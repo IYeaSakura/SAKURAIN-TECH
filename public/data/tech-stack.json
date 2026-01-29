@@ -1,0 +1,34 @@
+{
+  "categories": [
+    {
+      "name": "前端",
+      "items": [
+        { "name": "React", "proficiency": 95, "icon": "react" },
+        { "name": "TypeScript", "proficiency": 90, "icon": "typescript" },
+        { "name": "Vue.js", "proficiency": 85, "icon": "vue" },
+        { "name": "Tailwind CSS", "proficiency": 95, "icon": "tailwind" },
+        { "name": "Next.js", "proficiency": 80, "icon": "nextjs" }
+      ]
+    },
+    {
+      "name": "后端",
+      "items": [
+        { "name": "Python", "proficiency": 95, "icon": "python" },
+        { "name": "FastAPI", "proficiency": 90, "icon": "fastapi" },
+        { "name": "Go", "proficiency": 85, "icon": "go" },
+        { "name": "Java", "proficiency": 80, "icon": "java" },
+        { "name": "PostgreSQL", "proficiency": 85, "icon": "postgresql" }
+      ]
+    },
+    {
+      "name": "工具",
+      "items": [
+        { "name": "Docker", "proficiency": 90, "icon": "docker" },
+        { "name": "Kubernetes", "proficiency": 75, "icon": "kubernetes" },
+        { "name": "Git", "proficiency": 95, "icon": "git" },
+        { "name": "Redis", "proficiency": 85, "icon": "redis" },
+        { "name": "Linux", "proficiency": 90, "icon": "linux" }
+      ]
+    }
+  ]
+}

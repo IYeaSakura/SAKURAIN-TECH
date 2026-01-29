@@ -1,0 +1,9 @@
+export { Navigation } from './Navigation';
+export { Hero } from './Hero';
+export { Services } from './Services';
+export { TechStack } from './TechStack';
+export { Pricing } from './Pricing';
+export { Process } from './Process';
+export { Comparison } from './Comparison';
+export { Contact } from './Contact';
+export { Footer } from './Footer';

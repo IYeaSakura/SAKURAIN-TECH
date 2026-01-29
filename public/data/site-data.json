@@ -1,0 +1,420 @@
+{
+  "meta": {
+    "title": "SAKURAIN | 博弈算法与数据工程专家",
+    "description": "8名高校计算机专业本科生组成的精英技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。",
+    "keywords": ["博弈算法", "量化交易", "数据分析", "C++", "Python", "高性能计算"]
+  },
+  "navigation": {
+    "logo": "SAKURAIN",
+    "links": [
+      { "label": "服务", "href": "#services" },
+      { "label": "技术栈", "href": "#tech-stack" },
+      { "label": "定价", "href": "#pricing" },
+      { "label": "流程", "href": "#process" },
+      { "label": "联系", "href": "#contact" }
+    ],
+    "cta": { "label": "开始项目", "href": "#contact" }
+  },
+  "hero": {
+    "badge": "高校精英技术团队",
+    "title": "将代码转化为竞争优势",
+    "subtitle": "专注博弈论算法工程化与大规模数据分析",
+    "description": "8名高校计算机专业本科生组成的精英技术团队，60天交付保证 · 100%源码交付 · 自主运维方案",
+    "cta": [
+      { "text": "探索服务", "link": "#services", "primary": true },
+      { "text": "联系我们", "link": "#contact", "primary": false }
+    ],
+    "stats": [
+      { "value": "50+", "label": "交付项目" },
+      { "value": "100%", "label": "源码交付" },
+      { "value": "60天", "label": "平均交付" },
+      { "value": "24h", "label": "响应时间" }
+    ]
+  },
+  "services": [
+    {
+      "id": "game-theory",
+      "title": "博弈程序开发",
+      "subtitle": "C++/Python/Go + AVX512 高性能博弈算法",
+      "description": "专注零和博弈、不完全信息博弈的算法工程化。支持极小化极大算法、MCTS蒙特卡洛树搜索、对手建模等核心技术。",
+      "icon": "Brain",
+      "color": "purple",
+      "size": "large",
+      "price": "¥3,000 - ¥20,000",
+      "delivery": "15-45天",
+      "features": [
+        "极小化极大算法 + 信息集处理",
+        "MCTS蒙特卡洛树搜索",
+        "对手建模与信念更新",
+        "AVX512 SIMD指令集优化",
+        "C++高性能核心引擎",
+        "Python策略接口层"
+      ],
+      "tech": ["C++", "Python", "Go", "AVX512", "PyTorch"],
+      "popular": true,
+      "details": {
+        "sections": [
+          {
+            "title": "量化交易博弈系统",
+            "items": [
+              { "name": "行情数据引擎", "desc": "百万级K线毫秒查询", "price": "¥960" },
+              { "name": "博弈策略核心", "desc": "支持10种对手模型", "price": "¥1,680" },
+              { "name": "回测加速模块", "desc": "AVX512优化，10年历史<5分钟", "price": "¥1,600" },
+              { "name": "并发调度器", "desc": "Go实现，支持100策略并行", "price": "¥720" },
+              { "name": "风险归因分析", "desc": "夏普/卡尔玛/最大回撤", "price": "¥448" },
+              { "name": "前端交互看板", "desc": "Vue3 + ECharts实时可视化", "price": "¥800" }
+            ],
+            "total": "¥8,500",
+            "performance": "回测速度提升5-10倍，单次回测内存占用<4GB，API调用延迟<10ms（p99）"
+          }
+        ]
+      }
+    },
+    {
+      "id": "data-analysis",
+      "title": "数据分析系统",
+      "subtitle": "Python + ClickHouse + Kafka 大规模数据处理",
+      "description": "构建实时日志分析平台、业务数据采集系统。支持日处理100万条数据，查询<1秒，亿级数据实时分析。",
+      "icon": "BarChart3",
+      "color": "blue",
+      "size": "large",
+      "price": "¥2,000 - ¥8,000",
+      "delivery": "7-25天",
+      "features": [
+        "Kafka集群消息队列",
+        "Flink实时流处理",
+        "ClickHouse OLAP存储",
+        "Scrapy分布式爬虫",
+        "Redis热数据缓存",
+        "Vue3数据可视化看板"
+      ],
+      "tech": ["Python", "ClickHouse", "Kafka", "Flink", "Redis", "Vue3"],
+      "popular": true,
+      "details": {
+        "sections": [
+          {
+            "title": "实时日志分析平台",
+            "items": [
+              { "name": "Kafka集群", "desc": "3节点，吞吐10万msg/s", "price": "¥720" },
+              { "name": "Flink流处理", "desc": "Exactly-Once语义，延迟<5s", "price": "¥1,400" },
+              { "name": "ClickHouse存储", "desc": "10亿日志分区，压缩率>5:1", "price": "¥1,024" },
+              { "name": "Redis热查询", "desc": "百万级Key，QPS>10万", "price": "¥448" },
+              { "name": "SQL构建器", "desc": "支持动态聚合查询", "price": "¥720" },
+              { "name": "Vue3监控看板", "desc": "WebSocket实时推送", "price": "¥800" },
+              { "name": "部署方案", "desc": "K8s Helm Chart", "price": "¥720" },
+              { "name": "压测验证", "desc": "JMeter，1000并发", "price": "¥200" }
+            ],
+            "total": "¥7,500",
+            "performance": "处理延迟端到端<5秒，吞吐量>5万条/秒，聚合查询<1秒，明细查询<0.5秒"
+          }
+        ]
+      }
+    },
+    {
+      "id": "web-dev",
+      "title": "小型网站开发",
+      "subtitle": "Vue3/React + FastAPI/Go 高性能全栈",
+      "description": "企业级Web应用开发，支持高并发与微服务架构。从需求分析到部署运维，提供一站式解决方案。",
+      "icon": "Globe",
+      "color": "green",
+      "size": "medium",
+      "price": "¥3,500 - ¥9,000",
+      "delivery": "12-30天",
+      "features": [
+        "Vue3/React前端",
+        "FastAPI/Gin后端",
+        "MySQL/PostgreSQL数据库",
+        "Redis缓存",
+        "Docker一键部署",
+        "Nginx负载均衡"
+      ],
+      "tech": ["Vue3", "React", "FastAPI", "Go", "MySQL", "Docker"]
+    },
+    {
+      "id": "graduation",
+      "title": "毕业设计项目",
+      "subtitle": "Python/Java/Go + Vue3 完整毕设包",
+      "description": "提供从选题到答辩的全流程支持。源码+论文+答辩PPT+代码讲解，保过承诺。",
+      "icon": "GraduationCap",
+      "color": "orange",
+      "size": "medium",
+      "price": "¥800 - ¥2,500",
+      "delivery": "7-15天",
+      "features": [
+        "完整源码交付",
+        "毕业论文撰写",
+        "答辩PPT制作",
+        "代码讲解服务",
+        "答辩指导",
+        "保过承诺"
+      ],
+      "tech": ["Python", "Java", "Go", "Vue3", "MySQL"]
+    },
+    {
+      "id": "mc-plugin",
+      "title": "Minecraft插件/模组",
+      "subtitle": "Java + Redis 高性能服务端开发",
+      "description": "定制化MC插件开发，支持大型服务器架构。从游戏机制到经济系统，打造独特的游戏体验。",
+      "icon": "Gamepad2",
+      "color": "cyan",
+      "size": "small",
+      "price": "¥600 - ¥4,000",
+      "delivery": "3-25天",
+      "features": [
+        "Spigot/Paper API",
+        "自定义游戏机制",
+        "MySQL/Redis存储",
+        "异步性能优化",
+        "JMH基准测试"
+      ],
+      "tech": ["Java", "Kotlin", "Redis", "MySQL"]
+    },
+    {
+      "id": "waf",
+      "title": "WAF安全中间件",
+      "subtitle": "Python + Redis 企业级Web防火墙",
+      "description": "自研WAF系统，提供DDoS防护、SQL注入检测、Bot管理等安全服务。拦截率>95%，QPS>10k。",
+      "icon": "Shield",
+      "color": "red",
+      "size": "small",
+      "price": "¥3,000 - ¥10,000",
+      "delivery": "10-18天",
+      "features": [
+        "规则匹配引擎（AC自动机）",
+        "速率限制模块（Token Bucket）",
+        "IP信誉库（本地+Redis）",
+        "日志分析（实时统计）",
+        "Vue3管理后台"
+      ],
+      "tech": ["Python", "Redis", "Nginx", "Vue3"]
+    }
+  ],
+  "techStack": {
+    "title": "技术栈",
+    "subtitle": "全栈技术能力，从底层优化到上层应用",
+    "categories": [
+      {
+        "name": "高性能计算",
+        "icon": "Cpu",
+        "skills": [
+          { "name": "C/C++", "level": 95 },
+          { "name": "AVX512 SIMD", "level": 90 },
+          { "name": "CUDA", "level": 75 },
+          { "name": "OpenMP", "level": 80 }
+        ]
+      },
+      {
+        "name": "后端开发",
+        "icon": "Server",
+        "skills": [
+          { "name": "Python", "level": 98 },
+          { "name": "Go", "level": 90 },
+          { "name": "FastAPI", "level": 95 },
+          { "name": "Gin", "level": 88 }
+        ]
+      },
+      {
+        "name": "数据存储",
+        "icon": "Database",
+        "skills": [
+          { "name": "ClickHouse", "level": 92 },
+          { "name": "PostgreSQL", "level": 90 },
+          { "name": "Redis", "level": 95 },
+          { "name": "Kafka", "level": 85 }
+        ]
+      },
+      {
+        "name": "前端开发",
+        "icon": "Layout",
+        "skills": [
+          { "name": "Vue3", "level": 92 },
+          { "name": "React", "level": 85 },
+          { "name": "TypeScript", "level": 90 },
+          { "name": "TailwindCSS", "level": 95 }
+        ]
+      },
+      {
+        "name": "机器学习",
+        "icon": "Brain",
+        "skills": [
+          { "name": "PyTorch", "level": 88 },
+          { "name": "NumPy", "level": 95 },
+          { "name": "Pandas", "level": 95 },
+          { "name": "Scikit-learn", "level": 85 }
+        ]
+      },
+      {
+        "name": "运维部署",
+        "icon": "Cloud",
+        "skills": [
+          { "name": "Docker", "level": 92 },
+          { "name": "Kubernetes", "level": 80 },
+          { "name": "Nginx", "level": 90 },
+          { "name": "Linux", "level": 95 }
+        ]
+      }
+    ]
+  },
+  "pricing": {
+    "title": "定价方案",
+    "subtitle": "透明的价格体系，灵活的定制选项",
+    "disclaimer": "价格仅供参考，具体根据需求评估",
+    "categories": [
+      {
+        "id": "game-theory",
+        "name": "博弈系统",
+        "plans": [
+          {
+            "name": "基础版",
+            "price": "¥3,000",
+            "features": ["标准minimax算法", "Python核心", "基础可视化", "单策略回测"],
+            "params": { "延迟": "<50ms", "并发": "1k QPS", "回测": "10x加速" }
+          },
+          {
+            "name": "专业版",
+            "price": "¥8,000",
+            "popular": true,
+            "features": ["纳什均衡计算", "多因子策略", "实时数据流", "机器学习模块", "完整回测系统"],
+            "params": { "延迟": "<20ms", "并发": "10k QPS", "回测": "50x加速" }
+          },
+          {
+            "name": "旗舰版",
+            "price": "联系议价",
+            "features": ["自定义博弈模型", "高频交易执行", "分布式架构", "实时风控", "专属技术支持"],
+            "params": { "延迟": "<5ms", "并发": "100k QPS", "回测": "100x加速" }
+          }
+        ]
+      },
+      {
+        "id": "data-analysis",
+        "name": "数据分析",
+        "plans": [
+          {
+            "name": "基础版",
+            "price": "¥2,000",
+            "features": ["Scrapy爬虫", "MySQL存储", "基础报表", "定时任务"],
+            "params": { "日处理": "10万条", "查询": "<2秒", "并发": "100" }
+          },
+          {
+            "name": "专业版",
+            "price": "¥5,000",
+            "popular": true,
+            "features": ["Kafka消息队列", "Flink流处理", "ClickHouse存储", "实时看板", "告警系统"],
+            "params": { "日处理": "100万条", "查询": "<1秒", "并发": "1000" }
+          },
+          {
+            "name": "旗舰版",
+            "price": "联系议价",
+            "features": ["分布式爬虫", "K8s集群", "多区域部署", "专属运维", "7x24支持"],
+            "params": { "日处理": "1000万条", "查询": "<500ms", "并发": "10000" }
+          }
+        ]
+      },
+      {
+        "id": "web-dev",
+        "name": "网站开发",
+        "plans": [
+          {
+            "name": "展示型",
+            "price": "¥3,500",
+            "features": ["响应式前端", "基础后端API", "MySQL数据库", "Docker部署"],
+            "params": { "并发": "500", "响应": "<200ms", "可用性": "99.9%" }
+          },
+          {
+            "name": "交互平台",
+            "price": "¥6,000",
+            "popular": true,
+            "features": ["Vue3前端", "微服务架构", "Redis缓存", "CI/CD流水线", "监控告警"],
+            "params": { "并发": "2000", "响应": "<100ms", "可用性": "99.95%" }
+          },
+          {
+            "name": "电商基础",
+            "price": "¥9,000",
+            "features": ["SSR/SSG优化", "分布式架构", "K8s编排", "多区域部署", "专属运维"],
+            "params": { "并发": "5000", "响应": "<50ms", "可用性": "99.99%" }
+          }
+        ]
+      }
+    ]
+  },
+  "process": {
+    "title": "工作流程",
+    "subtitle": "标准化的开发流程，确保高质量交付",
+    "steps": [
+      {
+        "id": 1,
+        "title": "需求分析",
+        "description": "深入了解业务需求，分析技术可行性，制定项目范围与里程碑",
+        "icon": "Search",
+        "details": ["业务需求梳理", "技术可行性分析", "项目范围定义", "里程碑规划"],
+        "duration": "1-3天"
+      },
+      {
+        "id": 2,
+        "title": "技术方案",
+        "description": "设计系统架构与技术方案，包括数据库设计、API接口设计",
+        "icon": "Lightbulb",
+        "details": ["系统架构设计", "数据库建模", "API接口设计", "UI/UX设计"],
+        "duration": "2-5天"
+      },
+      {
+        "id": 3,
+        "title": "敏捷开发",
+        "description": "采用敏捷开发模式，每两周一个迭代周期，实时同步进度",
+        "icon": "Code",
+        "details": ["迭代开发", "代码审查", "持续集成", "进度同步"],
+        "duration": "主要阶段"
+      },
+      {
+        "id": 4,
+        "title": "测试交付",
+        "description": "全面的测试覆盖，包括单元测试、集成测试、性能测试",
+        "icon": "CheckCircle",
+        "details": ["单元测试", "集成测试", "性能测试", "安全审计"],
+        "duration": "3-7天"
+      },
+      {
+        "id": 5,
+        "title": "运维支持",
+        "description": "提供完善的运维文档与技术支持，确保系统稳定运行",
+        "icon": "Headphones",
+        "details": ["部署上线", "监控配置", "文档交付", "技术支持"],
+        "duration": "持续"
+      }
+    ]
+  },
+  "comparison": {
+    "title": "为什么选择 SAKURAIN",
+    "subtitle": "与传统外包公司的核心差异",
+    "items": [
+      { "dimension": "技术深度", "traditional": "广度优先，通用开发", "sakurain": "深度垂直，博弈算法与数据工程专家", "highlight": "核心成员在博弈论、性能优化领域有论文级研究" },
+      { "dimension": "定价基准", "traditional": "¥800-2,000/人天", "sakurain": "¥150-500/人天", "highlight": "无运营摊销，学生身份非盈利导向" },
+      { "dimension": "代码交付", "traditional": "部分源码或加密", "sakurain": "100%完整源码交付", "highlight": "客户拥有完全技术主权" },
+      { "dimension": "项目周期", "traditional": "倾向长期外包", "sakurain": "严格≤60天交付", "highlight": "大四毕业时间窗口强制短周期" },
+      { "dimension": "沟通路径", "traditional": "销售→PM→开发，信息衰减", "sakurain": "技术负责人直客", "highlight": "需求准确转化为技术实现" },
+      { "dimension": "运维绑定", "traditional": "长期维护收费", "sakurain": "提供自运维方案", "highlight": "无捆绑销售" }
+    ]
+  },
+  "contact": {
+    "title": "准备好开始您的项目了吗？",
+    "subtitle": "告诉我们您的需求，我们将在24小时内回复",
+    "email": "contact@sakurain.tech",
+    "responseTime": "24小时内回复",
+    "social": [
+      { "platform": "GitHub", "url": "https://github.com/sakurain", "icon": "Github" },
+      { "platform": "Telegram", "url": "https://t.me/sakuraintech", "icon": "Send" }
+    ],
+    "note": "请直接发送邮件至 contact@sakurain.tech"
+  },
+  "footer": {
+    "copyright": "© 2024 SAKURAIN技术工作室",
+    "slogan": "博弈算法与数据工程专家",
+    "links": [
+      { "label": "服务", "href": "#services" },
+      { "label": "技术栈", "href": "#tech-stack" },
+      { "label": "定价", "href": "#pricing" },
+      { "label": "流程", "href": "#process" },
+      { "label": "联系", "href": "#contact" }
+    ]
+  }
+}
