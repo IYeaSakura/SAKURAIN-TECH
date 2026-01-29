@@ -1,0 +1,548 @@
+/* Minecraft Theme - Deep Customization */
+
+/* ==================== MINECRAFT FONTS ==================== */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+/* Minecraft-style pixel font class */
+.font-minecraft {
+  font-family: 'VT323', monospace;
+  letter-spacing: 0.02em;
+}
+
+/* ==================== MINECRAFT COLORS ==================== */
+:root {
+  /* Minecraft Earth Tones */
+  --mc-dirt: #8B7355;
+  --mc-dirt-dark: #6B5344;
+  --mc-grass: #5D8C38;
+  --mc-grass-dark: #4a6f2d;
+  --mc-stone: #7D7D7D;
+  --mc-stone-dark: #5A5A5A;
+  --mc-wood: #8B6914;
+  --mc-wood-dark: #6B4F0F;
+  --mc-gold: #D4A017;
+  --mc-gold-glow: #FFD700;
+  --mc-diamond: #4A9;
+  --mc-diamond-glow: #5FB;
+  --mc-emerald: #50C878;
+  --mc-emerald-glow: #7FEDA8;
+  
+  /* Minecraft UI Colors */
+  --mc-ui-bg: #C6C6C6;
+  --mc-ui-dark: #8B8B8B;
+  --mc-ui-darker: #555555;
+  --mc-ui-border: #FFFFFF;
+  --mc-ui-shadow: #373737;
+  
+  /* Light Theme Overrides */
+  --mc-bg-primary: #E8E0D0;
+  --mc-bg-secondary: #D8D0C0;
+  --mc-bg-card: #F0E8D8;
+  --mc-text-primary: #3D3D3D;
+  --mc-text-secondary: #5A5A5A;
+  --mc-accent: #5D8C38;
+  --mc-accent-glow: rgba(93, 140, 56, 0.4);
+  
+  /* Texture Patterns */
+  --mc-pattern-dirt: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect fill='%238B7355' width='16' height='16'/%3E%3Crect fill='%239B8365' x='0' y='0' width='8' height='8'/%3E%3Crect fill='%237B6345' x='8' y='8' width='8' height='8'/%3E%3C/svg%3E");
+  --mc-pattern-stone: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect fill='%237D7D7D' width='16' height='16'/%3E%3Crect fill='%238D8D8D' x='4' y='4' width='4' height='4'/%3E%3Crect fill='%236D6D6D' x='12' y='0' width='4' height='4'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] {
+  --mc-bg-primary: #1a1814;
+  --mc-bg-secondary: #242220;
+  --mc-bg-card: #1f1d1a;
+  --mc-text-primary: #E8E0D0;
+  --mc-text-secondary: #A09080;
+  --mc-accent: #7cb342;
+  --mc-accent-glow: rgba(124, 179, 66, 0.5);
+}
+
+/* ==================== MINECRAFT BUTTONS ==================== */
+.mc-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 32px;
+  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: white;
+  background: var(--mc-accent);
+  border: 3px solid;
+  border-color: 
+    color-mix(in srgb, var(--mc-accent) 120%, white)
+    color-mix(in srgb, var(--mc-accent) 80%, black)
+    color-mix(in srgb, var(--mc-accent) 80%, black)
+    color-mix(in srgb, var(--mc-accent) 120%, white);
+  box-shadow: 
+    inset -3px -3px 0 color-mix(in srgb, var(--mc-accent) 60%, black),
+    inset 3px 3px 0 color-mix(in srgb, var(--mc-accent) 120%, white);
+  cursor: pointer;
+  transition: all 0.1s ease;
+  image-rendering: pixelated;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.mc-btn:hover {
+  background: color-mix(in srgb, var(--mc-accent) 110%, white);
+  transform: translateY(-1px);
+}
+
+.mc-btn:active {
+  transform: translateY(2px);
+  box-shadow: 
+    inset -2px -2px 0 color-mix(in srgb, var(--mc-accent) 60%, black),
+    inset 2px 2px 0 color-mix(in srgb, var(--mc-accent) 120%, white);
+}
+
+.mc-btn-secondary {
+  background: var(--mc-stone);
+  border-color: 
+    color-mix(in srgb, var(--mc-stone) 120%, white)
+    color-mix(in srgb, var(--mc-stone) 80%, black)
+    color-mix(in srgb, var(--mc-stone) 80%, black)
+    color-mix(in srgb, var(--mc-stone) 120%, white);
+  box-shadow: 
+    inset -3px -3px 0 color-mix(in srgb, var(--mc-stone) 60%, black),
+    inset 3px 3px 0 color-mix(in srgb, var(--mc-stone) 120%, white);
+}
+
+.mc-btn-secondary:hover {
+  background: color-mix(in srgb, var(--mc-stone) 110%, white);
+}
+
+.mc-btn-gold {
+  background: var(--mc-gold);
+  border-color: 
+    color-mix(in srgb, var(--mc-gold) 120%, white)
+    color-mix(in srgb, var(--mc-gold) 80%, black)
+    color-mix(in srgb, var(--mc-gold) 80%, black)
+    color-mix(in srgb, var(--mc-gold) 120%, white);
+  box-shadow: 
+    inset -3px -3px 0 color-mix(in srgb, var(--mc-gold) 60%, black),
+    inset 3px 3px 0 color-mix(in srgb, var(--mc-gold) 120%, white),
+    0 0 20px rgba(212, 160, 23, 0.4);
+}
+
+.mc-btn-gold:hover {
+  background: color-mix(in srgb, var(--mc-gold) 110%, white);
+  box-shadow: 
+    inset -3px -3px 0 color-mix(in srgb, var(--mc-gold) 60%, black),
+    inset 3px 3px 0 color-mix(in srgb, var(--mc-gold) 120%, white),
+    0 0 30px rgba(212, 160, 23, 0.6);
+}
+
+/* ==================== MINECRAFT CARDS ==================== */
+.mc-panel {
+  position: relative;
+  background: var(--mc-bg-card);
+  border: 4px solid;
+  border-color: 
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white)
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black)
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black)
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white);
+  box-shadow: 
+    inset -4px -4px 0 color-mix(in srgb, var(--mc-bg-secondary) 40%, black),
+    inset 4px 4px 0 color-mix(in srgb, var(--mc-bg-secondary) 150%, white),
+    0 4px 0 color-mix(in srgb, var(--mc-bg-secondary) 40%, black);
+  image-rendering: pixelated;
+}
+
+.mc-panel:hover {
+  border-color: 
+    color-mix(in srgb, var(--mc-accent) 80%, white)
+    color-mix(in srgb, var(--mc-accent) 40%, black)
+    color-mix(in srgb, var(--mc-accent) 40%, black)
+    color-mix(in srgb, var(--mc-accent) 80%, white);
+}
+
+.mc-panel-elevated {
+  box-shadow: 
+    inset -4px -4px 0 color-mix(in srgb, var(--mc-bg-secondary) 40%, black),
+    inset 4px 4px 0 color-mix(in srgb, var(--mc-bg-secondary) 150%, white),
+    0 6px 0 color-mix(in srgb, var(--mc-bg-secondary) 50%, black),
+    0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* ==================== MINECRAFT INPUTS ==================== */
+.mc-input {
+  padding: 14px 18px;
+  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--mc-text-primary);
+  background: var(--mc-bg-secondary);
+  border: 3px solid;
+  border-color: 
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black)
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white)
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white)
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black);
+  box-shadow: 
+    inset 3px 3px 0 rgba(0, 0, 0, 0.2);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.mc-input:focus {
+  border-color: var(--mc-accent);
+  box-shadow: 
+    inset 3px 3px 0 rgba(0, 0, 0, 0.2),
+    0 0 0 2px var(--mc-accent-glow);
+}
+
+.mc-input::placeholder {
+  color: var(--mc-text-secondary);
+  opacity: 0.6;
+}
+
+/* ==================== MINECRAFT TEXTURES ==================== */
+.mc-texture-dirt {
+  background-color: var(--mc-dirt);
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 15px,
+      rgba(0,0,0,0.05) 15px,
+      rgba(0,0,0,0.05) 16px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 15px,
+      rgba(0,0,0,0.05) 15px,
+      rgba(0,0,0,0.05) 16px
+    );
+}
+
+.mc-texture-stone {
+  background-color: var(--mc-stone);
+  background-image: 
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 0%, transparent 20%),
+    radial-gradient(circle at 70% 60%, rgba(0,0,0,0.1) 0%, transparent 15%),
+    radial-gradient(circle at 40% 80%, rgba(255,255,255,0.08) 0%, transparent 25%);
+}
+
+.mc-texture-grass {
+  background: linear-gradient(
+    to bottom,
+    var(--mc-grass) 0%,
+    var(--mc-grass) 30%,
+    var(--mc-dirt) 30%,
+    var(--mc-dirt) 100%
+  );
+  position: relative;
+}
+
+.mc-texture-grass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background-image: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.1) 3px,
+      rgba(0,0,0,0.1) 6px
+    );
+}
+
+/* ==================== MINECRAFT GLOW EFFECTS ==================== */
+.mc-glow-gold {
+  text-shadow: 
+    0 0 5px var(--mc-gold),
+    0 0 10px var(--mc-gold),
+    0 0 20px var(--mc-gold-glow);
+}
+
+.mc-glow-emerald {
+  text-shadow: 
+    0 0 5px var(--mc-emerald),
+    0 0 10px var(--mc-emerald),
+    0 0 20px var(--mc-emerald-glow);
+}
+
+.mc-glow-diamond {
+  text-shadow: 
+    0 0 5px var(--mc-diamond),
+    0 0 10px var(--mc-diamond),
+    0 0 20px var(--mc-diamond-glow);
+}
+
+.mc-border-glow {
+  box-shadow: 
+    0 0 5px var(--mc-accent-glow),
+    0 0 10px var(--mc-accent-glow),
+    inset 0 0 5px var(--mc-accent-glow);
+}
+
+/* ==================== MINECRAFT BADGES ==================== */
+.mc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
+  font-size: 0.925rem;
+  font-weight: 600;
+  background: var(--mc-bg-secondary);
+  border: 2px solid;
+  border-color: 
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white)
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black)
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black)
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white);
+  image-rendering: pixelated;
+}
+
+.mc-badge-gold {
+  background: var(--mc-gold);
+  border-color: 
+    color-mix(in srgb, var(--mc-gold) 120%, white)
+    color-mix(in srgb, var(--mc-gold) 80%, black)
+    color-mix(in srgb, var(--mc-gold) 80%, black)
+    color-mix(in srgb, var(--mc-gold) 120%, white);
+  color: white;
+}
+
+/* ==================== MINECRAFT PROGRESS BAR ==================== */
+.mc-progress {
+  height: 20px;
+  background: var(--mc-bg-secondary);
+  border: 2px solid;
+  border-color: 
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black)
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white)
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white)
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black);
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.mc-progress-fill {
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    var(--mc-accent) 0%,
+    color-mix(in srgb, var(--mc-accent) 80%, black) 100%
+  );
+  border-right: 2px solid color-mix(in srgb, var(--mc-accent) 120%, white);
+  transition: width 0.3s ease;
+}
+
+/* ==================== MINECRAFT TOOLTIP ==================== */
+.mc-tooltip {
+  position: relative;
+}
+
+.mc-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 12px;
+  font-family: 'VT323', monospace;
+  font-size: 1rem;
+  color: white;
+  background: rgba(16, 0, 16, 0.95);
+  border: 2px solid #5000A0;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.mc-tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+  bottom: calc(100% + 8px);
+}
+
+/* ==================== MINECRAFT SECTION STYLES ==================== */
+.mc-section-title {
+  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
+  font-size: 3rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--mc-text-primary);
+  text-shadow: 3px 3px 0 color-mix(in srgb, var(--mc-bg-secondary) 50%, black);
+  line-height: 1.2;
+}
+
+.mc-section-subtitle {
+  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--mc-text-secondary);
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+}
+
+/* ==================== MINECRAFT ICON CONTAINER ==================== */
+.mc-icon-box {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mc-bg-secondary);
+  border: 3px solid;
+  border-color: 
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white)
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black)
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black)
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white);
+  box-shadow: 
+    inset -3px -3px 0 color-mix(in srgb, var(--mc-bg-secondary) 40%, black),
+    inset 3px 3px 0 color-mix(in srgb, var(--mc-bg-secondary) 150%, white);
+}
+
+.mc-icon-box-gold {
+  background: var(--mc-gold);
+  border-color: 
+    color-mix(in srgb, var(--mc-gold) 120%, white)
+    color-mix(in srgb, var(--mc-gold) 80%, black)
+    color-mix(in srgb, var(--mc-gold) 80%, black)
+    color-mix(in srgb, var(--mc-gold) 120%, white);
+  box-shadow: 
+    inset -3px -3px 0 color-mix(in srgb, var(--mc-gold) 60%, black),
+    inset 3px 3px 0 color-mix(in srgb, var(--mc-gold) 120%, white),
+    0 0 15px rgba(212, 160, 23, 0.3);
+}
+
+/* ==================== MINECRAFT MODAL/OVERLAY ==================== */
+.mc-modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(2px);
+}
+
+.mc-modal {
+  background: var(--mc-bg-card);
+  border: 4px solid;
+  border-color: 
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white)
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black)
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black)
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white);
+  box-shadow: 
+    inset -4px -4px 0 color-mix(in srgb, var(--mc-bg-secondary) 40%, black),
+    inset 4px 4px 0 color-mix(in srgb, var(--mc-bg-secondary) 150%, white),
+    0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ==================== MINECRAFT NAVBAR ==================== */
+.mc-navbar {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--mc-bg-card) 95%, transparent),
+    color-mix(in srgb, var(--mc-bg-secondary) 90%, transparent)
+  );
+  border-bottom: 3px solid;
+  border-color: 
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black);
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--mc-bg-secondary) 40%, black);
+}
+
+.mc-nav-link {
+  position: relative;
+  font-family: 'VT323', monospace;
+  font-size: 1.25rem;
+  color: var(--mc-text-secondary);
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+}
+
+.mc-nav-link:hover {
+  color: var(--mc-accent);
+  text-shadow: 0 0 10px var(--mc-accent-glow);
+}
+
+.mc-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: var(--mc-accent);
+  transition: all 0.2s ease;
+  transform: translateX(-50%);
+}
+
+.mc-nav-link:hover::after {
+  width: 80%;
+}
+
+/* ==================== MINECRAFT STATS DISPLAY ==================== */
+.mc-stat-box {
+  padding: 20px 28px;
+  text-align: center;
+  background: var(--mc-bg-card);
+  border: 3px solid;
+  border-color: 
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white)
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black)
+    color-mix(in srgb, var(--mc-bg-secondary) 60%, black)
+    color-mix(in srgb, var(--mc-bg-secondary) 150%, white);
+  box-shadow: 
+    inset -3px -3px 0 color-mix(in srgb, var(--mc-bg-secondary) 40%, black),
+    inset 3px 3px 0 color-mix(in srgb, var(--mc-bg-secondary) 150%, white);
+}
+
+.mc-stat-value {
+  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: var(--mc-accent);
+  text-shadow: 3px 3px 0 color-mix(in srgb, var(--mc-accent) 40%, black);
+  line-height: 1.1;
+}
+
+.mc-stat-label {
+  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--mc-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes mc-pulse {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--mc-accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--mc-accent-glow), 0 0 40px var(--mc-accent-glow);
+  }
+}
+
+.mc-animate-pulse {
+  animation: mc-pulse 2s ease-in-out infinite;
+}
+
+@keyframes mc-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.mc-animate-float {
+  animation: mc-float 3s ease-in-out infinite;
+}

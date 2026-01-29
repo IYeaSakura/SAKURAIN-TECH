@@ -18,14 +18,22 @@ export function SectionTitle({ title, subtitle, align = 'center', className }: S
       )}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
+      viewport={{ margin: '-50px' }}
       transition={{ duration: 0.5 }}
     >
-      <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+      <h2
+        className="mc-section-title mb-4"
+        style={{
+          fontSize: '3.5rem',
+          textAlign: align,
+          fontWeight: 800,
+          letterSpacing: '0.02em',
+        }}
+      >
         <span
-          className="bg-clip-text text-transparent"
           style={{
-            backgroundImage: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary))',
+            color: 'var(--accent-primary)',
+            textShadow: '4px 4px 0 color-mix(in srgb, var(--accent-primary) 40%, black)',
           }}
         >
           {title}
@@ -33,8 +41,12 @@ export function SectionTitle({ title, subtitle, align = 'center', className }: S
       </h2>
       {subtitle && (
         <p
-          className="text-lg max-w-2xl mx-auto"
-          style={{ color: 'var(--text-muted)' }}
+          className="mc-section-subtitle max-w-2xl"
+          style={{
+            color: 'var(--text-muted)',
+            margin: align === 'center' ? '0 auto' : '0',
+            textAlign: align,
+          }}
         >
           {subtitle}
         </p>

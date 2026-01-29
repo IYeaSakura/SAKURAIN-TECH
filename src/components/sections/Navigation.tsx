@@ -5,9 +5,13 @@ import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/atoms';
 import type { SiteData } from '@/types';
 
+// Theme type definition
+// Define the theme type for component props
+type Theme = 'light' | 'dark';
+
 interface NavigationProps {
   data: SiteData['navigation'];
-  theme: 'light' | 'dark';
+  theme: Theme;
   onThemeToggle: (event: React.MouseEvent<HTMLElement>) => void;
   isThemeTransitioning?: boolean;
 }
@@ -40,34 +44,27 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
         transition={{ duration: 0.5 }}
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-          isScrolled
-            ? 'glass border-b'
-            : 'bg-transparent'
+          isScrolled ? 'mc-navbar' : 'bg-transparent'
         )}
-        style={{
-          borderColor: isScrolled ? 'var(--border-subtle)' : 'transparent',
-        }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <motion.a
               href="#"
-              className="flex items-center gap-2"
+              className="flex items-center gap-3"
               whileHover={{ scale: 1.02 }}
             >
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                }}
-              >
-                <span className="text-white font-bold text-sm">S</span>
-              </div>
+              <img
+                src="/image/logo.webp"
+                alt="SAKURAIN"
+                className="w-10 h-10 object-contain"
+              />
               <span
-                className="text-xl font-bold bg-clip-text text-transparent"
+                className="font-minecraft text-2xl font-bold"
                 style={{
-                  backgroundImage: 'linear-gradient(135deg, var(--text-primary), var(--text-secondary))',
+                  color: 'var(--text-primary)',
+                  textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
                 }}
               >
                 {data.logo}
@@ -80,22 +77,9 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                 <button
                   key={link.href}
                   onClick={() => scrollToSection(link.href)}
-                  className="text-sm transition-colors relative group"
-                  style={{ color: 'var(--text-secondary)' }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = 'var(--text-primary)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = 'var(--text-secondary)';
-                  }}
+                  className="mc-nav-link"
                 >
                   {link.label}
-                  <span
-                    className="absolute -bottom-1 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full"
-                    style={{
-                      background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))',
-                    }}
-                  />
                 </button>
               ))}
             </div>
@@ -107,18 +91,12 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                 onToggle={onThemeToggle}
                 isTransitioning={isThemeTransitioning}
               />
-              <motion.button
+              <button
                 onClick={() => scrollToSection(data.cta.href)}
-                className="px-5 py-2.5 text-sm font-medium rounded-xl transition-all"
-                style={{
-                  background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                  color: 'white',
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                className="mc-btn mc-btn-gold text-sm"
               >
                 {data.cta.label}
-              </motion.button>
+              </button>
             </div>
 
             {/* Mobile Menu Button */}
@@ -150,43 +128,38 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-40 lg:hidden"
           >
+            {/* Backdrop */}
             <div
-              className="absolute inset-0 backdrop-blur-xl"
-              style={{ background: 'color-mix(in srgb, var(--bg-primary) 95%, transparent)' }}
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setIsMobileMenuOpen(false)}
             />
-            <div className="relative pt-20 px-6">
+
+            {/* Menu Panel */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="absolute top-20 left-4 right-4 mc-panel p-6"
+            >
               <div className="flex flex-col gap-4">
-                {data.links.map((link, index) => (
-                  <motion.button
+                {data.links.map((link) => (
+                  <button
                     key={link.href}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
                     onClick={() => scrollToSection(link.href)}
-                    className="text-lg py-3 border-b text-left transition-colors"
-                    style={{
-                      color: 'var(--text-secondary)',
-                      borderColor: 'var(--border-subtle)',
-                    }}
+                    className="mc-nav-link text-left py-3 border-b"
+                    style={{ borderColor: 'var(--border-subtle)' }}
                   >
                     {link.label}
-                  </motion.button>
+                  </button>
                 ))}
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
+                <button
                   onClick={() => scrollToSection(data.cta.href)}
-                  className="mt-4 px-6 py-3 rounded-xl font-medium"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                    color: 'white',
-                  }}
+                  className="mc-btn mc-btn-gold mt-4"
                 >
                   {data.cta.label}
-                </motion.button>
+                </button>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

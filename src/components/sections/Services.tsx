@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
 import {
   Brain, BarChart3, Globe, GraduationCap, Gamepad2, Shield,
-  X, Clock, Code2, ArrowRight
+  X, Clock, Code2, ArrowRight, Pickaxe, Sword, Axe
 } from 'lucide-react';
 import { GridBackground } from '@/components/effects';
 import { SectionTitle } from '@/components/atoms';
@@ -20,20 +20,24 @@ const iconMap: Record<string, LucideIcon> = {
   GraduationCap,
   Gamepad2,
   Shield,
+  Pickaxe,
+  Sword,
+  Axe,
 };
 
 const getIcon = (iconName: string): LucideIcon => iconMap[iconName] || Code2;
 
+// Minecraft-style color mapping
 const colorMap: Record<string, string> = {
-  purple: 'from-purple-500 to-violet-500',
-  blue: 'from-blue-500 to-cyan-500',
-  green: 'from-emerald-500 to-teal-500',
-  orange: 'from-orange-500 to-amber-500',
-  cyan: 'from-cyan-500 to-sky-500',
-  red: 'from-red-500 to-rose-500',
+  purple: '#9B59B6', // Amethyst
+  blue: '#3498DB',   // Diamond
+  green: '#5D8C38',  // Emerald/Grass
+  orange: '#E67E22', // Copper
+  cyan: '#1ABC9C',   // Prismarine
+  red: '#C0392B',    // Redstone
 };
 
-const getColorClass = (color: string): string => colorMap[color] || colorMap.purple;
+const getColor = (color: string): string => colorMap[color] || colorMap.green;
 
 // Memoized service card component
 const ServiceCard = memo(({
@@ -46,60 +50,67 @@ const ServiceCard = memo(({
   onSelect: (service: SiteData['services'][0]) => void;
 }) => {
   const Icon = useMemo(() => getIcon(service.icon), [service.icon]);
+  const color = useMemo(() => getColor(service.color), [service.color]);
   const isLarge = service.size === 'large';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
+      viewport={{ margin: '-50px' }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       className={isLarge ? 'md:col-span-2 lg:col-span-1' : ''}
     >
       <motion.div
-        className="group relative h-full p-6 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300"
-        style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-subtle)',
-        }}
-        whileHover={{
-          y: -4,
-          borderColor: 'color-mix(in srgb, var(--accent-primary) 30%, transparent)',
-        }}
+        className="group relative h-full p-6 mc-panel cursor-pointer"
+        whileHover={{ y: -4 }}
         onClick={() => service.details && onSelect(service)}
       >
-        {/* Gradient overlay on hover */}
-        <div
-          className={`absolute inset-0 bg-gradient-to-br ${getColorClass(service.color)} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}
-        />
-
         {/* Popular badge */}
         {service.popular && (
-          <div
-            className="absolute top-4 right-4 px-3 py-1 text-xs font-medium text-white rounded-full"
-            style={{
-              background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-            }}
-          >
+          <div className="absolute -top-3 right-4 mc-badge mc-badge-gold z-10">
             热门
           </div>
         )}
 
-        {/* Icon */}
+        {/* Icon Box */}
         <div
-          className={`w-12 h-12 rounded-xl bg-gradient-to-br ${getColorClass(service.color)} flex items-center justify-center mb-4`}
+          className="mc-icon-box mb-4"
+          style={{
+            borderColor: color,
+            boxShadow: `inset -3px -3px 0 ${color}40, inset 3px 3px 0 ${color}80`,
+          }}
         >
-          <Icon className="w-6 h-6 text-white" />
+          <Icon className="w-8 h-8" style={{ color }} />
         </div>
 
         {/* Content */}
-        <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+        <h3 
+          className="text-2xl font-bold mb-2" 
+          style={{ 
+            color: 'var(--text-primary)',
+            fontWeight: 800,
+            letterSpacing: '0.02em',
+          }}
+        >
           {service.title}
         </h3>
-        <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>
+        <p 
+          className="mb-2" 
+          style={{ 
+            color: 'var(--text-secondary)',
+            fontWeight: 600,
+          }}
+        >
           {service.subtitle}
         </p>
-        <p className="text-sm mb-4 line-clamp-2" style={{ color: 'var(--text-muted)' }}>
+        <p 
+          className="mb-4 line-clamp-2" 
+          style={{ 
+            color: 'var(--text-muted)',
+            fontWeight: 500,
+          }}
+        >
           {service.description}
         </p>
 
@@ -108,9 +119,9 @@ const ServiceCard = memo(({
           {service.features.slice(0, 3).map((feature) => (
             <span
               key={feature}
-              className="px-2 py-1 text-xs rounded"
+              className="px-2 py-1 text-sm mc-badge"
               style={{
-                background: 'color-mix(in srgb, var(--bg-tertiary) 50%, transparent)',
+                background: 'var(--bg-secondary)',
                 color: 'var(--text-muted)',
               }}
             >
@@ -119,9 +130,9 @@ const ServiceCard = memo(({
           ))}
           {service.features.length > 3 && (
             <span
-              className="px-2 py-1 text-xs rounded"
+              className="px-2 py-1 text-sm mc-badge"
               style={{
-                background: 'color-mix(in srgb, var(--bg-tertiary) 50%, transparent)',
+                background: 'var(--bg-secondary)',
                 color: 'var(--text-muted)',
               }}
             >
@@ -133,32 +144,29 @@ const ServiceCard = memo(({
         {/* Price & Delivery */}
         <div
           className="flex items-center justify-between pt-4"
-          style={{ borderTop: '1px solid var(--border-subtle)' }}
+          style={{ borderTop: '2px solid var(--border-subtle)' }}
         >
           <div>
             <span
-              className="text-lg font-bold"
+              className="text-xl font-bold"
               style={{ color: 'var(--accent-primary)' }}
             >
               {service.price}
             </span>
           </div>
           <div
-            className="flex items-center gap-1 text-sm"
+            className="flex items-center gap-1"
             style={{ color: 'var(--text-muted)' }}
           >
             <Clock className="w-4 h-4" />
-            {service.delivery}
+            <span className="text-sm">{service.delivery}</span>
           </div>
         </div>
 
-        {/* View Details hint */}
+        {/* Arrow indicator */}
         {service.details && (
-          <div
-            className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{ color: 'var(--accent-primary)' }}
-          >
-            <ArrowRight className="w-5 h-5" />
+          <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+            <ArrowRight className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
           </div>
         )}
       </motion.div>
@@ -168,7 +176,7 @@ const ServiceCard = memo(({
 
 ServiceCard.displayName = 'ServiceCard';
 
-// Memoized modal component
+// Service Detail Modal
 const ServiceModal = memo(({
   service,
   onClose,
@@ -177,174 +185,166 @@ const ServiceModal = memo(({
   onClose: () => void;
 }) => {
   const Icon = useMemo(() => getIcon(service.icon), [service.icon]);
-
-  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  }, [onClose]);
+  const color = useMemo(() => getColor(service.color), [service.color]);
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={handleBackdropClick}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 mc-modal-overlay"
+      onClick={onClose}
     >
-      <div
-        className="absolute inset-0 backdrop-blur-sm"
-        style={{ background: 'color-mix(in srgb, var(--bg-primary) 80%, transparent)' }}
-      />
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative w-full max-w-4xl max-h-[90vh] overflow-auto rounded-2xl"
-        style={{
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-subtle)',
-        }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto mc-modal p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Modal Header */}
-        <div
-          className="sticky top-0 z-10 flex items-center justify-between p-6 backdrop-blur"
-          style={{
-            background: 'color-mix(in srgb, var(--bg-secondary) 95%, transparent)',
-            borderBottom: '1px solid var(--border-subtle)',
-          }}
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded transition-colors"
         >
-          <div className="flex items-center gap-4">
-            <div
-              className={`w-10 h-10 rounded-lg bg-gradient-to-br ${getColorClass(service.color)} flex items-center justify-center`}
-            >
-              <Icon className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                {service.title}
-              </h3>
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                {service.subtitle}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg transition-colors"
-            style={{ color: 'var(--text-muted)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = 'var(--text-primary)';
-              e.currentTarget.style.background = 'color-mix(in srgb, var(--bg-tertiary) 50%, transparent)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = 'var(--text-muted)';
-              e.currentTarget.style.background = 'transparent';
+          <X className="w-6 h-6" style={{ color: 'var(--text-muted)' }} />
+        </button>
+
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-6">
+          <div
+            className="mc-icon-box"
+            style={{
+              borderColor: color,
+              boxShadow: `inset -3px -3px 0 ${color}40, inset 3px 3px 0 ${color}80`,
             }}
           >
-            <X className="w-5 h-5" />
-          </button>
+            <Icon className="w-8 h-8" style={{ color }} />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              {service.title}
+            </h3>
+            <p style={{ color: 'var(--text-secondary)' }}>{service.subtitle}</p>
+          </div>
         </div>
 
-        {/* Modal Content */}
-        <div className="p-6">
-          {service.details?.sections.map((section, sectionIndex) => (
-            <div key={sectionIndex} className="mb-8">
-              <h4 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-                {section.title}
-              </h4>
+        {/* Description */}
+        <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
+          {service.description}
+        </p>
 
-              {/* Items Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>模块</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>功能描述</th>
-                      <th className="text-right py-3 px-4 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>价格</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {section.items.map((item, itemIndex) => (
-                      <tr
-                        key={itemIndex}
-                        style={{ borderBottom: '1px solid var(--border-subtle)' }}
-                        className="hover:bg-opacity-50"
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLTableRowElement).style.background = 'color-mix(in srgb, var(--bg-tertiary) 20%, transparent)';
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLTableRowElement).style.background = 'transparent';
-                        }}
-                      >
-                        <td className="py-3 px-4 font-medium" style={{ color: 'var(--text-primary)' }}>{item.name}</td>
-                        <td className="py-3 px-4 text-sm" style={{ color: 'var(--text-secondary)' }}>{item.desc}</td>
-                        <td className="py-3 px-4 text-right font-medium" style={{ color: 'var(--accent-primary)' }}>{item.price}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr style={{ background: 'color-mix(in srgb, var(--bg-tertiary) 30%, transparent)' }}>
-                      <td colSpan={2} className="py-3 px-4 text-right" style={{ color: 'var(--text-muted)' }}>套餐总价</td>
-                      <td className="py-3 px-4 text-right text-xl font-bold" style={{ color: 'var(--accent-primary)' }}>{section.total}</td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+        {/* Tech Stack */}
+        <div className="mb-6">
+          <h4 className="text-lg font-bold mb-3 mc-badge" style={{ display: 'inline-flex' }}>
+            技术栈
+          </h4>
+          <div className="flex flex-wrap gap-2">
+            {service.tech.map((tech) => (
+              <span
+                key={tech}
+                className="px-3 py-1 mc-badge"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  color: 'var(--text-primary)',
+                }}
+              >
+                {tech}
+              </span>
+            ))}
+          </div>
+        </div>
 
-              {/* Performance Metrics */}
-              {section.performance && (
+        {/* Features */}
+        <div className="mb-6">
+          <h4 className="text-lg font-bold mb-3 mc-badge" style={{ display: 'inline-flex' }}>
+            服务特性
+          </h4>
+          <ul className="space-y-2">
+            {service.features.map((feature) => (
+              <li
+                key={feature}
+                className="flex items-center gap-2"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                <span style={{ color: 'var(--accent-primary)' }}>▸</span>
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Details Sections */}
+        {service.details && service.details.sections.map((section, sectionIdx) => (
+          <div key={sectionIdx} className="mb-6">
+            <h4 className="text-lg font-bold mb-3 mc-badge" style={{ display: 'inline-flex' }}>
+              {section.title}
+            </h4>
+            <div className="space-y-3">
+              {section.items.map((item, itemIdx) => (
                 <div
-                  className="mt-4 p-4 rounded-xl"
-                  style={{
-                    background: 'color-mix(in srgb, var(--accent-primary) 10%, transparent)',
-                    border: '1px solid color-mix(in srgb, var(--accent-primary) 20%, transparent)',
-                  }}
+                  key={itemIdx}
+                  className="flex items-start gap-3 p-3 mc-panel"
+                  style={{ background: 'var(--bg-secondary)' }}
                 >
-                  <p className="text-sm" style={{ color: 'var(--accent-primary)' }}>
-                    <span className="font-medium">性能指标：</span>
-                    {section.performance}
-                  </p>
+                  <span
+                    className="flex-shrink-0 w-6 h-6 flex items-center justify-center mc-badge"
+                    style={{
+                      background: 'var(--accent-primary)',
+                      color: 'white',
+                      padding: '0',
+                      width: '24px',
+                      height: '24px',
+                    }}
+                  >
+                    {itemIdx + 1}
+                  </span>
+                  <div className="flex-1">
+                    <div className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                      {item.name}
+                    </div>
+                    <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                      {item.desc}
+                    </div>
+                    <div className="text-sm font-bold mt-1" style={{ color: 'var(--accent-primary)' }}>
+                      {item.price}
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
-
-          {/* Tech Stack */}
-          <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-            <h4 className="text-sm font-medium mb-3" style={{ color: 'var(--text-muted)' }}>技术栈</h4>
-            <div className="flex flex-wrap gap-2">
-              {service.tech.map((tech) => (
-                <span
-                  key={tech}
-                  className="px-3 py-1.5 text-sm rounded-lg"
-                  style={{
-                    background: 'color-mix(in srgb, var(--bg-tertiary) 50%, transparent)',
-                    color: 'var(--text-secondary)',
-                    border: '1px solid var(--border-subtle)',
-                  }}
-                >
-                  {tech}
-                </span>
               ))}
             </div>
+            {section.total && (
+              <div className="mt-3 p-3 mc-panel" style={{ background: 'var(--accent-primary)', color: 'white' }}>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold">总计</span>
+                  <span className="font-bold">{section.total}</span>
+                </div>
+              </div>
+            )}
+            {section.performance && (
+              <div className="mt-3 p-3 mc-badge" style={{ display: 'inline-flex', background: 'var(--bg-secondary)' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>{section.performance}</span>
+              </div>
+            )}
           </div>
+        ))}
 
-          {/* CTA */}
-          <div className="mt-8 flex gap-4">
-            <motion.a
+        {/* CTA */}
+        <div className="mt-8 pt-6" style={{ borderTop: '2px solid var(--border-subtle)' }}>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm" style={{ color: 'var(--text-muted)' }}>价格</span>
+              <div className="text-2xl font-bold" style={{ color: 'var(--accent-primary)' }}>
+                {service.price}
+              </div>
+            </div>
+            <a
               href="#contact"
               onClick={onClose}
-              className="flex-1 px-6 py-3 text-center rounded-xl font-medium text-white"
-              style={{
-                background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-              }}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
+              className="mc-btn mc-btn-gold"
             >
-              咨询此服务
-            </motion.a>
+              立即咨询
+            </a>
           </div>
         </div>
       </motion.div>
@@ -355,45 +355,44 @@ const ServiceModal = memo(({
 ServiceModal.displayName = 'ServiceModal';
 
 export const Services = memo(function Services({ data }: ServicesProps) {
-  const [selectedService, setSelectedService] = useState<typeof data[0] | null>(null);
+  const [selectedService, setSelectedService] = useState<SiteData['services'][0] | null>(null);
 
-  const handleSelectService = useCallback((service: typeof data[0]) => {
+  const handleSelect = useCallback((service: SiteData['services'][0]) => {
     setSelectedService(service);
   }, []);
 
-  const handleCloseModal = useCallback(() => {
+  const handleClose = useCallback(() => {
     setSelectedService(null);
   }, []);
 
   return (
-    <section id="services" className="relative py-24 lg:py-32">
+    <section id="services" className="relative py-24 lg:py-32 overflow-hidden">
       <GridBackground />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle
-          title="核心服务"
-          subtitle="从博弈算法到数据分析，提供全栈技术解决方案"
+          title="服务项目"
+          subtitle="专业的技术解决方案，助力您的项目成功"
         />
 
-        {/* Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {data.map((service, idx) => (
+          {data.map((service, index) => (
             <ServiceCard
               key={service.id}
               service={service}
-              index={idx}
-              onSelect={handleSelectService}
+              index={index}
+              onSelect={handleSelect}
             />
           ))}
         </div>
       </div>
 
-      {/* Service Detail Modal */}
+      {/* Modal */}
       <AnimatePresence>
         {selectedService && (
           <ServiceModal
             service={selectedService}
-            onClose={handleCloseModal}
+            onClose={handleClose}
           />
         )}
       </AnimatePresence>

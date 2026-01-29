@@ -45,7 +45,7 @@ const SkillBar = memo(({
       <motion.div
         initial={{ width: 0 }}
         whileInView={{ width: `${skill.level}%` }}
-        viewport={{ once: true, margin: '-50px' }}
+        viewport={{ margin: '-50px' }}
         transition={{
           duration: 1,
           delay: categoryIndex * 0.1 + skillIndex * 0.1,
@@ -76,7 +76,7 @@ const CategoryCard = memo(({
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
+      viewport={{ margin: '-50px' }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       className="group"
     >
@@ -137,7 +137,7 @@ const TechTag = memo(({
   <motion.span
     initial={{ opacity: 0, scale: 0.8 }}
     whileInView={{ opacity: 1, scale: 1 }}
-    viewport={{ once: true, margin: '-50px' }}
+    viewport={{ margin: '-50px' }}
     transition={{ duration: 0.3, delay: index * 0.03 }}
     className="px-4 py-2 text-sm rounded-xl transition-all cursor-default"
     style={{
@@ -199,7 +199,7 @@ export const TechStack = memo(function TechStack({ data }: TechStackProps) {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-50px' }}
+          viewport={{ margin: '-50px' }}
           transition={{ duration: 0.5, delay: 0.4 }}
           className="mt-16"
         >

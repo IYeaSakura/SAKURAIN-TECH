@@ -34,7 +34,7 @@ const ProcessStep = memo(({
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
+      viewport={{ margin: '-50px' }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       className="relative"
     >
@@ -167,7 +167,7 @@ export const Process = memo(function Process({ data }: ProcessProps) {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ margin: '-50px' }}
           transition={{ duration: 0.5, delay: 0.5 }}
           className="mt-16 text-center"
         >
