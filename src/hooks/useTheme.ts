@@ -48,22 +48,29 @@ export function useTheme(): ThemeState {
 
     const newTheme = theme === 'light' ? 'dark' : 'light';
 
-    // Create ripple effect
+    // Add transitioning class to body for smooth color transitions
+    document.body.classList.add('theme-transitioning');
+
+    // Create ripple effect with mix-blend-mode for seamless integration
     const ripple = document.createElement('div');
     ripple.className = 'theme-ripple';
+    
+    // Use mix-blend-mode: difference for seamless integration with page content
+    // This creates an inverted effect that naturally blends with the content
     ripple.style.cssText = `
       position: fixed;
       top: ${clickPositionRef.current.y}px;
       left: ${clickPositionRef.current.x}px;
-      width: 10px;
-      height: 10px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
-      background: ${newTheme === 'dark' ? '#0a0a0f' : '#ffffff'};
+      background: ${newTheme === 'dark' ? '#ffffff' : '#000000'};
       pointer-events: none;
       z-index: 9999;
       transform: translate(-50%, -50%) scale(0);
-      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-      mix-blend-mode: normal;
+      transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+      mix-blend-mode: difference;
+      opacity: 0.95;
     `;
 
     document.body.appendChild(ripple);
@@ -78,25 +85,31 @@ export function useTheme(): ThemeState {
       clickPositionRef.current.y,
       window.innerHeight - clickPositionRef.current.y
     );
-    const scale = (maxDistance * 2) / 10;
+    const scale = (maxDistance * 2.5) / 20;
 
     // Start the ripple animation
     requestAnimationFrame(() => {
       ripple.style.transform = `translate(-50%, -50%) scale(${scale})`;
     });
 
-    // Switch theme halfway through the animation
+    // Switch theme at 60% through the animation for better visual flow
     setTimeout(() => {
       setTheme(newTheme);
       document.documentElement.setAttribute('data-theme', newTheme);
       localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-    }, 400);
+    }, 540);
 
     // Clean up after animation
     setTimeout(() => {
-      ripple.remove();
-      setIsTransitioning(false);
-    }, 800);
+      ripple.style.opacity = '0';
+      ripple.style.transition = 'opacity 0.3s ease';
+      
+      setTimeout(() => {
+        ripple.remove();
+        document.body.classList.remove('theme-transitioning');
+        setIsTransitioning(false);
+      }, 300);
+    }, 900);
   }, [theme, isTransitioning]);
 
   return { theme, isTransitioning, toggleTheme };
