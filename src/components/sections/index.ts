@@ -7,3 +7,5 @@ export { Process } from './Process';
 export { Comparison } from './Comparison';
 export { Contact } from './Contact';
 export { Footer } from './Footer';
+export { Timeline } from './Timeline';
+export { StatsCharts } from './StatsCharts';

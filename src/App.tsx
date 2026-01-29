@@ -10,21 +10,43 @@ import {
   Comparison,
   Contact,
   Footer,
+  Timeline,
+  StatsCharts,
 } from '@/components/sections';
 import { useTheme } from '@/hooks';
 import type { SiteData } from '@/types';
 import './styles/globals.css';
 
+interface TimelineData {
+  title: string;
+  subtitle: string;
+  events: any[];
+}
+
+interface StatsChartsData {
+  title: string;
+  subtitle: string;
+  stats: any[];
+  charts: any[];
+}
+
 function App() {
   const [siteData, setSiteData] = useState<SiteData | null>(null);
+  const [timelineData, setTimelineData] = useState<TimelineData | null>(null);
+  const [statsChartsData, setStatsChartsData] = useState<StatsChartsData | null>(null);
   const [loading, setLoading] = useState(true);
   const { theme, isTransitioning, toggleTheme } = useTheme();
 
   useEffect(() => {
-    fetch('/data/site-data.json')
-      .then((res) => res.json())
-      .then((data: SiteData) => {
-        setSiteData(data);
+    Promise.all([
+      fetch('/data/site-data.json').then((res) => res.json()),
+      fetch('/data/timeline.json').then((res) => res.json()),
+      fetch('/data/stats-charts.json').then((res) => res.json()),
+    ])
+      .then(([site, timeline, stats]: [SiteData, TimelineData, StatsChartsData]) => {
+        setSiteData(site);
+        setTimelineData(timeline);
+        setStatsChartsData(stats);
         setLoading(false);
       })
       .catch((error) => {
@@ -86,6 +108,8 @@ function App() {
         <Hero data={siteData.hero} />
         <Services data={siteData.services} />
         <TechStack data={siteData.techStack} />
+        {statsChartsData && <StatsCharts data={statsChartsData} />}
+        {timelineData && <Timeline data={timelineData} />}
         <Pricing data={siteData.pricing} />
         <Process data={siteData.process} />
         <Comparison data={siteData.comparison} />

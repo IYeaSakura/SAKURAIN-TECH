@@ -11,51 +11,51 @@
 
 /* ==================== MINECRAFT COLORS ==================== */
 :root {
-  /* Minecraft Earth Tones */
-  --mc-dirt: #8B7355;
-  --mc-dirt-dark: #6B5344;
-  --mc-grass: #5D8C38;
-  --mc-grass-dark: #4a6f2d;
-  --mc-stone: #7D7D7D;
-  --mc-stone-dark: #5A5A5A;
-  --mc-wood: #8B6914;
-  --mc-wood-dark: #6B4F0F;
-  --mc-gold: #D4A017;
-  --mc-gold-glow: #FFD700;
-  --mc-diamond: #4A9;
-  --mc-diamond-glow: #5FB;
-  --mc-emerald: #50C878;
-  --mc-emerald-glow: #7FEDA8;
+  /* VSCode High Contrast Inspired Colors */
+  --mc-dirt: #3C3C3C;
+  --mc-dirt-dark: #2A2A2A;
+  --mc-grass: #0E639C;
+  --mc-grass-dark: #094575;
+  --mc-stone: #6E6E6E;
+  --mc-stone-dark: #4A4A4A;
+  --mc-wood: #6A9955;
+  --mc-wood-dark: #4A7A3A;
+  --mc-gold: #CE9178;
+  --mc-gold-glow: #FFA070;
+  --mc-diamond: #4EC9B0;
+  --mc-diamond-glow: #6FE9D0;
+  --mc-emerald: #569CD6;
+  --mc-emerald-glow: #76BCE6;
   
   /* Minecraft UI Colors */
-  --mc-ui-bg: #C6C6C6;
-  --mc-ui-dark: #8B8B8B;
-  --mc-ui-darker: #555555;
-  --mc-ui-border: #FFFFFF;
-  --mc-ui-shadow: #373737;
+  --mc-ui-bg: #F3F3F3;
+  --mc-ui-dark: #E8E8E8;
+  --mc-ui-darker: #D4D4D4;
+  --mc-ui-border: #000000;
+  --mc-ui-shadow: #3C3C3C;
   
   /* Light Theme Overrides */
-  --mc-bg-primary: #E8E0D0;
-  --mc-bg-secondary: #D8D0C0;
-  --mc-bg-card: #F0E8D8;
-  --mc-text-primary: #3D3D3D;
-  --mc-text-secondary: #5A5A5A;
-  --mc-accent: #5D8C38;
-  --mc-accent-glow: rgba(93, 140, 56, 0.4);
+  --mc-bg-primary: #FFFFFF;
+  --mc-bg-secondary: #F3F3F3;
+  --mc-bg-card: #FAFAFA;
+  --mc-text-primary: #000000;
+  --mc-text-secondary: #3C3C3C;
+  --mc-accent: #0E639C;
+  --mc-accent-glow: rgba(14, 99, 156, 0.3);
   
   /* Texture Patterns */
-  --mc-pattern-dirt: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect fill='%238B7355' width='16' height='16'/%3E%3Crect fill='%239B8365' x='0' y='0' width='8' height='8'/%3E%3Crect fill='%237B6345' x='8' y='8' width='8' height='8'/%3E%3C/svg%3E");
-  --mc-pattern-stone: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect fill='%237D7D7D' width='16' height='16'/%3E%3Crect fill='%238D8D8D' x='4' y='4' width='4' height='4'/%3E%3Crect fill='%236D6D6D' x='12' y='0' width='4' height='4'/%3E%3C/svg%3E");
+  --mc-pattern-dirt: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect fill='%233C3C3C' width='16' height='16'/%3E%3Crect fill='%234C4C4C' x='0' y='0' width='8' height='8'/%3E%3Crect fill='%232C2C2C' x='8' y='8' width='8' height='8'/%3E%3C/svg%3E");
+  --mc-pattern-stone: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Crect fill='%236E6E6E' width='16' height='16'/%3E%3Crect fill='%237E7E7E' x='4' y='4' width='4' height='4'/%3E%3Crect fill='%235E5E5E' x='12' y='0' width='4' height='4'/%3E%3C/svg%3E");
 }
 
 [data-theme="dark"] {
-  --mc-bg-primary: #1a1814;
-  --mc-bg-secondary: #242220;
-  --mc-bg-card: #1f1d1a;
-  --mc-text-primary: #E8E0D0;
-  --mc-text-secondary: #A09080;
-  --mc-accent: #7cb342;
-  --mc-accent-glow: rgba(124, 179, 66, 0.5);
+  --mc-bg-primary: #000000;
+  --mc-bg-secondary: #0C0C0C;
+  --mc-bg-card: #0D0D0D;
+  --mc-text-primary: #FFFFFF;
+  --mc-text-secondary: #D4D4D4;
+  --mc-accent: #569CD6;
+  --mc-accent-glow: rgba(86, 156, 214, 0.4);
 }
 
 /* ==================== MINECRAFT BUTTONS ==================== */

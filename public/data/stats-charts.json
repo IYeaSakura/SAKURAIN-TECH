@@ -1,0 +1,73 @@
+{
+  "title": "技术实力统计",
+  "subtitle": "用数据说话，展现我们的技术实力",
+  "stats": [
+    {
+      "title": "项目完成率",
+      "value": 98,
+      "unit": "%",
+      "color": "blue",
+      "description": "按时交付率",
+      "trend": "+5%"
+    },
+    {
+      "title": "客户满意度",
+      "value": 96,
+      "unit": "%",
+      "color": "green",
+      "description": "客户好评率",
+      "trend": "+8%"
+    },
+    {
+      "title": "技术覆盖率",
+      "value": 85,
+      "unit": "%",
+      "color": "purple",
+      "description": "技术栈覆盖",
+      "trend": "+12%"
+    },
+    {
+      "title": "响应速度",
+      "value": 99,
+      "unit": "%",
+      "color": "cyan",
+      "description": "24小时响应",
+      "trend": "+3%"
+    }
+  ],
+  "charts": [
+    {
+      "title": "技术栈分布",
+      "type": "pie",
+      "data": [
+        { "label": "React", "value": 35, "color": "#0E639C" },
+        { "label": "Vue", "value": 25, "color": "#6A9955" },
+        { "label": "Node.js", "value": 20, "color": "#9B59B6" },
+        { "label": "Python", "value": 15, "color": "#4EC9B0" },
+        { "label": "其他", "value": 5, "color": "#CE9178" }
+      ]
+    },
+    {
+      "title": "项目类型分布",
+      "type": "bar",
+      "data": [
+        { "label": "Web应用", "value": 45, "color": "#0E639C" },
+        { "label": "移动应用", "value": 25, "color": "#6A9955" },
+        { "label": "后端服务", "value": 20, "color": "#9B59B6" },
+        { "label": "数据分析", "value": 10, "color": "#4EC9B0" }
+      ]
+    },
+    {
+      "title": "月度项目交付",
+      "type": "line",
+      "data": [
+        { "label": "1月", "value": 12 },
+        { "label": "2月", "value": 15 },
+        { "label": "3月", "value": 18 },
+        { "label": "4月", "value": 22 },
+        { "label": "5月", "value": 25 },
+        { "label": "6月", "value": 28 }
+      ]
+    }
+  ]
+}

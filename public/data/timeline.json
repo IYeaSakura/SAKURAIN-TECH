@@ -1,0 +1,79 @@
+{
+  "title": "技术团队发展历程",
+  "subtitle": "从初创到未来，我们不断突破技术边界",
+  "events": [
+    {
+      "year": "2020",
+      "title": "团队前身",
+      "description": "团队前身三月樱雨成立，致力于找到一批同样热爱编程的人，共同学习，共同进步",
+      "icon": "Rocket",
+      "color": "blue",
+      "achievements": [
+        "完成首个商业项目",
+        "建立核心技术栈",
+        "团队规模达到5人"
+      ]
+    },
+    {
+      "year": "2021",
+      "title": "技术突破",
+      "description": "在React和Vue框架领域取得重大突破，建立完善的开发规范",
+      "icon": "Code2",
+      "color": "green",
+      "achievements": [
+        "发布开源项目3个",
+        "获得技术专利1项",
+        "服务客户数量达到20+"
+      ]
+    },
+    {
+      "year": "2022",
+      "title": "规模扩张",
+      "description": "团队规模扩大，业务范围拓展到移动端和后端开发",
+      "icon": "TrendingUp",
+      "color": "purple",
+      "achievements": [
+        "团队规模达到15人",
+        "建立完善的DevOps流程",
+        "完成企业级项目10+"
+      ]
+    },
+    {
+      "year": "2023",
+      "title": "技术领先",
+      "description": "在AI集成和云原生技术领域取得领先地位",
+      "icon": "Brain",
+      "color": "cyan",
+      "achievements": [
+        "发布AI驱动的解决方案",
+        "获得行业技术奖项",
+        "服务客户数量达到50+"
+      ]
+    },
+    {
+      "year": "2024",
+      "title": "生态建设",
+      "description": "构建完整的技术生态系统，提供一站式技术解决方案",
+      "icon": "Globe",
+      "color": "orange",
+      "achievements": [
+        "建立技术社区",
+        "发布技术博客和教程",
+        "团队规模达到30人"
+      ]
+    },
+    {
+      "year": "2025",
+      "title": "未来展望",
+      "description": "致力于成为行业领先的技术服务提供商，推动技术创新",
+      "icon": "Sparkles",
+      "color": "gold",
+      "achievements": [
+        "拓展国际市场",
+        "建立技术研发中心",
+        "目标服务客户100+"
+      ],
+      "isFuture": true
+    }
+  ]
+}

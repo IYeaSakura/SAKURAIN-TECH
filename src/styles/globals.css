@@ -5,92 +5,96 @@
 @tailwind utilities;
 
 :root {
-  /* Light Theme - Minecraft Inspired */
-  --bg-primary: #E8E0D0;
-  --bg-secondary: #D8D0C0;
-  --bg-tertiary: #C8C0B0;
-  --bg-card: #F0E8D8;
+  /* Light Theme - VSCode High Contrast Inspired */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F3F3F3;
+  --bg-tertiary: #E8E8E8;
+  --bg-card: #FAFAFA;
 
-  /* Minecraft Earthy Colors */
-  --accent-primary: #5D8C38;
-  --accent-secondary: #8B6914;
-  --accent-tertiary: #4a7c59;
-  --accent-glow: rgba(93, 140, 56, 0.4);
+  /* VSCode High Contrast Colors */
+  --accent-primary: #0E639C;
+  --accent-secondary: #6A9955;
+  --accent-tertiary: #569CD6;
+  --accent-glow: rgba(14, 99, 156, 0.3);
 
-  --text-primary: #3D3D3D;
-  --text-secondary: #5A5A5A;
-  --text-muted: #7A7A7A;
+  --text-primary: #000000;
+  --text-secondary: #3C3C3C;
+  --text-muted: #6E6E6E;
 
-  --border-subtle: rgba(93, 140, 56, 0.2);
-  --border-glow: rgba(93, 140, 56, 0.3);
+  --border-subtle: #3C3C3C;
+  --border-glow: #0E639C;
 
-  --success: #5D8C38;
-  --warning: #D4A017;
-  --error: #C44536;
+  --success: #4EC9B0;
+  --warning: #CE9178;
+  --error: #F44747;
 
   /* Shadcn/UI Light Theme */
-  --background: 40 20% 90%;
-  --foreground: 0 0% 24%;
-  --card: 40 25% 92%;
-  --card-foreground: 0 0% 24%;
-  --popover: 40 25% 92%;
-  --popover-foreground: 0 0% 24%;
-  --primary: 88 41% 38%;
+  --background: 0 0% 100%;
+  --foreground: 0 0% 0%;
+  --card: 0 0% 98%;
+  --card-foreground: 0 0% 0%;
+  --popover: 0 0% 98%;
+  --popover-foreground: 0 0% 0%;
+  --primary: 211 100% 35%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 40 15% 85%;
-  --secondary-foreground: 0 0% 24%;
-  --muted: 40 15% 85%;
-  --muted-foreground: 0 0% 45%;
-  --accent: 88 41% 38%;
+  --secondary: 0 0% 95%;
+  --secondary-foreground: 0 0% 0%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 43%;
+  --accent: 211 100% 35%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 8 55% 49%;
+  --destructive: 0 84% 47%;
   --destructive-foreground: 0 0% 100%;
-  --border: 40 15% 80%;
-  --input: 40 15% 80%;
-  --ring: 88 41% 38%;
+  --border: 0 0% 24%;
+  --input: 0 0% 24%;
+  --ring: 211 100% 35%;
   --radius: 0;
 }
 
 [data-theme="dark"] {
-  /* Dark Theme - Minecraft Cave/Night */
-  --bg-primary: #1a1814;
-  --bg-secondary: #242220;
-  --bg-tertiary: #2d2b28;
-  --bg-card: #1f1d1a;
+  /* Dark Theme - VSCode High Contrast Dark */
+  --bg-primary: #000000;
+  --bg-secondary: #0C0C0C;
+  --bg-tertiary: #1A1A1A;
+  --bg-card: #0D0D0D;
 
-  /* Glowing Minecraft Colors */
-  --accent-primary: #7cb342;
-  --accent-secondary: #a68b3c;
-  --accent-tertiary: #5d8c38;
-  --accent-glow: rgba(124, 179, 66, 0.5);
+  /* VSCode High Contrast Dark Colors */
+  --accent-primary: #569CD6;
+  --accent-secondary: #4EC9B0;
+  --accent-tertiary: #CE9178;
+  --accent-glow: rgba(86, 156, 214, 0.4);
 
-  --text-primary: #E8E0D0;
-  --text-secondary: #A09080;
-  --text-muted: #706050;
+  --text-primary: #FFFFFF;
+  --text-secondary: #D4D4D4;
+  --text-muted: #808080;
 
-  --border-subtle: rgba(124, 179, 66, 0.15);
-  --border-glow: rgba(124, 179, 66, 0.3);
+  --border-subtle: #3C3C3C;
+  --border-glow: #569CD6;
+
+  --success: #4EC9B0;
+  --warning: #B5CEA8;
+  --error: #F44747;
 
   /* Shadcn/UI Dark Theme */
-  --background: 30 10% 8%;
-  --foreground: 40 20% 90%;
-  --card: 30 10% 10%;
-  --card-foreground: 40 20% 90%;
-  --popover: 30 10% 10%;
-  --popover-foreground: 40 20% 90%;
-  --primary: 88 41% 48%;
-  --primary-foreground: 0 0% 10%;
-  --secondary: 30 10% 15%;
-  --secondary-foreground: 40 20% 90%;
-  --muted: 30 10% 15%;
-  --muted-foreground: 40 10% 50%;
-  --accent: 88 41% 48%;
-  --accent-foreground: 0 0% 10%;
-  --destructive: 8 55% 49%;
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 5%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 5%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 10%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 10%;
+  --muted-foreground: 0 0% 50%;
+  --accent: 217 91% 60%;
+  --accent-foreground: 0 0% 0%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 30 10% 18%;
-  --input: 30 10% 18%;
-  --ring: 88 41% 48%;
+  --border: 0 0% 24%;
+  --input: 0 0% 24%;
+  --ring: 217 91% 60%;
 }
 
 * {
