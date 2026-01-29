@@ -27,7 +27,7 @@
     "stats": [
       { "value": "50+", "label": "交付项目" },
       { "value": "100%", "label": "源码交付" },
-      { "value": "60天内", "label": "交付期限" },
+      { "value": "60天", "label": "最迟期限" },
       { "value": "24h", "label": "响应时间" }
     ]
   },
