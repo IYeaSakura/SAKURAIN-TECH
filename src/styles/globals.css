@@ -217,6 +217,16 @@ body {
   font-family: 'Consolas', 'Courier New', monospace;
 }
 
+/* Scrollbar Hide */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Theme Transition Styles */
 .theme-transitioning,
 .theme-transitioning *,

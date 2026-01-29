@@ -56,46 +56,15 @@ const TimelineCard = memo(({
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-      whileInView={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ margin: '-100px' }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
-      className={`relative ${index % 2 === 0 ? 'md:mr-auto md:pr-12' : 'md:ml-auto md:pl-12'} w-full md:w-1/2`}
+      className="relative flex-shrink-0 w-80 md:w-96"
     >
-      {/* Timeline Node */}
       <motion.div
-        className={`absolute top-8 ${
-          index % 2 === 0 ? 'md:right-0 md:translate-x-1/2' : 'md:left-0 md:-translate-x-1/2'
-        } left-1/2 -translate-x-1/2 w-16 h-16 rounded-full flex items-center justify-center z-10`}
-        style={{
-          background: event.isFuture ? 'transparent' : color,
-          border: `3px solid ${color}`,
-          boxShadow: `0 0 20px ${color}40`,
-        }}
-        whileHover={{ scale: 1.1 }}
-      >
-        {event.isFuture ? (
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center"
-            style={{ background: color }}
-          >
-            <Icon className="w-6 h-6 text-white" />
-          </div>
-        ) : (
-          <Icon className="w-8 h-8 text-white" />
-        )}
-      </motion.div>
-
-      {/* Card */}
-      <motion.div
-        className={`relative p-6 mc-panel cursor-pointer ${
-          index % 2 === 0 ? 'md:mr-8' : 'md:ml-8'
-        }`}
-        style={{
-          marginTop: index % 2 === 0 ? '0' : '32px',
-          marginBottom: index % 2 === 0 ? '32px' : '0',
-        }}
-        whileHover={{ y: -4 }}
+        className="relative p-6 mc-panel cursor-pointer h-full"
+        whileHover={{ y: -8, scale: 1.02 }}
         onClick={onToggle}
       >
         {/* Year Badge */}
@@ -109,32 +78,32 @@ const TimelineCard = memo(({
           {event.year}
         </div>
 
+        {/* Icon */}
+        <div
+          className="absolute -top-3 right-6 w-10 h-10 rounded-full flex items-center justify-center"
+          style={{
+            background: color,
+            boxShadow: `0 0 15px ${color}40`,
+          }}
+        >
+          <Icon className="w-5 h-5 text-white" />
+        </div>
+
         {/* Content */}
         <div className="pt-4">
-          <div className="flex items-start justify-between mb-3">
-            <h3
-              className="text-2xl font-bold"
-              style={{
-                color: 'var(--text-primary)',
-                fontWeight: 800,
-                letterSpacing: '0.02em',
-              }}
-            >
-              {event.title}
-            </h3>
-            <motion.div
-              animate={{ rotate: isExpanded ? 90 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronRight
-                className="w-5 h-5 flex-shrink-0"
-                style={{ color }}
-              />
-            </motion.div>
-          </div>
+          <h3
+            className="text-xl font-bold mb-3"
+            style={{
+              color: 'var(--text-primary)',
+              fontWeight: 800,
+              letterSpacing: '0.02em',
+            }}
+          >
+            {event.title}
+          </h3>
 
           <p
-            className="mb-4"
+            className="mb-4 text-sm"
             style={{
               color: 'var(--text-secondary)',
               fontWeight: 500,
@@ -179,6 +148,21 @@ const TimelineCard = memo(({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Expand Indicator */}
+          <motion.div
+            className="mt-4 flex items-center justify-center gap-2 text-sm"
+            style={{ color: 'var(--text-muted)' }}
+            animate={{ opacity: isExpanded ? 0 : 1 }}
+          >
+            <span>点击查看详情</span>
+            <motion.div
+              animate={{ x: [0, 5, 0] }}
+              transition={{ duration: 1, repeat: Infinity }}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </motion.div>
+          </motion.div>
         </div>
       </motion.div>
     </motion.div>
@@ -215,25 +199,16 @@ export const Timeline = memo(function Timeline({ data }: { data: TimelineData })
 
         {/* Timeline Container */}
         <div className="relative">
-          {/* Center Line */}
-          <div
-            className="absolute left-1/2 top-0 bottom-0 w-1 -translate-x-1/2 hidden md:block"
-            style={{
-              background: 'linear-gradient(to bottom, var(--accent-primary), var(--accent-secondary))',
-              boxShadow: '0 0 10px var(--accent-glow)',
-            }}
-          />
-
-          {/* Events */}
-          <div className="space-y-0">
+          <div className="flex overflow-x-auto gap-6 pb-8 snap-x snap-mandatory scrollbar-hide">
             {data.events.map((event, index) => (
-              <TimelineCard
-                key={event.year}
-                event={event}
-                index={index}
-                isExpanded={expandedIndex === index}
-                onToggle={() => handleToggle(index)}
-              />
+              <div key={event.year} className="snap-start">
+                <TimelineCard
+                  event={event}
+                  index={index}
+                  isExpanded={expandedIndex === index}
+                  onToggle={() => handleToggle(index)}
+                />
+              </div>
             ))}
           </div>
         </div>

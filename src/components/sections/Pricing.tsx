@@ -182,11 +182,13 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ margin: '-50px' }}
-          className="mt-12 text-center mc-panel p-4 inline-block"
+          className="mt-12 text-center"
         >
-          <p style={{ color: 'var(--text-muted)' }}>
-            {data.disclaimer}
-          </p>
+          <div className="mc-panel p-4 inline-block mx-auto">
+            <p style={{ color: 'var(--text-muted)' }}>
+              {data.disclaimer}
+            </p>
+          </div>
         </motion.div>
       </div>
     </section>

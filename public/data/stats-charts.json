@@ -58,15 +58,31 @@
       ]
     },
     {
-      "title": "月度项目交付",
-      "type": "line",
+      "title": "技术能力雷达图",
+      "type": "radar",
       "data": [
-        { "label": "1月", "value": 12 },
-        { "label": "2月", "value": 15 },
-        { "label": "3月", "value": 18 },
-        { "label": "4月", "value": 22 },
-        { "label": "5月", "value": 25 },
-        { "label": "6月", "value": 28 }
+        { "label": "前端开发", "value": 95, "color": "#0E639C" },
+        { "label": "后端开发", "value": 88, "color": "#6A9955" },
+        { "label": "数据库", "value": 82, "color": "#9B59B6" },
+        { "label": "DevOps", "value": 85, "color": "#4EC9B0" },
+        { "label": "UI/UX设计", "value": 78, "color": "#CE9178" },
+        { "label": "性能优化", "value": 90, "color": "#D4A017" }
+      ]
+    },
+    {
+      "title": "技术深度分析",
+      "type": "heatmap",
+      "data": [
+        { "label": "React", "value": 95, "color": "#0E639C" },
+        { "label": "Vue", "value": 88, "color": "#6A9955" },
+        { "label": "Node.js", "value": 90, "color": "#9B59B6" },
+        { "label": "Python", "value": 85, "color": "#4EC9B0" },
+        { "label": "TypeScript", "value": 92, "color": "#CE9178" },
+        { "label": "Docker", "value": 80, "color": "#D4A017" },
+        { "label": "K8s", "value": 75, "color": "#0E639C" },
+        { "label": "Redis", "value": 88, "color": "#6A9955" },
+        { "label": "MongoDB", "value": 82, "color": "#9B59B6" },
+        { "label": "GraphQL", "value": 78, "color": "#4EC9B0" }
       ]
     }
   ]

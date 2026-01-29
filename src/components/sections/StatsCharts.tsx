@@ -20,7 +20,7 @@ interface ChartData {
 
 interface Chart {
   title: string;
-  type: 'pie' | 'bar' | 'line';
+  type: 'pie' | 'bar' | 'radar' | 'heatmap';
   data: ChartData[];
 }
 
@@ -276,13 +276,13 @@ const BarChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
             </div>
             <div className="h-8 rounded overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
               <motion.div
-              initial={{ width: 0 }}
-              whileInView={{ width: `${(item.value / maxValue) * 100}%` }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, delay: idx * 0.1 + 0.2 }}
-              className="h-full rounded"
-              style={{ background: item.color }}
-            />
+                initial={{ width: 0 }}
+                whileInView={{ width: `${(item.value / maxValue) * 100}%` }}
+                viewport={{ once: true }}
+                transition={{ duration: 1, delay: idx * 0.1 + 0.2 }}
+                className="h-full rounded"
+                style={{ background: item.color }}
+              />
             </div>
           </motion.div>
         ))}
@@ -293,12 +293,29 @@ const BarChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
 
 BarChart.displayName = 'BarChart';
 
-const LineChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
-  const maxValue = Math.max(...chart.data.map((item) => item.value));
+const RadarChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
+  const centerX = 50;
+  const centerY = 50;
+  const radius = 35;
+  const maxValue = 100;
+
+  const getPoint = (value: number, angle: number) => {
+    const r = (value / maxValue) * radius;
+    const x = centerX + r * Math.cos(angle);
+    const y = centerY + r * Math.sin(angle);
+    return { x, y };
+  };
+
+  const angleStep = (Math.PI * 2) / chart.data.length;
+
   const points = chart.data.map((item, idx) => {
-    const x = (idx / (chart.data.length - 1)) * 100;
-    const y = 100 - (item.value / maxValue) * 80;
-    return `${x},${y}`;
+    const angle = idx * angleStep - Math.PI / 2;
+    return getPoint(item.value, angle);
+  });
+
+  const polygonPoints = points.map((p, idx) => {
+    if (idx === 0) return `M ${p.x},${p.y}`;
+    return `L ${p.x},${p.y}`;
   }).join(' ');
 
   return (
@@ -320,74 +337,195 @@ const LineChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
         {chart.title}
       </h3>
 
-      <div className="relative h-48">
-        {/* Grid Lines */}
-        <div className="absolute inset-0 flex flex-col justify-between">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="w-full border-t"
-              style={{ borderColor: 'var(--border-subtle)' }}
+      <div className="relative w-full h-80">
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          {/* Background Circles */}
+          {[0.2, 0.4, 0.6, 0.8, 1].map((scale, idx) => (
+            <circle
+              key={idx}
+              cx={centerX}
+              cy={centerY}
+              r={radius * scale}
+              fill="none"
+              stroke="var(--border-subtle)"
+              strokeWidth="0.5"
             />
           ))}
-        </div>
 
-        {/* Line Chart */}
-        <svg viewBox="0 0 100 100" className="absolute inset-0 w-full h-full preserve-3d">
-          <motion.path
-            d={`M ${points}`}
-            fill="none"
-            stroke="var(--accent-primary)"
-            strokeWidth="2"
-            initial={{ pathLength: 0 }}
-            whileInView={{ pathLength: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.5, ease: 'easeInOut' }}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ filter: 'drop-shadow(0 0 8px var(--accent-glow))' }}
-          />
-
-          {/* Data Points */}
-          {chart.data.map((item, idx) => {
-            const x = (idx / (chart.data.length - 1)) * 100;
-            const y = 100 - (item.value / maxValue) * 80;
+          {/* Axis Lines */}
+          {chart.data.map((_, idx) => {
+            const angle = idx * angleStep - Math.PI / 2;
+            const endPoint = getPoint(100, angle);
             return (
-              <motion.circle
+              <line
                 key={idx}
-                cx={x}
-                cy={y}
-                r="3"
-                fill="var(--accent-primary)"
-                initial={{ scale: 0 }}
-                whileInView={{ scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: idx * 0.1 + 0.5 }}
-                className="cursor-pointer hover:scale-150"
-                whileHover={{ r: 5 }}
+                x1={centerX}
+                y1={centerY}
+                x2={endPoint.x}
+                y2={endPoint.y}
+                stroke="var(--border-subtle)"
+                strokeWidth="0.5"
               />
             );
           })}
-        </svg>
 
-        {/* X-axis Labels */}
-        <div className="absolute bottom-0 left-0 right-0 flex justify-between px-2">
-          {chart.data.map((item, idx) => (
-            <span
+          {/* Data Polygon */}
+          <motion.polygon
+            points={polygonPoints}
+            fill="var(--accent-primary)"
+            fillOpacity={0.3}
+            stroke="var(--accent-primary)"
+            strokeWidth="2"
+            initial={{ pathLength: 0, opacity: 0 }}
+            whileInView={{ pathLength: 1, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.3 }}
+            style={{ filter: 'drop-shadow(0 0 10px var(--accent-glow))' }}
+          />
+
+          {/* Data Points */}
+          {points.map((point, idx) => (
+            <motion.circle
               key={idx}
-              className="text-xs"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              {item.label}
-            </span>
+              cx={point.x}
+              cy={point.y}
+              r="3"
+              fill={chart.data[idx].color}
+              initial={{ scale: 0 }}
+              whileInView={{ scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.3, delay: idx * 0.1 + 0.5 }}
+              className="cursor-pointer"
+              whileHover={{ r: 5 }}
+            />
           ))}
+
+          {/* Labels */}
+          {chart.data.map((item, idx) => {
+            const angle = idx * angleStep - Math.PI / 2;
+            const labelPoint = getPoint(100, angle);
+            return (
+              <text
+                key={idx}
+                x={labelPoint.x}
+                y={labelPoint.y}
+                textAnchor={labelPoint.x < centerX ? 'end' : 'start'}
+                dominantBaseline="middle"
+                className="text-xs"
+                style={{
+                  fill: 'var(--text-muted)',
+                  fontSize: '3',
+                  fontWeight: '600',
+                }}
+              >
+                {item.label}
+              </text>
+            );
+          })}
+        </svg>
+      </div>
+    </motion.div>
+  );
+});
+
+RadarChart.displayName = 'RadarChart';
+
+const HeatMapChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ margin: '-100px' }}
+      transition={{ duration: 0.6, delay: index * 0.2 }}
+      className="p-6 mc-panel"
+    >
+      <h3
+        className="text-xl font-bold mb-6"
+        style={{
+          color: 'var(--text-primary)',
+          fontWeight: 800,
+          letterSpacing: '0.02em',
+        }}
+      >
+        {chart.title}
+      </h3>
+
+      <div className="grid grid-cols-2 gap-3">
+        {chart.data.map((item, idx) => (
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: idx * 0.08 }}
+            className="relative p-4 rounded-lg overflow-hidden cursor-pointer"
+            style={{
+              background: `linear-gradient(135deg, ${item.color}20, ${item.color}40)`,
+              border: `2px solid ${item.color}60`,
+            }}
+            whileHover={{
+              scale: 1.05,
+              boxShadow: `0 0 20px ${item.color}60`,
+            }}
+          >
+            <div className="relative z-10">
+              <div
+                className="text-sm font-bold mb-2"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                {item.label}
+              </div>
+              <div className="flex items-center gap-2">
+                <motion.div
+                  className="h-2 rounded-full"
+                  style={{ background: item.color }}
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${item.value}%` }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1, delay: idx * 0.08 + 0.2 }}
+                />
+                <motion.span
+                  className="text-xs font-bold"
+                  style={{ color: item.color }}
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: idx * 0.08 + 0.6 }}
+                >
+                  {item.value}%
+                </motion.span>
+              </div>
+            </div>
+
+            <motion.div
+              className="absolute inset-0 opacity-0"
+              style={{ background: item.color }}
+              whileHover={{ opacity: 0.1 }}
+              transition={{ duration: 0.3 }}
+            />
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="mt-6 flex items-center justify-center gap-4">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded" style={{ background: 'var(--accent-primary)' }} />
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>精通</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded" style={{ background: 'var(--accent-secondary)' }} />
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>熟练</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded" style={{ background: 'var(--accent-tertiary)' }} />
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>掌握</span>
         </div>
       </div>
     </motion.div>
   );
 });
 
-LineChart.displayName = 'LineChart';
+HeatMapChart.displayName = 'HeatMapChart';
 
 export const StatsCharts = memo(function StatsCharts({ data }: { data: StatsChartsData }) {
   return (
@@ -421,7 +559,8 @@ export const StatsCharts = memo(function StatsCharts({ data }: { data: StatsChar
           {data.charts.map((chart, index) => {
             if (chart.type === 'pie') return <PieChart key={chart.title} chart={chart} index={index} />;
             if (chart.type === 'bar') return <BarChart key={chart.title} chart={chart} index={index} />;
-            if (chart.type === 'line') return <LineChart key={chart.title} chart={chart} index={index} />;
+            if (chart.type === 'radar') return <RadarChart key={chart.title} chart={chart} index={index} />;
+            if (chart.type === 'heatmap') return <HeatMapChart key={chart.title} chart={chart} index={index} />;
             return null;
           })}
         </div>
