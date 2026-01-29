@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "SAKURAIN | 博弈算法与数据工程专家",
-    "description": "8名高校计算机专业本科生组成的精英技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。",
+    "description": "SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。",
     "keywords": ["博弈算法", "量化交易", "数据分析", "C++", "Python", "高性能计算"]
   },
   "navigation": {
@@ -16,10 +16,10 @@
     "cta": { "label": "开始项目", "href": "#contact" }
   },
   "hero": {
-    "badge": "高校精英技术团队",
+    "badge": "SAKURAIN 技术团队",
     "title": "将代码转化为竞争优势",
     "subtitle": "专注博弈论算法工程化与大规模数据分析",
-    "description": "8名高校计算机专业本科生组成的精英技术团队，60天交付保证 · 100%源码交付 · 自主运维方案",
+    "description": "60天交付保证 · 100%源码交付 · 自主运维方案",
     "cta": [
       { "text": "探索服务", "link": "#services", "primary": true },
       { "text": "联系我们", "link": "#contact", "primary": false }
@@ -27,7 +27,7 @@
     "stats": [
       { "value": "50+", "label": "交付项目" },
       { "value": "100%", "label": "源码交付" },
-      { "value": "60天", "label": "平均交付" },
+      { "value": "60天内", "label": "交付期限" },
       { "value": "24h", "label": "响应时间" }
     ]
   },
@@ -40,7 +40,7 @@
       "icon": "Brain",
       "color": "purple",
       "size": "large",
-      "price": "¥3,000 - ¥20,000",
+      "price": "¥5,000 - ¥20,000",
       "delivery": "15-45天",
       "features": [
         "极小化极大算法 + 信息集处理",
@@ -138,7 +138,7 @@
       "icon": "GraduationCap",
       "color": "orange",
       "size": "medium",
-      "price": "¥800 - ¥2,500",
+      "price": "¥1200 - ¥2,500",
       "delivery": "7-15天",
       "features": [
         "完整源码交付",
@@ -158,7 +158,7 @@
       "icon": "Gamepad2",
       "color": "cyan",
       "size": "small",
-      "price": "¥600 - ¥4,000",
+      "price": "¥600 - ¥5,000",
       "delivery": "3-25天",
       "features": [
         "Spigot/Paper API",
@@ -177,7 +177,7 @@
       "icon": "Shield",
       "color": "red",
       "size": "small",
-      "price": "¥3,000 - ¥10,000",
+      "price": "¥2,000 - ¥10,000",
       "delivery": "10-18天",
       "features": [
         "规则匹配引擎（AC自动机）",
@@ -265,20 +265,20 @@
         "name": "博弈系统",
         "plans": [
           {
-            "name": "基础版",
+            "name": "传统算法",
             "price": "¥3,000",
             "features": ["标准minimax算法", "Python核心", "基础可视化", "单策略回测"],
             "params": { "延迟": "<50ms", "并发": "1k QPS", "回测": "10x加速" }
           },
           {
-            "name": "专业版",
+            "name": "机器学习",
             "price": "¥8,000",
             "popular": true,
             "features": ["纳什均衡计算", "多因子策略", "实时数据流", "机器学习模块", "完整回测系统"],
             "params": { "延迟": "<20ms", "并发": "10k QPS", "回测": "50x加速" }
           },
           {
-            "name": "旗舰版",
+            "name": "自研模型",
             "price": "联系议价",
             "features": ["自定义博弈模型", "高频交易执行", "分布式架构", "实时风控", "专属技术支持"],
             "params": { "延迟": "<5ms", "并发": "100k QPS", "回测": "100x加速" }
@@ -303,7 +303,7 @@
             "params": { "日处理": "100万条", "查询": "<1秒", "并发": "1000" }
           },
           {
-            "name": "旗舰版",
+            "name": "集群版",
             "price": "联系议价",
             "features": ["分布式爬虫", "K8s集群", "多区域部署", "专属运维", "7x24支持"],
             "params": { "日处理": "1000万条", "查询": "<500ms", "并发": "10000" }
@@ -398,17 +398,17 @@
   "contact": {
     "title": "准备好开始您的项目了吗？",
     "subtitle": "告诉我们您的需求，我们将在24小时内回复",
-    "email": "contact@sakurain.tech",
+    "email": "Yae_SakuRain@outlook.com",
     "responseTime": "24小时内回复",
     "social": [
-      { "platform": "GitHub", "url": "https://github.com/sakurain", "icon": "Github" },
-      { "platform": "Telegram", "url": "https://t.me/sakuraintech", "icon": "Send" }
+      { "platform": "GitHub", "url": "#", "icon": "Github" },
+      { "platform": "Telegram", "url": "#", "icon": "Send" }
     ],
-    "note": "请直接发送邮件至 contact@sakurain.tech"
+    "note": "请直接发送邮件至 Yae_SakuRain@outlook.com"
   },
   "footer": {
-    "copyright": "© 2024 SAKURAIN技术工作室",
-    "slogan": "博弈算法与数据工程专家",
+    "copyright": "© 2026 SAKURAIN 技术工作室",
+    "slogan": "更专业，更可靠，更高效",
     "links": [
       { "label": "服务", "href": "#services" },
       { "label": "技术栈", "href": "#tech-stack" },

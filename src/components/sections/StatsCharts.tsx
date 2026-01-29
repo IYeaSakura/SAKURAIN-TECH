@@ -152,9 +152,9 @@ const PieChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
         {chart.title}
       </h3>
 
-      <div className="flex items-center gap-8">
+      <div className="flex flex-col md:flex-row items-center gap-8">
         {/* Pie Chart */}
-        <div className="relative w-48 h-48">
+        <div className="relative w-56 h-56 md:w-64 md:h-64">
           <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
             {chart.data.map((item, idx) => {
               const angle = (item.value / total) * 360;
@@ -250,7 +250,7 @@ const BarChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
         {chart.title}
       </h3>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {chart.data.map((item, idx) => (
           <motion.div
             key={idx}
@@ -274,13 +274,13 @@ const BarChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
                 {item.value}%
               </span>
             </div>
-            <div className="h-8 rounded overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
+            <div className="h-10 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
               <motion.div
                 initial={{ width: 0 }}
                 whileInView={{ width: `${(item.value / maxValue) * 100}%` }}
                 viewport={{ once: true }}
                 transition={{ duration: 1, delay: idx * 0.1 + 0.2 }}
-                className="h-full rounded"
+                className="h-full rounded-full"
                 style={{ background: item.color }}
               />
             </div>
@@ -337,7 +337,7 @@ const RadarChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
         {chart.title}
       </h3>
 
-      <div className="relative w-full h-80">
+      <div className="relative w-full h-96">
         <svg viewBox="0 0 100 100" className="w-full h-full">
           {/* Background Circles */}
           {[0.2, 0.4, 0.6, 0.8, 1].map((scale, idx) => (
@@ -450,7 +450,7 @@ const HeatMapChart = memo(({ chart, index }: { chart: Chart; index: number }) =>
         {chart.title}
       </h3>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         {chart.data.map((item, idx) => (
           <motion.div
             key={idx}
@@ -458,7 +458,7 @@ const HeatMapChart = memo(({ chart, index }: { chart: Chart; index: number }) =>
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: idx * 0.08 }}
-            className="relative p-4 rounded-lg overflow-hidden cursor-pointer"
+            className="relative p-5 rounded-lg overflow-hidden cursor-pointer"
             style={{
               background: `linear-gradient(135deg, ${item.color}20, ${item.color}40)`,
               border: `2px solid ${item.color}60`,
@@ -470,14 +470,14 @@ const HeatMapChart = memo(({ chart, index }: { chart: Chart; index: number }) =>
           >
             <div className="relative z-10">
               <div
-                className="text-sm font-bold mb-2"
+                className="text-sm font-bold mb-3"
                 style={{ color: 'var(--text-primary)' }}
               >
                 {item.label}
               </div>
               <div className="flex items-center gap-2">
                 <motion.div
-                  className="h-2 rounded-full"
+                  className="h-3 rounded-full"
                   style={{ background: item.color }}
                   initial={{ width: 0 }}
                   whileInView={{ width: `${item.value}%` }}
@@ -494,7 +494,7 @@ const HeatMapChart = memo(({ chart, index }: { chart: Chart; index: number }) =>
                 >
                   {item.value}%
                 </motion.span>
-              </div>
+                </div>
             </div>
 
             <motion.div

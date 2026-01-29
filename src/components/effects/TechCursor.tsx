@@ -1,17 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 export function TechCursor() {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  
+  const cursorRef = useRef({ x: 0, y: 0 });
+  const ringRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setPosition({ x: e.clientX, y: e.clientY });
       setIsVisible(true);
+      cursorRef.current = { x: e.clientX, y: e.clientY };
     };
 
     const handleMouseEnter = () => setIsHovering(true);
@@ -39,103 +41,79 @@ export function TechCursor() {
     };
   }, []);
 
+  useEffect(() => {
+    const animateRing = () => {
+      const lerp = (start: number, end: number, factor: number) => {
+        return start + (end - start) * factor;
+      };
+      
+      ringRef.current.x = lerp(ringRef.current.x, cursorRef.current.x, 0.1);
+      ringRef.current.y = lerp(ringRef.current.y, cursorRef.current.y, 0.1);
+      
+      requestAnimationFrame(animateRing);
+    };
+
+    animateRing();
+  }, []);
+
   if (!isVisible) return null;
 
   return (
     <>
       <motion.div
-        className="fixed pointer-events-none z-50 hidden md:block"
+        className="fixed pointer-events-none z-[99999] hidden md:block"
         style={{
-          left: position.x,
-          top: position.y,
+          left: cursorRef.current.x,
+          top: cursorRef.current.y,
         }}
         animate={{
           scale: isHovering ? 1.5 : 1,
         }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
       >
         <svg
-          width="40"
-          height="40"
-          viewBox="0 0 40 40"
+          width="16"
+          height="16"
+          viewBox="0 0 16 16"
           style={{ transform: 'translate(-50%, -50%)' }}
         >
-          <defs>
-            <linearGradient id="cursorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="var(--accent-primary)" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="var(--accent-secondary)" stopOpacity="0.8" />
-            </linearGradient>
-            <filter id="cursorGlow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
           <circle
-            cx="20"
-            cy="20"
-            r="8"
-            fill="none"
-            stroke="url(#cursorGradient)"
-            strokeWidth="2"
-            filter="url(#cursorGlow)"
-          />
-
-          <motion.circle
-            cx="20"
-            cy="20"
-            r="4"
+            cx="8"
+            cy="8"
+            r="3"
             fill="var(--accent-primary)"
-            animate={{
-              r: isHovering ? 6 : 4,
-              opacity: isHovering ? 1 : 0.8,
-            }}
-            transition={{ duration: 0.2 }}
           />
-
-          <motion.g
-            animate={{ rotate: 360 }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-            style={{ transformOrigin: '20px 20px' }}
-          >
-            {[0, 90, 180, 270].map((angle, idx) => (
-              <line
-                key={idx}
-                x1="20"
-                y1="20"
-                x2={20 + 12 * Math.cos((angle * Math.PI) / 180)}
-                y2={20 + 12 * Math.sin((angle * Math.PI) / 180)}
-                stroke="var(--accent-primary)"
-                strokeWidth="1"
-                opacity="0.5"
-              />
-            ))}
-          </motion.g>
         </svg>
       </motion.div>
 
       <motion.div
-        className="fixed pointer-events-none z-50 hidden md:block"
+        className="fixed pointer-events-none z-[99998] hidden md:block"
         style={{
-          left: position.x,
-          top: position.y,
+          left: ringRef.current.x,
+          top: ringRef.current.y,
         }}
         animate={{
-          scale: isHovering ? 2 : 1,
-          opacity: isHovering ? 0.3 : 0.1,
+          scale: isHovering ? 1.5 : 1,
+          opacity: isHovering ? 0.8 : 0.5,
         }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
       >
-        <div
-          className="w-8 h-8 rounded-full"
-          style={{
-            background: 'radial-gradient(circle, var(--accent-primary), transparent)',
-            transform: 'translate(-50%, -50%)',
-          }}
-        />
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 32 32"
+          style={{ transform: 'translate(-50%, -50%)' }}
+        >
+          <circle
+            cx="16"
+            cy="16"
+            r="12"
+            fill="none"
+            stroke="var(--accent-secondary)"
+            strokeWidth="2"
+            opacity="0.6"
+          />
+        </svg>
       </motion.div>
     </>
   );

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ScrollProgress, TechCursor } from '@/components/effects';
+import { ScrollProgress } from '@/components/effects';
 import {
   Navigation,
   Hero,
@@ -98,7 +98,6 @@ function App() {
       style={{ background: 'var(--bg-primary)' }}
     >
       <ScrollProgress />
-      <TechCursor />
       <Navigation
         data={siteData.navigation}
         theme={theme}

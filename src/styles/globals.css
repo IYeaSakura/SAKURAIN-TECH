@@ -227,6 +227,8 @@ body {
   display: none;
 }
 
+/* Default Cursor Restored - Mouse effects removed */
+
 /* Theme Transition Styles */
 .theme-transitioning,
 .theme-transitioning *,

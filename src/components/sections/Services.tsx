@@ -69,7 +69,7 @@ const ServiceCard = memo(({
         {/* Popular badge */}
         {service.popular && (
           <div className="absolute -top-3 right-4 mc-badge mc-badge-gold z-10">
-            热门
+            专长
           </div>
         )}
 
