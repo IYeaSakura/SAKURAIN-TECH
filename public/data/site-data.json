@@ -21,7 +21,7 @@
     "subtitle": "专注博弈论算法工程化与大规模数据分析",
     "description": "60天交付保证 · 100%源码交付 · 自主运维方案",
     "cta": [
-      { "text": "探索服务", "link": "#services", "primary": true },
+      { "text": "业务", "link": "#services", "primary": true },
       { "text": "联系我们", "link": "#contact", "primary": false }
     ],
     "stats": [
