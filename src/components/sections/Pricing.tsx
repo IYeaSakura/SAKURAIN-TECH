@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useRef } from 'react';
+import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Check, Sparkles, Zap, Brain, BarChart3, Globe, Shield, GraduationCap, Gamepad2, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
@@ -32,7 +32,6 @@ const getColors = (categoryName: string) => {
   return colorMap[categoryName] || { primary: '#0E639C', secondary: '#094575', glow: 'rgba(14, 99, 156, 0.4)' };
 };
 
-// Flatten all plans with their indices
 const getAllPlans = (categories: SiteData['pricing']['categories']) => {
   const allPlans: Array<{
     plan: SiteData['pricing']['categories'][0]['plans'][0];
@@ -58,18 +57,17 @@ const getAllPlans = (categories: SiteData['pricing']['categories']) => {
   return allPlans;
 };
 
-// Get the recommended (popular) plan index in a category
-const getRecommendedPlanIndex = (categories: SiteData['pricing']['categories'], categoryIndex: number) => {
+// Get first plan index of a category
+const getCategoryFirstIndex = (categories: SiteData['pricing']['categories'], categoryIndex: number) => {
   let index = 0;
   for (let i = 0; i < categoryIndex; i++) {
     index += categories[i].plans.length;
   }
-  const category = categories[categoryIndex];
-  const popularIndex = category.plans.findIndex(p => p.popular);
-  return index + (popularIndex >= 0 ? popularIndex : 0);
+  return index;
 };
 
-// Plan Card Component
+
+
 const PlanCard = memo(({
   plan,
   categoryName,
@@ -87,12 +85,11 @@ const PlanCard = memo(({
   
   return (
     <motion.div
-      className="w-72 flex-shrink-0 cursor-pointer"
+      className="w-64 flex-shrink-0 cursor-pointer"
       onClick={onClick}
       whileHover={{ y: -8 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Card Container with Glow */}
       <motion.div
         className="relative rounded-2xl overflow-hidden h-full"
         style={{
@@ -100,22 +97,19 @@ const PlanCard = memo(({
           transformOrigin: 'center center',
         }}
         animate={{
-          scale: isActive ? 1.03 : 1,
+          scale: isActive ? 1.05 : 1,
           boxShadow: isActive
-            ? `0 0 50px ${categoryColor.glow}, 0 25px 60px -10px rgba(0,0,0,0.5)`
+            ? `0 0 40px ${categoryColor.glow}, 0 20px 50px -10px rgba(0,0,0,0.5)`
             : '0 4px 20px -5px rgba(0,0,0,0.2)',
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 25 }}
       >
-        {/* Animated Border */}
         <motion.div
           className="absolute inset-0 rounded-2xl pointer-events-none z-10"
           style={{
             border: `2px solid ${isActive ? categoryColor.primary : 'var(--border-subtle)'}`,
           }}
         />
-
-        {/* Glow Effect */}
         <motion.div
           className="absolute -inset-1 rounded-2xl pointer-events-none blur-xl"
           style={{
@@ -123,10 +117,8 @@ const PlanCard = memo(({
           }}
           animate={{ opacity: isActive ? 0.8 : 0 }}
         />
-
-        {/* Category Header Bar */}
         <div
-          className="relative px-5 py-3 flex items-center justify-between"
+          className="relative px-4 py-2.5 flex items-center justify-between"
           style={{
             background: `linear-gradient(135deg, ${categoryColor.primary}20, ${categoryColor.primary}05)`,
             borderBottom: `1px solid ${categoryColor.primary}30`,
@@ -134,84 +126,75 @@ const PlanCard = memo(({
         >
           <div className="flex items-center gap-2">
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              className="w-7 h-7 rounded-lg flex items-center justify-center"
               style={{
                 background: `${categoryColor.primary}20`,
                 border: `1px solid ${categoryColor.primary}40`,
               }}
             >
-              <Icon className="w-4 h-4" style={{ color: categoryColor.primary }} />
+              <Icon className="w-3.5 h-3.5" style={{ color: categoryColor.primary }} />
             </div>
-            <span className="font-primary text-sm font-bold tracking-wide" style={{ color: categoryColor.primary }}>
+            <span className="font-primary text-xs font-bold tracking-wide" style={{ color: categoryColor.primary }}>
               {categoryName}
             </span>
           </div>
-          
-          {/* Popular Badge */}
           {plan.popular && (
             <motion.div
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: 'spring', stiffness: 300, delay: 0.2 }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full"
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full"
               style={{
                 background: 'var(--mc-gold)',
-                boxShadow: '0 2px 10px rgba(255, 215, 0, 0.4)',
+                boxShadow: '0 2px 8px rgba(255, 215, 0, 0.4)',
               }}
             >
-              <Sparkles className="w-3 h-3 text-black" />
-              <span className="font-primary text-[10px] font-black text-black uppercase">推荐</span>
+              <Sparkles className="w-2.5 h-2.5 text-black" />
+              <span className="font-primary text-[9px] font-black text-black uppercase">推荐</span>
             </motion.div>
           )}
         </div>
-
-        {/* Card Content */}
-        <div className="relative p-5">
-          {/* Plan Name & Price */}
-          <div className="text-center mb-5">
+        <div className="relative p-4">
+          <div className="text-center mb-4">
             <motion.h3 
-              className="font-primary text-xl font-black mb-2"
+              className="font-primary text-lg font-black mb-1"
               style={{ color: 'var(--text-primary)' }}
             >
               {plan.name}
             </motion.h3>
             <div className="flex items-baseline justify-center gap-1">
-              <span className="font-primary text-3xl font-black" style={{ color: categoryColor.primary }}>
+              <span className="font-primary text-2xl font-black" style={{ color: categoryColor.primary }}>
                 {plan.price}
               </span>
               {plan.price !== '面议' && plan.price !== '定制' && (
-                <span className="font-primary text-sm" style={{ color: 'var(--text-muted)' }}>起</span>
+                <span className="font-primary text-xs" style={{ color: 'var(--text-muted)' }}>起</span>
               )}
             </div>
           </div>
-
-          {/* Features List */}
-          <div className="space-y-3 mb-5">
+          <div className="space-y-2 mb-4">
             {plan.features.slice(0, 4).map((feature, idx) => (
               <motion.div
                 key={idx}
-                className="flex items-start gap-3"
+                className="flex items-start gap-2"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05 }}
               >
                 <div
-                  className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                  className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
                   style={{ background: `${categoryColor.primary}15` }}
                 >
-                  <Check className="w-3 h-3" style={{ color: categoryColor.primary }} />
+                  <Check className="w-2.5 h-2.5" style={{ color: categoryColor.primary }} />
                 </div>
-                <span className="font-primary text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                <span className="font-primary text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                   {feature}
                 </span>
               </motion.div>
             ))}
           </div>
-
-          {/* Params Grid */}
           {plan.params && (
             <div 
-              className="grid grid-cols-3 gap-2 p-3 rounded-xl mb-5"
+              className="grid grid-cols-3 gap-1.5 p-2.5 rounded-xl mb-4"
               style={{
                 background: 'var(--bg-secondary)',
                 border: '1px solid var(--border-subtle)',
@@ -219,25 +202,23 @@ const PlanCard = memo(({
             >
               {Object.entries(plan.params).slice(0, 3).map(([key, value]) => (
                 <div key={key} className="text-center">
-                  <div className="font-mono text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>
+                  <div className="font-mono text-[9px] uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-muted)' }}>
                     {key}
                   </div>
-                  <div className="font-primary text-sm font-bold" style={{ color: categoryColor.primary }}>
+                  <div className="font-primary text-xs font-bold" style={{ color: categoryColor.primary }}>
                     {value}
                   </div>
                 </div>
               ))}
             </div>
           )}
-
-          {/* CTA Button */}
           <motion.button
-            className="w-full py-3 font-primary font-bold uppercase tracking-wider text-sm relative overflow-hidden group"
+            className="w-full py-2.5 font-primary font-bold uppercase tracking-wider text-xs relative overflow-hidden group"
             style={{
               background: isActive ? categoryColor.primary : 'transparent',
               color: isActive ? '#fff' : categoryColor.primary,
               border: `2px solid ${categoryColor.primary}`,
-              borderRadius: '12px',
+              borderRadius: '10px',
             }}
             whileHover={{ 
               scale: 1.02,
@@ -251,15 +232,14 @@ const PlanCard = memo(({
               if (element) element.scrollIntoView({ behavior: 'smooth' });
             }}
           >
-            {/* Shine Effect */}
             <motion.div
               className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"
               style={{
                 background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
               }}
             />
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              <Zap className="w-4 h-4" />
+            <span className="relative z-10 flex items-center justify-center gap-1.5">
+              <Zap className="w-3.5 h-3.5" />
               选择方案
             </span>
           </motion.button>
@@ -269,7 +249,6 @@ const PlanCard = memo(({
   );
 });
 
-// Category Tab Button
 const CategoryTab = memo(({
   category,
   isActive,
@@ -289,7 +268,7 @@ const CategoryTab = memo(({
   return (
     <motion.button
       onClick={onClick}
-      className="relative px-5 py-3 rounded-xl font-primary font-bold text-sm"
+      className="relative px-4 py-2.5 rounded-xl font-primary font-bold text-sm"
       style={{
         color: isActive ? '#fff' : 'var(--text-secondary)',
         background: isActive ? colors.primary : 'var(--bg-card)',
@@ -315,8 +294,6 @@ const CategoryTab = memo(({
           {planCount}
         </span>
       </span>
-      
-      {/* Active Glow */}
       {isActive && (
         <motion.div
           className="absolute inset-0 -z-10 rounded-xl"
@@ -329,8 +306,7 @@ const CategoryTab = memo(({
   );
 });
 
-// Centered Carousel - Shows 5 cards with center focus
-const CenteredCarousel = memo(({
+const CardCarousel = memo(({
   allPlans,
   activeIndex,
   onSelect,
@@ -341,30 +317,30 @@ const CenteredCarousel = memo(({
   onSelect: (index: number) => void;
   isInView: boolean;
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const totalPlans = allPlans.length;
+  const cardWidth = 264; // w-64 + some margin
+  const gap = 20;
+  const itemWidth = cardWidth + gap;
   
-  // Calculate visible cards (center + 2 on each side = 5 total)
-  const visibleCount = 5;
-  const halfVisible = Math.floor(visibleCount / 2); // 2
-
-  // Get indices for visible cards with wrapping
-  const getVisibleIndices = () => {
-    const indices = [];
-    for (let i = -halfVisible; i <= halfVisible; i++) {
-      let idx = activeIndex + i;
-      // Wrap around
-      idx = ((idx % totalPlans) + totalPlans) % totalPlans;
-      indices.push(idx);
-    }
-    return indices;
-  };
-
-  // Navigation
+  // For infinite loop, we need to triple the cards
+  const extendedPlans = [...allPlans, ...allPlans, ...allPlans];
+  
+  // Calculate the "virtual" active index in the middle set
+  const virtualActiveIndex = activeIndex + totalPlans;
+  
+  // Navigation with proper loop handling
   const navigate = useCallback((direction: 'prev' | 'next') => {
-    const newIndex = direction === 'prev' 
-      ? (activeIndex - 1 + totalPlans) % totalPlans
-      : (activeIndex + 1) % totalPlans;
+    let newIndex = direction === 'prev' 
+      ? activeIndex - 1
+      : activeIndex + 1;
+    
+    // Handle wrapping
+    if (newIndex < 0) {
+      newIndex = totalPlans - 1;
+    } else if (newIndex >= totalPlans) {
+      newIndex = 0;
+    }
+    
     onSelect(newIndex);
   }, [activeIndex, totalPlans, onSelect]);
 
@@ -378,50 +354,28 @@ const CenteredCarousel = memo(({
     }
   }, [navigate]);
 
-  const visibleIndices = getVisibleIndices();
+  // Calculate translateX to center the active card
+  // Container should show: half-card | full | ACTIVE | full | half-card
+  const containerWidth = itemWidth * 4; // 4 cards width
+  const translateX = (containerWidth / 2) - (virtualActiveIndex * itemWidth) - (cardWidth / 2);
 
-  // Card entrance animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const getCardVariants = (positionIndex: number) => ({
-    hidden: {
-      opacity: 0,
-      y: 60,
-      scale: 0.8,
-      rotateY: positionIndex < halfVisible ? -15 : positionIndex > halfVisible ? 15 : 0,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: positionIndex === halfVisible ? 1.03 : positionIndex === 0 || positionIndex === visibleCount - 1 ? 0.85 : 0.92,
-      rotateY: 0,
-      transition: {
-        type: 'spring' as const,
-        stiffness: 200,
-        damping: 20,
-        delay: Math.abs(positionIndex - halfVisible) * 0.05,
-      },
-    },
-  });
+  // Track if initial animation has played
+  const hasAnimated = useRef(false);
+  useEffect(() => {
+    if (isInView && !hasAnimated.current) {
+      hasAnimated.current = true;
+    }
+  }, [isInView]);
 
   return (
     <div className="relative">
       {/* Navigation Arrows */}
       <motion.button
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md"
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md"
         style={{
           background: 'var(--bg-card)',
           border: '2px solid var(--accent-primary)',
-          boxShadow: '0 4px 30px var(--accent-glow)',
+          boxShadow: '0 4px 20px var(--accent-glow)',
         }}
         onClick={() => navigate('prev')}
         whileHover={{ scale: 1.1, x: -2 }}
@@ -430,15 +384,15 @@ const CenteredCarousel = memo(({
         animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
         transition={{ delay: 0.5 }}
       >
-        <ChevronLeft className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
+        <ChevronLeft className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
       </motion.button>
 
       <motion.button
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md"
+        className="absolute right-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md"
         style={{
           background: 'var(--bg-card)',
           border: '2px solid var(--accent-primary)',
-          boxShadow: '0 4px 30px var(--accent-glow)',
+          boxShadow: '0 4px 20px var(--accent-glow)',
         }}
         onClick={() => navigate('next')}
         whileHover={{ scale: 1.1, x: 2 }}
@@ -447,55 +401,106 @@ const CenteredCarousel = memo(({
         animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
         transition={{ delay: 0.5 }}
       >
-        <ChevronRight className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
+        <ChevronRight className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
       </motion.button>
 
-      {/* Cards Container with Mask */}
-      <motion.div 
-        ref={containerRef}
-        className="relative overflow-hidden py-4"
+      {/* Cards Container */}
+      <div 
+        className="relative overflow-hidden py-10 mx-auto"
         style={{
-          maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
-          perspective: '1000px',
+          maxWidth: `${itemWidth * 4 + gap}px`,
         }}
         onWheel={handleWheel}
-        variants={containerVariants}
-        initial="hidden"
-        animate={isInView ? "visible" : "hidden"}
       >
-        {/* Cards Track */}
-        <div className="flex justify-center items-center gap-6">
-          {visibleIndices.map((planIndex, positionIndex) => {
-            const { plan, categoryName } = allPlans[planIndex];
-            const colors = getColors(categoryName);
-            const isCenter = positionIndex === halfVisible;
-            const isEdge = positionIndex === 0 || positionIndex === visibleCount - 1;
-            
-            return (
-              <motion.div
-                key={`${planIndex}-${positionIndex}`}
-                variants={getCardVariants(positionIndex)}
-                style={{
-                  opacity: isEdge ? 0.6 : 1,
-                }}
-              >
-                <PlanCard
-                  plan={plan}
-                  categoryName={categoryName}
-                  categoryColor={colors}
-                  isActive={isCenter}
-                  onClick={() => onSelect(planIndex)}
-                />
-              </motion.div>
-            );
-          })}
+        {/* Viewport with edge fade masking */}
+        <div 
+          className="relative overflow-hidden"
+          style={{
+            maskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
+          }}
+        >
+          {/* Cards Track */}
+          <motion.div 
+            className="flex"
+            style={{ 
+              gap: `${gap}px`,
+              width: `${extendedPlans.length * itemWidth}px`,
+            }}
+            animate={{
+              x: translateX,
+            }}
+            transition={{
+              type: 'spring',
+              stiffness: 300,
+              damping: 30,
+              mass: 0.8,
+            }}
+          >
+            {extendedPlans.map((planData, index) => {
+              const { plan, categoryName } = planData;
+              const colors = getColors(categoryName);
+              
+              // Calculate if this is the center (active) card
+              const isCenter = index === virtualActiveIndex;
+              // Calculate distance from center for scale/opacity
+              const distanceFromCenter = Math.abs(index - virtualActiveIndex);
+              
+              // Calculate scale and opacity based on distance
+              let scale = 0.85;
+              let opacity = 0.4;
+              if (isCenter) {
+                scale = 1.05;
+                opacity = 1;
+              } else if (distanceFromCenter === 1) {
+                scale = 0.95;
+                opacity = 0.9;
+              } else if (distanceFromCenter === 2) {
+                scale = 0.88;
+                opacity = 0.7;
+              }
+              
+              // Calculate the "real" index (0 to totalPlans-1)
+              const realIndex = index % totalPlans;
+              
+              return (
+                <motion.div
+                  key={`${plan.name}-${index}`}
+                  className="flex-shrink-0"
+                  style={{ width: cardWidth }}
+                  initial={!hasAnimated.current ? {
+                    opacity: 0,
+                    y: 40,
+                    scale: 0.8,
+                  } : false}
+                  animate={{
+                    opacity,
+                    scale,
+                    y: 0,
+                  }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 300,
+                    damping: 25,
+                  }}
+                >
+                  <PlanCard
+                    plan={plan}
+                    categoryName={categoryName}
+                    categoryColor={colors}
+                    isActive={isCenter}
+                    onClick={() => onSelect(realIndex)}
+                  />
+                </motion.div>
+              );
+            })}
+          </motion.div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Progress Dots */}
       <motion.div 
-        className="flex justify-center gap-2 mt-6"
+        className="flex justify-center gap-2 mt-4"
         initial={{ opacity: 0, y: 20 }}
         animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
         transition={{ delay: 0.6 }}
@@ -530,21 +535,24 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
   const totalPlans = allPlans.length;
   const totalCategories = data.categories.length;
 
+  // Handle category click - navigate to first plan of that category
   const handleCategoryClick = useCallback((categoryIndex: number) => {
     setActiveCategoryIndex(categoryIndex);
-    const recommendedIndex = getRecommendedPlanIndex(data.categories, categoryIndex);
-    setActivePlanIndex(recommendedIndex);
+    // Get the first plan index of this category
+    const targetIndex = getCategoryFirstIndex(data.categories, categoryIndex);
+    setActivePlanIndex(targetIndex);
   }, [data.categories]);
 
+  // Handle plan selection
   const handlePlanSelect = useCallback((globalIndex: number) => {
     setActivePlanIndex(globalIndex);
+    // Update active category based on selected plan
     const plan = allPlans[globalIndex];
     if (plan) {
       setActiveCategoryIndex(plan.categoryIndex);
     }
   }, [allPlans]);
 
-  // Container animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -571,7 +579,6 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
 
   return (
     <section id="pricing" ref={sectionRef} className="relative py-24 lg:py-32 overflow-hidden">
-      {/* Background Decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div 
           className="absolute top-1/4 left-0 w-96 h-96 rounded-full opacity-30"
@@ -599,7 +606,6 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
           <SectionTitle title={data.title} subtitle={data.subtitle} />
         </motion.div>
 
-        {/* Stats Banner */}
         <motion.div
           variants={itemVariants}
           className="flex justify-center gap-8 mb-8"
@@ -626,7 +632,6 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
           </motion.div>
         </motion.div>
 
-        {/* Category Tabs */}
         <motion.div 
           variants={itemVariants}
           className="flex flex-wrap justify-center gap-3 mb-10"
@@ -643,15 +648,13 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
           ))}
         </motion.div>
 
-        {/* Centered Carousel */}
-        <CenteredCarousel
+        <CardCarousel
           allPlans={allPlans}
           activeIndex={activePlanIndex}
           onSelect={handlePlanSelect}
           isInView={isInView}
         />
 
-        {/* Disclaimer */}
         <motion.p
           variants={itemVariants}
           className="mt-8 text-center font-primary text-sm"
@@ -660,7 +663,6 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
           * {data.disclaimer}
         </motion.p>
 
-        {/* Hint */}
         <motion.p
           variants={itemVariants}
           className="mt-2 text-center font-primary text-xs"

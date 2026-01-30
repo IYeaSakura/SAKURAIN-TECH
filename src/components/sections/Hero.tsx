@@ -220,7 +220,7 @@ const GradientText = memo(({ children }: { children: React.ReactNode }) => (
 
 GradientText.displayName = 'GradientText';
 
-// Magnetic button component
+// Magnetic button component with modern styling
 const MagneticButton = memo(({
   children,
   onClick,
@@ -232,6 +232,7 @@ const MagneticButton = memo(({
 }) => {
   const ref = useRef<HTMLButtonElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (!ref.current) return;
@@ -243,8 +244,10 @@ const MagneticButton = memo(({
     setPosition({ x, y });
   };
 
+  const handleMouseEnter = () => setIsHovered(true);
   const handleMouseLeave = () => {
     setPosition({ x: 0, y: 0 });
+    setIsHovered(false);
   };
 
   return (
@@ -252,44 +255,60 @@ const MagneticButton = memo(({
       ref={ref}
       onClick={onClick}
       onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="group relative flex items-center gap-2 overflow-hidden font-primary"
+      className="group relative flex items-center gap-3 overflow-hidden font-primary rounded-xl"
       style={{
-        padding: '16px 32px',
+        padding: '18px 36px',
         fontSize: 'var(--text-base)',
         fontWeight: 700,
-        letterSpacing: '0.1em',
-        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
         color: primary ? 'white' : 'var(--text-primary)',
-        background: primary ? 'var(--accent-primary)' : 'transparent',
-        border: '3px solid',
-        borderColor: primary
-          ? 'color-mix(in srgb, var(--accent-primary) 120%, white) color-mix(in srgb, var(--accent-primary) 80%, black) color-mix(in srgb, var(--accent-primary) 80%, black) color-mix(in srgb, var(--accent-primary) 120%, white)'
-          : 'var(--border-subtle)',
+        background: primary 
+          ? 'linear-gradient(135deg, var(--accent-primary), color-mix(in srgb, var(--accent-primary) 80%, var(--accent-secondary)))'
+          : 'transparent',
+        border: `2px solid ${primary ? 'transparent' : 'var(--border-subtle)'}`,
         boxShadow: primary
-          ? 'inset -3px -3px 0 color-mix(in srgb, var(--accent-primary) 60%, black), inset 3px 3px 0 color-mix(in srgb, var(--accent-primary) 120%, white), 0 0 20px var(--accent-glow)'
-          : 'none',
-        textShadow: primary ? '1px 1px 0 rgba(0, 0, 0, 0.3)' : 'none',
+          ? '0 4px 20px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.2)'
+          : '0 4px 20px rgba(0,0,0,0.2)',
       }}
-      animate={{ x: position.x, y: position.y }}
+      animate={{ 
+        x: position.x, 
+        y: position.y,
+      }}
       whileHover={{
         scale: 1.05,
         boxShadow: primary
-          ? 'inset -3px -3px 0 color-mix(in srgb, var(--accent-primary) 60%, black), inset 3px 3px 0 color-mix(in srgb, var(--accent-primary) 120%, white), 0 0 40px var(--accent-glow)'
-          : '0 0 20px var(--accent-glow)',
+          ? '0 8px 30px var(--accent-glow), 0 0 60px color-mix(in srgb, var(--accent-primary) 40%, transparent), inset 0 1px 0 rgba(255,255,255,0.3)'
+          : '0 8px 30px var(--accent-glow), inset 0 0 0 2px var(--accent-primary)',
       }}
-      whileTap={{ scale: 0.95 }}
-      transition={{ type: 'spring', stiffness: 350, damping: 15 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
     >
+      {/* Animated background for primary button */}
       {primary && (
         <motion.div
-          className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"
+          className="absolute inset-0"
           style={{
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+            x: '-100%',
+          }}
+          animate={{ x: isHovered ? '100%' : '-100%' }}
+          transition={{ duration: 0.6, ease: 'easeInOut' }}
+        />
+      )}
+      
+      {/* Glow effect for secondary button */}
+      {!primary && (
+        <motion.div
+          className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{
+            background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)',
           }}
         />
       )}
-      <span className="relative z-10">{children}</span>
+      
+      <span className="relative z-10 flex items-center gap-2">{children}</span>
     </motion.button>
   );
 });
