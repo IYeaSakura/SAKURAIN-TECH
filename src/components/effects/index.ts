@@ -7,3 +7,4 @@ export { TextReveal, CharacterReveal, LineReveal } from './TextReveal';
 export { MagneticButton } from './MagneticButton';
 export { SpotlightCard } from './SpotlightCard';
 export { ParallaxWrapper } from './ParallaxWrapper';
+export { Terminal } from './Terminal';

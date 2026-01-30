@@ -124,7 +124,7 @@ const CategoryCard = memo(({
   const [isHovered, setIsHovered] = useState(false);
   
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  const isInView = useInView(ref, { margin: '-50px' });
 
   return (
     <motion.div

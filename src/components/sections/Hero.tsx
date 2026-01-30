@@ -1,7 +1,7 @@
 import { memo, useState, useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
 import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown } from 'lucide-react';
-import { ParticleBackground } from '@/components/effects';
+import { HeroParticles } from '@/components/effects/HeroParticles';
 import type { SiteData } from '@/types';
 
 interface HeroProps {
@@ -13,13 +13,13 @@ const CodeDecoration = memo(({ className, delay = 0 }: { className?: string; del
   <motion.div
     className={`absolute font-mono text-xs sm:text-sm opacity-20 pointer-events-none ${className}`}
     initial={{ opacity: 0, y: 20, x: -20 }}
-    animate={{ 
+    animate={{
       opacity: [0.1, 0.2, 0.1],
       y: [0, -10, 0],
       x: [0, 5, 0],
     }}
-    transition={{ 
-      duration: 0.8, 
+    transition={{
+      duration: 0.8,
       delay,
       opacity: { duration: 4, repeat: Infinity },
       y: { duration: 6, repeat: Infinity },
@@ -36,14 +36,14 @@ const CodeDecoration = memo(({ className, delay = 0 }: { className?: string; del
 CodeDecoration.displayName = 'CodeDecoration';
 
 // Animated floating icon with rotation
-const FloatingIcon = memo(({ 
-  icon: Icon, 
-  className, 
+const FloatingIcon = memo(({
+  icon: Icon,
+  className,
   delay = 0,
   color = 'var(--accent-primary)'
-}: { 
-  icon: typeof Terminal; 
-  className?: string; 
+}: {
+  icon: typeof Terminal;
+  className?: string;
   delay?: number;
   color?: string;
 }) => (
@@ -51,22 +51,22 @@ const FloatingIcon = memo(({
     className={`absolute ${className}`}
     initial={{ opacity: 0, scale: 0, rotate: -180 }}
     animate={{ opacity: 0.3, scale: 1, rotate: 0 }}
-    transition={{ 
-      duration: 0.8, 
+    transition={{
+      duration: 0.8,
       delay,
       type: 'spring',
       stiffness: 200,
     }}
   >
     <motion.div
-      animate={{ 
-        y: [0, -15, 0], 
+      animate={{
+        y: [0, -15, 0],
         rotate: [0, 10, -10, 0],
         scale: [1, 1.1, 1],
       }}
-      transition={{ 
-        duration: 5, 
-        repeat: Infinity, 
+      transition={{
+        duration: 5,
+        repeat: Infinity,
         ease: 'easeInOut',
       }}
     >
@@ -114,8 +114,8 @@ const StatCard = memo(({
       ref={ref}
       initial={{ opacity: 0, scale: 0.8, y: 30, rotateX: -30 }}
       animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
-      transition={{ 
-        duration: 0.6, 
+      transition={{
+        duration: 0.6,
         delay: 0.6 + index * 0.1,
         type: 'spring',
         stiffness: 200,
@@ -136,7 +136,7 @@ const StatCard = memo(({
           rotateY,
           background: 'var(--bg-card)',
           border: '3px solid',
-          borderColor: isHovered 
+          borderColor: isHovered
             ? 'var(--accent-primary)'
             : 'color-mix(in srgb, var(--bg-secondary) 150%, white) color-mix(in srgb, var(--bg-secondary) 60%, black) color-mix(in srgb, var(--bg-secondary) 60%, black) color-mix(in srgb, var(--bg-secondary) 150%, white)',
           boxShadow: isHovered
@@ -165,14 +165,14 @@ const StatCard = memo(({
           animate={{ opacity: isHovered ? 0.1 : 0 }}
           style={{ background: 'var(--accent-primary)' }}
         />
-        
-        <motion.div 
+
+        <motion.div
           className="relative z-10 font-primary"
-          style={{ 
+          style={{
             fontSize: 'clamp(2rem, 5vw, 2.75rem)',
             fontWeight: 800,
             color: 'var(--accent-primary)',
-            textShadow: isHovered 
+            textShadow: isHovered
               ? '3px 3px 0 color-mix(in srgb, var(--accent-primary) 40%, black), 0 0 30px var(--accent-glow)'
               : '3px 3px 0 color-mix(in srgb, var(--accent-primary) 40%, black)',
             lineHeight: 1,
@@ -184,9 +184,9 @@ const StatCard = memo(({
         >
           {stat.value}
         </motion.div>
-        <motion.div 
+        <motion.div
           className="relative z-10 font-primary"
-          style={{ 
+          style={{
             fontSize: 'var(--text-sm)',
             fontWeight: 700,
             color: 'var(--text-secondary)',
@@ -263,18 +263,18 @@ const MagneticButton = memo(({
         color: primary ? 'white' : 'var(--text-primary)',
         background: primary ? 'var(--accent-primary)' : 'transparent',
         border: '3px solid',
-        borderColor: primary 
+        borderColor: primary
           ? 'color-mix(in srgb, var(--accent-primary) 120%, white) color-mix(in srgb, var(--accent-primary) 80%, black) color-mix(in srgb, var(--accent-primary) 80%, black) color-mix(in srgb, var(--accent-primary) 120%, white)'
           : 'var(--border-subtle)',
-        boxShadow: primary 
+        boxShadow: primary
           ? 'inset -3px -3px 0 color-mix(in srgb, var(--accent-primary) 60%, black), inset 3px 3px 0 color-mix(in srgb, var(--accent-primary) 120%, white), 0 0 20px var(--accent-glow)'
           : 'none',
         textShadow: primary ? '1px 1px 0 rgba(0, 0, 0, 0.3)' : 'none',
       }}
       animate={{ x: position.x, y: position.y }}
-      whileHover={{ 
+      whileHover={{
         scale: 1.05,
-        boxShadow: primary 
+        boxShadow: primary
           ? 'inset -3px -3px 0 color-mix(in srgb, var(--accent-primary) 60%, black), inset 3px 3px 0 color-mix(in srgb, var(--accent-primary) 120%, white), 0 0 40px var(--accent-glow)'
           : '0 0 20px var(--accent-glow)',
       }}
@@ -298,10 +298,9 @@ MagneticButton.displayName = 'MagneticButton';
 
 export const Hero = memo(function Hero({ data }: HeroProps) {
   const { scrollY } = useScroll();
-  const backgroundY = useTransform(scrollY, [0, 500], [0, 150]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
   const scale = useTransform(scrollY, [0, 300], [1, 0.9]);
-  
+
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
@@ -314,16 +313,13 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Animated Background Layers */}
-      <motion.div 
-        className="absolute inset-0 -z-20"
-        style={{ y: backgroundY }}
-      >
-        <ParticleBackground />
-      </motion.div>
+      {/* Particle Background - Lowest Layer */}
+      <div className="absolute inset-0 -z-20">
+        <HeroParticles />
+      </div>
 
       {/* Grid Pattern Overlay */}
-      <motion.div 
+      <motion.div
         className="absolute inset-0 -z-10 pointer-events-none"
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.03 }}
@@ -348,35 +344,35 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
       {/* Floating Code Decorations */}
       <CodeDecoration className="top-20 left-4 sm:left-10 hidden sm:block" delay={0.8} />
       <CodeDecoration className="bottom-32 right-4 sm:right-10 hidden sm:block" delay={1} />
-      
+
       {/* Floating Icons */}
-      <FloatingIcon 
-        icon={Terminal} 
-        className="top-1/4 left-[5%] hidden lg:block" 
+      <FloatingIcon
+        icon={Terminal}
+        className="top-1/4 left-[5%] hidden lg:block"
         delay={0.5}
         color="var(--accent-primary)"
       />
-      <FloatingIcon 
-        icon={Cpu} 
-        className="top-1/3 right-[8%] hidden lg:block" 
+      <FloatingIcon
+        icon={Cpu}
+        className="top-1/3 right-[8%] hidden lg:block"
         delay={0.7}
         color="var(--accent-secondary)"
       />
-      <FloatingIcon 
-        icon={Code2} 
-        className="bottom-1/4 left-[10%] hidden lg:block" 
+      <FloatingIcon
+        icon={Code2}
+        className="bottom-1/4 left-[10%] hidden lg:block"
         delay={0.9}
         color="var(--accent-tertiary)"
       />
-      <FloatingIcon 
-        icon={Sparkles} 
-        className="bottom-1/3 right-[5%] hidden lg:block" 
+      <FloatingIcon
+        icon={Sparkles}
+        className="bottom-1/3 right-[5%] hidden lg:block"
         delay={1.1}
         color="var(--mc-gold)"
       />
 
       {/* Main Content */}
-      <motion.div 
+      <motion.div
         className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32"
         style={{ opacity, scale }}
       >
@@ -385,13 +381,13 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ 
-              duration: 0.6, 
+            transition={{
+              duration: 0.6,
               ease: [0.16, 1, 0.3, 1],
             }}
             className="inline-flex items-center gap-2 mb-6 sm:mb-8"
           >
-            <motion.div 
+            <motion.div
               className="flex items-center gap-2 px-4 py-2"
               style={{
                 background: 'var(--bg-card)',
@@ -402,15 +398,15 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
               whileHover={{ scale: 1.05, boxShadow: '0 0 25px var(--accent-glow)' }}
               transition={{ type: 'spring', stiffness: 400 }}
             >
-              <motion.div 
+              <motion.div
                 className="w-2 h-2 rounded-full"
                 style={{ background: 'var(--accent-primary)' }}
                 animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
-              <span 
+              <span
                 className="font-primary"
-                style={{ 
+                style={{
                   fontSize: 'var(--text-sm)',
                   fontWeight: 700,
                   color: 'var(--accent-primary)',
@@ -428,8 +424,8 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
             <motion.h1
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
-              transition={{ 
-                duration: 0.8, 
+              transition={{
+                duration: 0.8,
                 ease: [0.16, 1, 0.3, 1],
                 delay: 0.1,
               }}
@@ -452,13 +448,13 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ 
-              duration: 0.6, 
+            transition={{
+              duration: 0.6,
               ease: [0.16, 1, 0.3, 1],
               delay: 0.3,
             }}
             className="mb-4 font-primary"
-            style={{ 
+            style={{
               fontSize: 'clamp(1.125rem, 3vw, 1.5rem)',
               fontWeight: 600,
               color: 'var(--accent-secondary)',
@@ -472,13 +468,13 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ 
-              duration: 0.6, 
+            transition={{
+              duration: 0.6,
               ease: [0.16, 1, 0.3, 1],
               delay: 0.4,
             }}
             className="max-w-2xl mx-auto mb-8 sm:mb-12 font-primary"
-            style={{ 
+            style={{
               fontSize: 'var(--text-lg)',
               fontWeight: 400,
               color: 'var(--text-muted)',
@@ -492,15 +488,15 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ 
-              duration: 0.6, 
+            transition={{
+              duration: 0.6,
               ease: [0.16, 1, 0.3, 1],
               delay: 0.5,
             }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 sm:mb-20"
           >
             {primaryCta && (
-              <MagneticButton 
+              <MagneticButton
                 onClick={() => scrollToSection(primaryCta.link)}
                 primary
               >
@@ -514,7 +510,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
               </MagneticButton>
             )}
             {secondaryCta && (
-              <MagneticButton 
+              <MagneticButton
                 onClick={() => scrollToSection(secondaryCta.link)}
                 primary={false}
               >
@@ -545,7 +541,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
           className="flex flex-col items-center gap-2 cursor-pointer"
           onClick={() => scrollToSection('#services')}
         >
-          <span 
+          <span
             className="font-primary text-xs uppercase tracking-widest"
             style={{ color: 'var(--text-muted)' }}
           >

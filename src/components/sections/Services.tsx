@@ -53,7 +53,7 @@ const ServiceCard = memo(({
   const isLarge = service.size === 'large';
   
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  const isInView = useInView(ref, { margin: '-50px' });
   
   const [isHovered, setIsHovered] = useState(false);
   const mouseX = useMotionValue(0);
@@ -315,7 +315,7 @@ const ServiceCard = memo(({
 
 ServiceCard.displayName = 'ServiceCard';
 
-// Enhanced Service Modal
+// Enhanced Service Modal with full detail sections
 const ServiceModal = memo(({
   service,
   onClose,
@@ -325,6 +325,7 @@ const ServiceModal = memo(({
 }) => {
   const Icon = useMemo(() => getIcon(service.icon), [service.icon]);
   const color = useMemo(() => getColor(service.color), [service.color]);
+  const details = service.details;
 
   return (
     <motion.div
@@ -335,132 +336,207 @@ const ServiceModal = memo(({
       onClick={onClose}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.8, y: 50, rotateX: -15 }}
-        animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
-        exit={{ opacity: 0, scale: 0.8, y: 50, rotateX: 15 }}
+        initial={{ opacity: 0, scale: 0.9, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 30 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto mc-modal p-6"
+        className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto mc-modal p-6"
         onClick={(e) => e.stopPropagation()}
-        style={{ perspective: 1000 }}
       >
         {/* Close button */}
         <motion.button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-lg transition-colors"
-          style={{ color: 'var(--text-muted)' }}
+          className="absolute top-4 right-4 p-2 rounded-xl transition-colors z-10"
+          style={{ 
+            color: 'var(--text-muted)',
+            background: 'var(--bg-secondary)',
+          }}
           whileHover={{ 
             scale: 1.1, 
-            backgroundColor: 'var(--bg-secondary)',
-            color: 'var(--text-primary)',
+            backgroundColor: color,
+            color: '#fff',
           }}
           whileTap={{ scale: 0.9 }}
         >
-          <X className="w-6 h-6" />
+          <X className="w-5 h-5" />
         </motion.button>
 
         {/* Header */}
         <motion.div 
-          className="flex items-center gap-4 mb-6"
+          className="flex items-start gap-4 mb-6"
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
         >
           <motion.div
-            className="mc-icon-box"
+            className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
             style={{
-              borderColor: color,
-              boxShadow: `inset -3px -3px 0 ${color}40, inset 3px 3px 0 ${color}80`,
+              background: `${color}20`,
+              border: `2px solid ${color}`,
+              boxShadow: `0 0 20px ${color}40`,
             }}
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+            animate={{ rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 4, repeat: Infinity }}
           >
-            <Icon className="w-8 h-8" style={{ color }} />
+            <Icon className="w-7 h-7" style={{ color }} />
           </motion.div>
-          <div>
+          <div className="flex-1">
             <h3 
-              className="font-primary"
-              style={{ 
-                fontSize: 'var(--text-2xl)',
-                fontWeight: 800,
-                color: 'var(--text-primary)',
-                letterSpacing: '-0.01em',
-              }}
+              className="font-primary text-2xl font-black mb-1"
+              style={{ color: 'var(--text-primary)' }}
             >
               {service.title}
             </h3>
             <p 
-              className="font-primary"
-              style={{ 
-                fontSize: 'var(--text-sm)',
-                fontWeight: 500,
-                color: 'var(--text-secondary)',
-              }}
+              className="font-primary text-sm mb-2"
+              style={{ color: 'var(--text-secondary)' }}
             >
               {service.subtitle}
             </p>
+            <div className="flex flex-wrap gap-2">
+              {service.features.slice(0, 3).map((feature) => (
+                <span
+                  key={feature}
+                  className="px-2 py-0.5 rounded-md font-primary text-xs"
+                  style={{
+                    background: `${color}15`,
+                    color: color,
+                    border: `1px solid ${color}30`,
+                  }}
+                >
+                  {feature.split(' ')[0]}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="text-right hidden sm:block">
+            <div className="font-primary text-xs" style={{ color: 'var(--text-muted)' }}>价格</div>
+            <div className="font-primary text-xl font-black" style={{ color }}>
+              {service.price}
+            </div>
           </div>
         </motion.div>
 
-        {/* Content sections with stagger */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={{
-            visible: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
-          }}
-        >
+        {/* Main Content */}
+        <div className="space-y-6">
           {/* Description */}
-          <motion.p 
-            className="mb-6 font-primary"
-            style={{ 
-              fontSize: 'var(--text-base)',
-              fontWeight: 400,
-              color: 'var(--text-secondary)',
-              lineHeight: 1.7,
-            }}
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              visible: { opacity: 1, y: 0 },
-            }}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="p-4 rounded-xl"
+            style={{ background: 'var(--bg-secondary)' }}
           >
-            {service.description}
-          </motion.p>
+            <p className="font-primary text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              {service.description}
+            </p>
+          </motion.div>
+
+          {/* Detail Sections */}
+          {details?.sections.map((section, sectionIdx) => (
+            <motion.div
+              key={section.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + sectionIdx * 0.1 }}
+              className="rounded-xl overflow-hidden"
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-subtle)',
+              }}
+            >
+              {/* Section Header */}
+              <div 
+                className="px-4 py-3 flex items-center justify-between"
+                style={{
+                  background: `linear-gradient(135deg, ${color}15, transparent)`,
+                  borderBottom: `1px solid ${color}20`,
+                }}
+              >
+                <h4 className="font-primary text-sm font-bold" style={{ color }}>
+                  {section.title}
+                </h4>
+                {section.total && (
+                  <span className="font-primary text-sm font-black" style={{ color }}>
+                    {section.total}
+                  </span>
+                )}
+              </div>
+
+              {/* Items List */}
+              <div className="p-4">
+                <div className="space-y-3">
+                  {section.items.map((item, itemIdx) => (
+                    <motion.div
+                      key={item.name}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 + sectionIdx * 0.1 + itemIdx * 0.05 }}
+                      className="flex items-center justify-between gap-4 p-3 rounded-lg"
+                      style={{ background: 'var(--bg-secondary)' }}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-primary text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                          {item.name}
+                        </div>
+                        <div className="font-primary text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+                          {item.desc}
+                        </div>
+                      </div>
+                      <div className="font-primary text-sm font-bold flex-shrink-0" style={{ color }}>
+                        {item.price}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Performance Note */}
+                {section.performance && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="mt-4 p-3 rounded-lg flex items-start gap-2"
+                    style={{
+                      background: `${color}10`,
+                      border: `1px solid ${color}30`,
+                    }}
+                  >
+                    <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color }} />
+                    <span className="font-primary text-xs" style={{ color: 'var(--text-secondary)' }}>
+                      {section.performance}
+                    </span>
+                  </motion.div>
+                )}
+
+
+              </div>
+            </motion.div>
+          ))}
 
           {/* Tech Stack */}
-          <motion.div className="mb-6" variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: { opacity: 1, y: 0 },
-          }}>
-            <h4 className="mb-3 font-primary" style={{ 
-              fontSize: 'var(--text-sm)',
-              fontWeight: 700,
-              color: 'var(--text-primary)',
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-            }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <h4 className="font-primary text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
               技术栈
             </h4>
             <div className="flex flex-wrap gap-2">
               {service.tech.map((tech, idx) => (
                 <motion.span
                   key={tech}
-                  className="px-3 py-1 font-primary"
+                  className="px-3 py-1.5 rounded-lg font-primary text-sm font-medium"
                   style={{
-                    fontSize: 'var(--text-sm)',
-                    fontWeight: 600,
-                    background: 'var(--bg-secondary)',
-                    color: 'var(--text-primary)',
-                    border: '2px solid var(--border-subtle)',
-                    letterSpacing: '0.02em',
+                    background: `${color}15`,
+                    color: color,
+                    border: `1px solid ${color}30`,
                   }}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 + idx * 0.05 }}
-                  whileHover={{ 
-                    scale: 1.05, 
-                    borderColor: color,
-                    color: color,
-                  }}
+                  transition={{ delay: 0.45 + idx * 0.03 }}
+                  whileHover={{ scale: 1.05, background: `${color}25` }}
                 >
                   {tech}
                 </motion.span>
@@ -468,99 +544,39 @@ const ServiceModal = memo(({
             </div>
           </motion.div>
 
-          {/* Features */}
-          <motion.div className="mb-6" variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: { opacity: 1, y: 0 },
-          }}>
-            <h4 className="mb-3 font-primary" style={{ 
-              fontSize: 'var(--text-sm)',
-              fontWeight: 700,
-              color: 'var(--text-primary)',
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-            }}>
-              服务特性
-            </h4>
-            <ul className="space-y-2">
-              {service.features.map((feature, idx) => (
-                <motion.li
-                  key={feature}
-                  className="flex items-center gap-2 font-primary"
-                  style={{ 
-                    fontSize: 'var(--text-base)',
-                    fontWeight: 400,
-                    color: 'var(--text-secondary)',
-                  }}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 + idx * 0.05 }}
-                >
-                  <motion.span 
-                    style={{ color }}
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 0.5, delay: 0.5 + idx * 0.1 }}
-                  >
-                    ▸
-                  </motion.span>
-                  {feature}
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* CTA */}
-          <motion.div 
-            className="mt-8 pt-6"
-            style={{ borderTop: '2px solid var(--border-subtle)' }}
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              visible: { opacity: 1, y: 0 },
-            }}
+          {/* Delivery & Price */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="flex items-center justify-between p-4 rounded-xl"
+            style={{ background: 'var(--bg-secondary)' }}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
               <div>
-                <span 
-                  className="font-primary"
-                  style={{ 
-                    fontSize: 'var(--text-sm)',
-                    fontWeight: 500,
-                    color: 'var(--text-muted)',
-                  }}
-                >
-                  价格
-                </span>
-                <motion.div 
-                  className="font-primary"
-                  style={{ 
-                    fontSize: 'var(--text-2xl)',
-                    fontWeight: 800,
-                    color,
-                    letterSpacing: '-0.01em',
-                  }}
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  {service.price}
-                </motion.div>
+                <div className="font-primary text-xs" style={{ color: 'var(--text-muted)' }}>交付周期</div>
+                <div className="font-primary text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {service.delivery}
+                </div>
               </div>
-              <motion.a
-                href="#contact"
-                onClick={onClose}
-                className="mc-btn mc-btn-gold font-primary"
-                style={{
-                  fontSize: 'var(--text-base)',
-                  fontWeight: 700,
-                  letterSpacing: '0.05em',
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                立即咨询
-              </motion.a>
+
             </div>
+            <motion.a
+              href="#contact"
+              onClick={onClose}
+              className="px-6 py-2.5 rounded-xl font-primary font-bold text-sm"
+              style={{
+                background: color,
+                color: '#fff',
+                boxShadow: `0 4px 20px ${color}40`,
+              }}
+              whileHover={{ scale: 1.05, boxShadow: `0 6px 30px ${color}60` }}
+              whileTap={{ scale: 0.95 }}
+            >
+              立即咨询
+            </motion.a>
           </motion.div>
-        </motion.div>
+        </div>
       </motion.div>
     </motion.div>
   );

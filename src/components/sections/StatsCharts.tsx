@@ -52,7 +52,7 @@ const StatCard = memo(({ stat, index }: { stat: StatItem; index: number }) => {
   const Icon = iconMap[stat.color] || TrendingUp;
   const color = colorMap[stat.color] || colorMap.blue;
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isInView = useInView(ref, { margin: '-100px' });
   
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -175,7 +175,7 @@ StatCard.displayName = 'StatCard';
 
 const PieChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isInView = useInView(ref, { margin: '-100px' });
   const total = chart.data.reduce((sum, item) => sum + item.value, 0);
   let currentAngle = 0;
 
@@ -297,7 +297,7 @@ PieChart.displayName = 'PieChart';
 
 const BarChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isInView = useInView(ref, { margin: '-100px' });
   const maxValue = Math.max(...chart.data.map((item) => item.value));
 
   return (

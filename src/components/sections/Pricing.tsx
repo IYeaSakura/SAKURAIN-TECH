@@ -1,6 +1,6 @@
-import { memo, useState, useRef } from 'react';
-import { motion, useInView, AnimatePresence } from 'framer-motion';
-import { Check, Sparkles, Zap } from 'lucide-react';
+import { memo, useState, useCallback, useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { Check, Sparkles, Zap, Brain, BarChart3, Globe, Shield, GraduationCap, Gamepad2, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
 import type { SiteData } from '@/types';
 
@@ -8,362 +8,667 @@ interface PricingProps {
   data: SiteData['pricing'];
 }
 
+const categoryIcons: Record<string, typeof Brain> = {
+  '博弈系统': Brain,
+  '数据分析': BarChart3,
+  '网站开发': Globe,
+  '毕业设计': GraduationCap,
+  'Minecraft插件': Gamepad2,
+  'WAF安全': Shield,
+};
+
+const getCategoryIcon = (categoryName: string) => categoryIcons[categoryName] || Zap;
+
+const colorMap: Record<string, { primary: string; secondary: string; glow: string }> = {
+  '博弈系统': { primary: '#9B59B6', secondary: '#8E44AD', glow: 'rgba(155, 89, 182, 0.4)' },
+  '数据分析': { primary: '#3498DB', secondary: '#2980B9', glow: 'rgba(52, 152, 219, 0.4)' },
+  '网站开发': { primary: '#27AE60', secondary: '#229954', glow: 'rgba(39, 174, 96, 0.4)' },
+  '毕业设计': { primary: '#E67E22', secondary: '#D35400', glow: 'rgba(230, 126, 34, 0.4)' },
+  'Minecraft插件': { primary: '#1ABC9C', secondary: '#16A085', glow: 'rgba(26, 188, 156, 0.4)' },
+  'WAF安全': { primary: '#E74C3C', secondary: '#C0392B', glow: 'rgba(231, 76, 60, 0.4)' },
+};
+
+const getColors = (categoryName: string) => {
+  return colorMap[categoryName] || { primary: '#0E639C', secondary: '#094575', glow: 'rgba(14, 99, 156, 0.4)' };
+};
+
+// Flatten all plans with their indices
+const getAllPlans = (categories: SiteData['pricing']['categories']) => {
+  const allPlans: Array<{
+    plan: SiteData['pricing']['categories'][0]['plans'][0];
+    categoryName: string;
+    categoryId: string;
+    categoryIndex: number;
+    globalIndex: number;
+  }> = [];
+  
+  let globalIndex = 0;
+  categories.forEach((category, categoryIndex) => {
+    category.plans.forEach((plan) => {
+      allPlans.push({
+        plan,
+        categoryName: category.name,
+        categoryId: category.id,
+        categoryIndex,
+        globalIndex: globalIndex++,
+      });
+    });
+  });
+  
+  return allPlans;
+};
+
+// Get the recommended (popular) plan index in a category
+const getRecommendedPlanIndex = (categories: SiteData['pricing']['categories'], categoryIndex: number) => {
+  let index = 0;
+  for (let i = 0; i < categoryIndex; i++) {
+    index += categories[i].plans.length;
+  }
+  const category = categories[categoryIndex];
+  const popularIndex = category.plans.findIndex(p => p.popular);
+  return index + (popularIndex >= 0 ? popularIndex : 0);
+};
+
+// Plan Card Component
 const PlanCard = memo(({
   plan,
+  categoryName,
   categoryColor,
-  index,
+  isActive,
+  onClick,
 }: {
   plan: SiteData['pricing']['categories'][0]['plans'][0];
-  categoryColor: string;
-  index: number;
+  categoryName: string;
+  categoryColor: { primary: string; secondary: string; glow: string };
+  isActive: boolean;
+  onClick: () => void;
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
-
+  const Icon = getCategoryIcon(categoryName);
+  
   return (
     <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 50, scale: 0.9, rotateX: -15 }}
-      animate={isInView ? { opacity: 1, y: 0, scale: 1, rotateX: 0 } : {}}
-      transition={{ 
-        duration: 0.6, 
-        delay: index * 0.15,
-        type: 'spring',
-        stiffness: 100,
-      }}
-      className="relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{ perspective: 1000 }}
+      className="w-72 flex-shrink-0 cursor-pointer"
+      onClick={onClick}
+      whileHover={{ y: -8 }}
+      transition={{ duration: 0.2 }}
     >
-      {/* Popular badge */}
-      <AnimatePresence>
-        {plan.popular && (
-          <motion.div 
-            className="absolute -top-3 left-1/2 -translate-x-1/2 z-10"
-            initial={{ scale: 0, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0, y: 20 }}
-            transition={{ type: 'spring', stiffness: 400, delay: index * 0.15 + 0.3 }}
-          >
-            <motion.div 
-              className="flex items-center gap-1 px-3 py-1 font-primary"
-              style={{
-                background: 'var(--mc-gold)',
-                border: '2px solid',
-                borderColor: 'color-mix(in srgb, var(--mc-gold) 120%, white) color-mix(in srgb, var(--mc-gold) 80%, black) color-mix(in srgb, var(--mc-gold) 80%, black) color-mix(in srgb, var(--mc-gold) 120%, white)',
-                fontSize: 'var(--text-xs)',
-                fontWeight: 700,
-                color: 'white',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                boxShadow: '0 0 15px rgba(212, 160, 23, 0.4)',
-              }}
-              animate={{ 
-                boxShadow: [
-                  '0 0 15px rgba(212, 160, 23, 0.4)',
-                  '0 0 25px rgba(212, 160, 23, 0.6)',
-                  '0 0 15px rgba(212, 160, 23, 0.4)',
-                ],
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <motion.span
-                animate={{ rotate: [0, 15, -15, 0] }}
-                transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
-              >
-                <Sparkles className="w-3 h-3" />
-              </motion.span>
-              推荐
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+      {/* Card Container with Glow */}
       <motion.div
-        className="h-full mc-panel p-6"
-        animate={{
-          y: isHovered ? -8 : 0,
-          scale: isHovered ? 1.02 : 1,
-          boxShadow: isHovered
-            ? `inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white), 0 25px 50px -12px ${categoryColor}40`
-            : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white), 0 4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black)',
+        className="relative rounded-2xl overflow-hidden h-full"
+        style={{
+          background: 'var(--bg-card)',
+          transformOrigin: 'center center',
         }}
-        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+        animate={{
+          scale: isActive ? 1.03 : 1,
+          boxShadow: isActive
+            ? `0 0 50px ${categoryColor.glow}, 0 25px 60px -10px rgba(0,0,0,0.5)`
+            : '0 4px 20px -5px rgba(0,0,0,0.2)',
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
       >
-        {/* Shine effect */}
+        {/* Animated Border */}
         <motion.div
-          className="absolute inset-0 pointer-events-none opacity-0"
+          className="absolute inset-0 rounded-2xl pointer-events-none z-10"
           style={{
-            background: `linear-gradient(105deg, transparent 40%, ${categoryColor}10 45%, ${categoryColor}20 50%, ${categoryColor}10 55%, transparent 60%)`,
+            border: `2px solid ${isActive ? categoryColor.primary : 'var(--border-subtle)'}`,
           }}
-          animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? '200%' : '-100%' }}
-          transition={{ duration: 0.6 }}
         />
 
-        {/* Plan Name */}
-        <motion.h3 
-          className="mb-2 font-primary"
-          style={{ 
-            fontSize: 'var(--text-xl)',
-            fontWeight: 800,
-            color: plan.popular ? categoryColor : 'var(--text-primary)',
-            letterSpacing: '-0.01em',
+        {/* Glow Effect */}
+        <motion.div
+          className="absolute -inset-1 rounded-2xl pointer-events-none blur-xl"
+          style={{
+            background: `radial-gradient(circle at 50% 0%, ${categoryColor.glow}, transparent 60%)`,
           }}
-          animate={{ color: isHovered ? categoryColor : (plan.popular ? categoryColor : 'var(--text-primary)') }}
-        >
-          {plan.name}
-        </motion.h3>
+          animate={{ opacity: isActive ? 0.8 : 0 }}
+        />
 
-        {/* Price */}
-        <motion.div 
-          className="mb-6"
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={isInView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ delay: index * 0.15 + 0.2, type: 'spring' }}
-        >
-          <motion.span 
-            className="font-primary mc-glow-emerald"
-            style={{ 
-              fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
-              fontWeight: 800,
-              letterSpacing: '-0.02em',
-              lineHeight: 1,
-            }}
-            animate={isHovered ? { scale: 1.1 } : {}}
-            transition={{ type: 'spring', stiffness: 400 }}
-          >
-            {plan.price}
-          </motion.span>
-        </motion.div>
-
-        {/* Features */}
-        <motion.ul 
-          className="space-y-3 mb-6"
-          initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
-          variants={{
-            visible: { transition: { staggerChildren: 0.05, delayChildren: index * 0.15 + 0.3 } },
+        {/* Category Header Bar */}
+        <div
+          className="relative px-5 py-3 flex items-center justify-between"
+          style={{
+            background: `linear-gradient(135deg, ${categoryColor.primary}20, ${categoryColor.primary}05)`,
+            borderBottom: `1px solid ${categoryColor.primary}30`,
           }}
         >
-          {plan.features.map((feature, idx) => (
-            <motion.li 
-              key={idx} 
-              className="flex items-start gap-2 font-primary"
+          <div className="flex items-center gap-2">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{
-                fontSize: 'var(--text-sm)',
-                fontWeight: 400,
-                color: 'var(--text-secondary)',
-                lineHeight: 1.5,
-              }}
-              variants={{
-                hidden: { opacity: 0, x: -20 },
-                visible: { opacity: 1, x: 0 },
+                background: `${categoryColor.primary}20`,
+                border: `1px solid ${categoryColor.primary}40`,
               }}
             >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={isInView ? { scale: 1 } : {}}
-                transition={{ delay: index * 0.15 + 0.3 + idx * 0.05, type: 'spring' }}
-              >
-                <Check 
-                  className="w-5 h-5 flex-shrink-0 mt-0.5" 
-                  style={{ color: categoryColor }}
-                />
-              </motion.div>
-              <span>{feature}</span>
-            </motion.li>
-          ))}
-        </motion.ul>
-
-        {/* Technical Params */}
-        <AnimatePresence>
-          {plan.params && (
-            <motion.div 
-              className="p-3 mb-6"
-              style={{ background: 'var(--bg-secondary)' }}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              <Icon className="w-4 h-4" style={{ color: categoryColor.primary }} />
+            </div>
+            <span className="font-primary text-sm font-bold tracking-wide" style={{ color: categoryColor.primary }}>
+              {categoryName}
+            </span>
+          </div>
+          
+          {/* Popular Badge */}
+          {plan.popular && (
+            <motion.div
+              initial={{ scale: 0, rotate: -20 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 300, delay: 0.2 }}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full"
+              style={{
+                background: 'var(--mc-gold)',
+                boxShadow: '0 2px 10px rgba(255, 215, 0, 0.4)',
+              }}
             >
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(plan.params).map(([key, value], idx) => (
-                  <motion.div 
-                    key={key}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={isInView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ delay: index * 0.15 + 0.4 + idx * 0.05 }}
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <div 
-                      className="font-primary"
-                      style={{
-                        fontSize: 'var(--text-xs)',
-                        fontWeight: 600,
-                        color: 'var(--text-muted)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                      }}
-                    >
-                      {key}
-                    </div>
-                    <div 
-                      className="font-primary"
-                      style={{
-                        fontSize: 'var(--text-sm)',
-                        fontWeight: 700,
-                        color: categoryColor,
-                      }}
-                    >
-                      {value}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              <Sparkles className="w-3 h-3 text-black" />
+              <span className="font-primary text-[10px] font-black text-black uppercase">推荐</span>
             </motion.div>
           )}
-        </AnimatePresence>
+        </div>
 
-        {/* CTA Button */}
-        <motion.button
-          className="w-full mt-auto font-primary flex items-center justify-center gap-2"
-          style={{
-            padding: '12px 24px',
-            fontSize: 'var(--text-base)',
-            fontWeight: 700,
-            letterSpacing: '0.05em',
-            textTransform: 'uppercase',
-            color: plan.popular ? 'white' : 'var(--text-primary)',
-            background: plan.popular ? categoryColor : 'var(--bg-secondary)',
-            border: '3px solid',
-            borderColor: plan.popular
-              ? `color-mix(in srgb, ${categoryColor} 120%, white) color-mix(in srgb, ${categoryColor} 80%, black) color-mix(in srgb, ${categoryColor} 80%, black) color-mix(in srgb, ${categoryColor} 120%, white)`
-              : 'color-mix(in srgb, var(--bg-secondary) 60%, black) color-mix(in srgb, var(--bg-secondary) 150%, white) color-mix(in srgb, var(--bg-secondary) 150%, white) color-mix(in srgb, var(--bg-secondary) 60%, black)',
-            boxShadow: plan.popular
-              ? `inset -3px -3px 0 color-mix(in srgb, ${categoryColor} 60%, black), inset 3px 3px 0 color-mix(in srgb, ${categoryColor} 120%, white), 0 0 20px ${categoryColor}40`
-              : 'inset -3px -3px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 3px 3px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
-            cursor: 'pointer',
-          }}
-          whileHover={{ 
-            scale: 1.05,
-            boxShadow: plan.popular
-              ? `inset -3px -3px 0 color-mix(in srgb, ${categoryColor} 60%, black), inset 3px 3px 0 color-mix(in srgb, ${categoryColor} 120%, white), 0 0 30px ${categoryColor}60`
-              : `0 0 20px ${categoryColor}40`,
-          }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            const element = document.querySelector('#contact');
-            if (element) element.scrollIntoView({ behavior: 'smooth' });
-          }}
-        >
-          <motion.span
-            animate={isHovered ? { x: [0, -3, 3, 0] } : {}}
-            transition={{ duration: 0.5 }}
+        {/* Card Content */}
+        <div className="relative p-5">
+          {/* Plan Name & Price */}
+          <div className="text-center mb-5">
+            <motion.h3 
+              className="font-primary text-xl font-black mb-2"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              {plan.name}
+            </motion.h3>
+            <div className="flex items-baseline justify-center gap-1">
+              <span className="font-primary text-3xl font-black" style={{ color: categoryColor.primary }}>
+                {plan.price}
+              </span>
+              {plan.price !== '面议' && plan.price !== '定制' && (
+                <span className="font-primary text-sm" style={{ color: 'var(--text-muted)' }}>起</span>
+              )}
+            </div>
+          </div>
+
+          {/* Features List */}
+          <div className="space-y-3 mb-5">
+            {plan.features.slice(0, 4).map((feature, idx) => (
+              <motion.div
+                key={idx}
+                className="flex items-start gap-3"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.05 }}
+              >
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                  style={{ background: `${categoryColor.primary}15` }}
+                >
+                  <Check className="w-3 h-3" style={{ color: categoryColor.primary }} />
+                </div>
+                <span className="font-primary text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                  {feature}
+                </span>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Params Grid */}
+          {plan.params && (
+            <div 
+              className="grid grid-cols-3 gap-2 p-3 rounded-xl mb-5"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-subtle)',
+              }}
+            >
+              {Object.entries(plan.params).slice(0, 3).map(([key, value]) => (
+                <div key={key} className="text-center">
+                  <div className="font-mono text-[10px] uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>
+                    {key}
+                  </div>
+                  <div className="font-primary text-sm font-bold" style={{ color: categoryColor.primary }}>
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* CTA Button */}
+          <motion.button
+            className="w-full py-3 font-primary font-bold uppercase tracking-wider text-sm relative overflow-hidden group"
+            style={{
+              background: isActive ? categoryColor.primary : 'transparent',
+              color: isActive ? '#fff' : categoryColor.primary,
+              border: `2px solid ${categoryColor.primary}`,
+              borderRadius: '12px',
+            }}
+            whileHover={{ 
+              scale: 1.02,
+              background: categoryColor.primary,
+              color: '#fff',
+            }}
+            whileTap={{ scale: 0.98 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              const element = document.querySelector('#contact');
+              if (element) element.scrollIntoView({ behavior: 'smooth' });
+            }}
           >
-            <Zap className="w-4 h-4" />
-          </motion.span>
-          选择方案
-        </motion.button>
+            {/* Shine Effect */}
+            <motion.div
+              className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"
+              style={{
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+              }}
+            />
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              <Zap className="w-4 h-4" />
+              选择方案
+            </span>
+          </motion.button>
+        </div>
       </motion.div>
     </motion.div>
   );
 });
 
-PlanCard.displayName = 'PlanCard';
+// Category Tab Button
+const CategoryTab = memo(({
+  category,
+  isActive,
+  onClick,
+  index,
+  planCount,
+}: {
+  category: SiteData['pricing']['categories'][0];
+  isActive: boolean;
+  onClick: () => void;
+  index: number;
+  planCount: number;
+}) => {
+  const colors = getColors(category.name);
+  const Icon = getCategoryIcon(category.name);
+
+  return (
+    <motion.button
+      onClick={onClick}
+      className="relative px-5 py-3 rounded-xl font-primary font-bold text-sm"
+      style={{
+        color: isActive ? '#fff' : 'var(--text-secondary)',
+        background: isActive ? colors.primary : 'var(--bg-card)',
+        border: `2px solid ${isActive ? colors.primary : 'var(--border-subtle)'}`,
+      }}
+      whileHover={{ scale: 1.05, y: -2 }}
+      whileTap={{ scale: 0.95 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+    >
+      <span className="flex items-center gap-2">
+        <Icon className="w-4 h-4" />
+        <span className="hidden sm:inline">{category.name}</span>
+        <span className="sm:hidden">{category.name.slice(0, 2)}</span>
+        <span
+          className="ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-black"
+          style={{
+            background: isActive ? 'rgba(255,255,255,0.2)' : colors.primary + '20',
+            color: isActive ? '#fff' : colors.primary,
+          }}
+        >
+          {planCount}
+        </span>
+      </span>
+      
+      {/* Active Glow */}
+      {isActive && (
+        <motion.div
+          className="absolute inset-0 -z-10 rounded-xl"
+          style={{ background: colors.glow, filter: 'blur(12px)' }}
+          animate={{ opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+      )}
+    </motion.button>
+  );
+});
+
+// Centered Carousel - Shows 5 cards with center focus
+const CenteredCarousel = memo(({
+  allPlans,
+  activeIndex,
+  onSelect,
+  isInView,
+}: {
+  allPlans: ReturnType<typeof getAllPlans>;
+  activeIndex: number;
+  onSelect: (index: number) => void;
+  isInView: boolean;
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const totalPlans = allPlans.length;
+  
+  // Calculate visible cards (center + 2 on each side = 5 total)
+  const visibleCount = 5;
+  const halfVisible = Math.floor(visibleCount / 2); // 2
+
+  // Get indices for visible cards with wrapping
+  const getVisibleIndices = () => {
+    const indices = [];
+    for (let i = -halfVisible; i <= halfVisible; i++) {
+      let idx = activeIndex + i;
+      // Wrap around
+      idx = ((idx % totalPlans) + totalPlans) % totalPlans;
+      indices.push(idx);
+    }
+    return indices;
+  };
+
+  // Navigation
+  const navigate = useCallback((direction: 'prev' | 'next') => {
+    const newIndex = direction === 'prev' 
+      ? (activeIndex - 1 + totalPlans) % totalPlans
+      : (activeIndex + 1) % totalPlans;
+    onSelect(newIndex);
+  }, [activeIndex, totalPlans, onSelect]);
+
+  // Handle wheel events
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    if (e.deltaY > 0) {
+      navigate('next');
+    } else {
+      navigate('prev');
+    }
+  }, [navigate]);
+
+  const visibleIndices = getVisibleIndices();
+
+  // Card entrance animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const getCardVariants = (positionIndex: number) => ({
+    hidden: {
+      opacity: 0,
+      y: 60,
+      scale: 0.8,
+      rotateY: positionIndex < halfVisible ? -15 : positionIndex > halfVisible ? 15 : 0,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: positionIndex === halfVisible ? 1.03 : positionIndex === 0 || positionIndex === visibleCount - 1 ? 0.85 : 0.92,
+      rotateY: 0,
+      transition: {
+        type: 'spring' as const,
+        stiffness: 200,
+        damping: 20,
+        delay: Math.abs(positionIndex - halfVisible) * 0.05,
+      },
+    },
+  });
+
+  return (
+    <div className="relative">
+      {/* Navigation Arrows */}
+      <motion.button
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md"
+        style={{
+          background: 'var(--bg-card)',
+          border: '2px solid var(--accent-primary)',
+          boxShadow: '0 4px 30px var(--accent-glow)',
+        }}
+        onClick={() => navigate('prev')}
+        whileHover={{ scale: 1.1, x: -2 }}
+        whileTap={{ scale: 0.9 }}
+        initial={{ opacity: 0, x: -20 }}
+        animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+        transition={{ delay: 0.5 }}
+      >
+        <ChevronLeft className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
+      </motion.button>
+
+      <motion.button
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md"
+        style={{
+          background: 'var(--bg-card)',
+          border: '2px solid var(--accent-primary)',
+          boxShadow: '0 4px 30px var(--accent-glow)',
+        }}
+        onClick={() => navigate('next')}
+        whileHover={{ scale: 1.1, x: 2 }}
+        whileTap={{ scale: 0.9 }}
+        initial={{ opacity: 0, x: 20 }}
+        animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
+        transition={{ delay: 0.5 }}
+      >
+        <ChevronRight className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
+      </motion.button>
+
+      {/* Cards Container with Mask */}
+      <motion.div 
+        ref={containerRef}
+        className="relative overflow-hidden py-4"
+        style={{
+          maskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%)',
+          perspective: '1000px',
+        }}
+        onWheel={handleWheel}
+        variants={containerVariants}
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+      >
+        {/* Cards Track */}
+        <div className="flex justify-center items-center gap-6">
+          {visibleIndices.map((planIndex, positionIndex) => {
+            const { plan, categoryName } = allPlans[planIndex];
+            const colors = getColors(categoryName);
+            const isCenter = positionIndex === halfVisible;
+            const isEdge = positionIndex === 0 || positionIndex === visibleCount - 1;
+            
+            return (
+              <motion.div
+                key={`${planIndex}-${positionIndex}`}
+                variants={getCardVariants(positionIndex)}
+                style={{
+                  opacity: isEdge ? 0.6 : 1,
+                }}
+              >
+                <PlanCard
+                  plan={plan}
+                  categoryName={categoryName}
+                  categoryColor={colors}
+                  isActive={isCenter}
+                  onClick={() => onSelect(planIndex)}
+                />
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* Progress Dots */}
+      <motion.div 
+        className="flex justify-center gap-2 mt-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+        transition={{ delay: 0.6 }}
+      >
+        {allPlans.map((_, idx) => (
+          <motion.button
+            key={idx}
+            className="w-2 h-2 rounded-full"
+            style={{
+              background: idx === activeIndex ? 'var(--accent-primary)' : 'var(--border-subtle)',
+            }}
+            animate={{
+              scale: idx === activeIndex ? 1.5 : 1,
+            }}
+            onClick={() => onSelect(idx)}
+            whileHover={{ scale: 1.8 }}
+          />
+        ))}
+      </motion.div>
+    </div>
+  );
+});
 
 export const Pricing = memo(function Pricing({ data }: PricingProps) {
-  const categoryColors: Record<string, string> = {
-    '博弈系统': '#9B59B6',
-    '数据分析': '#3498DB',
-    '网站开发': '#5D8C38',
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { margin: '-100px' });
+  
+  const allPlans = getAllPlans(data.categories);
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
+  const [activePlanIndex, setActivePlanIndex] = useState(0);
+  
+  const totalPlans = allPlans.length;
+  const totalCategories = data.categories.length;
+
+  const handleCategoryClick = useCallback((categoryIndex: number) => {
+    setActiveCategoryIndex(categoryIndex);
+    const recommendedIndex = getRecommendedPlanIndex(data.categories, categoryIndex);
+    setActivePlanIndex(recommendedIndex);
+  }, [data.categories]);
+
+  const handlePlanSelect = useCallback((globalIndex: number) => {
+    setActivePlanIndex(globalIndex);
+    const plan = allPlans[globalIndex];
+    if (plan) {
+      setActiveCategoryIndex(plan.categoryIndex);
+    }
+  }, [allPlans]);
+
+  // Container animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: 'spring' as const,
+        stiffness: 100,
+        damping: 15,
+      },
+    },
   };
 
   return (
-    <section id="pricing" className="relative py-24 lg:py-32 overflow-hidden">
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionTitle
-          title={data.title}
-          subtitle={data.subtitle}
+    <section id="pricing" ref={sectionRef} className="relative py-24 lg:py-32 overflow-hidden">
+      {/* Background Decoration */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div 
+          className="absolute top-1/4 left-0 w-96 h-96 rounded-full opacity-30"
+          style={{
+            background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)',
+            filter: 'blur(100px)',
+          }}
         />
+        <div 
+          className="absolute bottom-1/4 right-0 w-96 h-96 rounded-full opacity-20"
+          style={{
+            background: 'radial-gradient(circle, var(--accent-secondary) 0%, transparent 70%)',
+            filter: 'blur(100px)',
+          }}
+        />
+      </div>
 
-        {/* Pricing Categories */}
-        <div className="space-y-16">
-          {data.categories.map((category, catIndex) => (
-            <div key={category.id}>
-              {/* Category Header */}
-              <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: '-50px' }}
-                transition={{ duration: 0.5 }}
-                className="mb-8 flex items-center gap-4"
-              >
-                <motion.div 
-                  className="w-2 h-8"
-                  style={{ background: categoryColors[category.name] || 'var(--accent-primary)' }}
-                  initial={{ scaleY: 0 }}
-                  whileInView={{ scaleY: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: catIndex * 0.1 }}
-                />
-                <div>
-                  <h3 
-                    className="font-primary"
-                    style={{
-                      fontSize: 'var(--text-2xl)',
-                      fontWeight: 800,
-                      color: 'var(--text-primary)',
-                      letterSpacing: '-0.01em',
-                    }}
-                  >
-                    {category.name}
-                  </h3>
-                  <p 
-                    className="font-primary"
-                    style={{
-                      fontSize: 'var(--text-sm)',
-                      fontWeight: 400,
-                      color: 'var(--text-muted)',
-                    }}
-                  >
-                    {category.description}
-                  </p>
-                </div>
-              </motion.div>
+      <motion.div 
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+      >
+        <motion.div variants={itemVariants}>
+          <SectionTitle title={data.title} subtitle={data.subtitle} />
+        </motion.div>
 
-              {/* Plans Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {category.plans.map((plan, index) => (
-                  <PlanCard
-                    key={plan.name}
-                    plan={plan}
-                    categoryColor={categoryColors[category.name] || 'var(--accent-primary)'}
-                    index={catIndex * 3 + index}
-                  />
-                ))}
-              </div>
-            </div>
+        {/* Stats Banner */}
+        <motion.div
+          variants={itemVariants}
+          className="flex justify-center gap-8 mb-8"
+        >
+          <motion.div 
+            className="flex items-center gap-2 px-4 py-2 rounded-full" 
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+            whileHover={{ scale: 1.05, y: -2 }}
+          >
+            <TrendingUp className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+            <span className="font-primary text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{totalCategories}</span> 个分类
+            </span>
+          </motion.div>
+          <motion.div 
+            className="flex items-center gap-2 px-4 py-2 rounded-full" 
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)' }}
+            whileHover={{ scale: 1.05, y: -2 }}
+          >
+            <Sparkles className="w-4 h-4" style={{ color: 'var(--mc-gold)' }} />
+            <span className="font-primary text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{totalPlans}</span> 个方案
+            </span>
+          </motion.div>
+        </motion.div>
+
+        {/* Category Tabs */}
+        <motion.div 
+          variants={itemVariants}
+          className="flex flex-wrap justify-center gap-3 mb-10"
+        >
+          {data.categories.map((category, index) => (
+            <CategoryTab
+              key={category.id}
+              category={category}
+              isActive={activeCategoryIndex === index}
+              onClick={() => handleCategoryClick(index)}
+              index={index}
+              planCount={category.plans.length}
+            />
           ))}
-        </div>
+        </motion.div>
+
+        {/* Centered Carousel */}
+        <CenteredCarousel
+          allPlans={allPlans}
+          activeIndex={activePlanIndex}
+          onSelect={handlePlanSelect}
+          isInView={isInView}
+        />
 
         {/* Disclaimer */}
         <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: '-50px' }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-16 text-center font-primary"
-          style={{
-            fontSize: 'var(--text-sm)',
-            fontWeight: 400,
-            color: 'var(--text-muted)',
-            fontStyle: 'italic',
-          }}
+          variants={itemVariants}
+          className="mt-8 text-center font-primary text-sm"
+          style={{ color: 'var(--text-muted)' }}
         >
           * {data.disclaimer}
         </motion.p>
-      </div>
+
+        {/* Hint */}
+        <motion.p
+          variants={itemVariants}
+          className="mt-2 text-center font-primary text-xs"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          点击箭头或滚轮切换 · 点击卡片选择方案 · 共 {totalPlans} 个方案
+        </motion.p>
+      </motion.div>
     </section>
   );
 });
