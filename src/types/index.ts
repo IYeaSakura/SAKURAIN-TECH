@@ -340,6 +340,7 @@ export interface SiteData {
     categories: {
       id: string;
       name: string;
+      description: string;
       plans: {
         name: string;
         price: string;

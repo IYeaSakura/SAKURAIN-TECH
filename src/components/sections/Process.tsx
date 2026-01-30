@@ -1,6 +1,6 @@
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Lightbulb, Code, CheckCircle, Headphones, ArrowRight, type LucideIcon } from 'lucide-react';
+import { Search, Lightbulb, Code, CheckCircle, Headphones, ArrowRight } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
 import type { SiteData } from '@/types';
 
@@ -8,7 +8,7 @@ interface ProcessProps {
   data: SiteData['process'];
 }
 
-const iconMap: Record<string, LucideIcon> = {
+const iconMap: Record<string, typeof Search> = {
   Search,
   Lightbulb,
   Code,
@@ -16,9 +16,8 @@ const iconMap: Record<string, LucideIcon> = {
   Headphones,
 };
 
-const getIcon = (iconName: string): LucideIcon => iconMap[iconName] || Code;
+const getIcon = (iconName: string) => iconMap[iconName] || Code;
 
-// Memoized process step card
 const ProcessStep = memo(({
   step,
   index,
@@ -28,91 +27,121 @@ const ProcessStep = memo(({
   index: number;
   isLast: boolean;
 }) => {
-  const Icon = useMemo(() => getIcon(step.icon), [step.icon]);
+  const Icon = getIcon(step.icon);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
+      whileInView={{ opacity: 1, x: 0 }}
       viewport={{ margin: '-50px' }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="relative"
+      className={`relative flex items-start gap-4 ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} md:flex-row`}
     >
-      {/* Step Card */}
-      <div
-        className="group relative p-6 rounded-2xl border transition-all duration-300 h-full"
-        style={{
-          background: 'var(--bg-card)',
-          borderColor: 'var(--border-subtle)',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'color-mix(in srgb, var(--accent-primary) 30%, transparent)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'var(--border-subtle)';
-        }}
-      >
-        {/* Step Number */}
-        <div
-          className="absolute -top-3 -left-3 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+      {/* Timeline Line */}
+      {!isLast && (
+        <div 
+          className="absolute left-6 top-14 w-0.5 h-full hidden md:block"
+          style={{ 
+            background: 'linear-gradient(to bottom, var(--accent-primary), transparent)',
+            height: 'calc(100% + 2rem)',
+          }}
+        />
+      )}
+
+      {/* Step Number & Icon */}
+      <div className="relative flex-shrink-0">
+        <motion.div
+          className="w-12 h-12 flex items-center justify-center"
           style={{
-            background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+            background: 'var(--accent-primary)',
+            border: '3px solid',
+            borderColor: 'color-mix(in srgb, var(--accent-primary) 120%, white) color-mix(in srgb, var(--accent-primary) 80%, black) color-mix(in srgb, var(--accent-primary) 80%, black) color-mix(in srgb, var(--accent-primary) 120%, white)',
+            boxShadow: 'inset -2px -2px 0 color-mix(in srgb, var(--accent-primary) 60%, black), inset 2px 2px 0 color-mix(in srgb, var(--accent-primary) 120%, white), 0 0 15px var(--accent-glow)',
+          }}
+          whileHover={{ scale: 1.1 }}
+        >
+          <Icon className="w-5 h-5 text-white" />
+        </motion.div>
+        <div 
+          className="absolute -top-2 -left-2 w-6 h-6 flex items-center justify-center font-primary"
+          style={{
+            background: 'var(--mc-gold)',
+            fontSize: 'var(--text-xs)',
+            fontWeight: 800,
+            color: 'white',
+            border: '2px solid',
+            borderColor: 'color-mix(in srgb, var(--mc-gold) 120%, white) color-mix(in srgb, var(--mc-gold) 80%, black) color-mix(in srgb, var(--mc-gold) 80%, black) color-mix(in srgb, var(--mc-gold) 120%, white)',
           }}
         >
           {step.id}
         </div>
-
-        {/* Icon */}
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 mt-2"
-          style={{
-            background: 'linear-gradient(135deg, color-mix(in srgb, var(--accent-primary) 20%, transparent), color-mix(in srgb, var(--accent-secondary) 20%, transparent))',
-          }}
-        >
-          <Icon className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
-        </div>
-
-        {/* Content */}
-        <h3 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-          {step.title}
-        </h3>
-        <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
-          {step.description}
-        </p>
-
-        {/* Details */}
-        <ul className="space-y-2 mb-4">
-          {step.details.map((detail) => (
-            <li key={detail} className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
-              <div
-                className="w-1 h-1 rounded-full"
-                style={{ background: 'var(--accent-primary)' }}
-              />
-              {detail}
-            </li>
-          ))}
-        </ul>
-
-        {/* Duration */}
-        <div
-          className="pt-4"
-          style={{ borderTop: '1px solid var(--border-subtle)' }}
-        >
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            预计周期: <span style={{ color: 'var(--accent-primary)' }}>{step.duration}</span>
-          </span>
-        </div>
       </div>
 
-      {/* Arrow to next - Desktop */}
-      {!isLast && (
-        <div className="hidden lg:flex absolute top-20 -right-2 z-10">
-          <ArrowRight
-            className="w-5 h-5"
-            style={{ color: 'color-mix(in srgb, var(--accent-primary) 50%, transparent)' }}
-          />
-        </div>
-      )}
+      {/* Content */}
+      <div className="flex-1 pb-8 md:pb-12">
+        <motion.div
+          className="p-6 mc-panel"
+          whileHover={{ y: -2 }}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+            <h3 
+              className="font-primary"
+              style={{
+                fontSize: 'var(--text-xl)',
+                fontWeight: 800,
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {step.title}
+            </h3>
+            <span 
+              className="font-primary"
+              style={{
+                fontSize: 'var(--text-xs)',
+                fontWeight: 700,
+                color: 'var(--accent-primary)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+              }}
+            >
+              {step.duration}
+            </span>
+          </div>
+          <p 
+            className="mb-4 font-primary"
+            style={{
+              fontSize: 'var(--text-base)',
+              fontWeight: 400,
+              color: 'var(--text-secondary)',
+              lineHeight: 1.7,
+            }}
+          >
+            {step.description}
+          </p>
+
+          {/* Details */}
+          <div className="flex flex-wrap gap-2">
+            {step.details.map((detail, idx) => (
+              <span
+                key={idx}
+                className="font-primary"
+                style={{
+                  fontSize: 'var(--text-xs)',
+                  fontWeight: 600,
+                  color: 'var(--text-muted)',
+                  padding: '4px 10px',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-subtle)',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                {detail}
+              </span>
+            ))}
+          </div>
+        </motion.div>
+      </div>
     </motion.div>
   );
 });
@@ -121,16 +150,8 @@ ProcessStep.displayName = 'ProcessStep';
 
 export const Process = memo(function Process({ data }: ProcessProps) {
   return (
-    <section id="process" className="relative py-24 lg:py-32">
-      {/* Background */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary), var(--bg-primary))',
-        }}
-      />
-
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="process" className="relative py-24 lg:py-32 overflow-hidden">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle
           title={data.title}
           subtitle={data.subtitle}
@@ -138,55 +159,41 @@ export const Process = memo(function Process({ data }: ProcessProps) {
 
         {/* Process Steps */}
         <div className="relative">
-          {/* Connection Line - Desktop */}
-          <div className="hidden lg:block absolute top-24 left-0 right-0 h-0.5">
-            <div className="max-w-5xl mx-auto px-12">
-              <div
-                className="h-full"
-                style={{
-                  background: 'linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-primary) 30%, transparent), transparent)',
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Steps Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-4">
-            {data.steps.map((step, index) => (
-              <ProcessStep
-                key={step.id}
-                step={step}
-                index={index}
-                isLast={index === data.steps.length - 1}
-              />
-            ))}
-          </div>
+          {data.steps.map((step, index) => (
+            <ProcessStep
+              key={step.id}
+              step={step}
+              index={index}
+              isLast={index === data.steps.length - 1}
+            />
+          ))}
         </div>
 
-        {/* Bottom CTA */}
+        {/* CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ margin: '-50px' }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="mt-16 text-center"
+          transition={{ duration: 0.5 }}
+          className="mt-12 text-center"
         >
-          <p className="mb-6" style={{ color: 'var(--text-muted)' }}>
-            标准化的流程确保每个项目都能高质量交付
-          </p>
-          <motion.a
-            href="#contact"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-medium text-white transition-all"
-            style={{
-              background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-              boxShadow: '0 4px 20px color-mix(in srgb, var(--accent-primary) 25%, transparent)',
+          <motion.button
+            onClick={() => {
+              const element = document.querySelector('#contact');
+              if (element) element.scrollIntoView({ behavior: 'smooth' });
             }}
-            whileHover={{ scale: 1.02 }}
+            className="mc-btn mc-btn-gold font-primary inline-flex items-center gap-2"
+            style={{
+              fontSize: 'var(--text-base)',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+            }}
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.98 }}
           >
             开始您的项目
             <ArrowRight className="w-5 h-5" />
-          </motion.a>
+          </motion.button>
         </motion.div>
       </div>
     </section>

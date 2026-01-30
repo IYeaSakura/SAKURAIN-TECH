@@ -1,7 +1,6 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { X, Check, Sparkles } from 'lucide-react';
-import { GridBackground } from '@/components/effects';
+import { Check, X, Sparkles } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
 import type { SiteData } from '@/types';
 
@@ -9,17 +8,9 @@ interface ComparisonProps {
   data: SiteData['comparison'];
 }
 
-const stats = [
-  { value: '60天', label: '严格交付周期', desc: '毕业时间窗口强制短周期' },
-  { value: '100%', label: '源码交付', desc: '客户拥有完全技术主权' },
-  { value: '¥150-500', label: '人天成本', desc: '无运营摊销，学生身份非盈利导向' },
-];
-
 export const Comparison = memo(function Comparison({ data }: ComparisonProps) {
   return (
-    <section className="relative py-24 lg:py-32">
-      <GridBackground />
-
+    <section id="comparison" className="relative py-24 lg:py-32 overflow-hidden">
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle
           title={data.title}
@@ -34,30 +25,49 @@ export const Comparison = memo(function Comparison({ data }: ComparisonProps) {
           transition={{ duration: 0.5 }}
           className="overflow-x-auto"
         >
-          <table className="w-full">
+          <table className="w-full min-w-[600px]">
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                <th
-                  className="text-left py-4 px-4 text-sm font-medium"
-                  style={{ color: 'var(--text-muted)' }}
+              <tr>
+                <th 
+                  className="text-left py-4 px-4 font-primary"
+                  style={{
+                    fontSize: 'var(--text-sm)',
+                    fontWeight: 700,
+                    color: 'var(--text-muted)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    borderBottom: '2px solid var(--border-subtle)',
+                  }}
                 >
                   对比维度
                 </th>
-                <th
-                  className="text-left py-4 px-4 text-sm font-medium"
-                  style={{ color: 'var(--text-muted)' }}
+                <th 
+                  className="text-left py-4 px-4 font-primary"
+                  style={{
+                    fontSize: 'var(--text-sm)',
+                    fontWeight: 700,
+                    color: 'var(--text-muted)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    borderBottom: '2px solid var(--border-subtle)',
+                  }}
                 >
-                  传统外包公司
+                  传统外包
                 </th>
-                <th className="text-left py-4 px-4">
+                <th 
+                  className="text-left py-4 px-4 font-primary"
+                  style={{
+                    fontSize: 'var(--text-sm)',
+                    fontWeight: 800,
+                    color: 'var(--accent-primary)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    borderBottom: '2px solid var(--accent-primary)',
+                  }}
+                >
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                    <span
-                      className="text-sm font-medium"
-                      style={{ color: 'var(--accent-primary)' }}
-                    >
-                      SAKURAIN
-                    </span>
+                    <Sparkles className="w-4 h-4" />
+                    SAKURAIN
                   </div>
                 </th>
               </tr>
@@ -69,49 +79,66 @@ export const Comparison = memo(function Comparison({ data }: ComparisonProps) {
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ margin: '-50px' }}
-                  transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="transition-colors"
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className="group"
                   style={{
-                    borderBottom: '1px solid color-mix(in srgb, var(--border-subtle) 50%, transparent)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'color-mix(in srgb, var(--bg-tertiary) 30%, transparent)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
+                    borderBottom: '1px solid var(--border-subtle)',
                   }}
                 >
-                  {/* Dimension */}
                   <td className="py-5 px-4">
-                    <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                    <span 
+                      className="font-primary"
+                      style={{
+                        fontSize: 'var(--text-base)',
+                        fontWeight: 700,
+                        color: 'var(--text-primary)',
+                      }}
+                    >
                       {item.dimension}
                     </span>
                   </td>
-
-                  {/* Traditional */}
                   <td className="py-5 px-4">
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-2">
                       <X className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--error)' }} />
-                      <div>
-                        <p style={{ color: 'var(--text-secondary)' }}>{item.traditional}</p>
-                      </div>
+                      <span 
+                        className="font-primary"
+                        style={{
+                          fontSize: 'var(--text-sm)',
+                          fontWeight: 400,
+                          color: 'var(--text-muted)',
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        {item.traditional}
+                      </span>
                     </div>
                   </td>
-
-                  {/* SAKURAIN */}
                   <td className="py-5 px-4">
-                    <div className="flex items-start gap-3">
-                      <Check
-                        className="w-5 h-5 flex-shrink-0 mt-0.5"
-                        style={{ color: 'var(--success)' }}
-                      />
+                    <div className="flex items-start gap-2">
+                      <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--accent-secondary)' }} />
                       <div>
-                        <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                        <span 
+                          className="font-primary block"
+                          style={{
+                            fontSize: 'var(--text-sm)',
+                            fontWeight: 600,
+                            color: 'var(--text-primary)',
+                            lineHeight: 1.6,
+                          }}
+                        >
                           {item.sakurain}
-                        </p>
-                        <p className="text-sm mt-1" style={{ color: 'var(--accent-primary)' }}>
+                        </span>
+                        <span 
+                          className="font-primary block mt-1"
+                          style={{
+                            fontSize: 'var(--text-xs)',
+                            fontWeight: 500,
+                            color: 'var(--accent-primary)',
+                            fontStyle: 'italic',
+                          }}
+                        >
                           {item.highlight}
-                        </p>
+                        </span>
                       </div>
                     </div>
                   </td>
@@ -121,39 +148,53 @@ export const Comparison = memo(function Comparison({ data }: ComparisonProps) {
           </table>
         </motion.div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-          {stats.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ margin: '-50px' }}
-              transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-              className="p-6 rounded-2xl text-center border"
-              style={{
-                background: 'var(--bg-card)',
-                borderColor: 'var(--border-subtle)',
-              }}
-            >
-              <div
-                className="text-2xl font-bold mb-2"
-                style={{ color: 'var(--accent-primary)' }}
-              >
-                {stat.value}
-              </div>
-              <div
-                className="font-medium mb-1"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                {stat.label}
-              </div>
-              <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                {stat.desc}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        {/* Bottom CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ margin: '-50px' }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mt-12 p-8 mc-panel text-center"
+        >
+          <h3 
+            className="mb-4 font-primary"
+            style={{
+              fontSize: 'var(--text-2xl)',
+              fontWeight: 800,
+              color: 'var(--text-primary)',
+              letterSpacing: '-0.01em',
+            }}
+          >
+            准备好体验不同的开发服务了吗？
+          </h3>
+          <p 
+            className="mb-6 font-primary max-w-2xl mx-auto"
+            style={{
+              fontSize: 'var(--text-base)',
+              fontWeight: 400,
+              color: 'var(--text-secondary)',
+              lineHeight: 1.7,
+            }}
+          >
+            选择 SAKURAIN，获得更专业、更可靠、更高效的技术解决方案
+          </p>
+          <motion.button
+            onClick={() => {
+              const element = document.querySelector('#contact');
+              if (element) element.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="mc-btn mc-btn-gold font-primary"
+            style={{
+              fontSize: 'var(--text-base)',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            立即咨询
+          </motion.button>
+        </motion.div>
       </div>
     </section>
   );

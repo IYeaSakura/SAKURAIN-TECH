@@ -1,7 +1,8 @@
-import { memo } from 'react';
-import { motion } from 'framer-motion';
+import { memo, useRef } from 'react';
+import { motion, useInView, useMotionValue, useSpring } from 'framer-motion';
 import { TrendingUp, Award, Target, Zap } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
+import { AnimatedCounter } from '@/components/effects';
 
 interface StatItem {
   title: string;
@@ -50,79 +51,122 @@ const iconMap: Record<string, typeof TrendingUp> = {
 const StatCard = memo(({ stat, index }: { stat: StatItem; index: number }) => {
   const Icon = iconMap[stat.color] || TrendingUp;
   const color = colorMap[stat.color] || colorMap.blue;
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) / 20;
+    const y = (e.clientY - rect.top - rect.height / 2) / 20;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
+
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
+
+  const rotateX = useSpring(mouseY, { stiffness: 300, damping: 30 });
+  const rotateY = useSpring(mouseX, { stiffness: 300, damping: 30 });
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ margin: '-100px' }}
-      transition={{ duration: 0.6, delay: index * 0.1 }}
+      ref={ref}
+      initial={{ opacity: 0, y: 50, rotateX: -30 }}
+      animate={isInView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
+      transition={{ 
+        duration: 0.6, 
+        delay: index * 0.1,
+        type: 'spring',
+        stiffness: 100,
+      }}
       className="relative p-6 mc-panel"
-      whileHover={{ y: -8, scale: 1.02 }}
+      style={{ perspective: 1000 }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
-      {/* Icon */}
-      <div
-        className="absolute -top-4 -right-4 w-12 h-12 rounded-full flex items-center justify-center"
+      <motion.div
         style={{
-          background: color,
-          boxShadow: `0 0 20px ${color}60`,
+          rotateX,
+          rotateY,
+          transformStyle: 'preserve-3d',
         }}
       >
-        <Icon className="w-6 h-6 text-white" />
-      </div>
-
-      {/* Content */}
-      <div>
-        <p
-          className="text-sm mb-2"
-          style={{ color: 'var(--text-muted)', fontWeight: 600 }}
+        {/* Icon with floating animation */}
+        <motion.div
+          className="absolute -top-4 -right-4 w-12 h-12 rounded-full flex items-center justify-center"
+          style={{
+            background: color,
+            boxShadow: `0 0 20px ${color}60`,
+          }}
+          animate={{ y: [0, -5, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          whileHover={{ scale: 1.2, rotate: 360 }}
         >
-          {stat.title}
-        </p>
-        <div className="flex items-baseline gap-2 mb-2">
-          <motion.span
-            initial={{ scale: 0 }}
-            whileInView={{ scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: index * 0.1 + 0.2 }}
-            className="text-4xl font-bold"
-            style={{
-              color,
-              fontWeight: 800,
-              textShadow: `2px 2px 0 ${color}40`,
-            }}
-          >
-            {stat.value}
-          </motion.span>
-          <span
-            className="text-xl"
-            style={{ color: 'var(--text-secondary)', fontWeight: 600 }}
-          >
-            {stat.unit}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span
-            className="text-sm"
+          <Icon className="w-6 h-6 text-white" />
+        </motion.div>
+
+        {/* Content */}
+        <div>
+          <motion.p
+            className="text-sm mb-2 font-primary text-label"
             style={{ color: 'var(--text-muted)' }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={isInView ? { opacity: 1, x: 0 } : {}}
+            transition={{ delay: index * 0.1 + 0.2 }}
           >
-            {stat.description}
-          </span>
-          <motion.span
-            initial={{ opacity: 0, x: -10 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: index * 0.1 + 0.4 }}
-            className="text-sm font-bold px-2 py-1 rounded"
-            style={{
-              background: `${color}20`,
-              color,
-            }}
-          >
-            {stat.trend}
-          </motion.span>
+            {stat.title}
+          </motion.p>
+          
+          <div className="flex items-baseline gap-2 mb-2">
+            <AnimatedCounter
+              value={stat.value}
+              suffix={stat.unit}
+              className="font-primary text-4xl font-extrabold"
+              style={{
+                color,
+                textShadow: `2px 2px 0 ${color}40`,
+                letterSpacing: '-0.02em',
+                lineHeight: 1,
+              }}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span
+              className="font-primary text-body-sm"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              {stat.description}
+            </span>
+            <motion.span
+              initial={{ opacity: 0, x: -10, scale: 0.8 }}
+              animate={isInView ? { opacity: 1, x: 0, scale: 1 } : {}}
+              transition={{ 
+                duration: 0.4, 
+                delay: index * 0.1 + 0.4,
+                type: 'spring',
+                stiffness: 200,
+              }}
+              className="font-primary text-caption"
+              style={{
+                background: `${color}20`,
+                color,
+                padding: '4px 8px',
+                fontWeight: 700,
+              }}
+              whileHover={{ scale: 1.1 }}
+            >
+              {stat.trend}
+            </motion.span>
+          </div>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 });
@@ -130,23 +174,33 @@ const StatCard = memo(({ stat, index }: { stat: StatItem; index: number }) => {
 StatCard.displayName = 'StatCard';
 
 const PieChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
   const total = chart.data.reduce((sum, item) => sum + item.value, 0);
   let currentAngle = 0;
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ margin: '-100px' }}
-      transition={{ duration: 0.6, delay: index * 0.2 }}
+      ref={ref}
+      initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
+      animate={isInView ? { opacity: 1, scale: 1, rotate: 0 } : {}}
+      transition={{ 
+        duration: 0.6, 
+        delay: index * 0.2,
+        type: 'spring',
+        stiffness: 100,
+      }}
       className="p-6 mc-panel"
+      whileHover={{ y: -5 }}
     >
       <h3
-        className="text-xl font-bold mb-6"
+        className="mb-6 font-primary"
         style={{
-          color: 'var(--text-primary)',
+          fontSize: 'var(--text-xl)',
           fontWeight: 800,
-          letterSpacing: '0.02em',
+          color: 'var(--text-primary)',
+          letterSpacing: '-0.01em',
+          lineHeight: 1.3,
         }}
       >
         {chart.title}
@@ -154,8 +208,12 @@ const PieChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
 
       <div className="flex flex-col md:flex-row items-center gap-8">
         {/* Pie Chart */}
-        <div className="relative w-56 h-56 md:w-64 md:h-64">
-          <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+        <motion.div 
+          className="relative w-56 h-56 md:w-64 md:h-64"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+        >
+          <svg viewBox="0 0 100 100" className="w-full h-full" style={{ transform: 'rotate(-90deg)' }}>
             {chart.data.map((item, idx) => {
               const angle = (item.value / total) * 360;
               const startAngle = currentAngle;
@@ -177,17 +235,16 @@ const PieChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
                   key={idx}
                   d={`M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2} Z`}
                   fill={item.color}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  className="cursor-pointer hover:opacity-80"
-                  whileHover={{ scale: 1.05 }}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                  transition={{ duration: 0.5, delay: idx * 0.1 + 0.3 }}
+                  className="cursor-pointer"
+                  whileHover={{ scale: 1.05, opacity: 0.8 }}
                 />
               );
             })}
           </svg>
-        </div>
+        </motion.div>
 
         {/* Legend */}
         <div className="flex-1 space-y-3">
@@ -195,25 +252,35 @@ const PieChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
             <motion.div
               key={idx}
               initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.4, delay: idx * 0.1 + 0.3 }}
               className="flex items-center gap-3"
+              whileHover={{ x: 5 }}
             >
-              <div
+              <motion.div
                 className="w-4 h-4 rounded"
                 style={{ background: item.color }}
+                whileHover={{ scale: 1.3, rotate: 180 }}
+                transition={{ duration: 0.3 }}
               />
               <div className="flex-1">
                 <span
-                  className="text-sm font-bold"
-                  style={{ color: 'var(--text-primary)' }}
+                  className="font-primary"
+                  style={{ 
+                    fontSize: 'var(--text-sm)',
+                    fontWeight: 700,
+                    color: 'var(--text-primary)',
+                  }}
                 >
                   {item.label}
                 </span>
                 <span
-                  className="text-sm ml-2"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="font-primary ml-2"
+                  style={{ 
+                    fontSize: 'var(--text-sm)',
+                    fontWeight: 500,
+                    color: 'var(--text-muted)',
+                  }}
                 >
                   {item.value}%
                 </span>
@@ -229,22 +296,32 @@ const PieChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
 PieChart.displayName = 'PieChart';
 
 const BarChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
   const maxValue = Math.max(...chart.data.map((item) => item.value));
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ margin: '-100px' }}
-      transition={{ duration: 0.6, delay: index * 0.2 }}
+      ref={ref}
+      initial={{ opacity: 0, scale: 0.8, x: 50 }}
+      animate={isInView ? { opacity: 1, scale: 1, x: 0 } : {}}
+      transition={{ 
+        duration: 0.6, 
+        delay: index * 0.2,
+        type: 'spring',
+        stiffness: 100,
+      }}
       className="p-6 mc-panel"
+      whileHover={{ y: -5 }}
     >
       <h3
-        className="text-xl font-bold mb-6"
+        className="mb-6 font-primary"
         style={{
-          color: 'var(--text-primary)',
+          fontSize: 'var(--text-xl)',
           fontWeight: 800,
-          letterSpacing: '0.02em',
+          color: 'var(--text-primary)',
+          letterSpacing: '-0.01em',
+          lineHeight: 1.3,
         }}
       >
         {chart.title}
@@ -255,34 +332,55 @@ const BarChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
           <motion.div
             key={idx}
             initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.5, delay: idx * 0.1 }}
             className="space-y-2"
           >
             <div className="flex items-center justify-between">
               <span
-                className="text-sm font-bold"
-                style={{ color: 'var(--text-primary)' }}
+                className="font-primary"
+                style={{ 
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 700,
+                  color: 'var(--text-primary)',
+                }}
               >
                 {item.label}
               </span>
-              <span
-                className="text-sm font-bold"
-                style={{ color: item.color }}
+              <motion.span
+                className="font-primary"
+                style={{ 
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 800,
+                  color: item.color,
+                }}
+                initial={{ opacity: 0 }}
+                animate={isInView ? { opacity: 1 } : {}}
+                transition={{ delay: idx * 0.1 + 0.5 }}
               >
-                {item.value}%
-              </span>
+                <AnimatedCounter value={item.value} suffix="%" />
+              </motion.span>
             </div>
-            <div className="h-10 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
+            <div 
+              className="h-10 rounded-full overflow-hidden" 
+              style={{ background: 'var(--bg-secondary)' }}
+            >
               <motion.div
                 initial={{ width: 0 }}
-                whileInView={{ width: `${(item.value / maxValue) * 100}%` }}
-                viewport={{ once: true }}
-                transition={{ duration: 1, delay: idx * 0.1 + 0.2 }}
-                className="h-full rounded-full"
+                animate={isInView ? { width: `${(item.value / maxValue) * 100}%` } : {}}
+                transition={{ duration: 1, delay: idx * 0.1 + 0.2, ease: 'easeOut' }}
+                className="h-full rounded-full relative"
                 style={{ background: item.color }}
-              />
+              >
+                <motion.div
+                  className="absolute inset-0"
+                  style={{
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                  }}
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{ duration: 2, repeat: Infinity, delay: idx * 0.2 }}
+                />
+              </motion.div>
             </div>
           </motion.div>
         ))}
@@ -293,252 +391,24 @@ const BarChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
 
 BarChart.displayName = 'BarChart';
 
-const RadarChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
-  const centerX = 50;
-  const centerY = 50;
-  const radius = 35;
-  const maxValue = 100;
-
-  const getPoint = (value: number, angle: number) => {
-    const r = (value / maxValue) * radius;
-    const x = centerX + r * Math.cos(angle);
-    const y = centerY + r * Math.sin(angle);
-    return { x, y };
-  };
-
-  const angleStep = (Math.PI * 2) / chart.data.length;
-
-  const points = chart.data.map((item, idx) => {
-    const angle = idx * angleStep - Math.PI / 2;
-    return getPoint(item.value, angle);
-  });
-
-  const polygonPoints = points.map((p, idx) => {
-    if (idx === 0) return `M ${p.x},${p.y}`;
-    return `L ${p.x},${p.y}`;
-  }).join(' ');
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ margin: '-100px' }}
-      transition={{ duration: 0.6, delay: index * 0.2 }}
-      className="p-6 mc-panel"
-    >
-      <h3
-        className="text-xl font-bold mb-6"
-        style={{
-          color: 'var(--text-primary)',
-          fontWeight: 800,
-          letterSpacing: '0.02em',
-        }}
-      >
-        {chart.title}
-      </h3>
-
-      <div className="relative w-full h-96">
-        <svg viewBox="0 0 100 100" className="w-full h-full">
-          {/* Background Circles */}
-          {[0.2, 0.4, 0.6, 0.8, 1].map((scale, idx) => (
-            <circle
-              key={idx}
-              cx={centerX}
-              cy={centerY}
-              r={radius * scale}
-              fill="none"
-              stroke="var(--border-subtle)"
-              strokeWidth="0.5"
-            />
-          ))}
-
-          {/* Axis Lines */}
-          {chart.data.map((_, idx) => {
-            const angle = idx * angleStep - Math.PI / 2;
-            const endPoint = getPoint(100, angle);
-            return (
-              <line
-                key={idx}
-                x1={centerX}
-                y1={centerY}
-                x2={endPoint.x}
-                y2={endPoint.y}
-                stroke="var(--border-subtle)"
-                strokeWidth="0.5"
-              />
-            );
-          })}
-
-          {/* Data Polygon */}
-          <motion.polygon
-            points={polygonPoints}
-            fill="var(--accent-primary)"
-            fillOpacity={0.3}
-            stroke="var(--accent-primary)"
-            strokeWidth="2"
-            initial={{ pathLength: 0, opacity: 0 }}
-            whileInView={{ pathLength: 1, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, delay: 0.3 }}
-            style={{ filter: 'drop-shadow(0 0 10px var(--accent-glow))' }}
-          />
-
-          {/* Data Points */}
-          {points.map((point, idx) => (
-            <motion.circle
-              key={idx}
-              cx={point.x}
-              cy={point.y}
-              r="3"
-              fill={chart.data[idx].color}
-              initial={{ scale: 0 }}
-              whileInView={{ scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: idx * 0.1 + 0.5 }}
-              className="cursor-pointer"
-              whileHover={{ r: 5 }}
-            />
-          ))}
-
-          {/* Labels */}
-          {chart.data.map((item, idx) => {
-            const angle = idx * angleStep - Math.PI / 2;
-            const labelPoint = getPoint(100, angle);
-            return (
-              <text
-                key={idx}
-                x={labelPoint.x}
-                y={labelPoint.y}
-                textAnchor={labelPoint.x < centerX ? 'end' : 'start'}
-                dominantBaseline="middle"
-                className="text-xs"
-                style={{
-                  fill: 'var(--text-muted)',
-                  fontSize: '3',
-                  fontWeight: '600',
-                }}
-              >
-                {item.label}
-              </text>
-            );
-          })}
-        </svg>
-      </div>
-    </motion.div>
-  );
-});
-
-RadarChart.displayName = 'RadarChart';
-
-const HeatMapChart = memo(({ chart, index }: { chart: Chart; index: number }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ margin: '-100px' }}
-      transition={{ duration: 0.6, delay: index * 0.2 }}
-      className="p-6 mc-panel"
-    >
-      <h3
-        className="text-xl font-bold mb-6"
-        style={{
-          color: 'var(--text-primary)',
-          fontWeight: 800,
-          letterSpacing: '0.02em',
-        }}
-      >
-        {chart.title}
-      </h3>
-
-      <div className="grid grid-cols-2 gap-4">
-        {chart.data.map((item, idx) => (
-          <motion.div
-            key={idx}
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: idx * 0.08 }}
-            className="relative p-5 rounded-lg overflow-hidden cursor-pointer"
-            style={{
-              background: `linear-gradient(135deg, ${item.color}20, ${item.color}40)`,
-              border: `2px solid ${item.color}60`,
-            }}
-            whileHover={{
-              scale: 1.05,
-              boxShadow: `0 0 20px ${item.color}60`,
-            }}
-          >
-            <div className="relative z-10">
-              <div
-                className="text-sm font-bold mb-3"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                {item.label}
-              </div>
-              <div className="flex items-center gap-2">
-                <motion.div
-                  className="h-3 rounded-full"
-                  style={{ background: item.color }}
-                  initial={{ width: 0 }}
-                  whileInView={{ width: `${item.value}%` }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1, delay: idx * 0.08 + 0.2 }}
-                />
-                <motion.span
-                  className="text-xs font-bold"
-                  style={{ color: item.color }}
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: idx * 0.08 + 0.6 }}
-                >
-                  {item.value}%
-                </motion.span>
-                </div>
-            </div>
-
-            <motion.div
-              className="absolute inset-0 opacity-0"
-              style={{ background: item.color }}
-              whileHover={{ opacity: 0.1 }}
-              transition={{ duration: 0.3 }}
-            />
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="mt-6 flex items-center justify-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ background: 'var(--accent-primary)' }} />
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>精通</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ background: 'var(--accent-secondary)' }} />
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>熟练</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded" style={{ background: 'var(--accent-tertiary)' }} />
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>掌握</span>
-        </div>
-      </div>
-    </motion.div>
-  );
-});
-
-HeatMapChart.displayName = 'HeatMapChart';
-
 export const StatsCharts = memo(function StatsCharts({ data }: { data: StatsChartsData }) {
   return (
     <section id="stats" className="relative py-24 lg:py-32 overflow-hidden">
       {/* Background Pattern */}
-      <div
-        className="absolute inset-0 opacity-5"
+      <motion.div
+        className="absolute inset-0"
         style={{
           backgroundImage: `
             radial-gradient(circle at 50% 50%, var(--accent-primary) 0%, transparent 50%),
             radial-gradient(circle at 20% 80%, var(--accent-secondary) 0%, transparent 40%)
           `,
+          opacity: 0.05,
         }}
+        animate={{ 
+          scale: [1, 1.1, 1],
+          rotate: [0, 5, 0],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
       />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -559,8 +429,6 @@ export const StatsCharts = memo(function StatsCharts({ data }: { data: StatsChar
           {data.charts.map((chart, index) => {
             if (chart.type === 'pie') return <PieChart key={chart.title} chart={chart} index={index} />;
             if (chart.type === 'bar') return <BarChart key={chart.title} chart={chart} index={index} />;
-            if (chart.type === 'radar') return <RadarChart key={chart.title} chart={chart} index={index} />;
-            if (chart.type === 'heatmap') return <HeatMapChart key={chart.title} chart={chart} index={index} />;
             return null;
           })}
         </div>

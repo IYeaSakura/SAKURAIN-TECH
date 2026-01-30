@@ -61,10 +61,11 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                 className="w-10 h-10 object-contain"
               />
               <span
-                className="font-minecraft text-2xl font-bold"
+                className="font-pixel text-2xl sm:text-3xl"
                 style={{
                   color: 'var(--text-primary)',
                   textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
+                  letterSpacing: '0.05em',
                 }}
               >
                 {data.logo}
@@ -78,6 +79,12 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   key={link.href}
                   onClick={() => scrollToSection(link.href)}
                   className="mc-nav-link"
+                  style={{
+                    fontFamily: 'var(--font-primary)',
+                    fontSize: 'var(--text-base)',
+                    fontWeight: 600,
+                    letterSpacing: '0.05em',
+                  }}
                 >
                   {link.label}
                 </button>
@@ -94,6 +101,11 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               <button
                 onClick={() => scrollToSection(data.cta.href)}
                 className="mc-btn mc-btn-gold text-sm"
+                style={{
+                  fontFamily: 'var(--font-primary)',
+                  fontWeight: 700,
+                  letterSpacing: '0.05em',
+                }}
               >
                 {data.cta.label}
               </button>
@@ -147,7 +159,12 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                     key={link.href}
                     onClick={() => scrollToSection(link.href)}
                     className="mc-nav-link text-left py-3 border-b"
-                    style={{ borderColor: 'var(--border-subtle)' }}
+                    style={{ 
+                      borderColor: 'var(--border-subtle)',
+                      fontFamily: 'var(--font-primary)',
+                      fontSize: 'var(--text-lg)',
+                      fontWeight: 600,
+                    }}
                   >
                     {link.label}
                   </button>
@@ -155,6 +172,11 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                 <button
                   onClick={() => scrollToSection(data.cta.href)}
                   className="mc-btn mc-btn-gold mt-4"
+                  style={{
+                    fontFamily: 'var(--font-primary)',
+                    fontWeight: 700,
+                    letterSpacing: '0.05em',
+                  }}
                 >
                   {data.cta.label}
                 </button>

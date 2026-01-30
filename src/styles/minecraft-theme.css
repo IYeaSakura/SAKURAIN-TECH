@@ -1,15 +1,8 @@
-/* Minecraft Theme - Deep Customization */
+/* Minecraft Theme - Deep Customization with Enhanced Typography */
 
-/* ==================== MINECRAFT FONTS ==================== */
-@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-
-/* Minecraft-style pixel font class */
-.font-minecraft {
-  font-family: 'VT323', monospace;
-  letter-spacing: 0.02em;
-}
-
-/* ==================== MINECRAFT COLORS ==================== */
+/* ============================================
+   MINECRAFT COLORS
+   ============================================ */
 :root {
   /* VSCode High Contrast Inspired Colors */
   --mc-dirt: #3C3C3C;
@@ -58,18 +51,20 @@
   --mc-accent-glow: rgba(86, 156, 214, 0.4);
 }
 
-/* ==================== MINECRAFT BUTTONS ==================== */
+/* ============================================
+   MINECRAFT BUTTONS
+   ============================================ */
 .mc-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 14px 32px;
-  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
-  font-size: 1.125rem;
-  font-weight: 700;
+  font-family: var(--font-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tracking-wider);
   color: white;
   background: var(--mc-accent);
   border: 3px solid;
@@ -136,7 +131,9 @@
     0 0 30px rgba(212, 160, 23, 0.6);
 }
 
-/* ==================== MINECRAFT CARDS ==================== */
+/* ============================================
+   MINECRAFT CARDS & PANELS
+   ============================================ */
 .mc-panel {
   position: relative;
   background: var(--mc-bg-card);
@@ -169,12 +166,14 @@
     0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* ==================== MINECRAFT INPUTS ==================== */
+/* ============================================
+   MINECRAFT INPUTS
+   ============================================ */
 .mc-input {
   padding: 14px 18px;
-  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
-  font-size: 1rem;
-  font-weight: 500;
+  font-family: var(--font-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
   color: var(--mc-text-primary);
   background: var(--mc-bg-secondary);
   border: 3px solid;
@@ -199,9 +198,12 @@
 .mc-input::placeholder {
   color: var(--mc-text-secondary);
   opacity: 0.6;
+  font-weight: var(--font-regular);
 }
 
-/* ==================== MINECRAFT TEXTURES ==================== */
+/* ============================================
+   MINECRAFT TEXTURES
+   ============================================ */
 .mc-texture-dirt {
   background-color: var(--mc-dirt);
   background-image: 
@@ -257,7 +259,9 @@
     );
 }
 
-/* ==================== MINECRAFT GLOW EFFECTS ==================== */
+/* ============================================
+   MINECRAFT GLOW EFFECTS
+   ============================================ */
 .mc-glow-gold {
   text-shadow: 
     0 0 5px var(--mc-gold),
@@ -286,15 +290,17 @@
     inset 0 0 5px var(--mc-accent-glow);
 }
 
-/* ==================== MINECRAFT BADGES ==================== */
+/* ============================================
+   MINECRAFT BADGES
+   ============================================ */
 .mc-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
-  font-size: 0.925rem;
-  font-weight: 600;
+  font-family: var(--font-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   background: var(--mc-bg-secondary);
   border: 2px solid;
   border-color: 
@@ -315,7 +321,9 @@
   color: white;
 }
 
-/* ==================== MINECRAFT PROGRESS BAR ==================== */
+/* ============================================
+   MINECRAFT PROGRESS BAR
+   ============================================ */
 .mc-progress {
   height: 20px;
   background: var(--mc-bg-secondary);
@@ -339,7 +347,9 @@
   transition: width 0.3s ease;
 }
 
-/* ==================== MINECRAFT TOOLTIP ==================== */
+/* ============================================
+   MINECRAFT TOOLTIP
+   ============================================ */
 .mc-tooltip {
   position: relative;
 }
@@ -351,8 +361,8 @@
   left: 50%;
   transform: translateX(-50%);
   padding: 8px 12px;
-  font-family: 'VT323', monospace;
-  font-size: 1rem;
+  font-family: var(--font-pixel);
+  font-size: var(--text-base);
   color: white;
   background: rgba(16, 0, 16, 0.95);
   border: 2px solid #5000A0;
@@ -370,28 +380,32 @@
   bottom: calc(100% + 8px);
 }
 
-/* ==================== MINECRAFT SECTION STYLES ==================== */
+/* ============================================
+   MINECRAFT SECTION STYLES - ENHANCED TYPOGRAPHY
+   ============================================ */
 .mc-section-title {
-  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
-  font-size: 3rem;
-  font-weight: 800;
+  font-family: var(--font-primary);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: var(--font-extrabold);
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tracking-tight);
   color: var(--mc-text-primary);
   text-shadow: 3px 3px 0 color-mix(in srgb, var(--mc-bg-secondary) 50%, black);
-  line-height: 1.2;
+  line-height: var(--leading-tight);
 }
 
 .mc-section-subtitle {
-  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
-  font-size: 1.25rem;
-  font-weight: 500;
+  font-family: var(--font-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--font-medium);
   color: var(--mc-text-secondary);
-  letter-spacing: 0.02em;
-  line-height: 1.6;
+  letter-spacing: var(--tracking-normal);
+  line-height: var(--leading-relaxed);
 }
 
-/* ==================== MINECRAFT ICON CONTAINER ==================== */
+/* ============================================
+   MINECRAFT ICON CONTAINER
+   ============================================ */
 .mc-icon-box {
   width: 64px;
   height: 64px;
@@ -423,7 +437,9 @@
     0 0 15px rgba(212, 160, 23, 0.3);
 }
 
-/* ==================== MINECRAFT MODAL/OVERLAY ==================== */
+/* ============================================
+   MINECRAFT MODAL/OVERLAY
+   ============================================ */
 .mc-modal-overlay {
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(2px);
@@ -443,7 +459,9 @@
     0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
-/* ==================== MINECRAFT NAVBAR ==================== */
+/* ============================================
+   MINECRAFT NAVBAR - ENHANCED
+   ============================================ */
 .mc-navbar {
   background: linear-gradient(
     to bottom,
@@ -458,11 +476,13 @@
 
 .mc-nav-link {
   position: relative;
-  font-family: 'VT323', monospace;
-  font-size: 1.25rem;
+  font-family: var(--font-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
   color: var(--mc-text-secondary);
   padding: 8px 16px;
   transition: all 0.2s ease;
+  letter-spacing: var(--tracking-wide);
 }
 
 .mc-nav-link:hover {
@@ -486,7 +506,9 @@
   width: 80%;
 }
 
-/* ==================== MINECRAFT STATS DISPLAY ==================== */
+/* ============================================
+   MINECRAFT STATS DISPLAY - ENHANCED
+   ============================================ */
 .mc-stat-box {
   padding: 20px 28px;
   text-align: center;
@@ -503,24 +525,47 @@
 }
 
 .mc-stat-value {
-  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
-  font-size: 2.75rem;
-  font-weight: 800;
+  font-family: var(--font-primary);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-black);
   color: var(--mc-accent);
   text-shadow: 3px 3px 0 color-mix(in srgb, var(--mc-accent) 40%, black);
-  line-height: 1.1;
+  line-height: var(--leading-none);
 }
 
 .mc-stat-label {
-  font-family: 'Microsoft YaHei', '微软雅黑', 'SimHei', '黑体', sans-serif;
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-family: var(--font-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
   color: var(--mc-text-secondary);
   text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+}
+
+/* ============================================
+   PIXEL FONT STYLES
+   ============================================ */
+.font-pixel-lg {
+  font-family: var(--font-pixel);
+  font-size: var(--text-3xl);
   letter-spacing: 0.02em;
 }
 
-/* ==================== ANIMATIONS ==================== */
+.font-pixel-md {
+  font-family: var(--font-pixel);
+  font-size: var(--text-xl);
+  letter-spacing: 0.02em;
+}
+
+.font-pixel-sm {
+  font-family: var(--font-pixel);
+  font-size: var(--text-lg);
+  letter-spacing: 0.02em;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
 @keyframes mc-pulse {
   0%, 100% {
     box-shadow: 0 0 5px var(--mc-accent-glow);
