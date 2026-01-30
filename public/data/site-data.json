@@ -2,7 +2,14 @@
   "meta": {
     "title": "SAKURAIN | 博弈算法与数据工程专家",
     "description": "SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。",
-    "keywords": ["博弈算法", "量化交易", "数据分析", "C++", "Python", "高性能计算"]
+    "keywords": [
+      "博弈算法",
+      "量化交易",
+      "数据分析",
+      "C++",
+      "Python",
+      "高性能计算"
+    ]
   },
   "navigation": {
     "logo": "SAKURAIN",
@@ -57,12 +64,36 @@
           {
             "title": "量化交易博弈系统",
             "items": [
-              { "name": "行情数据引擎", "desc": "百万级K线毫秒查询", "price": "¥960" },
-              { "name": "博弈策略核心", "desc": "支持10种对手模型", "price": "¥1,680" },
-              { "name": "回测加速模块", "desc": "AVX512优化，10年历史<5分钟", "price": "¥1,600" },
-              { "name": "并发调度器", "desc": "Go实现，支持100策略并行", "price": "¥720" },
-              { "name": "风险归因分析", "desc": "夏普/卡尔玛/最大回撤", "price": "¥448" },
-              { "name": "前端交互看板", "desc": "Vue3 + ECharts实时可视化", "price": "¥800" }
+              {
+                "name": "行情数据引擎",
+                "desc": "百万级K线毫秒查询",
+                "price": "¥960"
+              },
+              {
+                "name": "博弈策略核心",
+                "desc": "支持10种对手模型",
+                "price": "¥1,680"
+              },
+              {
+                "name": "回测加速模块",
+                "desc": "AVX512优化，10年历史<5分钟",
+                "price": "¥1,600"
+              },
+              {
+                "name": "并发调度器",
+                "desc": "Go实现，支持100策略并行",
+                "price": "¥720"
+              },
+              {
+                "name": "风险归因分析",
+                "desc": "夏普/卡尔玛/最大回撤",
+                "price": "¥448"
+              },
+              {
+                "name": "前端交互看板",
+                "desc": "Vue3 + ECharts实时可视化",
+                "price": "¥800"
+              }
             ],
             "total": "¥8,500",
             "performance": "回测速度提升5-10倍，单次回测内存占用<4GB，API调用延迟<10ms（p99）"
@@ -95,14 +126,42 @@
           {
             "title": "实时日志分析平台",
             "items": [
-              { "name": "Kafka集群", "desc": "3节点，吞吐10万msg/s", "price": "¥720" },
-              { "name": "Flink流处理", "desc": "Exactly-Once语义，延迟<5s", "price": "¥1,400" },
-              { "name": "ClickHouse存储", "desc": "10亿日志分区，压缩率>5:1", "price": "¥1,024" },
-              { "name": "Redis热查询", "desc": "百万级Key，QPS>10万", "price": "¥448" },
-              { "name": "SQL构建器", "desc": "支持动态聚合查询", "price": "¥720" },
-              { "name": "Vue3监控看板", "desc": "WebSocket实时推送", "price": "¥800" },
+              {
+                "name": "Kafka集群",
+                "desc": "3节点，吞吐10万msg/s",
+                "price": "¥720"
+              },
+              {
+                "name": "Flink流处理",
+                "desc": "Exactly-Once语义，延迟<5s",
+                "price": "¥1,400"
+              },
+              {
+                "name": "ClickHouse存储",
+                "desc": "10亿日志分区，压缩率>5:1",
+                "price": "¥1,024"
+              },
+              {
+                "name": "Redis热查询",
+                "desc": "百万级Key，QPS>10万",
+                "price": "¥448"
+              },
+              {
+                "name": "SQL构建器",
+                "desc": "支持动态聚合查询",
+                "price": "¥720"
+              },
+              {
+                "name": "Vue3监控看板",
+                "desc": "WebSocket实时推送",
+                "price": "¥800"
+              },
               { "name": "部署方案", "desc": "K8s Helm Chart", "price": "¥720" },
-              { "name": "压测验证", "desc": "JMeter，1000并发", "price": "¥200" }
+              {
+                "name": "压测验证",
+                "desc": "JMeter，1000并发",
+                "price": "¥200"
+              }
             ],
             "total": "¥7,500",
             "performance": "处理延迟端到端<5秒，吞吐量>5万条/秒，聚合查询<1秒，明细查询<0.5秒"
@@ -256,82 +315,373 @@
     ]
   },
   "pricing": {
-    "title": "定价方案",
-    "subtitle": "透明的价格体系，灵活的定制选项",
-    "disclaimer": "价格仅供参考，具体根据需求评估",
+    "title": "技术服务方案",
+    "subtitle": "专注高性能计算与博弈算法工程化，源码透明交付",
+    "disclaimer": "基准报价按功能复杂度调整，100%源码交付，不含第三方云资源费用",
     "categories": [
       {
         "id": "game-theory",
-        "name": "博弈系统",
+        "name": "量化博弈系统",
         "plans": [
           {
-            "name": "传统算法",
-            "price": "¥3,000",
-            "features": ["标准minimax算法", "Python核心", "基础可视化", "单策略回测"],
-            "params": { "延迟": "<50ms", "并发": "1k QPS", "回测": "10x加速" }
+            "name": "策略原型",
+            "price": "¥3,800",
+            "features": [
+              "Python/NumPy 向量化回测核心",
+              "Minimax/Alpha-Beta 剪枝算法",
+              "基础对手建模（静态策略）",
+              "CSV/Parquet 数据导入",
+              "Matplotlib 可视化分析",
+              "Docker 容器化交付"
+            ],
+            "params": {
+              "延迟": "<100ms",
+              "并发": "1k QPS",
+              "回测加速": "5x",
+              "数据精度": "Double 浮点"
+            }
           },
           {
-            "name": "机器学习",
-            "price": "¥8,000",
+            "name": "高性能实盘",
+            "price": "¥8,800",
             "popular": true,
-            "features": ["纳什均衡计算", "多因子策略", "实时数据流", "机器学习模块", "完整回测系统"],
-            "params": { "延迟": "<20ms", "并发": "10k QPS", "回测": "50x加速" }
+            "features": [
+              "C++17/AVX512 SIMD 指令集优化",
+              "不完全信息博弈（IIG）求解器",
+              "实时行情 WebSocket/ZeroMQ 接入",
+              "SQLite/MySQL 双存储策略",
+              "Telegram/钉钉信号推送",
+              "Goroutine 异步并发调度"
+            ],
+            "params": {
+              "延迟": "<20ms",
+              "并发": "10k QPS",
+              "回测加速": "50x",
+              "内存占用": "<2GB"
+            }
           },
           {
-            "name": "自研模型",
+            "name": "高频算法定制",
             "price": "联系议价",
-            "features": ["自定义博弈模型", "高频交易执行", "分布式架构", "实时风控", "专属技术支持"],
-            "params": { "延迟": "<5ms", "并发": "100k QPS", "回测": "100x加速" }
+            "features": [
+              "FPGA/AVX512 混合加速核心",
+              "MCTS+深度神经网络混合策略",
+              "内存数据库 Redis/Memcached 优化",
+              "实时风控拦截与熔断机制",
+              "多活部署与异地容灾方案",
+              "3个月技术维护与调优"
+            ],
+            "params": {
+              "延迟": "<5ms",
+              "并发": "100k QPS",
+              "回测加速": "200x",
+              "夏普比率": ">2.0"
+            }
+          }
+        ]
+      },
+      {
+        "id": "minecraft-dev",
+        "name": "Minecraft 生态开发",
+        "plans": [
+          {
+            "name": "基础插件",
+            "price": "¥1,200",
+            "features": [
+              "Bukkit/Spigot/Paper API 开发",
+              "YAML 配置热加载机制",
+              "单功能闭环逻辑实现",
+              "JMH 微基准性能测试",
+              "Git 完整源码交付",
+              "7天快速交付周期"
+            ],
+            "params": {
+              "延迟": "<5ms",
+              "并发": "50人",
+              "兼容版本": "1.20.x",
+              "交付周期": "7天"
+            }
+          },
+          {
+            "name": "核心玩法系统",
+            "price": "¥4,200",
+            "popular": true,
+            "features": [
+              "Paper 服务端异步优化",
+              "MySQL/Redis 双缓存架构",
+              "跨版本兼容 ViaVersion 集成",
+              "自定义 GUI 菜单与状态机",
+              "Web 管理后台（Vue3）",
+              "JFR 性能剖析报告"
+            ],
+            "params": {
+              "延迟": "<3ms",
+              "并发": "200人",
+              "兼容版本": "1.16-1.21",
+              "交付周期": "2-3周"
+            }
+          },
+          {
+            "name": "分布式架构",
+            "price": "¥9,800起",
+            "features": [
+              "BungeeCord/Velocity 分布式代理",
+              "跨服数据同步与消息总线",
+              "Forge/Fabric Mod 联动开发",
+              "Kubernetes 容器化编排",
+              " economy/权限/聊天全局系统",
+              "1个月运维交接与培训"
+            ],
+            "params": {
+              "延迟": "<2ms",
+              "并发": "1000人+",
+              "兼容版本": "1.8-1.21",
+              "可用性": "99.9%"
+            }
+          }
+        ]
+      },
+      {
+        "id": "web-c-end",
+        "name": "C端应用开发",
+        "plans": [
+          {
+            "name": "营销落地页",
+            "price": "¥2,800",
+            "features": [
+              "Vue3/React18 + TailwindCSS",
+              "Lighthouse 性能评分 >90",
+              "SEO 预渲染与 SSR 优化",
+              "微信 JSSDK 分享/支付集成",
+              "表单数据收集与 CMS 后台",
+              "Cloudflare/GitHub Pages 部署"
+            ],
+            "params": {
+              "首屏加载": "<1.0s",
+              "并发支持": "500",
+              "浏览器兼容": "Chrome/Safari/Firefox",
+              "交付周期": "3-5天"
+            }
+          },
+          {
+            "name": "微信小程序",
+            "price": "¥5,800",
+            "popular": true,
+            "features": [
+              "Taro 3.x/Uni-app 跨端架构",
+              "微信登录/支付/订阅消息",
+              "FastAPI/Go Gin 高性能后端",
+              "MySQL + Redis 缓存策略",
+              "ECharts 数据可视化大屏",
+              "审核包过与发布指导"
+            ],
+            "params": {
+              "首屏加载": "<800ms",
+              "并发支持": "1k QPS",
+              "接口延迟": "<100ms",
+              "可用性": "99.5%"
+            }
+          },
+          {
+            "name": "独立 Web 应用",
+            "price": "¥10,800",
+            "features": [
+              "React18/Vue3 + TypeScript",
+              "Node.js/Go 微服务架构",
+              "JWT + OAuth2.0 权限体系",
+              "MySQL/PostgreSQL + Prisma ORM",
+              "Docker Compose 一键部署",
+              "Prometheus 监控接入"
+            ],
+            "params": {
+              "首屏加载": "<600ms",
+              "并发支持": "3k QPS",
+              "接口延迟": "<50ms",
+              "可用性": "99.5%"
+            }
+          }
+        ]
+      },
+      {
+        "id": "web-b-end",
+        "name": "B端管理系统",
+        "plans": [
+          {
+            "name": "业务后台",
+            "price": "¥3,800",
+            "features": [
+              "Vue-Vben-Admin/Arco Design Pro",
+              "RBAC 权限（角色/菜单/按钮）",
+              "通用 CRUD 代码生成器",
+              "ECharts 统计看板",
+              "Excel 批量导入导出",
+              "操作日志审计与追踪"
+            ],
+            "params": {
+              "页面加载": "<800ms",
+              "并发用户": "100",
+              "响应时间": "<300ms",
+              "数据规模": "10万级"
+            }
+          },
+          {
+            "name": "数据中台",
+            "price": "¥7,800",
+            "popular": true,
+            "features": [
+              "复杂工作流引擎（Camunda/Flowable）",
+              "多租户数据隔离与 SaaS 化",
+              "Redis Cluster 缓存架构",
+              "RabbitMQ/Kafka 异步任务",
+              "DataV/ECharts 可视化大屏",
+              "钉钉/飞书/企业微信集成"
+            ],
+            "params": {
+              "页面加载": "<600ms",
+              "并发用户": "500",
+              "响应时间": "<150ms",
+              "数据规模": "百万级"
+            }
+          },
+          {
+            "name": "企业级架构",
+            "price": "联系议价",
+            "features": [
+              "微服务拆分与 Service Mesh",
+              "分布式事务（Seata/Saga）",
+              "CI/CD 流水线（GitLab CI/GitHub Actions）",
+              "Kubernetes Helm 交付",
+              "多环境配置中心（Nacos/Apollo）",
+              "完整技术架构设计文档"
+            ],
+            "params": {
+              "页面加载": "<400ms",
+              "并发用户": "2000+",
+              "响应时间": "<100ms",
+              "可用性": "99.9%"
+            }
           }
         ]
       },
       {
         "id": "data-analysis",
-        "name": "数据分析",
+        "name": "数据分析处理",
         "plans": [
           {
-            "name": "基础版",
-            "price": "¥2,000",
-            "features": ["Scrapy爬虫", "MySQL存储", "基础报表", "定时任务"],
-            "params": { "日处理": "10万条", "查询": "<2秒", "并发": "100" }
+            "name": "数据采集",
+            "price": "¥2,800",
+            "features": [
+              "Scrapy/Playwright 分布式爬虫",
+              "IP 代理池与验证码识别",
+              "MongoDB/MySQL 数据存储",
+              "Airflow/Cron 定时调度",
+              "数据去重与清洗规则",
+              "JSON/Excel/Parquet 多格式导出"
+            ],
+            "params": {
+              "日采集量": "10万条",
+              "字段完整率": ">95%",
+              "抓取延迟": "<1s/页",
+              "运行时间": "7×12小时"
+            }
           },
           {
-            "name": "专业版",
-            "price": "¥5,000",
+            "name": "分析看板",
+            "price": "¥6,800",
             "popular": true,
-            "features": ["Kafka消息队列", "Flink流处理", "ClickHouse存储", "实时看板", "告警系统"],
-            "params": { "日处理": "100万条", "查询": "<1秒", "并发": "1000" }
+            "features": [
+              "Pandas/Polars 高性能数据处理",
+              "ClickHouse OLAP 查询优化",
+              "Apache ECharts/D3.js 可视化",
+              "Streamlit/Flask 交互界面",
+              "自动报表生成（PDF/Excel）",
+              "异常检测与预测模型"
+            ],
+            "params": {
+              "日处理量": "100万条",
+              "查询响应": "<500ms",
+              "图表渲染": "<1s",
+              "数据保留": "永久存储"
+            }
           },
           {
-            "name": "集群版",
-            "price": "联系议价",
-            "features": ["分布式爬虫", "K8s集群", "多区域部署", "专属运维", "7x24支持"],
-            "params": { "日处理": "1000万条", "查询": "<500ms", "并发": "10000" }
+            "name": "实时计算",
+            "price": "¥15,800起",
+            "features": [
+              "Apache Flink 流处理引擎",
+              "Kafka 高吞吐消息队列",
+              "ClickHouse 实时写入与查询",
+              "WebSocket 实时推送大屏",
+              "复杂事件处理（CEP）",
+              "集群部署与压测报告"
+            ],
+            "params": {
+              "日处理量": "1000万条",
+              "流延迟": "<3秒",
+              "查询响应": "<200ms",
+              "可用性": "99.5%"
+            }
           }
         ]
       },
       {
-        "id": "web-dev",
-        "name": "网站开发",
+        "id": "automation-tools",
+        "name": "自动化与脚本",
         "plans": [
           {
-            "name": "展示型",
-            "price": "¥3,500",
-            "features": ["响应式前端", "基础后端API", "MySQL数据库", "Docker部署"],
-            "params": { "并发": "500", "响应": "<200ms", "可用性": "99.9%" }
+            "name": "效率脚本",
+            "price": "¥1,200",
+            "features": [
+              "Python 自动化脚本开发",
+              "Excel/Word/PDF 批量处理",
+              "邮件/短信自动通知",
+              "文件自动归档与同步",
+              "Windows/Linux 计划任务",
+              "exe 可执行文件打包"
+            ],
+            "params": {
+              "执行时间": "<5分钟",
+              "处理文件": "1000个/次",
+              "准确率": "99%",
+              "交付形式": "源码+exe"
+            }
           },
           {
-            "name": "交互平台",
-            "price": "¥6,000",
+            "name": "RPA 流程",
+            "price": "¥3,800",
             "popular": true,
-            "features": ["Vue3前端", "微服务架构", "Redis缓存", "CI/CD流水线", "监控告警"],
-            "params": { "并发": "2000", "响应": "<100ms", "可用性": "99.95%" }
+            "features": [
+              "PyAutoGUI/DrissionPage 自动化",
+              "多网站登录与 Cookie 保持",
+              "OCR 验证码识别接入",
+              "异常重试与告警机制",
+              "数据跨系统搬运与同步",
+              "可视化操作日志记录"
+            ],
+            "params": {
+              "执行周期": "7×24小时",
+              "任务成功率": ">98%",
+              "并发流程": "5个",
+              "人工干预": "邮件告警"
+            }
           },
           {
-            "name": "电商基础",
-            "price": "¥9,000",
-            "features": ["SSR/SSG优化", "分布式架构", "K8s编排", "多区域部署", "专属运维"],
-            "params": { "并发": "5000", "响应": "<50ms", "可用性": "99.99%" }
+            "name": "智能工作流",
+            "price": "¥7,800起",
+            "features": [
+              "LLM 集成（GPT/Claude/本地模型）",
+              "LangChain/n8n 工作流编排",
+              "智能文档解析与信息抽取",
+              "自动分类、标签与摘要",
+              "多 API 异构系统集成",
+              "私有化部署与数据隔离"
+            ],
+            "params": {
+              "API 响应": "<2秒",
+              "日处理量": "5万次调用",
+              "准确率": ">90%",
+              "集成平台": "10+API"
+            }
           }
         ]
       }
@@ -346,7 +696,12 @@
         "title": "需求分析",
         "description": "深入了解业务需求，分析技术可行性，制定项目范围与里程碑",
         "icon": "Search",
-        "details": ["业务需求梳理", "技术可行性分析", "项目范围定义", "里程碑规划"],
+        "details": [
+          "业务需求梳理",
+          "技术可行性分析",
+          "项目范围定义",
+          "里程碑规划"
+        ],
         "duration": "1-3天"
       },
       {
@@ -387,12 +742,42 @@
     "title": "为什么选择 SAKURAIN",
     "subtitle": "与传统外包公司的核心差异",
     "items": [
-      { "dimension": "技术深度", "traditional": "广度优先，通用开发", "sakurain": "深度垂直，博弈算法与数据工程专家", "highlight": "核心成员在博弈论、性能优化领域有论文级研究" },
-      { "dimension": "定价基准", "traditional": "¥800-2,000/人天", "sakurain": "¥150-500/人天", "highlight": "无运营摊销，学生身份非盈利导向" },
-      { "dimension": "代码交付", "traditional": "部分源码或加密", "sakurain": "100%完整源码交付", "highlight": "客户拥有完全技术主权" },
-      { "dimension": "项目周期", "traditional": "倾向长期外包", "sakurain": "严格≤60天交付", "highlight": "大四毕业时间窗口强制短周期" },
-      { "dimension": "沟通路径", "traditional": "销售→PM→开发，信息衰减", "sakurain": "技术负责人直客", "highlight": "需求准确转化为技术实现" },
-      { "dimension": "运维绑定", "traditional": "长期维护收费", "sakurain": "提供自运维方案", "highlight": "无捆绑销售" }
+      {
+        "dimension": "技术深度",
+        "traditional": "广度优先，通用开发",
+        "sakurain": "深度垂直，博弈算法与数据工程专家",
+        "highlight": "核心成员在博弈论、性能优化领域有论文级研究"
+      },
+      {
+        "dimension": "定价基准",
+        "traditional": "¥800-2,000/人天",
+        "sakurain": "¥150-500/人天",
+        "highlight": "无运营摊销，学生身份非盈利导向"
+      },
+      {
+        "dimension": "代码交付",
+        "traditional": "部分源码或加密",
+        "sakurain": "100%完整源码交付",
+        "highlight": "客户拥有完全技术主权"
+      },
+      {
+        "dimension": "项目周期",
+        "traditional": "倾向长期外包",
+        "sakurain": "严格≤60天交付",
+        "highlight": "大四毕业时间窗口强制短周期"
+      },
+      {
+        "dimension": "沟通路径",
+        "traditional": "销售→PM→开发，信息衰减",
+        "sakurain": "技术负责人直客",
+        "highlight": "需求准确转化为技术实现"
+      },
+      {
+        "dimension": "运维绑定",
+        "traditional": "长期维护收费",
+        "sakurain": "提供自运维方案",
+        "highlight": "无捆绑销售"
+      }
     ]
   },
   "contact": {

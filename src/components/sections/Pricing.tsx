@@ -19,17 +19,20 @@ const categoryIcons: Record<string, typeof Brain> = {
 
 const getCategoryIcon = (categoryName: string) => categoryIcons[categoryName] || Zap;
 
-const colorMap: Record<string, { primary: string; secondary: string; glow: string }> = {
-  '博弈系统': { primary: '#9B59B6', secondary: '#8E44AD', glow: 'rgba(155, 89, 182, 0.4)' },
-  '数据分析': { primary: '#3498DB', secondary: '#2980B9', glow: 'rgba(52, 152, 219, 0.4)' },
-  '网站开发': { primary: '#27AE60', secondary: '#229954', glow: 'rgba(39, 174, 96, 0.4)' },
-  '毕业设计': { primary: '#E67E22', secondary: '#D35400', glow: 'rgba(230, 126, 34, 0.4)' },
-  'Minecraft插件': { primary: '#1ABC9C', secondary: '#16A085', glow: 'rgba(26, 188, 156, 0.4)' },
-  'WAF安全': { primary: '#E74C3C', secondary: '#C0392B', glow: 'rgba(231, 76, 60, 0.4)' },
-};
+// 7种预设色彩循环使用（避免相邻种类颜色相同）
+const colorPalette: { primary: string; secondary: string; glow: string }[] = [
+  { primary: '#3B82F6', secondary: '#2563EB', glow: 'rgba(59, 130, 246, 0.4)' },    // 科技蓝
+  { primary: '#8B5CF6', secondary: '#7C3AED', glow: 'rgba(139, 92, 246, 0.4)' },    // 神秘紫
+  { primary: '#10B981', secondary: '#059669', glow: 'rgba(16, 185, 129, 0.4)' },    // 活力绿
+  { primary: '#F59E0B', secondary: '#D97706', glow: 'rgba(245, 158, 11, 0.4)' },    // 温暖橙
+  { primary: '#EF4444', secondary: '#DC2626', glow: 'rgba(239, 68, 68, 0.4)' },      // 热情红
+  { primary: '#06B6D4', secondary: '#0891B2', glow: 'rgba(6, 182, 212, 0.4)' },      // 清新青
+  { primary: '#EC4899', secondary: '#DB2777', glow: 'rgba(236, 72, 153, 0.4)' },      // 浪漫粉
+];
 
-const getColors = (categoryName: string) => {
-  return colorMap[categoryName] || { primary: '#0E639C', secondary: '#094575', glow: 'rgba(14, 99, 156, 0.4)' };
+// 根据种类索引获取颜色（循环使用7种预设色）
+const getColors = (categoryIndex: number) => {
+  return colorPalette[categoryIndex % colorPalette.length];
 };
 
 const getAllPlans = (categories: SiteData['pricing']['categories']) => {
@@ -57,16 +60,25 @@ const getAllPlans = (categories: SiteData['pricing']['categories']) => {
   return allPlans;
 };
 
-// Get first plan index of a category
-const getCategoryFirstIndex = (categories: SiteData['pricing']['categories'], categoryIndex: number) => {
+// Get recommended plan index within a category (first popular plan, or first plan if none)
+const getCategoryRecommendedIndex = (categories: SiteData['pricing']['categories'], categoryIndex: number) => {
   let index = 0;
   for (let i = 0; i < categoryIndex; i++) {
     index += categories[i].plans.length;
   }
+  
+  const category = categories[categoryIndex];
+  if (!category) return index;
+  
+  // Find first popular plan in this category
+  const popularPlanIndex = category.plans.findIndex(plan => plan.popular);
+  if (popularPlanIndex !== -1) {
+    return index + popularPlanIndex;
+  }
+  
+  // Fallback to first plan
   return index;
 };
-
-
 
 const PlanCard = memo(({
   plan,
@@ -74,12 +86,14 @@ const PlanCard = memo(({
   categoryColor,
   isActive,
   onClick,
+  style,
 }: {
   plan: SiteData['pricing']['categories'][0]['plans'][0];
   categoryName: string;
   categoryColor: { primary: string; secondary: string; glow: string };
   isActive: boolean;
   onClick: () => void;
+  style?: React.CSSProperties;
 }) => {
   const Icon = getCategoryIcon(categoryName);
   
@@ -89,6 +103,7 @@ const PlanCard = memo(({
       onClick={onClick}
       whileHover={{ y: -8 }}
       transition={{ duration: 0.2 }}
+      style={style}
     >
       <motion.div
         className="relative rounded-2xl overflow-hidden h-full"
@@ -262,7 +277,7 @@ const CategoryTab = memo(({
   index: number;
   planCount: number;
 }) => {
-  const colors = getColors(category.name);
+  const colors = getColors(index);
   const Icon = getCategoryIcon(category.name);
 
   return (
@@ -306,6 +321,7 @@ const CategoryTab = memo(({
   );
 });
 
+// Infinite Carousel with seamless loop
 const CardCarousel = memo(({
   allPlans,
   activeIndex,
@@ -318,48 +334,99 @@ const CardCarousel = memo(({
   isInView: boolean;
 }) => {
   const totalPlans = allPlans.length;
-  const cardWidth = 264; // w-64 + some margin
+  const cardWidth = 264;
   const gap = 20;
   const itemWidth = cardWidth + gap;
   
-  // For infinite loop, we need to triple the cards
-  const extendedPlans = [...allPlans, ...allPlans, ...allPlans];
+  // For true infinite loop, we render many copies
+  const copies = 5; // Number of copies for seamless loop
+  const extendedPlans = Array(copies).fill(allPlans).flat();
+  const totalExtended = extendedPlans.length;
   
-  // Calculate the "virtual" active index in the middle set
-  const virtualActiveIndex = activeIndex + totalPlans;
+  // Current visual position (can be any number, not bounded)
+  const [visualIndex, setVisualIndex] = useState(() => activeIndex + totalPlans);
+  const visualIndexRef = useRef(visualIndex);
   
-  // Navigation with proper loop handling
-  const navigate = useCallback((direction: 'prev' | 'next') => {
-    let newIndex = direction === 'prev' 
-      ? activeIndex - 1
-      : activeIndex + 1;
-    
-    // Handle wrapping
-    if (newIndex < 0) {
-      newIndex = totalPlans - 1;
-    } else if (newIndex >= totalPlans) {
-      newIndex = 0;
+  // Keep ref in sync with state
+  useEffect(() => {
+    visualIndexRef.current = visualIndex;
+  }, [visualIndex]);
+  
+  // Ref to track if visualIndex change is from user navigation (not external activeIndex change)
+  const isNavigatingRef = useRef(false);
+  const lastActiveIndexRef = useRef(activeIndex);
+  
+  // Sync visual index when activeIndex changes from outside (category click)
+  // Only run when activeIndex actually changes externally (not from our own onSelect)
+  useEffect(() => {
+    // Skip if this is the same activeIndex we already synced to
+    if (activeIndex === lastActiveIndexRef.current && !isNavigatingRef.current) {
+      return;
     }
     
-    onSelect(newIndex);
-  }, [activeIndex, totalPlans, onSelect]);
-
+    // Mark that we're responding to external change, not user navigation
+    isNavigatingRef.current = false;
+    lastActiveIndexRef.current = activeIndex;
+    
+    const currentVisual = visualIndexRef.current;
+    
+    // Find the closest occurrence of activeIndex to current visualIndex
+    const baseOffset = Math.floor(currentVisual / totalPlans) * totalPlans;
+    let targetIndex = baseOffset + activeIndex;
+    
+    // Choose the closest one to minimize animation distance
+    if (Math.abs(targetIndex + totalPlans - currentVisual) < Math.abs(targetIndex - currentVisual)) {
+      targetIndex += totalPlans;
+    } else if (Math.abs(targetIndex - totalPlans - currentVisual) < Math.abs(targetIndex - currentVisual)) {
+      targetIndex -= totalPlans;
+    }
+    
+    setVisualIndex(targetIndex);
+  }, [activeIndex, totalPlans]);  // 注意：不依赖 visualIndex，避免循环
+  
+  // Normalize visual index periodically to prevent overflow (without triggering onSelect)
+  useEffect(() => {
+    const minIndex = totalPlans;
+    const maxIndex = totalPlans * (copies - 1);
+    
+    if (visualIndex < minIndex || visualIndex >= maxIndex) {
+      // Normalize to middle copy
+      const normalizedIndex = (visualIndex % totalPlans) + totalPlans;
+      if (normalizedIndex !== visualIndex) {
+        setVisualIndex(normalizedIndex);
+      }
+    }
+  }, [visualIndex, totalPlans, copies]);
+  
+  // Navigation - mark as user navigation
+  const navigate = useCallback((direction: 'prev' | 'next') => {
+    isNavigatingRef.current = true;
+    setVisualIndex(prev => prev + (direction === 'prev' ? -1 : 1));
+  }, []);
+  
+  // Update real active index based on visual index (only when user is navigating)
+  useEffect(() => {
+    // Only update activeIndex when user is navigating (not when syncing from external change)
+    if (!isNavigatingRef.current) return;
+    
+    const realIndex = ((visualIndex % totalPlans) + totalPlans) % totalPlans;
+    if (realIndex !== activeIndex) {
+      lastActiveIndexRef.current = realIndex;
+      onSelect(realIndex);
+    }
+  }, [visualIndex, totalPlans, activeIndex, onSelect]);
+  
   // Handle wheel events
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
-    if (e.deltaY > 0) {
-      navigate('next');
-    } else {
-      navigate('prev');
-    }
+    navigate(e.deltaY > 0 ? 'next' : 'prev');
   }, [navigate]);
 
-  // Calculate translateX to center the active card
-  // Container should show: half-card | full | ACTIVE | full | half-card
-  const containerWidth = itemWidth * 4; // 4 cards width
-  const translateX = (containerWidth / 2) - (virtualActiveIndex * itemWidth) - (cardWidth / 2);
-
-  // Track if initial animation has played
+  // Calculate translateX to center the active visual card
+  const containerWidth = itemWidth * 4;
+  const translateX = (containerWidth / 2) - (visualIndex * itemWidth) - (cardWidth / 2);
+  
+  // Track initial animation
   const hasAnimated = useRef(false);
   useEffect(() => {
     if (isInView && !hasAnimated.current) {
@@ -368,10 +435,10 @@ const CardCarousel = memo(({
   }, [isInView]);
 
   return (
-    <div className="relative">
+    <div className="relative" style={{ zIndex: 50 }}>
       {/* Navigation Arrows */}
       <motion.button
-        className="absolute left-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md"
+        className="absolute left-2 top-1/2 -translate-y-1/2 z-[60] w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md"
         style={{
           background: 'var(--bg-card)',
           border: '2px solid var(--accent-primary)',
@@ -388,7 +455,7 @@ const CardCarousel = memo(({
       </motion.button>
 
       <motion.button
-        className="absolute right-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md"
+        className="absolute right-2 top-1/2 -translate-y-1/2 z-[60] w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md"
         style={{
           background: 'var(--bg-card)',
           border: '2px solid var(--accent-primary)',
@@ -404,28 +471,34 @@ const CardCarousel = memo(({
         <ChevronRight className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
       </motion.button>
 
-      {/* Cards Container */}
+      {/* Cards Container - 增加垂直空间避免hover被截断 */}
       <div 
-        className="relative overflow-hidden py-10 mx-auto"
+        className="relative mx-auto overflow-visible"
         style={{
           maxWidth: `${itemWidth * 4 + gap}px`,
+          zIndex: 50,
+          paddingTop: '60px',
+          paddingBottom: '60px',
+          marginTop: '30px',
+          marginBottom: '30px',
         }}
         onWheel={handleWheel}
       >
-        {/* Viewport with edge fade masking */}
+        {/* Viewport - 左右渐变遮罩，垂直方向无遮罩 */}
         <div 
-          className="relative overflow-hidden"
+          className="relative overflow-visible"
           style={{
-            maskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%)',
+            maskImage: 'linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 4%, black 96%, transparent 100%)',
           }}
         >
-          {/* Cards Track */}
+          {/* Cards Track - 增加最小高度确保卡片完全显示 */}
           <motion.div 
-            className="flex"
+            className="flex items-center"
             style={{ 
               gap: `${gap}px`,
-              width: `${extendedPlans.length * itemWidth}px`,
+              width: `${totalExtended * itemWidth}px`,
+              minHeight: '500px',
             }}
             animate={{
               x: translateX,
@@ -438,15 +511,11 @@ const CardCarousel = memo(({
             }}
           >
             {extendedPlans.map((planData, index) => {
-              const { plan, categoryName } = planData;
-              const colors = getColors(categoryName);
+              const { plan, categoryName, categoryIndex } = planData;
+              const colors = getColors(categoryIndex);
+              const isCenter = index === visualIndex;
+              const distanceFromCenter = Math.abs(index - visualIndex);
               
-              // Calculate if this is the center (active) card
-              const isCenter = index === virtualActiveIndex;
-              // Calculate distance from center for scale/opacity
-              const distanceFromCenter = Math.abs(index - virtualActiveIndex);
-              
-              // Calculate scale and opacity based on distance
               let scale = 0.85;
               let opacity = 0.4;
               if (isCenter) {
@@ -460,18 +529,21 @@ const CardCarousel = memo(({
                 opacity = 0.7;
               }
               
-              // Calculate the "real" index (0 to totalPlans-1)
               const realIndex = index % totalPlans;
               
               return (
                 <motion.div
                   key={`${plan.name}-${index}`}
                   className="flex-shrink-0"
-                  style={{ width: cardWidth }}
+                  style={{ 
+                    width: cardWidth,
+                    position: 'relative',
+                    zIndex: isCenter ? 100 : 50 - distanceFromCenter,
+                  }}
                   initial={!hasAnimated.current ? {
                     opacity: 0,
-                    y: 40,
-                    scale: 0.8,
+                    y: 60,
+                    scale: 0.6,
                   } : false}
                   animate={{
                     opacity,
@@ -535,18 +607,22 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
   const totalPlans = allPlans.length;
   const totalCategories = data.categories.length;
 
-  // Handle category click - navigate to first plan of that category
+  // 数据加载后，自动定位到第一个分类的推荐项目
+  useEffect(() => {
+    if (data.categories.length > 0) {
+      const defaultIndex = getCategoryRecommendedIndex(data.categories, 0);
+      setActivePlanIndex(defaultIndex);
+    }
+  }, [data.categories]);
+
   const handleCategoryClick = useCallback((categoryIndex: number) => {
     setActiveCategoryIndex(categoryIndex);
-    // Get the first plan index of this category
-    const targetIndex = getCategoryFirstIndex(data.categories, categoryIndex);
+    const targetIndex = getCategoryRecommendedIndex(data.categories, categoryIndex);
     setActivePlanIndex(targetIndex);
   }, [data.categories]);
 
-  // Handle plan selection
   const handlePlanSelect = useCallback((globalIndex: number) => {
     setActivePlanIndex(globalIndex);
-    // Update active category based on selected plan
     const plan = allPlans[globalIndex];
     if (plan) {
       setActiveCategoryIndex(plan.categoryIndex);
@@ -578,8 +654,8 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
   };
 
   return (
-    <section id="pricing" ref={sectionRef} className="relative py-24 lg:py-32 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
+    <section id="pricing" ref={sectionRef} className="relative py-24 lg:py-32 overflow-visible">
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div 
           className="absolute top-1/4 left-0 w-96 h-96 rounded-full opacity-30"
           style={{
@@ -597,7 +673,8 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
       </div>
 
       <motion.div 
-        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+        className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-visible"
+        style={{ zIndex: 10 }}
         variants={containerVariants}
         initial="hidden"
         animate={isInView ? "visible" : "hidden"}
