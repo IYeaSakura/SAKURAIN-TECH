@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Lightbulb, Code, CheckCircle, Headphones, ArrowRight } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
-import { AmbientGlow, FloatingBubbles, TwinklingStars, ConstellationEffect } from '@/components/effects';
+import { AmbientGlow, FloatingBubbles, TwinklingStars } from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface ProcessProps {
@@ -205,12 +205,12 @@ export const Process = memo(function Process({ data }: ProcessProps) {
       
       {/* 闪烁星星 */}
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
-        <TwinklingStars count={25} color="var(--accent-secondary)" />
+        <TwinklingStars count={30} color="var(--accent-secondary)" secondaryColor="var(--accent-primary)" />
       </div>
       
       {/* 星座连线 */}
       <div className="absolute inset-0 pointer-events-none opacity-15 hidden lg:block">
-        <ConstellationEffect count={12} connectionDistance={130} color="var(--accent-primary)" />
+
       </div>
       
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">

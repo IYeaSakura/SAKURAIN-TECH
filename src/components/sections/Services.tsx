@@ -1,5 +1,5 @@
-import { useState, memo, useMemo, useCallback, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useSpring, useInView } from 'framer-motion';
+import { useState, memo, useMemo, useCallback, useRef, useEffect } from 'react';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
 import {
   Brain, BarChart3, Globe, GraduationCap, Gamepad2, Shield,
@@ -59,26 +59,45 @@ const ServiceCard = memo(({
   const isLarge = service.size === 'large';
   
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { margin: '-50px' });
+  const [isInView, setIsInView] = useState(false);
+  
+  // 使用 IntersectionObserver 替代 framer-motion 的 useInView 以减少依赖
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect(); // 只触发一次
+        }
+      },
+      { rootMargin: '-50px', threshold: 0.1 }
+    );
+    
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
   
   const [isHovered, setIsHovered] = useState(false);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return;
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!ref.current || !isInView) return;
     const rect = ref.current.getBoundingClientRect();
     const x = (e.clientX - rect.left - rect.width / 2) / 20;
     const y = (e.clientY - rect.top - rect.height / 2) / 20;
     mouseX.set(x);
     mouseY.set(y);
-  };
+  }, [isInView, mouseX, mouseY]);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     mouseX.set(0);
     mouseY.set(0);
     setIsHovered(false);
-  };
+  }, [mouseX]);
 
   const rotateX = useSpring(mouseY, { stiffness: 300, damping: 30 });
   const rotateY = useSpring(mouseX, { stiffness: 300, damping: 30 });
@@ -630,7 +649,7 @@ export const Services = memo(function Services({ data }: ServicesProps) {
       
       {/* 闪烁星星 */}
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
-        <TwinklingStars count={25} color="var(--accent-secondary)" />
+        <TwinklingStars count={30} color="var(--accent-secondary)" secondaryColor="var(--accent-tertiary)" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

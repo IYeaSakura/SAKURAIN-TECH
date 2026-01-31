@@ -406,7 +406,7 @@ export const StatsCharts = memo(function StatsCharts({ data }: { data: StatsChar
       
       {/* 闪烁星星 */}
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
-        <TwinklingStars count={25} color="var(--accent-primary)" />
+        <TwinklingStars count={30} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

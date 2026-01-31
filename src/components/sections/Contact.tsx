@@ -4,7 +4,6 @@ import { Mail, Clock, Send, Github, MessageCircle, Terminal, ChevronRight } from
 import { SectionTitle } from '@/components/atoms';
 import { 
   AmbientGlow,
-  ConstellationEffect,
   GlowingBorder,
   FloatingBubbles,
   TwinklingStars,
@@ -55,11 +54,6 @@ export const Contact = memo(function Contact({ data }: ContactProps) {
       <AmbientGlow position="top-left" color="var(--accent-secondary)" size={300} opacity={0.12} />
       <AmbientGlow position="bottom-right" color="var(--accent-tertiary)" size={400} opacity={0.1} />
       
-      {/* 星座连线效果 */}
-      <div className="absolute inset-0 opacity-30 hidden lg:block">
-        <ConstellationEffect count={20} connectionDistance={120} color="var(--accent-primary)" />
-      </div>
-      
       {/* 浮动气泡 */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <FloatingBubbles count={8} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
@@ -67,7 +61,7 @@ export const Contact = memo(function Contact({ data }: ContactProps) {
       
       {/* 闪烁星星 */}
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
-        <TwinklingStars count={20} color="var(--accent-secondary)" />
+        <TwinklingStars count={30} color="var(--accent-secondary)" secondaryColor="var(--accent-tertiary)" />
       </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

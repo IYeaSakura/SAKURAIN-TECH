@@ -1,10 +1,11 @@
 import { memo, useEffect, useState, useCallback, useRef } from 'react';
-import { motion, useSpring, useMotionValue } from 'framer-motion';
+import { motion, useSpring, useMotionValue, useReducedMotion } from 'framer-motion';
 
-// ==================== 磁性光标 ====================
+// ==================== 磁性光标 - 优化版 ====================
 export const MagneticCursor = memo(() => {
   const [isHovering, setIsHovering] = useState(false);
   const cursorRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
   
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -14,6 +15,8 @@ export const MagneticCursor = memo(() => {
   const cursorY = useSpring(mouseY, springConfig);
 
   useEffect(() => {
+    if (prefersReducedMotion) return;
+    
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
@@ -39,7 +42,9 @@ export const MagneticCursor = memo(() => {
       document.removeEventListener('mouseover', handleMouseOver);
       document.removeEventListener('mouseout', handleMouseOut);
     };
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, prefersReducedMotion]);
+
+  if (prefersReducedMotion) return null;
 
   return (
     <>
@@ -52,6 +57,7 @@ export const MagneticCursor = memo(() => {
           y: cursorY,
           translateX: '-50%',
           translateY: '-50%',
+          willChange: 'transform',
         }}
         animate={{
           width: isHovering ? 60 : 20,
@@ -68,28 +74,49 @@ export const MagneticCursor = memo(() => {
   );
 });
 
-// ==================== 光标轨迹 ====================
+// ==================== 光标轨迹 - 优化版 ====================
 const CursorTrail = memo(() => {
   const [points, setPoints] = useState<Array<{ x: number; y: number; id: number }>>([]);
   const pointIdRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+  const pendingPointRef = useRef<{ x: number; y: number } | null>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
+    if (prefersReducedMotion) return;
+    
     const handleMouseMove = (e: MouseEvent) => {
-      pointIdRef.current++;
-      const newPoint = { x: e.clientX, y: e.clientY, id: pointIdRef.current };
-      
-      setPoints((prev) => {
-        const newPoints = [...prev, newPoint];
-        if (newPoints.length > 8) {
-          return newPoints.slice(newPoints.length - 8);
-        }
-        return newPoints;
-      });
+      pendingPointRef.current = { x: e.clientX, y: e.clientY };
+    };
+
+    // 使用 requestAnimationFrame 批量更新
+    const updatePoints = () => {
+      if (pendingPointRef.current) {
+        pointIdRef.current++;
+        const newPoint = { ...pendingPointRef.current, id: pointIdRef.current };
+        pendingPointRef.current = null;
+        
+        setPoints((prev) => {
+          const newPoints = [...prev, newPoint];
+          if (newPoints.length > 6) { // 减少轨迹点数量
+            return newPoints.slice(newPoints.length - 6);
+          }
+          return newPoints;
+        });
+      }
+      rafRef.current = requestAnimationFrame(updatePoints);
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+    rafRef.current = requestAnimationFrame(updatePoints);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [prefersReducedMotion]);
+
+  if (prefersReducedMotion) return null;
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[9998] hidden lg:block">
@@ -106,6 +133,7 @@ const CursorTrail = memo(() => {
             transform: 'translate(-50%, -50%)',
             opacity: (i + 1) / points.length * 0.4,
             boxShadow: `0 0 ${(i + 1) * 2}px var(--accent-primary)`,
+            willChange: 'opacity, transform',
           }}
           initial={{ scale: 1 }}
           animate={{ scale: 0, opacity: 0 }}
@@ -119,7 +147,7 @@ const CursorTrail = memo(() => {
   );
 });
 
-// ==================== 聚光灯效果 ====================
+// ==================== 聚光灯效果 - 优化版 ====================
 export const SpotlightCursor = memo(({
   children,
   size = 300,
@@ -132,15 +160,32 @@ export const SpotlightCursor = memo(({
   const containerRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
+  const rafRef = useRef<number | null>(null);
+  const pendingPosRef = useRef<{ x: number; y: number } | null>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || prefersReducedMotion) return;
     const rect = containerRef.current.getBoundingClientRect();
-    setPosition({
+    pendingPosRef.current = {
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
-    });
-  }, []);
+    };
+    
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(() => {
+        if (pendingPosRef.current) {
+          setPosition(pendingPosRef.current);
+          pendingPosRef.current = null;
+        }
+        rafRef.current = null;
+      });
+    }
+  }, [prefersReducedMotion]);
+
+  if (prefersReducedMotion) {
+    return <>{children}</>;
+  }
 
   return (
     <div
@@ -160,6 +205,7 @@ export const SpotlightCursor = memo(({
           transform: 'translate(-50%, -50%)',
           background: `radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)`,
           filter: 'blur(40px)',
+          willChange: 'opacity',
         }}
         animate={{ opacity: isVisible ? opacity : 0 }}
         transition={{ duration: 0.3 }}
@@ -169,7 +215,7 @@ export const SpotlightCursor = memo(({
   );
 });
 
-// ==================== 鼠标跟随卡片 ====================
+// ==================== 鼠标跟随卡片 - 优化版 ====================
 export const MouseFollowCard = memo(({
   children,
   className = '',
@@ -183,9 +229,10 @@ export const MouseFollowCard = memo(({
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [glarePosition, setGlarePosition] = useState({ x: 50, y: 50 });
+  const prefersReducedMotion = useReducedMotion();
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return;
+    if (!ref.current || prefersReducedMotion) return;
     const rect = ref.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -200,7 +247,7 @@ export const MouseFollowCard = memo(({
       x: ((e.clientX - rect.left) / rect.width) * 100,
       y: ((e.clientY - rect.top) / rect.height) * 100,
     });
-  }, [intensity]);
+  }, [intensity, prefersReducedMotion]);
 
   const handleMouseLeave = useCallback(() => {
     setRotateX(0);
@@ -208,8 +255,12 @@ export const MouseFollowCard = memo(({
     setGlarePosition({ x: 50, y: 50 });
   }, []);
 
+  if (prefersReducedMotion) {
+    return <div className={className}>{children}</div>;
+  }
+
   return (
-    <motion.div
+    <div
       ref={ref}
       className={`relative ${className}`}
       style={{
@@ -224,6 +275,7 @@ export const MouseFollowCard = memo(({
           rotateX,
           rotateY,
           transformStyle: 'preserve-3d',
+          willChange: 'transform',
         }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       >
@@ -238,11 +290,11 @@ export const MouseFollowCard = memo(({
           }}
         />
       </motion.div>
-    </motion.div>
+    </div>
   );
 });
 
-// ==================== 磁性元素 ====================
+// ==================== 磁性元素 - 优化版 ====================
 export const MagneticElement = memo(({
   children,
   className = '',
@@ -254,9 +306,10 @@ export const MagneticElement = memo(({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const prefersReducedMotion = useReducedMotion();
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!ref.current) return;
+    if (!ref.current || prefersReducedMotion) return;
     const rect = ref.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -268,11 +321,15 @@ export const MagneticElement = memo(({
       x: distanceX * strength,
       y: distanceY * strength,
     });
-  }, [strength]);
+  }, [strength, prefersReducedMotion]);
 
   const handleMouseLeave = useCallback(() => {
     setPosition({ x: 0, y: 0 });
   }, []);
+
+  if (prefersReducedMotion) {
+    return <div className={`inline-block ${className}`}>{children}</div>;
+  }
 
   return (
     <motion.div
@@ -282,13 +339,14 @@ export const MagneticElement = memo(({
       onMouseLeave={handleMouseLeave}
       animate={{ x: position.x, y: position.y }}
       transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+      style={{ willChange: 'transform' }}
     >
       {children}
     </motion.div>
   );
 });
 
-// ==================== 鼠标视差容器 ====================
+// ==================== 鼠标视差容器 - 优化版 ====================
 export const ParallaxContainer = memo(({
   children,
   className = '',
@@ -299,62 +357,101 @@ export const ParallaxContainer = memo(({
   intensity?: number;
 }) => {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const rafRef = useRef<number | null>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
+    if (prefersReducedMotion) return;
+    
+    let pendingOffset = { x: 0, y: 0 };
+    
     const handleMouseMove = (e: MouseEvent) => {
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
       
-      setOffset({
+      pendingOffset = {
         x: (e.clientX - centerX) * intensity,
         y: (e.clientY - centerY) * intensity,
-      });
+      };
+      
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(() => {
+          setOffset(pendingOffset);
+          rafRef.current = null;
+        });
+      }
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [intensity]);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [intensity, prefersReducedMotion]);
+
+  if (prefersReducedMotion) {
+    return <div className={className}>{children}</div>;
+  }
 
   return (
     <motion.div
       className={className}
       animate={{ x: offset.x, y: offset.y }}
       transition={{ type: 'spring', stiffness: 50, damping: 20 }}
+      style={{ willChange: 'transform' }}
     >
       {children}
     </motion.div>
   );
 });
 
-// ==================== 鼠标速度效果 ====================
+// ==================== 鼠标速度效果 - 优化版 ====================
 export const VelocityCursor = memo(() => {
   const [velocity, setVelocity] = useState(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const lastPos = useRef({ x: 0, y: 0 });
   const lastTime = useRef(Date.now());
+  const rafRef = useRef<number | null>(null);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
+    if (prefersReducedMotion) return;
+    
+    let pendingPos = { x: 0, y: 0 };
+    
     const handleMouseMove = (e: MouseEvent) => {
-      const now = Date.now();
-      const dt = now - lastTime.current;
+      pendingPos = { x: e.clientX, y: e.clientY };
       
-      if (dt > 16) {
-        const dx = e.clientX - lastPos.current.x;
-        const dy = e.clientY - lastPos.current.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const vel = dist / dt * 10;
-        
-        setVelocity(Math.min(vel, 10));
-        setPosition({ x: e.clientX, y: e.clientY });
-        
-        lastPos.current = { x: e.clientX, y: e.clientY };
-        lastTime.current = now;
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(() => {
+          const now = Date.now();
+          const dt = now - lastTime.current;
+          
+          if (dt > 16) {
+            const dx = pendingPos.x - lastPos.current.x;
+            const dy = pendingPos.y - lastPos.current.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const vel = dist / dt * 10;
+            
+            setVelocity(Math.min(vel, 10));
+            setPosition(pendingPos);
+            
+            lastPos.current = pendingPos;
+            lastTime.current = now;
+          }
+          rafRef.current = null;
+        });
       }
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [prefersReducedMotion]);
+
+  if (prefersReducedMotion) return null;
 
   return (
     <motion.div
@@ -363,6 +460,7 @@ export const VelocityCursor = memo(() => {
         left: position.x,
         top: position.y,
         transform: 'translate(-50%, -50%)',
+        willChange: 'transform, opacity',
       }}
       animate={{
         scale: 1 + velocity * 0.2,

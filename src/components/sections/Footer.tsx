@@ -35,7 +35,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
       
       {/* 闪烁星星 */}
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
-        <TwinklingStars count={15} color="var(--accent-primary)" />
+        <TwinklingStars count={20} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
       </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

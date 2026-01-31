@@ -11,7 +11,7 @@ interface ThemeState {
 const THEME_STORAGE_KEY = 'sakurain-theme';
 
 export function useTheme(): ThemeState {
-  const [theme, setTheme] = useState<Theme>('light');
+  const [theme, setTheme] = useState<Theme>('dark');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const clickPositionRef = useRef({ x: 0, y: 0 });
 
@@ -21,7 +21,9 @@ export function useTheme(): ThemeState {
       setTheme(stored);
       document.documentElement.setAttribute('data-theme', stored);
     } else {
-      document.documentElement.setAttribute('data-theme', 'light');
+      // 默认使用夜间主题
+      setTheme('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
     }
   }, []);
 

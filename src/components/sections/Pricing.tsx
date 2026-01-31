@@ -2,7 +2,7 @@ import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Check, Sparkles, Zap, Brain, BarChart3, Globe, Shield, GraduationCap, Gamepad2, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
-import { FloatingBubbles, TwinklingStars, ConstellationEffect } from '@/components/effects';
+import { FloatingBubbles, TwinklingStars } from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface PricingProps {
@@ -663,12 +663,12 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
       
       {/* 闪烁星星 */}
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
-        <TwinklingStars count={30} color="var(--accent-primary)" />
+        <TwinklingStars count={35} color="var(--accent-primary)" secondaryColor="var(--mc-gold)" />
       </div>
       
       {/* 星座连线效果 - 仅在桌面端显示 */}
       <div className="absolute inset-0 pointer-events-none opacity-20 hidden lg:block">
-        <ConstellationEffect count={15} connectionDistance={150} color="var(--accent-secondary)" />
+
       </div>
       
       {/* 柔和的环境光晕 */}

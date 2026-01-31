@@ -1,9 +1,8 @@
-import { memo, useState, useRef } from 'react';
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
+import { memo, useState, useRef, useCallback, useEffect } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown } from 'lucide-react';
 import { 
   AmbientGlow, 
-  FloatingParticles,
   TwinklingStars,
 } from '@/components/effects';
 import type { SiteData } from '@/types';
@@ -12,76 +11,52 @@ interface HeroProps {
   data: SiteData['hero'];
 }
 
-// Floating code decoration component with enhanced animation
-const CodeDecoration = memo(({ className, delay = 0 }: { className?: string; delay?: number }) => (
-  <motion.div
-    className={`absolute font-mono text-xs sm:text-sm opacity-20 pointer-events-none ${className}`}
-    initial={{ opacity: 0, y: 20, x: -20 }}
-    animate={{
-      opacity: [0.1, 0.2, 0.1],
-      y: [0, -10, 0],
-      x: [0, 5, 0],
-    }}
-    transition={{
-      duration: 0.8,
-      delay,
-      opacity: { duration: 4, repeat: Infinity },
-      y: { duration: 6, repeat: Infinity },
-      x: { duration: 5, repeat: Infinity },
-    }}
-  >
-    <div className="text-[var(--accent-primary)]">{'<System.init>'}</div>
-    <div className="text-[var(--accent-secondary)] ml-2">performance: optimized</div>
-    <div className="text-[var(--accent-tertiary)] ml-2">status: ready</div>
-    <div className="text-[var(--text-muted)]">{'</System.init>'}</div>
-  </motion.div>
-));
+// 使用 CSS 动画替代 JS 动画 - 性能更好
+const CodeDecoration = memo(({ className }: { className?: string }) => {
+  return (
+    <div 
+      className={`absolute font-mono text-xs sm:text-sm opacity-20 pointer-events-none ${className} animate-float-slow`}
+    >
+      <div className="text-[var(--accent-primary)]">{'<System.init>'}</div>
+      <div className="text-[var(--accent-secondary)] ml-2">performance: optimized</div>
+      <div className="text-[var(--accent-tertiary)] ml-2">status: ready</div>
+      <div className="text-[var(--text-muted)]">{'</System.init>'}</div>
+    </div>
+  );
+});
 
 CodeDecoration.displayName = 'CodeDecoration';
 
-// Animated floating icon with rotation
+// 简化浮动图标 - 纯 CSS 动画
 const FloatingIcon = memo(({
   icon: Icon,
   className,
-  delay = 0,
   color = 'var(--accent-primary)'
 }: {
   icon: typeof Terminal;
   className?: string;
-  delay?: number;
   color?: string;
-}) => (
-  <motion.div
-    className={`absolute ${className}`}
-    initial={{ opacity: 0, scale: 0, rotate: -180 }}
-    animate={{ opacity: 0.3, scale: 1, rotate: 0 }}
-    transition={{
-      duration: 0.8,
-      delay,
-      type: 'spring',
-      stiffness: 200,
-    }}
-  >
-    <motion.div
-      animate={{
-        y: [0, -15, 0],
-        rotate: [0, 10, -10, 0],
-        scale: [1, 1.1, 1],
-      }}
-      transition={{
-        duration: 5,
-        repeat: Infinity,
-        ease: 'easeInOut',
-      }}
-    >
+}) => {
+  const prefersReducedMotion = useReducedMotion();
+  
+  if (prefersReducedMotion) {
+    return (
+      <div className={`absolute ${className} opacity-30`}>
+        <Icon className="w-6 h-6 sm:w-8 sm:h-8" style={{ color }} />
+      </div>
+    );
+  }
+  
+  return (
+    <div className={`absolute ${className} opacity-30 animate-float`}>
       <Icon className="w-6 h-6 sm:w-8 sm:h-8" style={{ color }} />
-    </motion.div>
-  </motion.div>
-));
+    </div>
+  );
+});
 
 FloatingIcon.displayName = 'FloatingIcon';
 
-// Enhanced stat card component with 3D flip animation
+// 统计卡片 - 带光效（类似服务项目卡片）
 const StatCard = memo(({
   stat,
   index,
@@ -90,258 +65,431 @@ const StatCard = memo(({
   index: number;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
+  const color = 'var(--accent-primary)';
 
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left - rect.width / 2) / 20;
-    const y = (e.clientY - rect.top - rect.height / 2) / 20;
-    mouseX.set(x);
-    mouseY.set(y);
-  };
-
-  const handleMouseLeave = () => {
-    mouseX.set(0);
-    mouseY.set(0);
-    setIsHovered(false);
-  };
-
-  const rotateX = useSpring(mouseY, { stiffness: 300, damping: 30 });
-  const rotateY = useSpring(mouseX, { stiffness: 300, damping: 30 });
+  if (prefersReducedMotion) {
+    return (
+      <div
+        className="relative p-5 sm:p-6 text-center overflow-hidden transition-all duration-300"
+        style={{
+          background: 'var(--bg-card)',
+          border: '3px solid var(--border-subtle)',
+        }}
+      >
+        <div
+          className="font-primary text-3xl sm:text-4xl font-extrabold mb-2"
+          style={{ color: 'var(--accent-primary)' }}
+        >
+          {stat.value}
+        </div>
+        <div
+          className="font-primary text-xs sm:text-sm font-bold uppercase tracking-wider"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          {stat.label}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
-      ref={ref}
-      initial={{ opacity: 0, scale: 0.8, y: 30, rotateX: -30 }}
-      animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: 0.6,
+        duration: 0.5,
         delay: 0.6 + index * 0.1,
-        type: 'spring',
-        stiffness: 200,
+        ease: [0.25, 0.1, 0.25, 1],
       }}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className="relative group cursor-default"
-      style={{
-        perspective: 1000,
-        transformStyle: 'preserve-3d',
-      }}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative cursor-default group"
+      style={{ perspective: '1000px' }}
     >
-      <motion.div
-        className="relative p-5 sm:p-6 text-center overflow-hidden"
+      {/* 发光边框效果 */}
+      <div
+        className="absolute -inset-[2px] rounded-lg transition-opacity duration-500"
         style={{
-          rotateX,
-          rotateY,
+          background: isHovered 
+            ? `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))`
+            : 'transparent',
+          backgroundSize: '300% 300%',
+          animation: isHovered ? 'gradient-shift 3s ease infinite' : 'none',
+          opacity: isHovered ? 1 : 0,
+          filter: 'blur(4px)',
+          zIndex: -1,
+        }}
+      />
+      <div
+        className="relative p-5 sm:p-6 text-center overflow-hidden transition-all duration-300"
+        style={{
           background: 'var(--bg-card)',
           border: '3px solid',
-          borderColor: isHovered
-            ? 'var(--accent-primary)'
-            : 'color-mix(in srgb, var(--bg-secondary) 150%, white) color-mix(in srgb, var(--bg-secondary) 60%, black) color-mix(in srgb, var(--bg-secondary) 60%, black) color-mix(in srgb, var(--bg-secondary) 150%, white)',
-          boxShadow: isHovered
-            ? `inset -3px -3px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 3px 3px 0 color-mix(in srgb, var(--bg-secondary) 150%, white), 0 20px 40px var(--accent-glow)`
-            : 'inset -3px -3px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 3px 3px 0 color-mix(in srgb, var(--bg-secondary) 150%, white), 0 4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black)',
-          transformStyle: 'preserve-3d',
+          borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
+          transform: isHovered ? 'translateY(-8px) scale(1.02)' : 'none',
+          boxShadow: isHovered 
+            ? `0 20px 40px var(--accent-glow), 0 0 30px ${color}20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)` 
+            : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
         }}
-        whileHover={{ scale: 1.05, y: -8 }}
-        transition={{ duration: 0.3 }}
       >
-        {/* Shine effect */}
+        {/* Glow background - 顶部径向渐变 */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.1) 45%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 55%, transparent 60%)',
+            background: `radial-gradient(circle at 50% 0%, ${color}20, transparent 60%)`,
+          }}
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+        />
+        
+        {/* Shine effect - 斜向光泽 */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `linear-gradient(105deg, transparent 40%, ${color}15 45%, ${color}30 50%, ${color}15 55%, transparent 60%)`,
             transform: 'translateX(-100%)',
           }}
           animate={isHovered ? { x: '200%' } : { x: '-100%' }}
           transition={{ duration: 0.6 }}
         />
 
-        {/* Glow effect */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isHovered ? 0.1 : 0 }}
-          style={{ background: 'var(--accent-primary)' }}
-        />
-
-        <motion.div
-          className="relative z-10 font-primary"
-          style={{
-            fontSize: 'clamp(2rem, 5vw, 2.75rem)',
-            fontWeight: 800,
+        {/* 内容 */}
+        <div
+          className="font-primary text-3xl sm:text-4xl font-extrabold mb-2 transition-all duration-300 relative z-10"
+          style={{ 
             color: 'var(--accent-primary)',
-            textShadow: isHovered
-              ? '3px 3px 0 color-mix(in srgb, var(--accent-primary) 40%, black), 0 0 30px var(--accent-glow)'
-              : '3px 3px 0 color-mix(in srgb, var(--accent-primary) 40%, black)',
-            lineHeight: 1,
-            marginBottom: '8px',
-            transform: 'translateZ(30px)',
+            transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+            textShadow: isHovered ? `0 0 20px ${color}, 0 0 40px ${color}40` : 'none',
           }}
-          animate={isHovered ? { scale: 1.1 } : { scale: 1 }}
-          transition={{ type: 'spring', stiffness: 300 }}
         >
           {stat.value}
-        </motion.div>
-        <motion.div
-          className="relative z-10 font-primary"
-          style={{
-            fontSize: 'var(--text-sm)',
-            fontWeight: 700,
-            color: 'var(--text-secondary)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            transform: 'translateZ(20px)',
-          }}
+        </div>
+        <div
+          className="font-primary text-xs sm:text-sm font-bold uppercase tracking-wider relative z-10"
+          style={{ color: 'var(--text-secondary)' }}
         >
           {stat.label}
-        </motion.div>
-      </motion.div>
+        </div>
+      </div>
     </motion.div>
   );
 });
 
 StatCard.displayName = 'StatCard';
 
-// Animated gradient text
-const GradientText = memo(({ children }: { children: React.ReactNode }) => (
-  <motion.span
-    className="bg-gradient-to-r from-[var(--accent-primary)] via-[var(--accent-secondary)] to-[var(--accent-tertiary)] bg-clip-text text-transparent"
-    style={{
-      backgroundSize: '200% auto',
-    }}
-    animate={{ backgroundPosition: ['0% center', '200% center'] }}
-    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-  >
-    {children}
-  </motion.span>
-));
+// 渐变文字 - 平滑流动渐变色，无缝循环
+const GradientText = memo(({ children }: { children: React.ReactNode }) => {
+  return (
+    <span className="gradient-text-wrapper">
+      <span className="gradient-text">
+        {children}
+      </span>
+    </span>
+  );
+});
 
 GradientText.displayName = 'GradientText';
 
-// Magnetic button component with modern styling
-const MagneticButton = memo(({
+// 主按钮 - 带光效
+const PrimaryButton = memo(({
   children,
   onClick,
-  primary = true,
 }: {
   children: React.ReactNode;
   onClick: () => void;
-  primary?: boolean;
 }) => {
-  const ref = useRef<HTMLButtonElement>(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const x = (e.clientX - centerX) * 0.3;
-    const y = (e.clientY - centerY) * 0.3;
-    setPosition({ x, y });
-  };
-
-  const handleMouseEnter = () => setIsHovered(true);
-  const handleMouseLeave = () => {
-    setPosition({ x: 0, y: 0 });
-    setIsHovered(false);
-  };
-
+  
   return (
-    <motion.button
-      ref={ref}
+    <button
       onClick={onClick}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className="group relative flex items-center gap-3 overflow-hidden font-primary rounded-xl"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group relative flex items-center gap-3 overflow-hidden font-primary rounded-xl transition-all duration-300"
       style={{
         padding: '18px 36px',
         fontSize: 'var(--text-base)',
         fontWeight: 700,
         letterSpacing: '0.05em',
-        color: primary ? 'white' : 'var(--text-primary)',
-        background: primary 
-          ? 'linear-gradient(135deg, var(--accent-primary), color-mix(in srgb, var(--accent-primary) 80%, var(--accent-secondary)))'
-          : 'transparent',
-        border: `2px solid ${primary ? 'transparent' : 'var(--border-subtle)'}`,
-        boxShadow: primary
-          ? '0 4px 20px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.2)'
-          : '0 4px 20px rgba(0,0,0,0.2)',
+        color: 'white',
+        background: 'linear-gradient(135deg, var(--accent-primary), color-mix(in srgb, var(--accent-primary) 80%, var(--accent-secondary)))',
+        boxShadow: isHovered 
+          ? '0 8px 30px var(--accent-glow), 0 0 60px var(--accent-primary)40, inset 0 0 20px rgba(255,255,255,0.2)' 
+          : '0 4px 20px var(--accent-glow)',
+        transform: isHovered ? 'scale(1.05)' : 'scale(1)',
       }}
-      animate={{ 
-        x: position.x, 
-        y: position.y,
-      }}
-      whileHover={{
-        scale: 1.05,
-        boxShadow: primary
-          ? '0 8px 30px var(--accent-glow), 0 0 60px color-mix(in srgb, var(--accent-primary) 40%, transparent), inset 0 1px 0 rgba(255,255,255,0.3)'
-          : '0 8px 30px var(--accent-glow), inset 0 0 0 2px var(--accent-primary)',
-      }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 17 }}
     >
-      {/* Animated background for primary button */}
-      {primary && (
-        <motion.div
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-            x: '-100%',
-          }}
-          animate={{ x: isHovered ? '100%' : '-100%' }}
-          transition={{ duration: 0.6, ease: 'easeInOut' }}
-        />
-      )}
-      
-      {/* Glow effect for secondary button */}
-      {!primary && (
-        <motion.div
-          className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{
-            background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)',
-          }}
-        />
-      )}
-      
-      <span className="relative z-10 flex items-center gap-2">{children}</span>
-    </motion.button>
+      {/* 光效背景 */}
+      <div 
+        className="absolute inset-0 transition-opacity duration-300"
+        style={{
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+          transform: isHovered ? 'translateX(100%)' : 'translateX(-100%)',
+          transition: 'transform 0.6s ease',
+        }}
+      />
+      {/* 脉冲光环 */}
+      <div 
+        className="absolute inset-0 rounded-xl transition-opacity duration-300"
+        style={{
+          boxShadow: `inset 0 0 20px rgba(255,255,255,0.3), 0 0 30px var(--accent-primary)`,
+          opacity: isHovered ? 0.6 : 0,
+        }}
+      />
+      <span className="relative z-10 flex items-center gap-2">
+        {children}
+        <span className="animate-bounce-x">
+          <ArrowRight className="w-5 h-5" />
+        </span>
+      </span>
+    </button>
   );
 });
 
-MagneticButton.displayName = 'MagneticButton';
+PrimaryButton.displayName = 'PrimaryButton';
+
+// 次要按钮 - 带光效
+const SecondaryButton = memo(({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+  
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group relative flex items-center gap-3 overflow-hidden font-primary rounded-xl transition-all duration-300"
+      style={{
+        padding: '18px 36px',
+        fontSize: 'var(--text-base)',
+        fontWeight: 700,
+        letterSpacing: '0.05em',
+        color: isHovered ? 'var(--accent-primary)' : 'var(--text-primary)',
+        background: 'transparent',
+        border: '2px solid',
+        borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
+        boxShadow: isHovered 
+          ? '0 0 30px var(--accent-glow), inset 0 0 20px var(--accent-primary)10' 
+          : 'none',
+        transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+      }}
+    >
+      {/* 悬停光晕 */}
+      <div 
+        className="absolute inset-0 rounded-xl transition-opacity duration-300"
+        style={{
+          background: `radial-gradient(circle at center, var(--accent-primary)20, transparent 70%)`,
+          opacity: isHovered ? 1 : 0,
+        }}
+      />
+      <span className="relative z-10">{children}</span>
+    </button>
+  );
+});
+
+SecondaryButton.displayName = 'SecondaryButton';
+
+// 发光徽章
+const GlowBadge = memo(({ text }: { text: string }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      className="inline-flex items-center gap-2 mb-6 sm:mb-8 relative"
+    >
+      {/* 外发光 */}
+      <div 
+        className="absolute -inset-2 rounded-xl animate-pulse-glow"
+        style={{
+          background: `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary))`,
+          filter: 'blur(15px)',
+          opacity: 0.4,
+          zIndex: -1,
+        }}
+      />
+      <div
+        className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 relative overflow-hidden group"
+        style={{
+          background: 'var(--bg-card)',
+          border: '2px solid color-mix(in srgb, var(--accent-primary) 80%, transparent)',
+          boxShadow: '0 0 20px var(--accent-glow), inset 0 0 10px var(--accent-primary)10',
+        }}
+      >
+        {/* 内部光效 */}
+        <div 
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{
+            background: `linear-gradient(90deg, transparent, var(--accent-primary)20, transparent)`,
+          }}
+        />
+        <span 
+          className="w-2 h-2 rounded-full animate-pulse"
+          style={{ 
+            background: 'var(--accent-primary)',
+            boxShadow: '0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary)',
+          }}
+        />
+        <span
+          className="font-primary text-sm font-bold uppercase tracking-wider relative z-10"
+          style={{ color: 'var(--accent-primary)' }}
+        >
+          {text}
+        </span>
+      </div>
+    </motion.div>
+  );
+});
+
+GlowBadge.displayName = 'GlowBadge';
+
+// 发光标题
+const GlowTitle = memo(({ children }: { children: React.ReactNode }) => {
+  return (
+    <div className="overflow-hidden mb-6 sm:mb-8 relative">
+      {/* 多层光晕 */}
+      <div
+        className="absolute inset-0 pointer-events-none animate-pulse-slow"
+        style={{
+          background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
+          filter: 'blur(60px)',
+        }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at center, var(--accent-primary)20 0%, transparent 50%)',
+          filter: 'blur(40px)',
+          animation: 'pulse-glow 3s ease-in-out infinite',
+        }}
+      />
+      <motion.h1
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        transition={{
+          duration: 0.8,
+          ease: [0.16, 1, 0.3, 1],
+          delay: 0.1,
+        }}
+        className="font-primary relative"
+        style={{
+          fontSize: 'clamp(2.5rem, 8vw, 4.5rem)',
+          fontWeight: 800,
+          color: 'var(--text-primary)',
+          textShadow: `
+            4px 4px 0 color-mix(in srgb, var(--bg-secondary) 50%, black),
+            0 0 40px var(--accent-glow),
+            0 0 80px var(--accent-glow),
+            0 0 120px var(--accent-primary)40
+          `,
+          letterSpacing: '-0.02em',
+          lineHeight: 1.1,
+        }}
+      >
+        {children}
+      </motion.h1>
+    </div>
+  );
+});
+
+GlowTitle.displayName = 'GlowTitle';
+
+// 发光滚动指示器
+const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 1.2, duration: 0.6 }}
+      className="absolute bottom-8 left-1/2 -translate-x-1/2 cursor-pointer group"
+      onClick={onClick}
+    >
+      {/* 发光底座 */}
+      <div 
+        className="absolute inset-0 -m-4 rounded-full transition-opacity duration-300 opacity-0 group-hover:opacity-100"
+        style={{
+          background: `radial-gradient(circle, var(--accent-primary)30, transparent 70%)`,
+          filter: 'blur(10px)',
+        }}
+      />
+      <div className="flex flex-col items-center gap-2 animate-bounce-slow relative">
+        <span
+          className="font-primary text-xs uppercase tracking-widest transition-colors duration-300"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          向下滚动
+        </span>
+        <ChevronDown 
+          className="w-6 h-6 transition-all duration-300 group-hover:scale-125" 
+          style={{ 
+            color: 'var(--accent-primary)',
+            filter: 'drop-shadow(0 0 10px var(--accent-primary))',
+          }} 
+        />
+      </div>
+    </motion.div>
+  );
+});
+
+GlowScrollIndicator.displayName = 'GlowScrollIndicator';
 
 export const Hero = memo(function Hero({ data }: HeroProps) {
-  const { scrollY } = useScroll();
-  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
-  const scale = useTransform(scrollY, [0, 300], [1, 0.9]);
+  const prefersReducedMotion = useReducedMotion();
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const rafRef = useRef<number | null>(null);
 
-  const scrollToSection = (href: string) => {
+  // 使用 RAF 节流的滚动监听
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
+    let pendingScroll = 0;
+    let isProcessing = false;
+
+    const handleScroll = () => {
+      pendingScroll = window.scrollY;
+      
+      if (!isProcessing) {
+        isProcessing = true;
+        rafRef.current = requestAnimationFrame(() => {
+          const progress = Math.min(pendingScroll / 300, 1);
+          setScrollProgress(progress);
+          isProcessing = false;
+        });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [prefersReducedMotion]);
+
+  const scrollToSection = useCallback((href: string) => {
     const element = document.querySelector(href);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
     }
-  };
+  }, [prefersReducedMotion]);
 
   const primaryCta = data.cta.find(c => c.primary);
   const secondaryCta = data.cta.find(c => !c.primary);
 
+  // 计算滚动动画值
+  const opacity = prefersReducedMotion ? 1 : 1 - scrollProgress;
+  const scale = prefersReducedMotion ? 1 : 1 - scrollProgress * 0.1;
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Animated Grid Background */}
-      <motion.div
-        className="absolute inset-0 -z-20 pointer-events-none"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.05 }}
-        transition={{ duration: 1, delay: 0.5 }}
+      {/* 静态网格背景 */}
+      <div
+        className="absolute inset-0 -z-20 pointer-events-none opacity-5"
         style={{
           backgroundImage: `
             linear-gradient(var(--accent-primary) 1px, transparent 1px),
@@ -351,19 +499,16 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
         }}
       />
 
-      {/* Ambient Glow Effects */}
+      {/* 环境光效 */}
       <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.15} />
       <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.1} />
       
-      {/* Floating Particles */}
-      <FloatingParticles count={15} color="var(--accent-primary)" />
-      
-      {/* 闪烁星星 - 仅在桌面端显示 */}
+      {/* 闪烁星星 */}
       <div className="absolute inset-0 hidden lg:block">
-        <TwinklingStars count={20} color="var(--accent-secondary)" />
+        <TwinklingStars count={25} color="var(--accent-secondary)" secondaryColor="var(--mc-gold)" />
       </div>
 
-      {/* Radial Gradient Overlay */}
+      {/* 径向渐变遮罩 */}
       <div
         className="absolute inset-0 pointer-events-none -z-10"
         style={{
@@ -371,127 +516,54 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
         }}
       />
 
-      {/* Floating Code Decorations */}
-      <CodeDecoration className="top-20 left-4 sm:left-10 hidden sm:block" delay={0.8} />
-      <CodeDecoration className="bottom-32 right-4 sm:right-10 hidden sm:block" delay={1} />
+      {/* 浮动代码装饰 */}
+      <CodeDecoration className="top-20 left-4 sm:left-10 hidden sm:block" />
+      <CodeDecoration className="bottom-32 right-4 sm:right-10 hidden sm:block" />
 
-      {/* Floating Icons */}
+      {/* 浮动图标 */}
       <FloatingIcon
         icon={Terminal}
         className="top-1/4 left-[5%] hidden lg:block"
-        delay={0.5}
         color="var(--accent-primary)"
       />
       <FloatingIcon
         icon={Cpu}
         className="top-1/3 right-[8%] hidden lg:block"
-        delay={0.7}
         color="var(--accent-secondary)"
       />
       <FloatingIcon
         icon={Code2}
         className="bottom-1/4 left-[10%] hidden lg:block"
-        delay={0.9}
         color="var(--accent-tertiary)"
       />
       <FloatingIcon
         icon={Sparkles}
         className="bottom-1/3 right-[5%] hidden lg:block"
-        delay={1.1}
         color="var(--mc-gold)"
       />
 
-      {/* Main Content */}
-      <motion.div
+      {/* 主内容 */}
+      <div
         className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32"
-        style={{ opacity, scale }}
+        style={{
+          opacity,
+          transform: `scale(${scale})`,
+          willChange: 'transform, opacity',
+        }}
       >
         <div className="text-center">
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.8 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{
-              duration: 0.6,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-            className="inline-flex items-center gap-2 mb-6 sm:mb-8"
-          >
-            <motion.div
-              className="flex items-center gap-2 px-4 py-2"
-              style={{
-                background: 'var(--bg-card)',
-                border: '2px solid',
-                borderColor: 'color-mix(in srgb, var(--accent-primary) 80%, transparent)',
-                boxShadow: '0 0 15px var(--accent-glow)',
-              }}
-              whileHover={{ scale: 1.05, boxShadow: '0 0 25px var(--accent-glow)' }}
-              transition={{ type: 'spring', stiffness: 400 }}
-            >
-              <motion.div
-                className="w-2 h-2 rounded-full"
-                style={{ background: 'var(--accent-primary)' }}
-                animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              <span
-                className="font-primary"
-                style={{
-                  fontSize: 'var(--text-sm)',
-                  fontWeight: 700,
-                  color: 'var(--accent-primary)',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {data.badge}
-              </span>
-            </motion.div>
-          </motion.div>
+          {/* 发光徽章 */}
+          <GlowBadge text={data.badge} />
 
-          {/* Main Title with enhanced glow effect */}
-          <div className="overflow-hidden mb-6 sm:mb-8 relative">
-            {/* Title glow effect */}
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
-                filter: 'blur(60px)',
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0.3, 0.6, 0.3] }}
-              transition={{ duration: 3, repeat: Infinity }}
-            />
-            <motion.h1
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              transition={{
-                duration: 0.8,
-                ease: [0.16, 1, 0.3, 1],
-                delay: 0.1,
-              }}
-              className="font-primary relative"
-              style={{
-                fontSize: 'clamp(2.5rem, 8vw, 4.5rem)',
-                fontWeight: 800,
-                color: 'var(--text-primary)',
-                textShadow: `
-                  4px 4px 0 color-mix(in srgb, var(--bg-secondary) 50%, black),
-                  0 0 40px var(--accent-glow),
-                  0 0 80px var(--accent-glow)
-                `,
-                letterSpacing: '-0.02em',
-                lineHeight: 1.1,
-              }}
-            >
-              {data.title.split('竞争优势')[0]}
-              <span className="relative">
-                <GradientText>竞争优势</GradientText>
-              </span>
-            </motion.h1>
-          </div>
+          {/* 发光标题 */}
+          <GlowTitle>
+            {data.title.split('竞争优势')[0]}
+            <span className="relative">
+              <GradientText>竞争优势</GradientText>
+            </span>
+          </GlowTitle>
 
-          {/* Subtitle */}
+          {/* 副标题 */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -511,7 +583,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
             {data.subtitle}
           </motion.p>
 
-          {/* Description */}
+          {/* 描述 */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -531,7 +603,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
             {data.description}
           </motion.p>
 
-          {/* CTA Buttons with magnetic effect */}
+          {/* CTA 按钮 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -543,78 +615,145 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 sm:mb-20"
           >
             {primaryCta && (
-              <MagneticButton
-                onClick={() => scrollToSection(primaryCta.link)}
-                primary
-              >
-                <span>{primaryCta.text}</span>
-                <motion.span
-                  animate={{ x: [0, 5, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                  <ArrowRight className="w-5 h-5" />
-                </motion.span>
-              </MagneticButton>
+              <PrimaryButton onClick={() => scrollToSection(primaryCta.link)}>
+                {primaryCta.text}
+              </PrimaryButton>
             )}
             {secondaryCta && (
-              <MagneticButton
-                onClick={() => scrollToSection(secondaryCta.link)}
-                primary={false}
-              >
+              <SecondaryButton onClick={() => scrollToSection(secondaryCta.link)}>
                 {secondaryCta.text}
-              </MagneticButton>
+              </SecondaryButton>
             )}
           </motion.div>
 
-          {/* Stats Grid */}
+          {/* 统计网格 */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto relative">
-            {/* 统计区域背景发光 */}
-            <motion.div
-              className="absolute inset-0 -z-10 rounded-3xl"
+            {/* 统计区域背景光晕 */}
+            <div
+              className="absolute inset-0 -z-10 rounded-3xl animate-pulse-slow"
               style={{
                 background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
                 filter: 'blur(40px)',
               }}
-              animate={{ opacity: [0.2, 0.4, 0.2] }}
-              transition={{ duration: 4, repeat: Infinity }}
             />
             {data.stats.map((stat, index) => (
               <StatCard key={stat.label} stat={stat} index={index} />
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.2, duration: 0.6 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
-      >
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          className="flex flex-col items-center gap-2 cursor-pointer"
-          onClick={() => scrollToSection('#services')}
-        >
-          <span
-            className="font-primary text-xs uppercase tracking-widest"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            向下滚动
-          </span>
-          <ChevronDown className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
-        </motion.div>
-      </motion.div>
+      {/* 发光滚动指示器 */}
+      <GlowScrollIndicator onClick={() => scrollToSection('#services')} />
 
-      {/* Bottom Gradient Fade */}
+      {/* 底部渐变 */}
       <div
         className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
         style={{
           background: 'linear-gradient(to top, var(--bg-primary), transparent)',
         }}
       />
+
+      {/* CSS 动画定义 */}
+      <style>{`
+        /* 渐变文字 - 无缝循环流动 */
+        .gradient-text-wrapper {
+          position: relative;
+          display: inline-block;
+        }
+        
+        .gradient-text {
+          display: inline-block;
+          background: linear-gradient(
+            90deg,
+            var(--accent-primary) 0%,
+            var(--accent-secondary) 25%,
+            var(--accent-tertiary) 50%,
+            var(--accent-secondary) 75%,
+            var(--accent-primary) 100%
+          );
+          background-size: 200% 100%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: gradient-move 6s linear infinite;
+        }
+        
+        @keyframes gradient-move {
+          0% {
+            background-position: 0% 50%;
+          }
+          100% {
+            background-position: 200% 50%;
+          }
+        }
+        
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes float-slow {
+          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.2; }
+          50% { transform: translateY(-10px) translateX(5px); opacity: 0.15; }
+        }
+        
+        @keyframes gradient-flow {
+          0% { background-position: 0% center; }
+          50% { background-position: 100% center; }
+          100% { background-position: 200% center; }
+        }
+        
+        @keyframes bounce-x {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(5px); }
+        }
+        
+        @keyframes pulse-slow {
+          0%, 100% { opacity: 0.2; }
+          50% { opacity: 0.4; }
+        }
+        
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(10px); }
+        }
+
+        @keyframes gradient-shift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+
+        @keyframes pulse-glow {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.05); }
+        }
+        
+        .animate-float {
+          animation: float 5s ease-in-out infinite;
+        }
+        
+        .animate-float-slow {
+          animation: float-slow 6s ease-in-out infinite;
+        }
+        
+        .animate-bounce-x {
+          animation: bounce-x 1.5s ease-in-out infinite;
+        }
+        
+        .animate-pulse-slow {
+          animation: pulse-slow 4s ease-in-out infinite;
+        }
+        
+        .animate-bounce-slow {
+          animation: bounce-slow 2s ease-in-out infinite;
+        }
+
+        .animate-pulse-glow {
+          animation: pulse-glow 3s ease-in-out infinite;
+        }
+      `}</style>
     </section>
   );
 });

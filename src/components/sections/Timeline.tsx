@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Rocket, Code2, TrendingUp, Brain, Globe, Sparkles, ChevronDown } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
-import { AmbientGlow, FloatingBubbles, TwinklingStars, ConstellationEffect } from '@/components/effects';
+import { AmbientGlow, FloatingBubbles, TwinklingStars } from '@/components/effects';
 
 interface TimelineEvent {
   year: string;
@@ -57,12 +57,12 @@ export const Timeline = memo(function Timeline({ data }: TimelineProps) {
       
       {/* 闪烁星星 */}
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
-        <TwinklingStars count={25} color="var(--accent-primary)" />
+        <TwinklingStars count={30} color="var(--accent-primary)" secondaryColor="var(--accent-tertiary)" />
       </div>
       
       {/* 星座连线 */}
       <div className="absolute inset-0 pointer-events-none opacity-15 hidden lg:block">
-        <ConstellationEffect count={12} connectionDistance={140} color="var(--accent-secondary)" />
+
       </div>
       
       {/* Center Line - Desktop Only */}

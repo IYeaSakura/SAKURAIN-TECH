@@ -295,7 +295,7 @@ export const Comparison = memo(function Comparison({ data }: ComparisonProps) {
       
       {/* 闪烁星星 */}
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
-        <TwinklingStars count={20} color="var(--accent-secondary)" />
+        <TwinklingStars count={28} color="var(--accent-secondary)" secondaryColor="var(--accent-primary)" />
       </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
