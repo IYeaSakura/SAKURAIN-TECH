@@ -343,10 +343,10 @@ const ServiceModal = memo(({
         className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto mc-modal p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button */}
+        {/* Close button - 移到模态框外部避免遮挡内容 */}
         <motion.button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl transition-colors z-10"
+          className="absolute -top-12 right-0 p-2 rounded-xl transition-colors z-10"
           style={{ 
             color: 'var(--text-muted)',
             background: 'var(--bg-secondary)',
