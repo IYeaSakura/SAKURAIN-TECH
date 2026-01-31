@@ -2,6 +2,7 @@ import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Check, Sparkles, Zap, Brain, BarChart3, Globe, Shield, GraduationCap, Gamepad2, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
+import { FloatingBubbles, TwinklingStars, ConstellationEffect } from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface PricingProps {
@@ -655,6 +656,22 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
 
   return (
     <section id="pricing" ref={sectionRef} className="relative py-24 lg:py-32 overflow-visible">
+      {/* 浮动气泡背景 */}
+      <div className="absolute inset-0 pointer-events-none opacity-30">
+        <FloatingBubbles count={12} colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']} />
+      </div>
+      
+      {/* 闪烁星星 */}
+      <div className="absolute inset-0 pointer-events-none hidden lg:block">
+        <TwinklingStars count={30} color="var(--accent-primary)" />
+      </div>
+      
+      {/* 星座连线效果 - 仅在桌面端显示 */}
+      <div className="absolute inset-0 pointer-events-none opacity-20 hidden lg:block">
+        <ConstellationEffect count={15} connectionDistance={150} color="var(--accent-secondary)" />
+      </div>
+      
+      {/* 柔和的环境光晕 */}
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
         <div 
           className="absolute top-1/4 left-0 w-96 h-96 rounded-full opacity-30"
@@ -664,7 +681,7 @@ export const Pricing = memo(function Pricing({ data }: PricingProps) {
           }}
         />
         <div 
-          className="absolute bottom-1/4 right-0 w-96 h-96 rounded-full opacity-20"
+          className="absolute bottom-1/4 right-0 w-96 h-96 rounded-full opacity-25"
           style={{
             background: 'radial-gradient(circle, var(--accent-secondary) 0%, transparent 70%)',
             filter: 'blur(100px)',

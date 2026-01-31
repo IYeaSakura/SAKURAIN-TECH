@@ -2,7 +2,7 @@ import { memo, useRef, useState } from 'react';
 import { motion, useMotionValue, useSpring, useInView } from 'framer-motion';
 import { Check, X, Sparkles, Zap, ArrowRight } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
-import { Terminal, AmbientGlow } from '@/components/effects';
+import { Terminal, AmbientGlow, FloatingBubbles, TwinklingStars } from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface ComparisonProps {
@@ -284,8 +284,19 @@ export const Comparison = memo(function Comparison({ data }: ComparisonProps) {
   return (
     <section id="comparison" className="relative py-24 lg:py-32 overflow-hidden">
       {/* Ambient glow effects */}
-      <AmbientGlow position="top-right" color="var(--accent-primary)" size={400} opacity={0.1} />
-      <AmbientGlow position="bottom-left" color="var(--accent-secondary)" size={300} opacity={0.08} />
+      <AmbientGlow position="top-right" color="var(--accent-primary)" size={400} opacity={0.12} />
+      <AmbientGlow position="bottom-left" color="var(--accent-secondary)" size={300} opacity={0.1} />
+      <AmbientGlow position="center" color="var(--accent-tertiary)" size={500} opacity={0.06} />
+      
+      {/* 浮动气泡 */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <FloatingBubbles count={8} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
+      </div>
+      
+      {/* 闪烁星星 */}
+      <div className="absolute inset-0 pointer-events-none hidden lg:block">
+        <TwinklingStars count={20} color="var(--accent-secondary)" />
+      </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle

@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
-import { ScrollProgress } from '@/components/effects';
+import { 
+  ScrollProgress, 
+  MagneticCursor,
+  VelocityCursor,
+  TwinklingStars,
+  FlowingGradient,
+  LightBeam,
+} from '@/components/effects';
 import {
   Navigation,
   Hero,
@@ -97,14 +104,35 @@ function App() {
       className="relative min-h-screen"
       style={{ background: 'var(--bg-primary)' }}
     >
+      {/* 全局特效 */}
       <ScrollProgress />
+      <MagneticCursor />
+      <VelocityCursor />
+      
+      {/* 背景装饰 */}
+      <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block">
+        <TwinklingStars count={30} color="var(--accent-primary)" />
+      </div>
+      
+      {/* 流动渐变背景 */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <FlowingGradient 
+          colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
+          speed={15}
+          opacity={0.05}
+        />
+      </div>
+      
+      {/* 顶部光剑 */}
+      <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
+      
       <Navigation
         data={siteData.navigation}
         theme={theme}
         onThemeToggle={toggleTheme}
         isThemeTransitioning={isTransitioning}
       />
-      <main>
+      <main className="relative z-10">
         <Hero data={siteData.hero} />
         <Services data={siteData.services} />
         <TechStack data={siteData.techStack} />
@@ -116,6 +144,9 @@ function App() {
         <Contact data={siteData.contact} />
       </main>
       <Footer data={siteData.footer} />
+      
+      {/* 底部光剑 */}
+      <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />
     </div>
   );
 }

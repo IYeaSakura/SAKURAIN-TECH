@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Rocket, Code2, TrendingUp, Brain, Globe, Sparkles, ChevronDown } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
-import { AmbientGlow } from '@/components/effects';
+import { AmbientGlow, FloatingBubbles, TwinklingStars, ConstellationEffect } from '@/components/effects';
 
 interface TimelineEvent {
   year: string;
@@ -46,7 +46,24 @@ export const Timeline = memo(function Timeline({ data }: TimelineProps) {
   return (
     <section id="timeline" className="relative py-24 lg:py-32 overflow-hidden">
       {/* Ambient glow effects */}
-      <AmbientGlow position="center" color="var(--accent-primary)" size={400} opacity={0.08} />
+      <AmbientGlow position="center" color="var(--accent-primary)" size={400} opacity={0.1} />
+      <AmbientGlow position="top-right" color="var(--accent-secondary)" size={350} opacity={0.08} />
+      <AmbientGlow position="bottom-left" color="var(--accent-tertiary)" size={300} opacity={0.06} />
+      
+      {/* 浮动气泡 */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <FloatingBubbles count={10} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
+      </div>
+      
+      {/* 闪烁星星 */}
+      <div className="absolute inset-0 pointer-events-none hidden lg:block">
+        <TwinklingStars count={25} color="var(--accent-primary)" />
+      </div>
+      
+      {/* 星座连线 */}
+      <div className="absolute inset-0 pointer-events-none opacity-15 hidden lg:block">
+        <ConstellationEffect count={12} connectionDistance={140} color="var(--accent-secondary)" />
+      </div>
       
       {/* Center Line - Desktop Only */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">

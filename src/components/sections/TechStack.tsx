@@ -2,7 +2,7 @@ import { memo, useState, useRef } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { Cpu, Server, Database, Layout, Brain, Cloud } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
-import { AmbientGlow } from '@/components/effects';
+import { AmbientGlow, FloatingBubbles, TwinklingStars } from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface TechStackProps {
@@ -243,8 +243,19 @@ export const TechStack = memo(function TechStack({ data }: TechStackProps) {
   return (
     <section id="tech-stack" className="relative py-24 lg:py-32 overflow-hidden">
       {/* Ambient glow effects */}
-      <AmbientGlow position="center" color="var(--accent-primary)" size={600} opacity={0.08} />
-      <AmbientGlow position="top-left" color="var(--accent-secondary)" size={300} opacity={0.06} />
+      <AmbientGlow position="center" color="var(--accent-primary)" size={600} opacity={0.1} />
+      <AmbientGlow position="top-left" color="var(--accent-secondary)" size={300} opacity={0.08} />
+      <AmbientGlow position="bottom-right" color="var(--accent-tertiary)" size={400} opacity={0.06} />
+      
+      {/* 浮动气泡 */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <FloatingBubbles count={8} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
+      </div>
+      
+      {/* 闪烁星星 */}
+      <div className="absolute inset-0 pointer-events-none hidden lg:block">
+        <TwinklingStars count={20} color="var(--accent-primary)" />
+      </div>
       
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle

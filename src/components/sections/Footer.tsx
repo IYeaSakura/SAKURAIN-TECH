@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, ArrowUp } from 'lucide-react';
+import { FloatingBubbles, TwinklingStars } from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface FooterProps {
@@ -24,9 +25,19 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
 
   return (
     <footer
-      className="relative py-16 mc-texture-dirt"
+      className="relative py-16 mc-texture-dirt overflow-hidden"
       style={{ borderTop: '4px solid var(--border-subtle)' }}
     >
+      {/* 浮动气泡 - 从底部上升 */}
+      <div className="absolute inset-0 pointer-events-none opacity-15">
+        <FloatingBubbles count={8} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
+      </div>
+      
+      {/* 闪烁星星 */}
+      <div className="absolute inset-0 pointer-events-none hidden lg:block">
+        <TwinklingStars count={15} color="var(--accent-primary)" />
+      </div>
+      
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
           {/* Logo & Slogan */}

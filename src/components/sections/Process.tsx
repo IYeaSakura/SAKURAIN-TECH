@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Lightbulb, Code, CheckCircle, Headphones, ArrowRight } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
-import { AmbientGlow } from '@/components/effects';
+import { AmbientGlow, FloatingBubbles, TwinklingStars, ConstellationEffect } from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface ProcessProps {
@@ -194,8 +194,24 @@ export const Process = memo(function Process({ data }: ProcessProps) {
   return (
     <section id="process" className="relative py-24 lg:py-32 overflow-hidden">
       {/* Ambient glow effects */}
-      <AmbientGlow position="top-right" color="var(--accent-primary)" size={400} opacity={0.1} />
-      <AmbientGlow position="bottom-left" color="var(--accent-secondary)" size={300} opacity={0.08} />
+      <AmbientGlow position="top-right" color="var(--accent-primary)" size={400} opacity={0.12} />
+      <AmbientGlow position="bottom-left" color="var(--accent-secondary)" size={300} opacity={0.1} />
+      <AmbientGlow position="center" color="var(--accent-tertiary)" size={500} opacity={0.06} />
+      
+      {/* 浮动气泡 */}
+      <div className="absolute inset-0 pointer-events-none opacity-25">
+        <FloatingBubbles count={10} colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']} />
+      </div>
+      
+      {/* 闪烁星星 */}
+      <div className="absolute inset-0 pointer-events-none hidden lg:block">
+        <TwinklingStars count={25} color="var(--accent-secondary)" />
+      </div>
+      
+      {/* 星座连线 */}
+      <div className="absolute inset-0 pointer-events-none opacity-15 hidden lg:block">
+        <ConstellationEffect count={12} connectionDistance={130} color="var(--accent-primary)" />
+      </div>
       
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle

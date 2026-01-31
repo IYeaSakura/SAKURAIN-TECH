@@ -5,7 +5,13 @@ import {
   Brain, BarChart3, Globe, GraduationCap, Gamepad2, Shield,
   X, Clock, Code2, ArrowRight, Pickaxe, Sword, Axe, Sparkles
 } from 'lucide-react';
-import { GridBackground, AmbientGlow } from '@/components/effects';
+import { 
+  GridBackground, 
+  AmbientGlow,
+  SparkEffect,
+  FloatingBubbles,
+  TwinklingStars,
+} from '@/components/effects';
 import { SectionTitle } from '@/components/atoms';
 import type { SiteData } from '@/types';
 
@@ -88,11 +94,11 @@ const ServiceCard = memo(({
         type: 'spring',
         stiffness: 100,
       }}
-      className={isLarge ? 'md:col-span-2 lg:col-span-1' : ''}
+      className={`h-full ${isLarge ? 'md:col-span-2 lg:col-span-1' : ''}`}
       style={{ perspective: 1000 }}
     >
       <motion.div
-        className="group relative h-full p-6 mc-panel cursor-pointer"
+        className="group relative h-[420px] p-6 mc-panel cursor-pointer flex flex-col"
         style={{
           rotateX,
           rotateY,
@@ -178,7 +184,7 @@ const ServiceCard = memo(({
 
         {/* Content */}
         <motion.h3 
-          className="mb-2 font-primary"
+          className="mb-2 font-primary line-clamp-1"
           style={{ 
             fontSize: 'var(--text-xl)',
             fontWeight: 800,
@@ -186,18 +192,20 @@ const ServiceCard = memo(({
             color: 'var(--text-primary)',
             lineHeight: 1.3,
             transform: 'translateZ(20px)',
+            height: '1.3em',
           }}
         >
           {service.title}
         </motion.h3>
         <motion.p 
-          className="mb-2 font-primary"
+          className="mb-2 font-primary line-clamp-1"
           style={{ 
             fontSize: 'var(--text-sm)',
             fontWeight: 600,
             color: 'var(--text-secondary)',
             letterSpacing: '0.01em',
             transform: 'translateZ(15px)',
+            height: '1.5em',
           }}
         >
           {service.subtitle}
@@ -217,7 +225,8 @@ const ServiceCard = memo(({
 
         {/* Features with stagger */}
         <motion.div 
-          className="flex flex-wrap gap-2 mb-4"
+          className="flex flex-wrap gap-2 mb-4 overflow-hidden"
+          style={{ maxHeight: '90px' }}
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
           variants={{
@@ -267,7 +276,7 @@ const ServiceCard = memo(({
 
         {/* Price & Delivery */}
         <motion.div
-          className="flex items-center justify-between pt-4"
+          className="flex items-center justify-between pt-4 mt-auto"
           style={{ borderTop: '2px solid var(--border-subtle)' }}
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
@@ -342,7 +351,7 @@ const ServiceModal = memo(({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 mc-modal-overlay"
+      className="fixed inset-0 z-[200] flex items-start justify-center p-4 pt-28 mc-modal-overlay"
       onClick={onClose}
     >
       <motion.div
@@ -350,7 +359,7 @@ const ServiceModal = memo(({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 30 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto mc-modal p-6"
+        className="relative w-full max-w-4xl max-h-[calc(100vh-8rem)] overflow-y-auto mc-modal p-6 mb-6"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button - 移到模态框外部避免遮挡内容 */}
@@ -610,8 +619,19 @@ export const Services = memo(function Services({ data }: ServicesProps) {
       <GridBackground />
       
       {/* Ambient glow effects */}
-      <AmbientGlow position="top-right" color="var(--accent-primary)" size={400} opacity={0.1} />
-      <AmbientGlow position="bottom-left" color="var(--accent-secondary)" size={300} opacity={0.08} />
+      <AmbientGlow position="top-right" color="var(--accent-primary)" size={400} opacity={0.15} />
+      <AmbientGlow position="bottom-left" color="var(--accent-secondary)" size={300} opacity={0.12} />
+      <AmbientGlow position="center" color="var(--accent-tertiary)" size={500} opacity={0.08} />
+      
+      {/* 浮动气泡背景 */}
+      <div className="absolute inset-0 pointer-events-none opacity-50">
+        <FloatingBubbles count={10} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
+      </div>
+      
+      {/* 闪烁星星 */}
+      <div className="absolute inset-0 pointer-events-none hidden lg:block">
+        <TwinklingStars count={25} color="var(--accent-secondary)" />
+      </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle
@@ -621,12 +641,13 @@ export const Services = memo(function Services({ data }: ServicesProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {data.map((service, index) => (
-            <ServiceCard
-              key={service.id}
-              service={service}
-              index={index}
-              onSelect={handleSelect}
-            />
+            <SparkEffect key={service.id} sparkCount={3} color={getColor(service.color)}>
+              <ServiceCard
+                service={service}
+                index={index}
+                onSelect={handleSelect}
+              />
+            </SparkEffect>
           ))}
         </div>
       </div>

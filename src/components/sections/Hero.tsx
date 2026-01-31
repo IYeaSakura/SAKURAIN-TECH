@@ -1,7 +1,11 @@
 import { memo, useState, useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
 import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown } from 'lucide-react';
-import { AmbientGlow, FloatingParticles } from '@/components/effects';
+import { 
+  AmbientGlow, 
+  FloatingParticles,
+  TwinklingStars,
+} from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface HeroProps {
@@ -348,11 +352,16 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
       />
 
       {/* Ambient Glow Effects */}
-      <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.2} />
-      <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.15} />
+      <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.15} />
+      <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.1} />
       
       {/* Floating Particles */}
       <FloatingParticles count={15} color="var(--accent-primary)" />
+      
+      {/* 闪烁星星 - 仅在桌面端显示 */}
+      <div className="absolute inset-0 hidden lg:block">
+        <TwinklingStars count={20} color="var(--accent-secondary)" />
+      </div>
 
       {/* Radial Gradient Overlay */}
       <div
@@ -447,11 +456,11 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
               className="absolute inset-0 pointer-events-none"
               style={{
                 background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
-                filter: 'blur(40px)',
+                filter: 'blur(60px)',
               }}
               initial={{ opacity: 0 }}
-              animate={{ opacity: [0.3, 0.5, 0.3] }}
-              transition={{ duration: 4, repeat: Infinity }}
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              transition={{ duration: 3, repeat: Infinity }}
             />
             <motion.h1
               initial={{ y: '100%' }}
@@ -468,14 +477,17 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
                 color: 'var(--text-primary)',
                 textShadow: `
                   4px 4px 0 color-mix(in srgb, var(--bg-secondary) 50%, black),
-                  0 0 60px var(--accent-glow)
+                  0 0 40px var(--accent-glow),
+                  0 0 80px var(--accent-glow)
                 `,
                 letterSpacing: '-0.02em',
                 lineHeight: 1.1,
               }}
             >
               {data.title.split('竞争优势')[0]}
-              <GradientText>竞争优势</GradientText>
+              <span className="relative">
+                <GradientText>竞争优势</GradientText>
+              </span>
             </motion.h1>
           </div>
 
@@ -555,7 +567,17 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
           </motion.div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto relative">
+            {/* 统计区域背景发光 */}
+            <motion.div
+              className="absolute inset-0 -z-10 rounded-3xl"
+              style={{
+                background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
+                filter: 'blur(40px)',
+              }}
+              animate={{ opacity: [0.2, 0.4, 0.2] }}
+              transition={{ duration: 4, repeat: Infinity }}
+            />
             {data.stats.map((stat, index) => (
               <StatCard key={stat.label} stat={stat} index={index} />
             ))}

@@ -2,7 +2,7 @@ import { memo, useRef } from 'react';
 import { motion, useInView, useMotionValue, useSpring } from 'framer-motion';
 import { TrendingUp, Award, Target, Zap } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
-import { AnimatedCounter, AmbientGlow } from '@/components/effects';
+import { AnimatedCounter, AmbientGlow, FloatingBubbles, TwinklingStars } from '@/components/effects';
 
 interface StatItem {
   title: string;
@@ -394,26 +394,20 @@ BarChart.displayName = 'BarChart';
 export const StatsCharts = memo(function StatsCharts({ data }: { data: StatsChartsData }) {
   return (
     <section id="stats" className="relative py-24 lg:py-32 overflow-hidden">
-      {/* Background Pattern */}
-      <motion.div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `
-            radial-gradient(circle at 50% 50%, var(--accent-primary) 0%, transparent 50%),
-            radial-gradient(circle at 20% 80%, var(--accent-secondary) 0%, transparent 40%)
-          `,
-          opacity: 0.05,
-        }}
-        animate={{ 
-          scale: [1, 1.1, 1],
-          rotate: [0, 5, 0],
-        }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-      />
-      
       {/* Ambient glow effects */}
-      <AmbientGlow position="top-left" color="var(--accent-primary)" size={400} opacity={0.1} />
-      <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={300} opacity={0.08} />
+      <AmbientGlow position="top-left" color="var(--accent-primary)" size={400} opacity={0.12} />
+      <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={300} opacity={0.1} />
+      <AmbientGlow position="center" color="var(--accent-tertiary)" size={500} opacity={0.06} />
+      
+      {/* 浮动气泡 */}
+      <div className="absolute inset-0 pointer-events-none opacity-20">
+        <FloatingBubbles count={10} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
+      </div>
+      
+      {/* 闪烁星星 */}
+      <div className="absolute inset-0 pointer-events-none hidden lg:block">
+        <TwinklingStars count={25} color="var(--accent-primary)" />
+      </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle
