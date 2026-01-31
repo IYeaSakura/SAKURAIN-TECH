@@ -2,6 +2,7 @@ import { memo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Clock, Send, Github, MessageCircle, Terminal, ChevronRight } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
+import { AmbientGlow } from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface ContactProps {
@@ -43,6 +44,10 @@ export const Contact = memo(function Contact({ data }: ContactProps) {
 
   return (
     <section id="contact" className="relative py-24 lg:py-32 overflow-hidden">
+      {/* Ambient glow effects */}
+      <AmbientGlow position="center" color="var(--accent-primary)" size={500} opacity={0.1} />
+      <AmbientGlow position="top-left" color="var(--accent-secondary)" size={300} opacity={0.08} />
+      
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle
           title={data.title}

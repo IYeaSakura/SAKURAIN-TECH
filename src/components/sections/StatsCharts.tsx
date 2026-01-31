@@ -2,7 +2,7 @@ import { memo, useRef } from 'react';
 import { motion, useInView, useMotionValue, useSpring } from 'framer-motion';
 import { TrendingUp, Award, Target, Zap } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
-import { AnimatedCounter } from '@/components/effects';
+import { AnimatedCounter, AmbientGlow } from '@/components/effects';
 
 interface StatItem {
   title: string;
@@ -410,6 +410,10 @@ export const StatsCharts = memo(function StatsCharts({ data }: { data: StatsChar
         }}
         transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
       />
+      
+      {/* Ambient glow effects */}
+      <AmbientGlow position="top-left" color="var(--accent-primary)" size={400} opacity={0.1} />
+      <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={300} opacity={0.08} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle

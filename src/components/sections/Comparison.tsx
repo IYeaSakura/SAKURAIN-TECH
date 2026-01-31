@@ -2,7 +2,7 @@ import { memo, useRef, useState } from 'react';
 import { motion, useMotionValue, useSpring, useInView } from 'framer-motion';
 import { Check, X, Sparkles, Zap, ArrowRight } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
-import { Terminal } from '@/components/effects';
+import { Terminal, AmbientGlow } from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface ComparisonProps {
@@ -283,6 +283,10 @@ const CTACard = memo(function CTACard() {
 export const Comparison = memo(function Comparison({ data }: ComparisonProps) {
   return (
     <section id="comparison" className="relative py-24 lg:py-32 overflow-hidden">
+      {/* Ambient glow effects */}
+      <AmbientGlow position="top-right" color="var(--accent-primary)" size={400} opacity={0.1} />
+      <AmbientGlow position="bottom-left" color="var(--accent-secondary)" size={300} opacity={0.08} />
+      
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle
           title={data.title}
@@ -352,11 +356,21 @@ export const Comparison = memo(function Comparison({ data }: ComparisonProps) {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ margin: '-50px' }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="group"
+                  className="group relative"
+                  whileHover={{ 
+                    backgroundColor: 'color-mix(in srgb, var(--bg-secondary) 50%, transparent)',
+                  }}
                   style={{
                     borderBottom: '1px solid var(--border-subtle)',
                   }}
                 >
+                  {/* Row hover glow */}
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent, var(--accent-glow), transparent)',
+                    }}
+                  />
                   <td className="py-5 px-4">
                     <span 
                       className="font-primary"

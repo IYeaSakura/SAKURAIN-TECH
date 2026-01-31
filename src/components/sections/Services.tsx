@@ -5,7 +5,7 @@ import {
   Brain, BarChart3, Globe, GraduationCap, Gamepad2, Shield,
   X, Clock, Code2, ArrowRight, Pickaxe, Sword, Axe, Sparkles
 } from 'lucide-react';
-import { GridBackground } from '@/components/effects';
+import { GridBackground, AmbientGlow } from '@/components/effects';
 import { SectionTitle } from '@/components/atoms';
 import type { SiteData } from '@/types';
 
@@ -99,7 +99,7 @@ const ServiceCard = memo(({
           transformStyle: 'preserve-3d',
           borderColor: isHovered ? color : undefined,
           boxShadow: isHovered 
-            ? `0 25px 50px -12px ${color}40, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)`
+            ? `0 25px 50px -12px ${color}40, 0 0 30px ${color}20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)`
             : undefined,
         }}
         onMouseEnter={() => setIsHovered(true)}
@@ -109,11 +109,21 @@ const ServiceCard = memo(({
         onClick={() => service.details && onSelect(service)}
         transition={{ duration: 0.3 }}
       >
+        {/* Glow background */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `radial-gradient(circle at 50% 0%, ${color}20, transparent 60%)`,
+          }}
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+        />
+        
         {/* Shine effect */}
         <motion.div
           className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
           style={{
-            background: `linear-gradient(105deg, transparent 40%, ${color}10 45%, ${color}20 50%, ${color}10 55%, transparent 60%)`,
+            background: `linear-gradient(105deg, transparent 40%, ${color}15 45%, ${color}30 50%, ${color}15 55%, transparent 60%)`,
             transform: 'translateX(-100%)',
           }}
           animate={isHovered ? { x: '200%' } : { x: '-100%' }}
@@ -598,6 +608,10 @@ export const Services = memo(function Services({ data }: ServicesProps) {
   return (
     <section id="services" className="relative py-24 lg:py-32 overflow-hidden">
       <GridBackground />
+      
+      {/* Ambient glow effects */}
+      <AmbientGlow position="top-right" color="var(--accent-primary)" size={400} opacity={0.1} />
+      <AmbientGlow position="bottom-left" color="var(--accent-secondary)" size={300} opacity={0.08} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle

@@ -8,3 +8,4 @@ export { MagneticButton } from './MagneticButton';
 export { SpotlightCard } from './SpotlightCard';
 export { ParallaxWrapper } from './ParallaxWrapper';
 export { Terminal } from './Terminal';
+export { AmbientGlow, FloatingParticles, ScanLine, AnimatedGrid, CursorGlow } from './GlowEffects';

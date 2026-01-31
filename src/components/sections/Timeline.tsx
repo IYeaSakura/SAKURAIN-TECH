@@ -2,6 +2,7 @@ import { memo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Rocket, Code2, TrendingUp, Brain, Globe, Sparkles, ChevronDown } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
+import { AmbientGlow } from '@/components/effects';
 
 interface TimelineEvent {
   year: string;
@@ -44,10 +45,34 @@ export const Timeline = memo(function Timeline({ data }: TimelineProps) {
 
   return (
     <section id="timeline" className="relative py-24 lg:py-32 overflow-hidden">
+      {/* Ambient glow effects */}
+      <AmbientGlow position="center" color="var(--accent-primary)" size={400} opacity={0.08} />
+      
       {/* Center Line - Desktop Only */}
       <div className="absolute inset-0 pointer-events-none hidden md:block">
+        {/* Main line */}
         <div className="absolute top-0 left-1/2 w-px h-full -translate-x-1/2"
-          style={{ background: 'linear-gradient(to bottom, transparent, var(--accent-primary) 20%, var(--accent-primary) 80%, transparent)' }}
+          style={{ 
+            background: 'linear-gradient(to bottom, transparent, var(--accent-primary) 20%, var(--accent-primary) 80%, transparent)',
+            boxShadow: '0 0 10px var(--accent-glow)',
+          }}
+        />
+        {/* Animated pulse */}
+        <motion.div 
+          className="absolute left-1/2 w-1 h-20 -translate-x-1/2"
+          style={{ 
+            background: 'linear-gradient(to bottom, transparent, var(--accent-primary), transparent)',
+            filter: 'blur(2px)',
+          }}
+          animate={{ 
+            top: ['0%', '100%'],
+            opacity: [0, 1, 0],
+          }}
+          transition={{ 
+            duration: 4, 
+            repeat: Infinity, 
+            ease: 'linear',
+          }}
         />
       </div>
 
@@ -114,11 +139,25 @@ export const Timeline = memo(function Timeline({ data }: TimelineProps) {
                         <div className="absolute inset-0 rounded-full"
                           style={{ background: `${color}20`, border: `2px solid ${color}` }}
                         />
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center"
-                          style={{ background: color, boxShadow: `0 0 15px ${color}80` }}
+                        <motion.div 
+                          className="w-10 h-10 rounded-full flex items-center justify-center relative"
+                          style={{ 
+                            background: color, 
+                            boxShadow: `0 0 20px ${color}80, 0 0 40px ${color}40`,
+                          }}
+                          whileHover={{ scale: 1.1 }}
                         >
-                          <Icon className="w-5 h-5 text-white" />
-                        </div>
+                          {/* Glow ring */}
+                          <motion.div
+                            className="absolute inset-0 rounded-full"
+                            style={{
+                              border: `2px solid ${color}`,
+                            }}
+                            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                          />
+                          <Icon className="w-5 h-5 text-white relative z-10" />
+                        </motion.div>
                       </motion.div>
 
                       {/* Line to bottom */}

@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Lightbulb, Code, CheckCircle, Headphones, ArrowRight } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
+import { AmbientGlow } from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface ProcessProps {
@@ -39,24 +40,55 @@ const ProcessStep = memo(({
     >
       {/* Timeline Line */}
       {!isLast && (
-        <div 
-          className="absolute left-6 top-14 w-0.5 h-full hidden md:block"
-          style={{ 
-            background: 'linear-gradient(to bottom, var(--accent-primary), transparent)',
-            height: 'calc(100% + 2rem)',
-          }}
-        />
+        <>
+          <div 
+            className="absolute left-6 top-14 w-0.5 h-full hidden md:block"
+            style={{ 
+              background: 'linear-gradient(to bottom, var(--accent-primary), transparent)',
+              height: 'calc(100% + 2rem)',
+            }}
+          />
+          {/* Animated pulse on timeline */}
+          <motion.div
+            className="absolute left-6 top-14 w-0.5 hidden md:block"
+            style={{ 
+              background: 'var(--accent-primary)',
+              height: '20px',
+              filter: 'blur(2px)',
+            }}
+            animate={{ 
+              top: ['56px', 'calc(100% + 2rem)'],
+              opacity: [1, 0],
+            }}
+            transition={{ 
+              duration: 2, 
+              repeat: Infinity, 
+              delay: index * 0.5,
+              ease: 'easeOut',
+            }}
+          />
+        </>
       )}
 
       {/* Step Number & Icon */}
       <div className="relative flex-shrink-0">
+        {/* Glow effect behind icon */}
         <motion.div
-          className="w-12 h-12 flex items-center justify-center"
+          className="absolute inset-0 -z-10"
+          style={{
+            background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)',
+            filter: 'blur(10px)',
+          }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+        <motion.div
+          className="w-12 h-12 flex items-center justify-center relative"
           style={{
             background: 'var(--accent-primary)',
             border: '3px solid',
             borderColor: 'color-mix(in srgb, var(--accent-primary) 120%, white) color-mix(in srgb, var(--accent-primary) 80%, black) color-mix(in srgb, var(--accent-primary) 80%, black) color-mix(in srgb, var(--accent-primary) 120%, white)',
-            boxShadow: 'inset -2px -2px 0 color-mix(in srgb, var(--accent-primary) 60%, black), inset 2px 2px 0 color-mix(in srgb, var(--accent-primary) 120%, white), 0 0 15px var(--accent-glow)',
+            boxShadow: 'inset -2px -2px 0 color-mix(in srgb, var(--accent-primary) 60%, black), inset 2px 2px 0 color-mix(in srgb, var(--accent-primary) 120%, white), 0 0 20px var(--accent-glow), 0 0 40px var(--accent-glow)',
           }}
           whileHover={{ scale: 1.1 }}
         >
@@ -80,9 +112,19 @@ const ProcessStep = memo(({
       {/* Content */}
       <div className="flex-1 pb-8 md:pb-12">
         <motion.div
-          className="p-6 mc-panel"
-          whileHover={{ y: -2 }}
+          className="p-6 mc-panel relative overflow-hidden group"
+          whileHover={{ y: -4, boxShadow: '0 20px 40px -10px var(--accent-glow)' }}
         >
+          {/* Hover glow effect */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)',
+            }}
+            initial={{ opacity: 0 }}
+            whileHover={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          />
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
             <h3 
               className="font-primary"
@@ -151,6 +193,10 @@ ProcessStep.displayName = 'ProcessStep';
 export const Process = memo(function Process({ data }: ProcessProps) {
   return (
     <section id="process" className="relative py-24 lg:py-32 overflow-hidden">
+      {/* Ambient glow effects */}
+      <AmbientGlow position="top-right" color="var(--accent-primary)" size={400} opacity={0.1} />
+      <AmbientGlow position="bottom-left" color="var(--accent-secondary)" size={300} opacity={0.08} />
+      
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle
           title={data.title}

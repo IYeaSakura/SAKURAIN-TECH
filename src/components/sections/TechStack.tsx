@@ -2,6 +2,7 @@ import { memo, useState, useRef } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { Cpu, Server, Database, Layout, Brain, Cloud } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
+import { AmbientGlow } from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface TechStackProps {
@@ -88,11 +89,23 @@ const SkillBar = memo(({
           style={{ 
             background: `linear-gradient(to right, ${color}, ${color}80)`,
             borderRight: `2px solid ${color}`,
+            boxShadow: `0 0 10px ${color}40`,
           }}
           initial={{ width: 0 }}
           animate={isInView ? { width: `${skill.level}%` } : {}}
           transition={{ duration: 1.2, delay: index * 0.1 + 0.2, ease: 'easeOut' }}
         >
+          {/* Glow pulse effect */}
+          <motion.div
+            className="absolute right-0 top-0 bottom-0 w-4"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${color})`,
+              filter: 'blur(4px)',
+            }}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+          
           {/* Shimmer effect */}
           <motion.div
             className="absolute inset-0"
@@ -229,6 +242,10 @@ CategoryCard.displayName = 'CategoryCard';
 export const TechStack = memo(function TechStack({ data }: TechStackProps) {
   return (
     <section id="tech-stack" className="relative py-24 lg:py-32 overflow-hidden">
+      {/* Ambient glow effects */}
+      <AmbientGlow position="center" color="var(--accent-primary)" size={600} opacity={0.08} />
+      <AmbientGlow position="top-left" color="var(--accent-secondary)" size={300} opacity={0.06} />
+      
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle
           title={data.title}

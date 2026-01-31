@@ -1,7 +1,7 @@
 import { memo, useState, useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
 import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown } from 'lucide-react';
-
+import { AmbientGlow, FloatingParticles } from '@/components/effects';
 import type { SiteData } from '@/types';
 
 interface HeroProps {
@@ -332,11 +332,11 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Grid Pattern Overlay */}
+      {/* Animated Grid Background */}
       <motion.div
-        className="absolute inset-0 -z-10 pointer-events-none"
+        className="absolute inset-0 -z-20 pointer-events-none"
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.03 }}
+        animate={{ opacity: 0.05 }}
         transition={{ duration: 1, delay: 0.5 }}
         style={{
           backgroundImage: `
@@ -347,9 +347,16 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
         }}
       />
 
+      {/* Ambient Glow Effects */}
+      <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.2} />
+      <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.15} />
+      
+      {/* Floating Particles */}
+      <FloatingParticles count={15} color="var(--accent-primary)" />
+
       {/* Radial Gradient Overlay */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none -z-10"
         style={{
           background: `radial-gradient(ellipse at center, transparent 0%, var(--bg-primary) 70%)`,
         }}
@@ -433,8 +440,19 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
             </motion.div>
           </motion.div>
 
-          {/* Main Title with character animation */}
-          <div className="overflow-hidden mb-6 sm:mb-8">
+          {/* Main Title with enhanced glow effect */}
+          <div className="overflow-hidden mb-6 sm:mb-8 relative">
+            {/* Title glow effect */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
+                filter: 'blur(40px)',
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.3, 0.5, 0.3] }}
+              transition={{ duration: 4, repeat: Infinity }}
+            />
             <motion.h1
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
@@ -443,12 +461,15 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
                 ease: [0.16, 1, 0.3, 1],
                 delay: 0.1,
               }}
-              className="font-primary"
+              className="font-primary relative"
               style={{
                 fontSize: 'clamp(2.5rem, 8vw, 4.5rem)',
                 fontWeight: 800,
                 color: 'var(--text-primary)',
-                textShadow: '4px 4px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
+                textShadow: `
+                  4px 4px 0 color-mix(in srgb, var(--bg-secondary) 50%, black),
+                  0 0 60px var(--accent-glow)
+                `,
                 letterSpacing: '-0.02em',
                 lineHeight: 1.1,
               }}
