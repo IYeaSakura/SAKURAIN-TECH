@@ -1,7 +1,7 @@
 import { memo, useState, useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
 import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown } from 'lucide-react';
-import { HeroParticles } from '@/components/effects/HeroParticles';
+
 import type { SiteData } from '@/types';
 
 interface HeroProps {
@@ -332,11 +332,6 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Particle Background - Lowest Layer */}
-      <div className="absolute inset-0 -z-20">
-        <HeroParticles />
-      </div>
-
       {/* Grid Pattern Overlay */}
       <motion.div
         className="absolute inset-0 -z-10 pointer-events-none"
