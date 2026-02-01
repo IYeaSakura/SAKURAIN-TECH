@@ -378,15 +378,16 @@ const ServiceModal = memo(({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4 mc-modal-overlay"
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-20 sm:pt-24 p-3 sm:p-4 mc-modal-overlay"
       onClick={onClose}
+      style={{ background: 'rgba(0, 0, 0, 0.7)' }}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="relative w-full max-w-4xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto mc-modal p-4 sm:p-6"
+        className="relative w-full max-w-4xl max-h-[calc(100vh-6rem)] sm:max-h-[calc(100vh-7rem)] overflow-y-auto mc-modal p-4 sm:p-6"
         onClick={(e) => e.stopPropagation()}
         style={{
           borderRadius: '12px',
