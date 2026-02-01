@@ -429,17 +429,84 @@ strong, b {
   display: none;
 }
 
-/* Theme Transition Styles */
+/* ============================================
+   THEME TRANSITION - 丝滑主题切换
+   ============================================ */
+
+/* 基础过渡 - 使用更平滑的贝塞尔曲线 */
 .theme-transitioning,
 .theme-transitioning *,
 .theme-transitioning *::before,
 .theme-transitioning *::after {
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-              border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-              color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-              box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-              fill 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-              stroke 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: background-color 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
+              border-color 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
+              color 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
+              box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
+              fill 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
+              stroke 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* View Transition API 优化 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.6s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(root) {
+  animation-name: theme-fade-out;
+}
+
+::view-transition-new(root) {
+  animation-name: theme-fade-in;
+}
+
+@keyframes theme-fade-out {
+  from {
+    opacity: 1;
+    filter: brightness(1);
+  }
+  to {
+    opacity: 0;
+    filter: brightness(0.8);
+  }
+}
+
+@keyframes theme-fade-in {
+  from {
+    opacity: 0;
+    filter: brightness(1.2);
+  }
+  to {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+/* 主题切换涟漪动画 */
+@keyframes theme-ripple-expand {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(50);
+    opacity: 0;
+  }
+}
+
+/* 防止切换时的布局抖动 */
+html.theme-transitioning {
+  overflow-x: hidden;
+}
+
+/* 优化图片在主题切换时的表现 */
+.theme-transitioning img {
+  transition: filter 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
 /* ============================================

@@ -304,7 +304,7 @@ export const Comparison = memo(function Comparison({ data }: ComparisonProps) {
           subtitle={data.subtitle}
         />
 
-        {/* Comparison Table */}
+        {/* Comparison Table - 使用 Grid 布局 */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -312,137 +312,136 @@ export const Comparison = memo(function Comparison({ data }: ComparisonProps) {
           transition={{ duration: 0.5 }}
           className="overflow-x-auto"
         >
-          <table className="w-full min-w-[600px]">
-            <thead>
-              <tr>
-                <th 
-                  className="text-left py-4 px-4 font-primary"
+          <div className="min-w-[600px]">
+            {/* 表头 */}
+            <div className="grid grid-cols-[140px_1fr_1.5fr]">
+              <div 
+                className="py-4 px-4 font-primary text-left"
+                style={{
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 700,
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  borderBottom: '2px solid var(--border-subtle)',
+                }}
+              >
+                对比维度
+              </div>
+              <div 
+                className="py-4 px-4 font-primary text-left"
+                style={{
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 700,
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  borderBottom: '2px solid var(--border-subtle)',
+                }}
+              >
+                传统外包
+              </div>
+              <div 
+                className="py-4 px-4 font-primary text-left"
+                style={{
+                  fontSize: 'var(--text-sm)',
+                  fontWeight: 800,
+                  color: 'var(--accent-primary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  borderBottom: '2px solid var(--accent-primary)',
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 flex-shrink-0" />
+                  SAKURAIN
+                </div>
+              </div>
+            </div>
+
+            {/* 表体 */}
+            {data.items.map((item, index) => (
+              <motion.div
+                key={item.dimension}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ margin: '-50px' }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className="group relative grid grid-cols-[140px_1fr_1.5fr]"
+                whileHover={{ 
+                  backgroundColor: 'color-mix(in srgb, var(--bg-secondary) 50%, transparent)',
+                }}
+                style={{
+                  borderBottom: '1px solid var(--border-subtle)',
+                }}
+              >
+                {/* Row hover glow */}
+                <motion.div
+                  className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   style={{
-                    fontSize: 'var(--text-sm)',
-                    fontWeight: 700,
-                    color: 'var(--text-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
-                    borderBottom: '2px solid var(--border-subtle)',
+                    background: 'linear-gradient(90deg, transparent, var(--accent-glow), transparent)',
                   }}
-                >
-                  对比维度
-                </th>
-                <th 
-                  className="text-left py-4 px-4 font-primary"
-                  style={{
-                    fontSize: 'var(--text-sm)',
-                    fontWeight: 700,
-                    color: 'var(--text-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
-                    borderBottom: '2px solid var(--border-subtle)',
-                  }}
-                >
-                  传统外包
-                </th>
-                <th 
-                  className="text-left py-4 px-4 font-primary"
-                  style={{
-                    fontSize: 'var(--text-sm)',
-                    fontWeight: 800,
-                    color: 'var(--accent-primary)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
-                    borderBottom: '2px solid var(--accent-primary)',
-                  }}
-                >
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" />
-                    SAKURAIN
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((item, index) => (
-                <motion.tr
-                  key={item.dimension}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ margin: '-50px' }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="group relative"
-                  whileHover={{ 
-                    backgroundColor: 'color-mix(in srgb, var(--bg-secondary) 50%, transparent)',
-                  }}
-                  style={{
-                    borderBottom: '1px solid var(--border-subtle)',
-                  }}
-                >
-                  {/* Row hover glow */}
-                  <motion.div
-                    className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                />
+                <div className="py-5 px-4">
+                  <span 
+                    className="font-primary"
                     style={{
-                      background: 'linear-gradient(90deg, transparent, var(--accent-glow), transparent)',
+                      fontSize: 'var(--text-base)',
+                      fontWeight: 700,
+                      color: 'var(--text-primary)',
                     }}
-                  />
-                  <td className="py-5 px-4">
+                  >
+                    {item.dimension}
+                  </span>
+                </div>
+                <div className="py-5 px-4">
+                  <div className="flex items-start gap-2">
+                    <X className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--error)' }} />
                     <span 
                       className="font-primary"
                       style={{
-                        fontSize: 'var(--text-base)',
-                        fontWeight: 700,
-                        color: 'var(--text-primary)',
+                        fontSize: 'var(--text-sm)',
+                        fontWeight: 400,
+                        color: 'var(--text-muted)',
+                        lineHeight: 1.6,
                       }}
                     >
-                      {item.dimension}
+                      {item.traditional}
                     </span>
-                  </td>
-                  <td className="py-5 px-4">
-                    <div className="flex items-start gap-2">
-                      <X className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--error)' }} />
+                  </div>
+                </div>
+                <div className="py-5 px-4">
+                  <div className="flex items-start gap-2">
+                    <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--accent-secondary)' }} />
+                    <div>
                       <span 
-                        className="font-primary"
+                        className="font-primary block"
                         style={{
                           fontSize: 'var(--text-sm)',
-                          fontWeight: 400,
-                          color: 'var(--text-muted)',
+                          fontWeight: 600,
+                          color: 'var(--text-primary)',
                           lineHeight: 1.6,
                         }}
                       >
-                        {item.traditional}
+                        {item.sakurain}
+                      </span>
+                      <span 
+                        className="font-primary block mt-1"
+                        style={{
+                          fontSize: 'var(--text-xs)',
+                          fontWeight: 500,
+                          color: 'var(--accent-primary)',
+                          fontStyle: 'italic',
+                        }}
+                      >
+                        {item.highlight}
                       </span>
                     </div>
-                  </td>
-                  <td className="py-5 px-4">
-                    <div className="flex items-start gap-2">
-                      <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--accent-secondary)' }} />
-                      <div>
-                        <span 
-                          className="font-primary block"
-                          style={{
-                            fontSize: 'var(--text-sm)',
-                            fontWeight: 600,
-                            color: 'var(--text-primary)',
-                            lineHeight: 1.6,
-                          }}
-                        >
-                          {item.sakurain}
-                        </span>
-                        <span 
-                          className="font-primary block mt-1"
-                          style={{
-                            fontSize: 'var(--text-xs)',
-                            fontWeight: 500,
-                            color: 'var(--accent-primary)',
-                            fontStyle: 'italic',
-                          }}
-                        >
-                          {item.highlight}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
 
         {/* Bottom CTA - Advanced Animation Version */}

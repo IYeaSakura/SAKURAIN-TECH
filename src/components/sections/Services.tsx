@@ -58,40 +58,19 @@ const ServiceCard = memo(({
   const color = useMemo(() => getColor(service.color), [service.color]);
   const isLarge = service.size === 'large';
   
-  const ref = useRef<HTMLDivElement>(null);
-  const [isInView, setIsInView] = useState(false);
-  
-  // 使用 IntersectionObserver 替代 framer-motion 的 useInView 以减少依赖
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
-    
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          observer.disconnect(); // 只触发一次
-        }
-      },
-      { rootMargin: '-50px', threshold: 0.1 }
-    );
-    
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-  
   const [isHovered, setIsHovered] = useState(false);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current || !isInView) return;
-    const rect = ref.current.getBoundingClientRect();
+  
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>, ref: React.RefObject<HTMLDivElement | null>) => {
+    const element = ref.current;
+    if (!element) return;
+    const rect = element.getBoundingClientRect();
     const x = (e.clientX - rect.left - rect.width / 2) / 20;
     const y = (e.clientY - rect.top - rect.height / 2) / 20;
     mouseX.set(x);
     mouseY.set(y);
-  }, [isInView, mouseX, mouseY]);
+  }, [mouseX, mouseY]);
 
   const handleMouseLeave = useCallback(() => {
     mouseX.set(0);
@@ -102,11 +81,14 @@ const ServiceCard = memo(({
   const rotateX = useSpring(mouseY, { stiffness: 300, damping: 30 });
   const rotateY = useSpring(mouseX, { stiffness: 300, damping: 30 });
 
+  const cardRef = useRef<HTMLDivElement>(null);
+
   return (
     <motion.div
-      ref={ref}
+      ref={cardRef}
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
-      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: false, margin: '-50px', amount: 0.1 }}
       transition={{ 
         duration: 0.6, 
         delay: index * 0.1,
@@ -128,7 +110,7 @@ const ServiceCard = memo(({
             : undefined,
         }}
         onMouseEnter={() => setIsHovered(true)}
-        onMouseMove={handleMouseMove}
+        onMouseMove={(e) => handleMouseMove(e, cardRef)}
         onMouseLeave={handleMouseLeave}
         whileHover={{ y: -8, scale: 1.02 }}
         onClick={() => service.details && onSelect(service)}
@@ -160,7 +142,8 @@ const ServiceCard = memo(({
           <motion.div 
             className="absolute -top-3 right-4 z-10"
             initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
+            whileInView={{ scale: 1, rotate: 0 }}
+            viewport={{ once: false, amount: 0.1 }}
             transition={{ type: 'spring', stiffness: 200, delay: index * 0.1 + 0.3 }}
             style={{
               padding: '4px 12px',
@@ -247,7 +230,8 @@ const ServiceCard = memo(({
           className="flex flex-wrap gap-2 mb-4 overflow-hidden"
           style={{ maxHeight: '90px' }}
           initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
+          whileInView="visible"
+          viewport={{ once: false, amount: 0.1 }}
           variants={{
             visible: { transition: { staggerChildren: 0.05, delayChildren: index * 0.1 + 0.2 } },
           }}
@@ -298,7 +282,8 @@ const ServiceCard = memo(({
           className="flex items-center justify-between pt-4 mt-auto"
           style={{ borderTop: '2px solid var(--border-subtle)' }}
           initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: false, amount: 0.1 }}
           transition={{ delay: index * 0.1 + 0.4 }}
         >
           <motion.div
