@@ -365,29 +365,41 @@ const ServiceModal = memo(({
   const color = useMemo(() => getColor(service.color), [service.color]);
   const details = service.details;
 
+  // 禁止背景滚动当模态框打开时
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[200] flex items-start justify-center p-4 pt-28 mc-modal-overlay"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4 mc-modal-overlay"
       onClick={onClose}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 30 }}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 30 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="relative w-full max-w-4xl max-h-[calc(100vh-8rem)] overflow-y-auto mc-modal p-6 mb-6"
+        className="relative w-full max-w-4xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto mc-modal p-4 sm:p-6"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          borderRadius: '12px',
+        }}
       >
-        {/* Close button - 移到模态框外部避免遮挡内容 */}
+        {/* Close button - 改进移动端位置 */}
         <motion.button
           onClick={onClose}
-          className="absolute -top-12 right-0 p-2 rounded-xl transition-colors z-10"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 p-2 rounded-lg transition-colors z-10"
           style={{ 
             color: 'var(--text-muted)',
             background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-subtle)',
           }}
           whileHover={{ 
             scale: 1.1, 
@@ -396,18 +408,18 @@ const ServiceModal = memo(({
           }}
           whileTap={{ scale: 0.9 }}
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4 sm:w-5 sm:h-5" />
         </motion.button>
 
         {/* Header */}
         <motion.div 
-          className="flex items-start gap-4 mb-6"
+          className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6 pr-10 sm:pr-12"
           initial={{ x: -20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
         >
           <motion.div
-            className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
+            className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0"
             style={{
               background: `${color}20`,
               border: `2px solid ${color}`,
@@ -416,26 +428,26 @@ const ServiceModal = memo(({
             animate={{ rotate: [0, 5, -5, 0] }}
             transition={{ duration: 4, repeat: Infinity }}
           >
-            <Icon className="w-7 h-7" style={{ color }} />
+            <Icon className="w-5 h-5 sm:w-7 sm:h-7" style={{ color }} />
           </motion.div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <h3 
-              className="font-primary text-2xl font-black mb-1"
+              className="font-primary text-lg sm:text-2xl font-black mb-1 truncate"
               style={{ color: 'var(--text-primary)' }}
             >
               {service.title}
             </h3>
             <p 
-              className="font-primary text-sm mb-2"
+              className="font-primary text-xs sm:text-sm mb-2 truncate"
               style={{ color: 'var(--text-secondary)' }}
             >
               {service.subtitle}
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {service.features.slice(0, 3).map((feature) => (
                 <span
                   key={feature}
-                  className="px-2 py-0.5 rounded-md font-primary text-xs"
+                  className="px-1.5 sm:px-2 py-0.5 rounded-md font-primary text-xs"
                   style={{
                     background: `${color}15`,
                     color: color,
@@ -456,16 +468,16 @@ const ServiceModal = memo(({
         </motion.div>
 
         {/* Main Content */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Description */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="p-4 rounded-xl"
+            className="p-3 sm:p-4 rounded-lg sm:rounded-xl"
             style={{ background: 'var(--bg-secondary)' }}
           >
-            <p className="font-primary text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            <p className="font-primary text-xs sm:text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               {service.description}
             </p>
           </motion.div>
@@ -477,7 +489,7 @@ const ServiceModal = memo(({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 + sectionIdx * 0.1 }}
-              className="rounded-xl overflow-hidden"
+              className="rounded-lg sm:rounded-xl overflow-hidden"
               style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border-subtle)',
@@ -485,43 +497,43 @@ const ServiceModal = memo(({
             >
               {/* Section Header */}
               <div 
-                className="px-4 py-3 flex items-center justify-between"
+                className="px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between"
                 style={{
                   background: `linear-gradient(135deg, ${color}15, transparent)`,
                   borderBottom: `1px solid ${color}20`,
                 }}
               >
-                <h4 className="font-primary text-sm font-bold" style={{ color }}>
+                <h4 className="font-primary text-xs sm:text-sm font-bold" style={{ color }}>
                   {section.title}
                 </h4>
                 {section.total && (
-                  <span className="font-primary text-sm font-black" style={{ color }}>
+                  <span className="font-primary text-xs sm:text-sm font-black" style={{ color }}>
                     {section.total}
                   </span>
                 )}
               </div>
 
               {/* Items List */}
-              <div className="p-4">
-                <div className="space-y-3">
+              <div className="p-2 sm:p-4">
+                <div className="space-y-2 sm:space-y-3">
                   {section.items.map((item, itemIdx) => (
                     <motion.div
                       key={item.name}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.3 + sectionIdx * 0.1 + itemIdx * 0.05 }}
-                      className="flex items-center justify-between gap-4 p-3 rounded-lg"
+                      className="flex items-center justify-between gap-2 sm:gap-4 p-2 sm:p-3 rounded-md sm:rounded-lg"
                       style={{ background: 'var(--bg-secondary)' }}
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="font-primary text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                        <div className="font-primary text-xs sm:text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
                           {item.name}
                         </div>
                         <div className="font-primary text-xs truncate" style={{ color: 'var(--text-muted)' }}>
                           {item.desc}
                         </div>
                       </div>
-                      <div className="font-primary text-sm font-bold flex-shrink-0" style={{ color }}>
+                      <div className="font-primary text-xs sm:text-sm font-bold flex-shrink-0" style={{ color }}>
                         {item.price}
                       </div>
                     </motion.div>
@@ -534,13 +546,13 @@ const ServiceModal = memo(({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
-                    className="mt-4 p-3 rounded-lg flex items-start gap-2"
+                    className="mt-3 sm:mt-4 p-2 sm:p-3 rounded-md sm:rounded-lg flex items-start gap-2"
                     style={{
                       background: `${color}10`,
                       border: `1px solid ${color}30`,
                     }}
                   >
-                    <Sparkles className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color }} />
+                    <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0 mt-0.5" style={{ color }} />
                     <span className="font-primary text-xs" style={{ color: 'var(--text-secondary)' }}>
                       {section.performance}
                     </span>
@@ -558,14 +570,14 @@ const ServiceModal = memo(({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <h4 className="font-primary text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>
+            <h4 className="font-primary text-xs font-bold uppercase tracking-wider mb-2 sm:mb-3" style={{ color: 'var(--text-muted)' }}>
               技术栈
             </h4>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {service.tech.map((tech, idx) => (
                 <motion.span
                   key={tech}
-                  className="px-3 py-1.5 rounded-lg font-primary text-sm font-medium"
+                  className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg font-primary text-xs sm:text-sm font-medium"
                   style={{
                     background: `${color}15`,
                     color: color,
@@ -582,27 +594,33 @@ const ServiceModal = memo(({
             </div>
           </motion.div>
 
-          {/* Delivery & Price */}
+          {/* Delivery & Price - 移动端适配 */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex items-center justify-between p-4 rounded-xl"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl"
             style={{ background: 'var(--bg-secondary)' }}
           >
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 sm:gap-6">
               <div>
                 <div className="font-primary text-xs" style={{ color: 'var(--text-muted)' }}>交付周期</div>
                 <div className="font-primary text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
                   {service.delivery}
                 </div>
               </div>
-
+              {/* 移动端显示价格 */}
+              <div className="sm:hidden">
+                <div className="font-primary text-xs" style={{ color: 'var(--text-muted)' }}>价格</div>
+                <div className="font-primary text-lg font-black" style={{ color }}>
+                  {service.price}
+                </div>
+              </div>
             </div>
             <motion.a
               href="#contact"
               onClick={onClose}
-              className="px-6 py-2.5 rounded-xl font-primary font-bold text-sm"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-primary font-bold text-sm text-center"
               style={{
                 background: color,
                 color: '#fff',
