@@ -289,6 +289,34 @@ export function useIsLowPowerDevice(): boolean {
   return isLowPower;
 }
 
+/**
+ * 检测设备是否为移动端（基于屏幕宽度）
+ * 用于移动端性能优化，关闭复杂光效
+ */
+export function useIsMobile(breakpoint: number = 1024): boolean {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < breakpoint);
+    };
+
+    // 初始检测
+    checkMobile();
+
+    // 监听窗口大小变化
+    const mediaQuery = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsMobile(e.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
 // ==================== 性能监控 ====================
 
 interface PerformanceMetrics {

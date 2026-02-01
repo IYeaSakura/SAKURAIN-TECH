@@ -6,7 +6,7 @@ import {
   TwinklingStars,
 } from '@/components/effects';
 import { GradientText } from '@/components/effects/TextEffects';
-import { usePrefersReducedMotion, useThrottledScroll } from '@/lib/performance';
+import { usePrefersReducedMotion, useThrottledScroll, useIsMobile } from '@/lib/performance';
 import type { SiteData } from '@/types';
 
 interface HeroProps {
@@ -68,9 +68,10 @@ const StatCard = memo(({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
   const color = 'var(--accent-primary)';
 
-  if (prefersReducedMotion) {
+  if (prefersReducedMotion || isMobile) {
     return (
       <div
         className="relative p-5 sm:p-6 text-center overflow-hidden"
@@ -287,8 +288,9 @@ SecondaryButton.displayName = 'SecondaryButton';
 // 发光徽章
 const GlowBadge = memo(({ text }: { text: string }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
   
-  if (prefersReducedMotion) {
+  if (prefersReducedMotion || isMobile) {
     return (
       <div className="inline-flex items-center gap-2 mb-6 sm:mb-8 relative">
         <div
@@ -368,8 +370,9 @@ GlowBadge.displayName = 'GlowBadge';
 // 发光标题
 const GlowTitle = memo(({ children }: { children: React.ReactNode }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
   
-  if (prefersReducedMotion) {
+  if (prefersReducedMotion || isMobile) {
     return (
       <div className="overflow-hidden mb-6 sm:mb-8">
         <h1
@@ -440,8 +443,9 @@ GlowTitle.displayName = 'GlowTitle';
 // 发光滚动指示器
 const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
   
-  if (prefersReducedMotion) {
+  if (prefersReducedMotion || isMobile) {
     return (
       <div
         className="absolute bottom-8 left-1/2 -translate-x-1/2 cursor-pointer"
@@ -496,6 +500,7 @@ GlowScrollIndicator.displayName = 'GlowScrollIndicator';
 
 export const Hero = memo(function Hero({ data }: HeroProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
   const { scrollY } = useThrottledScroll(16);
   
   // 计算滚动动画值
@@ -527,14 +532,18 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
         }}
       />
 
-      {/* 环境光效 */}
-      <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.15} />
-      <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.1} />
-      
-      {/* 闪烁星星 */}
-      <div className="absolute inset-0 hidden lg:block">
-        <TwinklingStars count={20} color="var(--accent-secondary)" secondaryColor="var(--mc-gold)" />
-      </div>
+      {/* 环境光效 - 桌面端显示 */}
+      {!isMobile && (
+        <>
+          <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.15} />
+          <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.1} />
+          
+          {/* 闪烁星星 */}
+          <div className="absolute inset-0">
+            <TwinklingStars count={20} color="var(--accent-secondary)" secondaryColor="var(--mc-gold)" />
+          </div>
+        </>
+      )}
 
       {/* 径向渐变遮罩 */}
       <div
@@ -656,14 +665,16 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
 
           {/* 统计网格 */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto relative">
-            {/* 统计区域背景光晕 */}
-            <div
-              className="absolute inset-0 -z-10 rounded-3xl animate-pulse-slow"
-              style={{
-                background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
-                filter: 'blur(40px)',
-              }}
-            />
+            {/* 统计区域背景光晕 - 桌面端显示 */}
+            {!isMobile && (
+              <div
+                className="absolute inset-0 -z-10 rounded-3xl animate-pulse-slow"
+                style={{
+                  background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
+                  filter: 'blur(40px)',
+                }}
+              />
+            )}
             {data.stats.map((stat, index) => (
               <StatCard key={stat.label} stat={stat} index={index} />
             ))}
