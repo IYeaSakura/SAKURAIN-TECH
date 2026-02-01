@@ -1,11 +1,13 @@
 import { memo, useEffect, useState, useCallback, useRef } from 'react';
-import { motion, useSpring, useMotionValue, useReducedMotion } from 'framer-motion';
+import { motion, useSpring, useMotionValue } from 'framer-motion';
+import { usePrefersReducedMotion, usePageVisibility } from '@/lib/performance';
 
 // ==================== 磁性光标 - 优化版 ====================
 export const MagneticCursor = memo(() => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
   const [isHovering, setIsHovering] = useState(false);
   const cursorRef = useRef<HTMLDivElement>(null);
-  const prefersReducedMotion = useReducedMotion();
   
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -15,7 +17,7 @@ export const MagneticCursor = memo(() => {
   const cursorY = useSpring(mouseY, springConfig);
 
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion || !isVisible) return;
     
     const handleMouseMove = (e: MouseEvent) => {
       mouseX.set(e.clientX);
@@ -42,7 +44,7 @@ export const MagneticCursor = memo(() => {
       document.removeEventListener('mouseover', handleMouseOver);
       document.removeEventListener('mouseout', handleMouseOut);
     };
-  }, [mouseX, mouseY, prefersReducedMotion]);
+  }, [mouseX, mouseY, prefersReducedMotion, isVisible]);
 
   if (prefersReducedMotion) return null;
 
@@ -76,14 +78,15 @@ export const MagneticCursor = memo(() => {
 
 // ==================== 光标轨迹 - 优化版 ====================
 const CursorTrail = memo(() => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
   const [points, setPoints] = useState<Array<{ x: number; y: number; id: number }>>([]);
   const pointIdRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const pendingPointRef = useRef<{ x: number; y: number } | null>(null);
-  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion || !isVisible) return;
     
     const handleMouseMove = (e: MouseEvent) => {
       pendingPointRef.current = { x: e.clientX, y: e.clientY };
@@ -98,7 +101,7 @@ const CursorTrail = memo(() => {
         
         setPoints((prev) => {
           const newPoints = [...prev, newPoint];
-          if (newPoints.length > 6) { // 减少轨迹点数量
+          if (newPoints.length > 6) {
             return newPoints.slice(newPoints.length - 6);
           }
           return newPoints;
@@ -114,7 +117,7 @@ const CursorTrail = memo(() => {
       window.removeEventListener('mousemove', handleMouseMove);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, isVisible]);
 
   if (prefersReducedMotion) return null;
 
@@ -162,7 +165,7 @@ export const SpotlightCursor = memo(({
   const [isVisible, setIsVisible] = useState(false);
   const rafRef = useRef<number | null>(null);
   const pendingPosRef = useRef<{ x: number; y: number } | null>(null);
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current || prefersReducedMotion) return;
@@ -229,7 +232,7 @@ export const MouseFollowCard = memo(({
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [glarePosition, setGlarePosition] = useState({ x: 50, y: 50 });
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!ref.current || prefersReducedMotion) return;
@@ -306,7 +309,7 @@ export const MagneticElement = memo(({
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!ref.current || prefersReducedMotion) return;
@@ -358,10 +361,11 @@ export const ParallaxContainer = memo(({
 }) => {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const rafRef = useRef<number | null>(null);
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
 
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion || !isVisible) return;
     
     let pendingOffset = { x: 0, y: 0 };
     
@@ -387,7 +391,7 @@ export const ParallaxContainer = memo(({
       window.removeEventListener('mousemove', handleMouseMove);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [intensity, prefersReducedMotion]);
+  }, [intensity, prefersReducedMotion, isVisible]);
 
   if (prefersReducedMotion) {
     return <div className={className}>{children}</div>;
@@ -412,10 +416,11 @@ export const VelocityCursor = memo(() => {
   const lastPos = useRef({ x: 0, y: 0 });
   const lastTime = useRef(Date.now());
   const rafRef = useRef<number | null>(null);
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
 
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion || !isVisible) return;
     
     let pendingPos = { x: 0, y: 0 };
     
@@ -449,7 +454,7 @@ export const VelocityCursor = memo(() => {
       window.removeEventListener('mousemove', handleMouseMove);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, isVisible]);
 
   if (prefersReducedMotion) return null;
 

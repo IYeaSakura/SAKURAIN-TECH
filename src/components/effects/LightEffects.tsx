@@ -1,5 +1,6 @@
-import { memo, useState, useCallback, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { usePrefersReducedMotion, usePageVisibility } from '@/lib/performance';
 
 // ==================== 光剑效果 ====================
 export const LightBeam = memo(({
@@ -13,7 +14,7 @@ export const LightBeam = memo(({
   intensity?: number;
   animate?: boolean;
 }) => {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const shouldAnimate = animate && !prefersReducedMotion;
   const isHorizontal = position === 'top' || position === 'bottom';
   
@@ -90,7 +91,7 @@ export const PulseRing = memo(({
   delay?: number;
   duration?: number;
 }) => {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
   
   if (prefersReducedMotion) {
     return (
@@ -164,7 +165,7 @@ export const NeonText = memo(({
   flicker?: boolean;
   className?: string;
 }) => {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
   
   if (prefersReducedMotion || !flicker) {
     return (
@@ -227,7 +228,7 @@ export const RippleEffect = memo(({
   color?: string;
 }) => {
   const [ripples, setRipples] = useState<Ripple[]>([]);
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (prefersReducedMotion) return;
@@ -283,7 +284,7 @@ export const GlowingBorder = memo(({
   animate?: boolean;
   className?: string;
 }) => {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const shouldAnimate = animate && !prefersReducedMotion;
 
   return (
@@ -323,7 +324,7 @@ export const GlowingBorder = memo(({
   );
 });
 
-// ==================== 闪烁星星 - 美化增强版 ====================
+// ==================== 闪烁星星 - 性能优化版 ====================
 interface Star {
   id: number;
   x: number;
@@ -346,13 +347,15 @@ export const TwinklingStars = memo(({
   secondaryColor?: string;
   shootingStars?: boolean;
 }) => {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
   const [shootingStar, setShootingStar] = useState<{ x: number; y: number; id: number } | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
   // 限制最大数量
-  const starCount = Math.min(count, 50);
+  const starCount = Math.min(count, 35);
   
-  // 生成多样化的星星
+  // 生成多样化的星星 - 只生成一次
   const stars = useMemo(() => 
     Array.from({ length: starCount }, (_, i) => {
       const rand = Math.random();
@@ -387,9 +390,9 @@ export const TwinklingStars = memo(({
     [starCount, color, secondaryColor]
   );
 
-  // 流星效果
+  // 流星效果 - 只在页面可见时运行
   useEffect(() => {
-    if (!shootingStars || prefersReducedMotion) return;
+    if (!shootingStars || prefersReducedMotion || !isVisible) return;
     
     const createShootingStar = () => {
       const id = Date.now();
@@ -404,19 +407,21 @@ export const TwinklingStars = memo(({
       }, 1500);
     };
     
-    const interval = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       if (Math.random() > 0.6) {
         createShootingStar();
       }
     }, 4000);
     
-    return () => clearInterval(interval);
-  }, [shootingStars, prefersReducedMotion]);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [shootingStars, prefersReducedMotion, isVisible]);
 
   if (prefersReducedMotion) {
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {stars.map((star) => (
+        {stars.slice(0, 10).map((star) => (
           <div
             key={star.id}
             className="absolute rounded-full"
@@ -451,11 +456,11 @@ export const TwinklingStars = memo(({
               width: star.size,
               height: star.size,
             }}
-            animate={{
+            animate={isVisible ? {
               opacity: isSparkle ? [0.3, 1, 0.2, 0.8, 0.3] : [0.2, 0.9, 0.2],
               scale: isSparkle ? [1, 1.5, 1, 1.3, 1] : [1, 1.3, 1],
               rotate: isSparkle ? [0, 180, 360] : 0,
-            }}
+            } : {}}
             transition={{
               duration: star.duration,
               repeat: Infinity,
@@ -470,8 +475,7 @@ export const TwinklingStars = memo(({
                 background: star.color,
                 boxShadow: `
                   0 0 ${star.size * 2}px ${star.color},
-                  0 0 ${star.size * 4}px ${star.color},
-                  0 0 ${star.size * 6}px ${star.color}80
+                  0 0 ${star.size * 4}px ${star.color}
                 `,
               }}
             />
@@ -481,97 +485,78 @@ export const TwinklingStars = memo(({
                 <div
                   className="absolute rounded-full"
                   style={{
-                    width: star.size * 8,
+                    width: star.size * 6,
                     height: 1,
                     background: `linear-gradient(90deg, transparent, ${star.color}, transparent)`,
                     left: '50%',
                     top: '50%',
                     transform: 'translate(-50%, -50%)',
-                    opacity: 0.6,
+                    opacity: 0.5,
                   }}
                 />
                 <div
                   className="absolute rounded-full"
                   style={{
                     width: 1,
-                    height: star.size * 8,
+                    height: star.size * 6,
                     background: `linear-gradient(0deg, transparent, ${star.color}, transparent)`,
                     left: '50%',
                     top: '50%',
                     transform: 'translate(-50%, -50%)',
-                    opacity: 0.6,
+                    opacity: 0.5,
                   }}
                 />
               </>
             )}
-            {/* 闪烁光晕 */}
-            <motion.div
-              className="absolute rounded-full"
-              style={{
-                width: star.size * 3,
-                height: star.size * 3,
-                background: `radial-gradient(circle, ${star.color}40, transparent)`,
-                left: '50%',
-                top: '50%',
-                marginLeft: -star.size * 1.5,
-                marginTop: -star.size * 1.5,
-              }}
-              animate={{
-                scale: [1, 1.5, 1],
-                opacity: [0.5, 0.2, 0.5],
-              }}
-              transition={{
-                duration: star.duration * 0.8,
-                repeat: Infinity,
-                delay: star.delay,
-              }}
-            />
           </motion.div>
         );
       })}
       
       {/* 流星效果 */}
-      {shootingStar && (
-        <motion.div
-          key={shootingStar.id}
-          className="absolute w-1 h-1 rounded-full"
-          style={{
-            left: `${shootingStar.x}%`,
-            top: `${shootingStar.y}%`,
-            background: color,
-            boxShadow: `0 0 10px ${color}, 0 0 20px ${color}`,
-          }}
-          initial={{ x: 0, y: 0, opacity: 1 }}
-          animate={{
-            x: [0, -200],
-            y: [0, 150],
-            opacity: [1, 0],
-          }}
-          transition={{
-            duration: 1.5,
-            ease: 'easeOut',
-          }}
-        >
-          {/* 流星尾巴 */}
+      <AnimatePresence>
+        {shootingStar && isVisible && (
           <motion.div
-            className="absolute rounded-full"
+            key={shootingStar.id}
+            className="absolute w-1 h-1 rounded-full"
             style={{
-              width: 100,
-              height: 2,
-              background: `linear-gradient(90deg, ${color}, transparent)`,
-              right: 0,
-              top: '50%',
-              transform: 'translateY(-50%)',
+              left: `${shootingStar.x}%`,
+              top: `${shootingStar.y}%`,
+              background: color,
+              boxShadow: `0 0 10px ${color}, 0 0 20px ${color}`,
             }}
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={{ scaleX: 1, opacity: [0, 1, 0] }}
+            initial={{ x: 0, y: 0, opacity: 1 }}
+            animate={{
+              x: [0, -200],
+              y: [0, 150],
+              opacity: [1, 0],
+            }}
+            exit={{ opacity: 0 }}
             transition={{
               duration: 1.5,
               ease: 'easeOut',
             }}
-          />
-        </motion.div>
-      )}
+          >
+            {/* 流星尾巴 */}
+            <motion.div
+              className="absolute rounded-full"
+              style={{
+                width: 80,
+                height: 2,
+                background: `linear-gradient(90deg, ${color}, transparent)`,
+                right: 0,
+                top: '50%',
+                transform: 'translateY(-50%)',
+              }}
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={{ scaleX: 1, opacity: [0, 1, 0] }}
+              transition={{
+                duration: 1.5,
+                ease: 'easeOut',
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 });
@@ -586,7 +571,8 @@ export const FlowingGradient = memo(({
   speed?: number;
   opacity?: number;
 }) => {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
   const gradientString = useMemo(() => 
     `linear-gradient(90deg, ${colors.join(', ')}, ${colors[0]})`,
     [colors]
@@ -619,9 +605,9 @@ export const FlowingGradient = memo(({
           filter: 'blur(60px)',
           willChange: 'background-position',
         }}
-        animate={{
+        animate={isVisible ? {
           backgroundPosition: ['0% 50%', '200% 50%'],
-        }}
+        } : {}}
         transition={{
           duration: speed,
           repeat: Infinity,
@@ -642,7 +628,8 @@ export const EnergyOrb = memo(({
   color?: string;
   secondaryColor?: string;
 }) => {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
   
   if (prefersReducedMotion) {
     return (
@@ -672,14 +659,12 @@ export const EnergyOrb = memo(({
           background: `radial-gradient(circle at 30% 30%, ${color}, ${secondaryColor})`,
           boxShadow: `
             0 0 30px ${color},
-            0 0 60px ${color},
-            0 0 90px ${secondaryColor},
-            inset 0 0 30px rgba(255,255,255,0.3)
+            0 0 60px ${color}
           `,
         }}
-        animate={{
+        animate={isVisible ? {
           scale: [1, 1.1, 1],
-        }}
+        } : {}}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
       />
       
@@ -691,10 +676,10 @@ export const EnergyOrb = memo(({
           boxShadow: `0 0 20px ${color}, inset 0 0 20px ${color}`,
           willChange: 'transform',
         }}
-        animate={{
+        animate={isVisible ? {
           rotate: 360,
           scale: [1, 1.05, 1],
-        }}
+        } : {}}
         transition={{
           rotate: { duration: 10, repeat: Infinity, ease: 'linear' },
           scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
@@ -709,9 +694,9 @@ export const EnergyOrb = memo(({
           opacity: 0.5,
           willChange: 'transform',
         }}
-        animate={{
+        animate={isVisible ? {
           rotate: -360,
-        }}
+        } : {}}
         transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
       />
     </div>
@@ -726,7 +711,8 @@ export const HologramEffect = memo(({
   children: React.ReactNode;
   color?: string;
 }) => {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
   
   return (
     <div className="relative">
@@ -740,7 +726,7 @@ export const HologramEffect = memo(({
       />
       
       {/* 扫描动画 - 只在需要时渲染 */}
-      {!prefersReducedMotion && (
+      {!prefersReducedMotion && isVisible && (
         <motion.div
           className="absolute inset-x-0 h-8 pointer-events-none z-20"
           style={{

@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
+import { usePrefersReducedMotion, usePageVisibility } from '@/lib/performance';
 
 // 环境光晕效果
 export const AmbientGlow = memo(({ 
@@ -15,6 +16,9 @@ export const AmbientGlow = memo(({
   opacity?: number;
   className?: string;
 }) => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
+  
   const positionStyles = {
     'top-left': { top: '10%', left: '10%' },
     'top-right': { top: '10%', right: '10%' },
@@ -22,6 +26,22 @@ export const AmbientGlow = memo(({
     'bottom-right': { bottom: '10%', right: '10%' },
     'center': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
   };
+
+  if (prefersReducedMotion) {
+    return (
+      <div
+        className={`absolute pointer-events-none ${className}`}
+        style={{
+          width: size,
+          height: size,
+          background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+          filter: 'blur(80px)',
+          opacity,
+          ...positionStyles[position],
+        }}
+      />
+    );
+  }
 
   return (
     <motion.div
@@ -34,10 +54,10 @@ export const AmbientGlow = memo(({
         opacity,
         ...positionStyles[position],
       }}
-      animate={{
+      animate={isVisible ? {
         scale: [1, 1.1, 1],
         opacity: [opacity, opacity * 0.7, opacity],
-      }}
+      } : {}}
       transition={{
         duration: 8,
         repeat: Infinity,
@@ -49,15 +69,42 @@ export const AmbientGlow = memo(({
 
 // 浮动粒子效果（轻量级）
 export const FloatingParticles = memo(({
-  count = 20,
+  count = 15,
   color = 'var(--accent-primary)',
 }: {
   count?: number;
   color?: string;
 }) => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
+  
+  // 限制数量
+  const particleCount = Math.min(count, 20);
+
+  if (prefersReducedMotion) {
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {Array.from({ length: Math.min(particleCount, 5) }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: Math.random() * 4 + 2,
+              height: Math.random() * 4 + 2,
+              background: color,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              opacity: 0.2,
+            }}
+          />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {Array.from({ length: count }).map((_, i) => (
+      {Array.from({ length: particleCount }).map((_, i) => (
         <motion.div
           key={i}
           className="absolute rounded-full"
@@ -69,11 +116,11 @@ export const FloatingParticles = memo(({
             top: `${Math.random() * 100}%`,
             opacity: Math.random() * 0.3 + 0.1,
           }}
-          animate={{
+          animate={isVisible ? {
             y: [0, -100, 0],
             x: [0, Math.random() * 50 - 25, 0],
             opacity: [0.1, 0.3, 0.1],
-          }}
+          } : {}}
           transition={{
             duration: Math.random() * 10 + 10,
             repeat: Infinity,
@@ -87,52 +134,85 @@ export const FloatingParticles = memo(({
 });
 
 // 扫描线效果
-export const ScanLine = memo(() => (
-  <motion.div
-    className="absolute inset-x-0 h-px pointer-events-none z-10"
-    style={{
-      background: 'linear-gradient(90deg, transparent, var(--accent-primary), transparent)',
-      boxShadow: '0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary)',
-    }}
-    initial={{ top: '0%', opacity: 0 }}
-    animate={{ 
-      top: ['0%', '100%', '0%'],
-      opacity: [0, 0.5, 0],
-    }}
-    transition={{
-      duration: 8,
-      repeat: Infinity,
-      ease: 'linear',
-    }}
-  />
-));
-
-// 网格线动画
-export const AnimatedGrid = memo(() => (
-  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+export const ScanLine = memo(() => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
+  
+  if (prefersReducedMotion) return null;
+  
+  return (
     <motion.div
-      className="absolute inset-0"
+      className="absolute inset-x-0 h-px pointer-events-none z-10"
       style={{
-        backgroundImage: `
-          linear-gradient(to right, color-mix(in srgb, var(--accent-primary) 3%, transparent) 1px, transparent 1px),
-          linear-gradient(to bottom, color-mix(in srgb, var(--accent-primary) 3%, transparent) 1px, transparent 1px)
-        `,
-        backgroundSize: '60px 60px',
+        background: 'linear-gradient(90deg, transparent, var(--accent-primary), transparent)',
+        boxShadow: '0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary)',
       }}
-      animate={{
-        backgroundPosition: ['0px 0px', '60px 60px'],
-      }}
+      initial={{ top: '0%', opacity: 0 }}
+      animate={isVisible ? { 
+        top: ['0%', '100%', '0%'],
+        opacity: [0, 0.5, 0],
+      } : {}}
       transition={{
-        duration: 20,
+        duration: 8,
         repeat: Infinity,
         ease: 'linear',
       }}
     />
-  </div>
-));
+  );
+});
+
+// 网格线动画
+export const AnimatedGrid = memo(() => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
+  
+  if (prefersReducedMotion) {
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, color-mix(in srgb, var(--accent-primary) 3%, transparent) 1px, transparent 1px),
+              linear-gradient(to bottom, color-mix(in srgb, var(--accent-primary) 3%, transparent) 1px, transparent 1px)
+            `,
+            backgroundSize: '60px 60px',
+          }}
+        />
+      </div>
+    );
+  }
+  
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, color-mix(in srgb, var(--accent-primary) 3%, transparent) 1px, transparent 1px),
+            linear-gradient(to bottom, color-mix(in srgb, var(--accent-primary) 3%, transparent) 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px',
+        }}
+        animate={isVisible ? {
+          backgroundPosition: ['0px 0px', '60px 60px'],
+        } : {}}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: 'linear',
+        }}
+      />
+    </div>
+  );
+});
 
 // 光标跟随光效
 export const CursorGlow = memo(() => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  
+  if (prefersReducedMotion) return null;
+  
   return (
     <motion.div
       className="fixed pointer-events-none z-50 mix-blend-screen"

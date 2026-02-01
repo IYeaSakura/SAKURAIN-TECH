@@ -1,5 +1,6 @@
-import { memo, useState, useEffect, useRef } from 'react';
+import { memo, useState, useEffect, useRef, useCallback } from 'react';
 import { motion, useInView, type Variants } from 'framer-motion';
+import { usePrefersReducedMotion, usePageVisibility } from '@/lib/performance';
 
 // ==================== 打字机效果 ====================
 export const TypewriterText = memo(({
@@ -24,9 +25,18 @@ export const TypewriterText = memo(({
   const [started, setStarted] = useState(false);
   const containerRef = useRef<HTMLSpanElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: '-100px' });
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
 
   useEffect(() => {
-    if (isInView && !started) {
+    if (prefersReducedMotion) {
+      setDisplayText(text);
+      setIsComplete(true);
+      onComplete?.();
+      return;
+    }
+
+    if (isInView && !started && isVisible) {
       setStarted(true);
       const timeout = setTimeout(() => {
         let index = 0;
@@ -46,12 +56,12 @@ export const TypewriterText = memo(({
 
       return () => clearTimeout(timeout);
     }
-  }, [isInView, started, text, speed, delay, onComplete]);
+  }, [isInView, started, text, speed, delay, onComplete, prefersReducedMotion, isVisible]);
 
   return (
     <span ref={containerRef} className={className}>
       {displayText}
-      {cursor && !isComplete && (
+      {cursor && !isComplete && !prefersReducedMotion && (
         <motion.span
           style={{ color: cursorColor }}
           animate={{ opacity: [1, 0] }}
@@ -76,6 +86,12 @@ export const GlitchText = memo(({
   color?: string;
   secondaryColor?: string;
 }) => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  
+  if (prefersReducedMotion) {
+    return <span className={className} style={{ color }}>{children}</span>;
+  }
+  
   return (
     <motion.span
       className={`relative inline-block ${className}`}
@@ -141,16 +157,22 @@ export const WaveText = memo(({
   frequency?: number;
   speed?: number;
 }) => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
   const characters = children.split('');
+
+  if (prefersReducedMotion) {
+    return <span className={className}>{children}</span>;
+  }
 
   return (
     <span className={`inline-flex ${className}`}>
       {characters.map((char, i) => (
         <motion.span
           key={i}
-          animate={{
+          animate={isVisible ? {
             y: [0, -amplitude, 0, amplitude, 0],
-          }}
+          } : {}}
           transition={{
             duration: speed,
             repeat: Infinity,
@@ -178,6 +200,7 @@ export const FlipText = memo(({
   const characters = children.split('');
   const containerRef = useRef<HTMLSpanElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: '-50px' });
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const variants: Variants = {
     hidden: { rotateX: 90, opacity: 0 },
@@ -191,6 +214,10 @@ export const FlipText = memo(({
       },
     }),
   };
+
+  if (prefersReducedMotion) {
+    return <span className={className}>{children}</span>;
+  }
 
   return (
     <span ref={containerRef} className={`inline-flex perspective-500 ${className}`}>
@@ -225,16 +252,32 @@ export const GradientText = memo(({
   animate?: boolean;
   speed?: number;
 }) => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
   const gradient = `linear-gradient(90deg, ${colors.join(', ')}, ${colors[0]})`;
+
+  if (prefersReducedMotion || !animate) {
+    return (
+      <span
+        className={`bg-clip-text text-transparent ${className}`}
+        style={{
+          backgroundImage: gradient,
+          backgroundSize: '200% 100%',
+        }}
+      >
+        {children}
+      </span>
+    );
+  }
 
   return (
     <motion.span
       className={`bg-clip-text text-transparent ${className}`}
       style={{
         backgroundImage: gradient,
-        backgroundSize: animate ? '200% 100%' : '100% 100%',
+        backgroundSize: '200% 100%',
       }}
-      animate={animate ? {
+      animate={isVisible ? {
         backgroundPosition: ['0% 50%', '200% 50%'],
       } : {}}
       transition={{
@@ -288,12 +331,26 @@ export const SpotlightText = memo(({
 }) => {
   const [mouseX, setMouseX] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    setMouseX(e.clientX - rect.left);
-  };
+    
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
+    
+    rafRef.current = requestAnimationFrame(() => {
+      setMouseX(e.clientX - rect.left);
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   return (
     <div
@@ -333,6 +390,7 @@ export const BounceText = memo(({
   const characters = children.split('');
   const containerRef = useRef<HTMLSpanElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: '-50px' });
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const variants: Variants = {
     hidden: { y: 50, opacity: 0 },
@@ -347,6 +405,10 @@ export const BounceText = memo(({
       },
     }),
   };
+
+  if (prefersReducedMotion) {
+    return <span className={className}>{children}</span>;
+  }
 
   return (
     <span ref={containerRef} className={`inline-flex ${className}`}>
@@ -380,6 +442,13 @@ export const ScanText = memo(({
   scanColor?: string;
   speed?: number;
 }) => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisible = usePageVisibility();
+
+  if (prefersReducedMotion) {
+    return <span style={{ color }}>{children}</span>;
+  }
+
   return (
     <span className={`relative inline-block ${className}`}>
       <span style={{ color }}>{children}</span>
@@ -387,7 +456,7 @@ export const ScanText = memo(({
         className="absolute inset-0 overflow-hidden"
         style={{ color: scanColor }}
         initial={{ clipPath: 'inset(0 100% 0 0)' }}
-        animate={{ clipPath: ['inset(0 100% 0 0)', 'inset(0 0 0 0)', 'inset(0 0 0 100%)'] }}
+        animate={isVisible ? { clipPath: ['inset(0 100% 0 0)', 'inset(0 0 0 0)', 'inset(0 0 0 100%)'] } : {}}
         transition={{
           duration: speed,
           repeat: Infinity,

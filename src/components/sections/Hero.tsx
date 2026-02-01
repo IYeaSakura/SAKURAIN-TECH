@@ -1,10 +1,12 @@
-import { memo, useState, useRef, useCallback, useEffect } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { memo, useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown } from 'lucide-react';
 import { 
   AmbientGlow, 
   TwinklingStars,
 } from '@/components/effects';
+import { GradientText } from '@/components/effects/TextEffects';
+import { usePrefersReducedMotion, useThrottledScroll } from '@/lib/performance';
 import type { SiteData } from '@/types';
 
 interface HeroProps {
@@ -15,7 +17,7 @@ interface HeroProps {
 const CodeDecoration = memo(({ className }: { className?: string }) => {
   return (
     <div 
-      className={`absolute font-mono text-xs sm:text-sm opacity-20 pointer-events-none ${className} animate-float-slow`}
+      className={`absolute font-mono text-xs sm:text-sm opacity-20 pointer-events-none animate-float-slow ${className}`}
     >
       <div className="text-[var(--accent-primary)]">{'<System.init>'}</div>
       <div className="text-[var(--accent-secondary)] ml-2">performance: optimized</div>
@@ -37,7 +39,7 @@ const FloatingIcon = memo(({
   className?: string;
   color?: string;
 }) => {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
   
   if (prefersReducedMotion) {
     return (
@@ -56,7 +58,7 @@ const FloatingIcon = memo(({
 
 FloatingIcon.displayName = 'FloatingIcon';
 
-// 统计卡片 - 带光效（类似服务项目卡片）
+// 统计卡片 - 带光效
 const StatCard = memo(({
   stat,
   index,
@@ -65,13 +67,13 @@ const StatCard = memo(({
   index: number;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = usePrefersReducedMotion();
   const color = 'var(--accent-primary)';
 
   if (prefersReducedMotion) {
     return (
       <div
-        className="relative p-5 sm:p-6 text-center overflow-hidden transition-all duration-300"
+        className="relative p-5 sm:p-6 text-center overflow-hidden"
         style={{
           background: 'var(--bg-card)',
           border: '3px solid var(--border-subtle)',
@@ -178,19 +180,6 @@ const StatCard = memo(({
 
 StatCard.displayName = 'StatCard';
 
-// 渐变文字 - 平滑流动渐变色，无缝循环
-const GradientText = memo(({ children }: { children: React.ReactNode }) => {
-  return (
-    <span className="gradient-text-wrapper">
-      <span className="gradient-text">
-        {children}
-      </span>
-    </span>
-  );
-});
-
-GradientText.displayName = 'GradientText';
-
 // 主按钮 - 带光效
 const PrimaryButton = memo(({
   children,
@@ -222,7 +211,7 @@ const PrimaryButton = memo(({
     >
       {/* 光效背景 */}
       <div 
-        className="absolute inset-0 transition-opacity duration-300"
+        className="absolute inset-0 transition-transform duration-600"
         style={{
           background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
           transform: isHovered ? 'translateX(100%)' : 'translateX(-100%)',
@@ -297,6 +286,33 @@ SecondaryButton.displayName = 'SecondaryButton';
 
 // 发光徽章
 const GlowBadge = memo(({ text }: { text: string }) => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  
+  if (prefersReducedMotion) {
+    return (
+      <div className="inline-flex items-center gap-2 mb-6 sm:mb-8 relative">
+        <div
+          className="flex items-center gap-2 px-4 py-2 rounded-lg"
+          style={{
+            background: 'var(--bg-card)',
+            border: '2px solid var(--accent-primary)',
+          }}
+        >
+          <span 
+            className="w-2 h-2 rounded-full"
+            style={{ background: 'var(--accent-primary)' }}
+          />
+          <span
+            className="font-primary text-sm font-bold uppercase tracking-wider"
+            style={{ color: 'var(--accent-primary)' }}
+          >
+            {text}
+          </span>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.8 }}
@@ -351,6 +367,27 @@ GlowBadge.displayName = 'GlowBadge';
 
 // 发光标题
 const GlowTitle = memo(({ children }: { children: React.ReactNode }) => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  
+  if (prefersReducedMotion) {
+    return (
+      <div className="overflow-hidden mb-6 sm:mb-8">
+        <h1
+          className="font-primary"
+          style={{
+            fontSize: 'clamp(2.5rem, 8vw, 4.5rem)',
+            fontWeight: 800,
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.02em',
+            lineHeight: 1.1,
+          }}
+        >
+          {children}
+        </h1>
+      </div>
+    );
+  }
+  
   return (
     <div className="overflow-hidden mb-6 sm:mb-8 relative">
       {/* 多层光晕 */}
@@ -402,6 +439,24 @@ GlowTitle.displayName = 'GlowTitle';
 
 // 发光滚动指示器
 const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  
+  if (prefersReducedMotion) {
+    return (
+      <div
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 cursor-pointer"
+        onClick={onClick}
+      >
+        <span
+          className="font-primary text-xs uppercase tracking-widest"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          向下滚动
+        </span>
+      </div>
+    );
+  }
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -440,36 +495,13 @@ const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
 GlowScrollIndicator.displayName = 'GlowScrollIndicator';
 
 export const Hero = memo(function Hero({ data }: HeroProps) {
-  const prefersReducedMotion = useReducedMotion();
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const rafRef = useRef<number | null>(null);
-
-  // 使用 RAF 节流的滚动监听
-  useEffect(() => {
-    if (prefersReducedMotion) return;
-
-    let pendingScroll = 0;
-    let isProcessing = false;
-
-    const handleScroll = () => {
-      pendingScroll = window.scrollY;
-      
-      if (!isProcessing) {
-        isProcessing = true;
-        rafRef.current = requestAnimationFrame(() => {
-          const progress = Math.min(pendingScroll / 300, 1);
-          setScrollProgress(progress);
-          isProcessing = false;
-        });
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [prefersReducedMotion]);
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const { scrollY } = useThrottledScroll(16);
+  
+  // 计算滚动动画值
+  const scrollProgress = Math.min(scrollY / 300, 1);
+  const opacity = prefersReducedMotion ? 1 : 1 - scrollProgress;
+  const scale = prefersReducedMotion ? 1 : 1 - scrollProgress * 0.1;
 
   const scrollToSection = useCallback((href: string) => {
     const element = document.querySelector(href);
@@ -480,10 +512,6 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
 
   const primaryCta = data.cta.find(c => c.primary);
   const secondaryCta = data.cta.find(c => !c.primary);
-
-  // 计算滚动动画值
-  const opacity = prefersReducedMotion ? 1 : 1 - scrollProgress;
-  const scale = prefersReducedMotion ? 1 : 1 - scrollProgress * 0.1;
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -505,7 +533,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
       
       {/* 闪烁星星 */}
       <div className="absolute inset-0 hidden lg:block">
-        <TwinklingStars count={25} color="var(--accent-secondary)" secondaryColor="var(--mc-gold)" />
+        <TwinklingStars count={20} color="var(--accent-secondary)" secondaryColor="var(--mc-gold)" />
       </div>
 
       {/* 径向渐变遮罩 */}
@@ -548,7 +576,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
         style={{
           opacity,
           transform: `scale(${scale})`,
-          willChange: 'transform, opacity',
+          willChange: prefersReducedMotion ? undefined : 'transform, opacity',
         }}
       >
         <div className="text-center">
@@ -559,7 +587,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
           <GlowTitle>
             {data.title.split('竞争优势')[0]}
             <span className="relative">
-              <GradientText>竞争优势</GradientText>
+              <GradientText animate={!prefersReducedMotion}>竞争优势</GradientText>
             </span>
           </GlowTitle>
 
@@ -653,107 +681,6 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
           background: 'linear-gradient(to top, var(--bg-primary), transparent)',
         }}
       />
-
-      {/* CSS 动画定义 */}
-      <style>{`
-        /* 渐变文字 - 无缝循环流动 */
-        .gradient-text-wrapper {
-          position: relative;
-          display: inline-block;
-        }
-        
-        .gradient-text {
-          display: inline-block;
-          background: linear-gradient(
-            90deg,
-            var(--accent-primary) 0%,
-            var(--accent-secondary) 25%,
-            var(--accent-tertiary) 50%,
-            var(--accent-secondary) 75%,
-            var(--accent-primary) 100%
-          );
-          background-size: 200% 100%;
-          -webkit-background-clip: text;
-          background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: gradient-move 6s linear infinite;
-        }
-        
-        @keyframes gradient-move {
-          0% {
-            background-position: 0% 50%;
-          }
-          100% {
-            background-position: 200% 50%;
-          }
-        }
-        
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-15px); }
-        }
-        
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0) translateX(0); opacity: 0.2; }
-          50% { transform: translateY(-10px) translateX(5px); opacity: 0.15; }
-        }
-        
-        @keyframes gradient-flow {
-          0% { background-position: 0% center; }
-          50% { background-position: 100% center; }
-          100% { background-position: 200% center; }
-        }
-        
-        @keyframes bounce-x {
-          0%, 100% { transform: translateX(0); }
-          50% { transform: translateX(5px); }
-        }
-        
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 0.2; }
-          50% { opacity: 0.4; }
-        }
-        
-        @keyframes bounce-slow {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(10px); }
-        }
-
-        @keyframes gradient-shift {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-
-        @keyframes pulse-glow {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0.6; transform: scale(1.05); }
-        }
-        
-        .animate-float {
-          animation: float 5s ease-in-out infinite;
-        }
-        
-        .animate-float-slow {
-          animation: float-slow 6s ease-in-out infinite;
-        }
-        
-        .animate-bounce-x {
-          animation: bounce-x 1.5s ease-in-out infinite;
-        }
-        
-        .animate-pulse-slow {
-          animation: pulse-slow 4s ease-in-out infinite;
-        }
-        
-        .animate-bounce-slow {
-          animation: bounce-slow 2s ease-in-out infinite;
-        }
-
-        .animate-pulse-glow {
-          animation: pulse-glow 3s ease-in-out infinite;
-        }
-      `}</style>
     </section>
   );
 });

@@ -97,7 +97,9 @@ html.lenis, html.lenis body {
   pointer-events: none;
 }
 
-/* Performance Optimizations */
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
 
 /* 1. 启用 GPU 加速 */
 .gpu-accelerated {
@@ -106,7 +108,7 @@ html.lenis, html.lenis body {
   perspective: 1000px;
 }
 
-/* 2. 动画优化 */
+/* 2. 动画优化 - 尊重用户偏好 */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
