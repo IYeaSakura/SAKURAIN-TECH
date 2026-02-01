@@ -22,6 +22,16 @@ const iconMap: Record<string, typeof Github> = {
 
 const getIcon = (iconName: string) => iconMap[iconName] || MessageCircle;
 
+// 项目类型映射
+const projectTypeMap: Record<string, string> = {
+  'game-theory': '博弈程序开发',
+  'data-analysis': '数据分析系统',
+  'web-dev': '网站开发',
+  'graduation': '毕业设计',
+  'mc-plugin': 'Minecraft插件',
+  'other': '其他项目',
+};
+
 export const Contact = memo(function Contact({ data }: ContactProps) {
   const [formData, setFormData] = useState({
     name: '',
@@ -36,15 +46,35 @@ export const Contact = memo(function Contact({ data }: ContactProps) {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // 构造邮件内容
+    const projectType = projectTypeMap[formData.project] || formData.project;
+    const subject = `业务咨询 - ${projectType}`;
+    const body = `您好，我是 ${formData.name}。
+
+我的邮箱是：${formData.email}
+
+项目类型：${projectType}
+
+项目详情：
+${formData.message}
+
+---
+此邮件由 SAKURAIN 网站联系表单自动生成`;
+    
+    // 构造 mailto 链接
+    const mailtoLink = `mailto:Yae_SakuRain@outlook.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    // 打开邮箱客户端
+    window.location.href = mailtoLink;
     
     setIsSubmitting(false);
     setSubmitted(true);
-    setFormData({ name: '', email: '', project: '', message: '' });
     
-    // Reset submitted state after 3 seconds
-    setTimeout(() => setSubmitted(false), 3000);
+    // 3秒后重置表单状态
+    setTimeout(() => {
+      setSubmitted(false);
+      setFormData({ name: '', email: '', project: '', message: '' });
+    }, 3000);
   };
 
   return (
