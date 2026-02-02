@@ -16,32 +16,30 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // 将 React 相关库打包到一起
-          'react-vendor': ['react', 'react-dom'],
-          // 将动画库打包到一起
-          'animation-vendor': ['framer-motion', 'gsap', '@gsap/react'],
-          // 将图标库打包到一起
-          'icons-vendor': ['lucide-react'],
-          // 将工具库打包到一起
-          'utils-vendor': ['clsx', 'tailwind-merge', 'class-variance-authority'],
-          // 将 Radix UI 组件打包到一起
-          'radix-vendor': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-tooltip',
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-select',
-            '@radix-ui/react-scroll-area',
-          ],
-          // 将图表库打包到一起
-          'charts-vendor': ['recharts'],
-          // 将粒子效果库打包到一起
-          'particles-vendor': ['@tsparticles/react', '@tsparticles/slim'],
+          // React 核心库
+          'react-vendor': ['react', 'react-dom', 'react-router'],
+          // 动画库
+          'framer-motion': ['framer-motion'],
+          'gsap': ['gsap', '@gsap/react'],
+          // 图标
+          'lucide': ['lucide-react'],
+          // 工具库
+          'utils': ['clsx', 'tailwind-merge', 'class-variance-authority'],
+          // 图表
+          'charts': ['recharts'],
+          // 粒子效果
+          'particles': ['@tsparticles/react', '@tsparticles/slim'],
         },
         // 优化 chunk 文件名
         entryFileNames: 'assets/[name]-[hash].js',
-        chunkFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: (chunkInfo) => {
+          // 根据模块内容命名 chunk
+          const facadeModuleId = chunkInfo.facadeModuleId || '';
+          if (facadeModuleId.includes('Docs')) {
+            return 'assets/docs-[name]-[hash].js';
+          }
+          return 'assets/[name]-[hash].js';
+        },
         assetFileNames: (assetInfo) => {
           const name = assetInfo.name || '';
           if (/\.(png|jpe?g|gif|svg|webp|ico)$/i.test(name)) {
@@ -58,9 +56,9 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     // 启用 CSS 代码分割
     cssCodeSplit: true,
-    // 压缩选项 - 使用 esbuild 替代 terser
+    // 压缩选项
     minify: 'esbuild',
-    // 启用 source map 用于生产调试（可选）
+    // 禁用 source map
     sourcemap: false,
   },
   // 开发服务器配置
@@ -73,15 +71,16 @@ export default defineConfig({
     include: [
       'react',
       'react-dom',
-      'framer-motion',
-      'lucide-react',
-      'clsx',
-      'tailwind-merge',
+      'react-router',
     ],
-    exclude: [],
   },
   // CSS 配置
   css: {
     devSourcemap: true,
+  },
+  // 实验性功能
+  esbuild: {
+    // 移除 console 和 debugger
+    drop: ['console', 'debugger'],
   },
 });

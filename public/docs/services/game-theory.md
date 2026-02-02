@@ -2,136 +2,140 @@
 
 ## 概述
 
-我们专注于**零和博弈**与**不完全信息博弈**的算法工程化，提供高性能的博弈解决方案。
+博弈程序开发涉及数学建模、算法设计和软件工程的综合应用。
 
-## 系统架构
+## 纳什均衡计算
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FEFEFE
+### 基本概念
 
-package "博弈系统" {
-    [WebSocket接口] as WS
-    [RESTful API] as API
+纳什均衡是指在一个博弈中，每个参与者的策略都是对其他参与者策略的最优反应。
+
+### 计算方法
+
+```python
+import numpy as np
+from scipy.optimize import linprog
+
+def find_nash_equilibrium(payoff_matrix):
+    """
+    求解两人零和博弈的纳什均衡
     
-    package "策略引擎" {
-        [Minimax核心] as Minimax
-        [MCTS搜索] as MCTS
-        [对手建模] as Opponent
-    }
+    Args:
+        payoff_matrix: 支付矩阵 (m x n)
     
-    package "优化层" {
-        [AVX512加速] as AVX
-        [CUDA并行] as CUDA
-        [Redis缓存] as Cache
-    }
-}
-
-database "ClickHouse" as DB
-
-WS --> Minimax
-API --> MCTS
-Minimax --> AVX
-MCTS --> CUDA
-Opponent --> Cache
-AVX --> DB
-CUDA --> DB
-
-@enduml
+    Returns:
+        (p, q, v): 玩家1策略、玩家2策略、博弈值
+    """
+    m, n = payoff_matrix.shape
+    
+    # 转换为线性规划问题
+    c = np.zeros(m + 1)
+    c[0] = -1  # 最大化 v
+    
+    A_ub = np.hstack([np.ones((n, 1)), -payoff_matrix.T])
+    b_ub = np.zeros(n)
+    
+    A_eq = np.hstack([[0], np.ones(m)]).reshape(1, -1)
+    b_eq = [1]
+    
+    bounds = [(0, None)] * (m + 1)
+    bounds[0] = (None, None)  # v 无约束
+    
+    result = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds)
+    
+    v = result.x[0]
+    p = result.x[1:]
+    
+    return p, v
 ```
 
-## 核心算法
+## 蒙特卡洛树搜索
 
-### Minimax with Alpha-Beta Pruning
+```python
+import math
+import random
 
-```cpp
-// C++17 + AVX512 优化示例
-#include <immintrin.h>
+class MCTSNode:
+    def __init__(self, state, parent=None, action=None):
+        self.state = state
+        self.parent = parent
+        self.action = action
+        self.children = []
+        self.visits = 0
+        self.wins = 0
+        self.untried_actions = state.get_legal_actions()
+    
+    def ucb1(self, exploration=1.414):
+        if self.visits == 0:
+            return float('inf')
+        return (self.wins / self.visits + 
+                exploration * math.sqrt(math.log(self.parent.visits) / self.visits))
+    
+    def best_child(self):
+        return max(self.children, key=lambda c: c.ucb1())
+    
+    def expand(self):
+        action = self.untried_actions.pop()
+        next_state = self.state.apply_action(action)
+        child = MCTSNode(next_state, self, action)
+        self.children.append(child)
+        return child
+    
+    def is_fully_expanded(self):
+        return len(self.untried_actions) == 0
+    
+    def is_terminal(self):
+        return self.state.is_terminal()
 
-class GameTreeSearcher {
-public:
-    double minimax(
-        GameState state, 
-        int depth, 
-        double alpha, 
-        double beta
-    ) {
-        if (depth == 0 || state.isTerminal()) {
-            return evaluate(state);
-        }
+class MCTS:
+    def search(self, root_state, iterations=1000):
+        root = MCTSNode(root_state)
         
-        if (state.isMaximizing()) {
-            double maxEval = -INFINITY;
-            for (auto& action : state.getActions()) {
-                double eval = minimax(
-                    state.apply(action),
-                    depth - 1, 
-                    alpha, 
-                    beta
-                );
-                maxEval = std::max(maxEval, eval);
-                alpha = std::max(alpha, eval);
-                if (beta <= alpha) break; // Alpha-Beta 剪枝
-            }
-            return maxEval;
-        }
-        // ... 最小化方逻辑
-    }
-};
+        for _ in range(iterations):
+            node = self._select(root)
+            reward = self._simulate(node.state)
+            self._backpropagate(node, reward)
+        
+        return max(root.children, key=lambda c: c.visits).action
+    
+    def _select(self, node):
+        while not node.is_terminal():
+            if not node.is_fully_expanded():
+                return node.expand()
+            node = node.best_child()
+        return node
+    
+    def _simulate(self, state):
+        while not state.is_terminal():
+            action = random.choice(state.get_legal_actions())
+            state = state.apply_action(action)
+        return state.get_reward()
+    
+    def _backpropagate(self, node, reward):
+        while node:
+            node.visits += 1
+            node.wins += reward
+            node = node.parent
 ```
 
-### MCTS (蒙特卡洛树搜索)
+## 架构设计
 
-```plantuml
-@startuml
-!theme plain
-skinparam backgroundColor #FEFEFE
+### 系统模块
 
-start
-
-:选择 (Selection);
-:扩展 (Expansion);
-:模拟 (Simulation);
-:反向传播 (Backpropagation);
-
-while (达到迭代次数?) is (否)
-  :选择 (Selection);
-  :扩展 (Expansion);
-  :模拟 (Simulation);
-  :反向传播 (Backpropagation);
-endwhile (是)
-
-:返回最优动作;
-
-stop
-
-@enduml
 ```
-
-## 性能指标
-
-| 指标 | 数值 | 说明 |
-|------|------|------|
-| 搜索延迟 | <10ms | p99延迟 |
-| QPS | >5,000 | 单核 |
-| 回测加速 | 50x | AVX512优化 |
-| 内存占用 | <2GB | 单实例 |
-
-## 技术参数
-
-```yaml
-runtime:
-  language: C++17 / Python 3.11
-  compiler: GCC 12+ / Clang 15+
-  
-optimization:
-  simd: AVX512
-  parallel: OpenMP
-  cache: Redis Cluster
-  
-dependencies:
-  - PyTorch 2.0+
-  - Eigen3
-  - spdlog
+博弈引擎
+├── 规则引擎 (Rule Engine)
+│   ├── 状态验证
+│   ├── 合法动作检查
+│   └── 终局判定
+├── 搜索算法 (Search)
+│   ├── Minimax
+│   ├── Alpha-Beta
+│   └── MCTS
+├── 评估函数 (Evaluation)
+│   ├── 特征提取
+│   └── 神经网络评估
+└── 接口层 (API)
+    ├── REST API
+    └── WebSocket
 ```

@@ -1,23 +1,104 @@
 {
   "title": "SAKURAIN 技术文档",
-  "description": "技术文档中心，包含项目文档、API文档和技术规范",
+  "description": "技术文档中心，包含项目文档、API文档、系列教程和技术规范",
   "categories": [
+    {
+      "id": "courses",
+      "name": "系列教程",
+      "icon": "BookOpen",
+      "items": [
+        {
+          "type": "series",
+          "id": "webgl-course",
+          "title": "WebGL技术从入门到精通",
+          "description": "系统学习WebGL图形编程，从基础概念到高级渲染技术",
+          "cover": "/images/webgl-course-cover.png",
+          "chapters": [
+            {
+              "id": "webgl-ch01",
+              "title": "第1章 WebGL基础入门",
+              "description": "WebGL概述、环境搭建与第一个三角形",
+              "path": "/docs/courses/webgl/ch01-basics.md"
+            },
+            {
+              "id": "webgl-ch02",
+              "title": "第2章 渲染管线与着色器",
+              "description": "深入理解WebGL渲染管线和GLSL着色器编程",
+              "path": "/docs/courses/webgl/ch02-rendering-pipeline.md"
+            },
+            {
+              "id": "webgl-ch03",
+              "title": "第3章 纹理与光照",
+              "description": "纹理映射、光照模型与材质系统",
+              "path": "/docs/courses/webgl/ch03-texture-lighting.md"
+            },
+            {
+              "id": "webgl-ch04",
+              "title": "第4章 高级渲染技术",
+              "description": "帧缓冲、后处理效果与延迟渲染",
+              "path": "/docs/courses/webgl/ch04-advanced-rendering.md"
+            },
+            {
+              "id": "webgl-ch05",
+              "title": "第5章 性能优化与调试",
+              "description": "WebGL性能分析、优化策略与调试技巧",
+              "path": "/docs/courses/webgl/ch05-performance.md"
+            },
+            {
+              "id": "webgl-ch06",
+              "title": "第6章 实战项目案例",
+              "description": "完整3D场景渲染项目的实现过程",
+              "path": "/docs/courses/webgl/ch06-project.md"
+            }
+          ]
+        },
+        {
+          "type": "series",
+          "id": "react-course",
+          "title": "React高级进阶指南",
+          "description": "深入React原理，掌握Hooks、并发特性与性能优化",
+          "cover": "/images/react-course-cover.png",
+          "chapters": [
+            {
+              "id": "react-ch01",
+              "title": "第1章 React核心原理",
+              "description": "虚拟DOM、Fiber架构与渲染流程",
+              "path": "/docs/courses/react/ch01-core.md"
+            },
+            {
+              "id": "react-ch02",
+              "title": "第2章 Hooks深度解析",
+              "description": "Hooks工作原理与自定义Hooks设计",
+              "path": "/docs/courses/react/ch02-hooks.md"
+            },
+            {
+              "id": "react-ch03",
+              "title": "第3章 并发特性与Suspense",
+              "description": "React 18并发模式与数据获取",
+              "path": "/docs/courses/react/ch03-concurrent.md"
+            }
+          ]
+        }
+      ]
+    },
     {
       "id": "rules",
       "name": "技术规范",
       "icon": "Code",
-      "docs": [
+      "items": [
         {
+          "type": "doc",
           "id": "git-standards",
           "title": "Git使用规范",
           "description": "Git版本控制使用规范与最佳实践",
-          "path": "docs/rules/Git使用规范.md"
+          "path": "/docs/rules/Git使用规范.md"
         },
         {
+          "type": "doc",
           "id": "mysql-standards",
           "title": "MySQL性能调优指南",
           "description": "MySQL数据库性能优化与调优策略",
-          "path": "docs/rules/MySQL性能调优指南.md"
+          "path": "/docs/rules/MySQL性能调优指南.md"
         }
       ]
     },
@@ -25,24 +106,20 @@
       "id": "services",
       "name": "服务文档",
       "icon": "Briefcase",
-      "docs": [
+      "items": [
         {
+          "type": "doc",
           "id": "game-theory",
           "title": "博弈程序开发",
           "description": "博弈算法开发规范与技术细节",
-          "path": "docs/services/game-theory.md"
+          "path": "/docs/services/game-theory.md"
         },
         {
+          "type": "doc",
           "id": "data-analysis",
           "title": "数据分析系统",
           "description": "数据分析平台架构与实现",
-          "path": "docs/services/data-analysis.md"
-        },
-        {
-          "id": "web-dev",
-          "title": "Web开发规范",
-          "description": "前后端开发流程与技术栈",
-          "path": "docs/services/web-dev.md"
+          "path": "/docs/services/data-analysis.md"
         }
       ]
     }
