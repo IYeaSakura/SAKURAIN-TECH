@@ -1,17 +1,5 @@
 // 配置相关 hooks
-export {
-  useConfig,
-  useThemeConfig,
-  useSiteConfig,
-  useHeroConfig,
-  useStatsConfig,
-  useServicesConfig,
-  useTechStackConfig,
-  usePricingConfig,
-  useProcessConfig,
-  useCasesConfig,
-  useNavigationConfig
-} from './useConfig';
+export { useConfig } from './useConfig';
 
 // 滚动相关 hooks
 export { useScrollProgress, useInView } from './useScrollProgress';

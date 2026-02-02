@@ -1,6 +1,6 @@
 import { useState, useEffect, Suspense, lazy, memo } from 'react';
-import { 
-  ScrollProgress, 
+import {
+  ScrollProgress,
   MagneticCursor,
   VelocityCursor,
   TwinklingStars,
@@ -121,24 +121,24 @@ function App() {
       <ScrollProgress />
       <MagneticCursor />
       <VelocityCursor />
-      
+
       {/* 背景装饰 */}
       <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block">
         <TwinklingStars count={35} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
       </div>
-      
+
       {/* 流动渐变背景 */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <FlowingGradient 
+        <FlowingGradient
           colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
           speed={15}
           opacity={0.05}
         />
       </div>
-      
+
       {/* 顶部光剑 */}
       <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
-      
+
       <Navigation
         data={siteData.navigation}
         theme={theme}
@@ -148,49 +148,49 @@ function App() {
       <main className="relative z-10">
         {/* Hero 首屏直接渲染，无需懒加载 */}
         <Hero data={siteData.hero} />
-        
+
         {/* 其他区域懒加载 */}
         <Suspense fallback={<SectionFallback />}>
           <Services data={siteData.services} />
         </Suspense>
-        
+
         <Suspense fallback={<SectionFallback />}>
           <TechStack data={siteData.techStack} />
         </Suspense>
-        
+
         {statsChartsData && (
           <Suspense fallback={<SectionFallback />}>
             <StatsCharts data={statsChartsData} />
           </Suspense>
         )}
-        
+
         {timelineData && (
           <Suspense fallback={<SectionFallback />}>
             <Timeline data={timelineData} />
           </Suspense>
         )}
-        
+
         <Suspense fallback={<SectionFallback />}>
           <Pricing data={siteData.pricing} />
         </Suspense>
-        
+
         <Suspense fallback={<SectionFallback />}>
           <Process data={siteData.process} />
         </Suspense>
-        
+
         <Suspense fallback={<SectionFallback />}>
           <Comparison data={siteData.comparison} />
         </Suspense>
-        
+
         <Suspense fallback={<SectionFallback />}>
           <Contact data={siteData.contact} />
         </Suspense>
       </main>
-      
+
       <Suspense fallback={<SectionFallback />}>
         <Footer data={siteData.footer} />
       </Suspense>
-      
+
       {/* 底部光剑 */}
       <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />
     </div>
