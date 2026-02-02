@@ -1,0 +1,50 @@
+{
+  "title": "SAKURAIN 技术文档",
+  "description": "技术文档中心，包含项目文档、API文档和技术规范",
+  "categories": [
+    {
+      "id": "rules",
+      "name": "技术规范",
+      "icon": "Code",
+      "docs": [
+        {
+          "id": "git-standards",
+          "title": "Git使用规范",
+          "description": "Git版本控制使用规范与最佳实践",
+          "path": "docs/rules/Git使用规范.md"
+        },
+        {
+          "id": "mysql-standards",
+          "title": "MySQL性能调优指南",
+          "description": "MySQL数据库性能优化与调优策略",
+          "path": "docs/rules/MySQL性能调优指南.md"
+        }
+      ]
+    },
+    {
+      "id": "services",
+      "name": "服务文档",
+      "icon": "Briefcase",
+      "docs": [
+        {
+          "id": "game-theory",
+          "title": "博弈程序开发",
+          "description": "博弈算法开发规范与技术细节",
+          "path": "docs/services/game-theory.md"
+        },
+        {
+          "id": "data-analysis",
+          "title": "数据分析系统",
+          "description": "数据分析平台架构与实现",
+          "path": "docs/services/data-analysis.md"
+        },
+        {
+          "id": "web-dev",
+          "title": "Web开发规范",
+          "description": "前后端开发流程与技术栈",
+          "path": "docs/services/web-dev.md"
+        }
+      ]
+    }
+  ]
+}

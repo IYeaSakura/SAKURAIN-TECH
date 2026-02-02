@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, BookOpen } from 'lucide-react';
+import { Link } from 'react-router';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/atoms';
 import type { SiteData } from '@/types';
@@ -101,6 +102,19 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   {link.label}
                 </button>
               ))}
+              <Link
+                to="/docs"
+                className="mc-nav-link flex items-center gap-1"
+                style={{
+                  fontFamily: 'var(--font-primary)',
+                  fontSize: 'var(--text-base)',
+                  fontWeight: 600,
+                  letterSpacing: '0.05em',
+                }}
+              >
+                <BookOpen className="w-4 h-4" />
+                文档
+              </Link>
             </div>
 
             {/* CTA Button & Theme Toggle */}
@@ -196,10 +210,29 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                     {link.label}
                   </motion.button>
                 ))}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: data.links.length * 0.05 }}
+                >
+                  <Link
+                    to="/docs"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
+                    style={{ 
+                      fontFamily: 'var(--font-primary)',
+                      fontSize: 'var(--text-base)',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    文档
+                  </Link>
+                </motion.div>
                 <motion.button
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
+                  transition={{ delay: 0.25 }}
                   onClick={() => scrollToSection(data.cta.href)}
                   className="mc-btn mc-btn-gold mt-3 w-full"
                   style={{
