@@ -67,3 +67,6 @@ export {
   DepthLayers,
   ScrollReveal3D,
 } from './Advanced3D';
+
+// 3D地球
+export { Globe3D } from './Globe3D';

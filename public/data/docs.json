@@ -54,28 +54,40 @@
         },
         {
           "type": "series",
-          "id": "react-course",
+          "id": "react-tsx",
           "title": "React高级进阶指南",
-          "description": "深入React原理，掌握Hooks、并发特性与性能优化",
+          "description": "本书是一套系统性的React与TypeScript技术书籍，涵盖从基础到专家级的完整知识体系，特别聚焦于AI-Native开发范式下的工程实践。",
           "cover": "/images/react-course-cover.png",
           "chapters": [
             {
-              "id": "react-ch01",
-              "title": "第1章 React核心原理",
-              "description": "虚拟DOM、Fiber架构与渲染流程",
-              "path": "/docs/courses/react/ch01-core.md"
+              "id": "react-tsx-ch00",
+              "title": "前言",
+              "description": "本书内容仅供学习交流使用。",
+              "path": "/docs/courses/react-tsx/chapter00.md"
             },
             {
-              "id": "react-ch02",
-              "title": "第2章 Hooks深度解析",
-              "description": "Hooks工作原理与自定义Hooks设计",
-              "path": "/docs/courses/react/ch02-hooks.md"
+              "id": "react-tsx-ch01",
+              "title": "第1章 AI-Native前端革命：大模型时代的技术栈生存法则与React战略价值",
+              "description": "本章深入探讨了AI-Native前端开发的技术范式转移，从命令式编程的上下文窗口瓶颈，到声明式UI的token效率优势，再到组件化思维的复杂度降维效应。我们分析了主流AI工具（Copilot、Cursor、v0.dev、Claude Artifacts、Windsurf/Cline）的技术原理和选型策略，并探讨了AI时代React开发者核心竞争力的重构方向。",
+              "path": "/docs/courses/react-tsx/chapter01.md"
             },
             {
-              "id": "react-ch03",
-              "title": "第3章 并发特性与Suspense",
-              "description": "React 18并发模式与数据获取",
-              "path": "/docs/courses/react/ch03-concurrent.md"
+              "id": "react-tsx-ch02",
+              "title": "第2章 TypeScript类型系统：AI协同开发的元语言与契约基础",
+              "description": "本章深入探讨了TypeScript类型系统的基础知识和React专用类型模式。从渐进式迁移策略到集合论基础，从类型元编程到TSX的类型检查机制，我们建立了类型系统的完整认知框架。这些知识是后续章节深入React组件设计、Hooks原理和架构模式的基础。",
+              "path": "/docs/courses/react-tsx/chapter02.md"
+            },
+            {
+              "id": "react-tsx-ch03",
+              "title": "第3章 React设计哲学与声明式编程：从函数到代数效应",
+              "description": "本章深入探讨了React的设计哲学和声明式编程范式，以及AI辅助下的组件接口设计和样式系统开发。从虚拟DOM的计算层本质，到单向数据流的类型保障，再到组件组合的范畴论表达，我们建立了React组件设计的理论基础。同时，我们探讨了如何利用Zod Schema进行AI驱动的Props接口设计，以及如何实现类型安全的样式系统和多态组件。",
+              "path": "/docs/courses/react-tsx/chapter03.md"
+            },
+            {
+              "id": "react-tsx-ch04",
+              "title": "第4章 状态管理与数据流架构：AI辅助的状态设计",
+              "description": "本章深入探讨了React状态管理的类型策略和AI辅助设计。从useState与useReducer的选择决策，到状态提升的类型传播，再到跨组件通信的类型安全方案，我们建立了完整的本地状态管理知识体系。同时，我们探讨了AI如何辅助状态机生成和状态管理选型，为AI-Native开发提供了实践指导。",
+              "path": "/docs/courses/react-tsx/chapter04.md"
             }
           ]
         }
