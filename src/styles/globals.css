@@ -205,12 +205,19 @@ h1 {
   font-size: var(--text-5xl);
   font-weight: var(--font-extrabold);
   line-height: var(--leading-none);
-  text-shadow: 3px 3px 0 color-mix(in srgb, var(--bg-secondary) 50%, black);
 }
 
 h2 {
   font-size: var(--text-4xl);
   font-weight: var(--font-bold);
+}
+
+/* 深色模式下为标题添加阴影效果 */
+[data-theme="dark"] h1 {
+  text-shadow: 3px 3px 0 color-mix(in srgb, var(--bg-secondary) 50%, black);
+}
+
+[data-theme="dark"] h2 {
   text-shadow: 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 40%, black);
 }
 
