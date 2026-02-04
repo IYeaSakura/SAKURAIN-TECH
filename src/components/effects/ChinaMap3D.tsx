@@ -704,14 +704,16 @@ function MapScene({
         enableRotate={false}
         minDistance={10}
         maxDistance={300}
-        target={new THREE.Vector3(0, 0, 0)}
-        minPolarAngle={Math.PI / 36}
-        maxPolarAngle={Math.PI / 36}
+        minPolarAngle={0}
+        maxPolarAngle={0}
         mouseButtons={{
-          LEFT: 2,
-          MIDDLE: 2,
-          RIGHT: 0
+          LEFT: THREE.MOUSE.PAN,
+          MIDDLE: THREE.MOUSE.DOLLY,
+          RIGHT: THREE.MOUSE.ROTATE
         }}
+        enableDamping={false}
+        minAzimuthAngle={0}
+        maxAzimuthAngle={0}
       />
     </>
   );
