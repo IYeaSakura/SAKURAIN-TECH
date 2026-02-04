@@ -94,7 +94,11 @@ export const PLAYER_DATA: Record<string, { players: number; online: number }> = 
 
 // 获取数据函数
 export function getPlayerData(name: string) {
-  return PLAYER_DATA[name] || { players: 1000, online: 800 };
+  const data = PLAYER_DATA[name];
+  if (data) {
+    return { ...data, hasData: true };
+  }
+  return { players: 0, online: 0, hasData: false };
 }
 
 // 获取最大玩家数（用于柱形图归一化）
