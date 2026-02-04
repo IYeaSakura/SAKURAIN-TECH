@@ -84,18 +84,18 @@ function Earth({ isHovered, isDark }: { isHovered: boolean; isDark: boolean }) {
   // 加载纹理
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadTextures = async () => {
       try {
         setLoading(true);
-        
+
         // 确定使用哪个主题
         const textureKey = isDark ? 'night' : 'day';
-        
+
         // 先尝试加载本地纹理
         let mapTexture: THREE.Texture | undefined;
         let bumpTexture: THREE.Texture | undefined;
-        
+
         try {
           // 尝试本地纹理
           mapTexture = await loadTexture(TEXTURE_PATHS.local[textureKey as keyof typeof TEXTURE_PATHS.local]);
@@ -110,7 +110,7 @@ function Earth({ isHovered, isDark }: { isHovered: boolean; isDark: boolean }) {
             console.warn('CDN texture also failed');
           }
         }
-        
+
         // 尝试加载 bump 贴图
         try {
           bumpTexture = await loadTexture(TEXTURE_PATHS.local.bump);
@@ -121,7 +121,7 @@ function Earth({ isHovered, isDark }: { isHovered: boolean; isDark: boolean }) {
             // bump 贴图不是必须的
           }
         }
-        
+
         if (isMounted) {
           setTextures({ map: mapTexture, bumpMap: bumpTexture });
           setLoading(false);
@@ -133,9 +133,9 @@ function Earth({ isHovered, isDark }: { isHovered: boolean; isDark: boolean }) {
         }
       }
     };
-    
+
     loadTextures();
-    
+
     return () => {
       isMounted = false;
     };
@@ -157,7 +157,7 @@ function Earth({ isHovered, isDark }: { isHovered: boolean; isDark: boolean }) {
     return (
       <mesh>
         <sphereGeometry args={[2, 32, 32]} />
-        <meshBasicMaterial 
+        <meshBasicMaterial
           color={isDark ? '#1a3a5c' : '#4a7c9b'}
           wireframe={false}
         />
@@ -234,7 +234,7 @@ function CityMarkers({ isDark }: { isDark: boolean }) {
 // 发光点效果
 function GlowPoints({ isDark }: { isDark: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
-  
+
   const points = useMemo(() => {
     return CITIES.map(city => {
       const position = latLonToVector3(city.lat, city.lon, 2.08);
@@ -269,7 +269,7 @@ function GlowPoints({ isDark }: { isDark: boolean }) {
 // 网络连接线
 function ConnectionLines({ isDark }: { isDark: boolean }) {
   const linesRef = useRef<THREE.Group>(null);
-  
+
   const connections = useMemo(() => {
     const lines: { start: THREE.Vector3; end: THREE.Vector3; phase: number }[] = [];
     const connections_list = [
@@ -282,7 +282,7 @@ function ConnectionLines({ isDark }: { isDark: boolean }) {
       [9, 10],  // 纽约 - 洛杉矶
       [9, 11],  // 纽约 - 旧金山
     ];
-    
+
     connections_list.forEach(([i, j]) => {
       const city1 = CITIES[i];
       const city2 = CITIES[j];
@@ -290,7 +290,7 @@ function ConnectionLines({ isDark }: { isDark: boolean }) {
       const end = latLonToVector3(city2.lat, city2.lon, 2.05);
       lines.push({ start, end, phase: Math.random() * Math.PI * 2 });
     });
-    
+
     return lines;
   }, []);
 
@@ -335,13 +335,13 @@ function ConnectionLines({ isDark }: { isDark: boolean }) {
 // 流动的数据包
 function DataPackets({ isDark }: { isDark: boolean }) {
   const packetsRef = useRef<THREE.Group>(null);
-  
+
   const packets = useMemo(() => {
     const items: { curve: THREE.QuadraticBezierCurve3; speed: number; offset: number }[] = [];
     const connections_list = [
       [0, 2], [0, 5], [0, 9], [2, 9], [5, 9],
     ];
-    
+
     connections_list.forEach(([i, j]) => {
       const city1 = CITIES[i];
       const city2 = CITIES[j];
@@ -369,7 +369,7 @@ function DataPackets({ isDark }: { isDark: boolean }) {
         const t = ((state.clock.elapsedTime * packet.speed + packet.offset) % 1);
         const position = packet.curve.getPoint(t);
         mesh.position.copy(position);
-        
+
         const material = mesh.material as THREE.MeshBasicMaterial;
         const fadeStart = 0.8;
         if (t > fadeStart) {
@@ -408,7 +408,7 @@ function Scene({ isHovered, isDark }: { isHovered: boolean; isDark: boolean }) {
     <>
       <ambientLight intensity={isDark ? 0.5 : 0.8} />
       <directionalLight position={[5, 3, 5]} intensity={isDark ? 0.8 : 1.2} />
-      
+
       <Stars
         radius={60}
         depth={30}
@@ -442,7 +442,7 @@ function Scene({ isHovered, isDark }: { isHovered: boolean; isDark: boolean }) {
 function GlobeLoader() {
   return (
     <div className="w-full h-full flex items-center justify-center">
-      <div 
+      <div
         className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
         style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
       />

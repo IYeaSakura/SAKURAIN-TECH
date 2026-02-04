@@ -72,7 +72,6 @@ export {
 export { Globe3D } from './Globe3D';
 export { CesiumGlobe } from './CesiumGlobe';
 
-// WebGL演示组件
-export { ParticleField } from './ParticleField';
-export { WaveAnimation } from './WaveAnimation';
-export { NeuralNetwork } from './NeuralNetwork';
+// 中国3D地图
+export { ChinaMap3D } from './ChinaMap3D';
+export * from './ChinaMap3DConfig';
