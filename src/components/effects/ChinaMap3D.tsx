@@ -52,7 +52,35 @@ function project(lon: number, lat: number): [number, number] {
   return [x, -y];
 }
 
+// 计算单个多边形的面积和质心（使用Shoelace公式）
+function calculatePolygonAreaAndCentroid(points: [number, number][]): { area: number; centroid: { x: number; y: number } } {
+  let area = 0;
+  let cx = 0;
+  let cy = 0;
+
+  for (let i = 0; i < points.length; i++) {
+    const j = (i + 1) % points.length;
+    const [xi, yi] = points[i];
+    const [xj, yj] = points[j];
+    const cross = xi * yj - xj * yi;
+    area += cross;
+    cx += (xi + xj) * cross;
+    cy += (yi + yj) * cross;
+  }
+
+  area = Math.abs(area) / 2;
+  if (area === 0) {
+    return { area: 0, centroid: { x: 0, y: 0 } };
+  }
+
+  cx = cx / (6 * area);
+  cy = cy / (6 * area);
+
+  return { area, centroid: { x: cx, y: cy } };
+}
+
 // 计算多边形几何中心（用于柱形图定位）
+// 优化：确保光柱显示在最大岛屿（多边形）的质心位置
 function calculatePolygonCenter(feature: Feature): { x: number; y: number } | null {
   const coords = feature.geometry.coordinates;
   const geoType = feature.geometry.type;
@@ -61,22 +89,26 @@ function calculatePolygonCenter(feature: Feature): { x: number; y: number } | nu
     ? coords as number[][][][]
     : [coords as number[][][]];
 
-  let sumX = 0, sumY = 0, count = 0;
+  let maxArea = 0;
+  let bestCentroid: { x: number; y: number } | null = null;
 
   polygons.forEach(polygon => {
     const rings = Array.isArray(polygon[0][0]) ? polygon : [polygon];
     const outerRing = rings[0] as number[][];
     
-    outerRing.forEach(point => {
-      const [x, y] = project(point[0], point[1]);
-      sumX += x;
-      sumY += y;
-      count++;
+    const projectedPoints: [number, number][] = outerRing.map(point => {
+      return project(point[0], point[1]);
     });
+
+    const { area, centroid } = calculatePolygonAreaAndCentroid(projectedPoints);
+
+    if (area > maxArea) {
+      maxArea = area;
+      bestCentroid = centroid;
+    }
   });
 
-  if (count === 0) return null;
-  return { x: sumX / count, y: sumY / count };
+  return bestCentroid;
 }
 
 // 根据数据获取填充颜色
@@ -402,17 +434,53 @@ function DataBar({
   bbox: { centerX: number; centerY: number };
   isHovered: boolean;
 }) {
-  const { name } = feature.properties;
+  const { name, centroid, center: centerProp } = feature.properties;
 
   const data = getPlayerData(name);
   const maxPlayers = getMaxPlayers();
   const height = Math.max(0.5, (data.players / maxPlayers) * 12);
 
-  const center = calculatePolygonCenter(feature);
-  if (!center) return null;
-
-  const x = center.x - bbox.centerX;
-  const z = center.y - bbox.centerY;
+  // Use centroid or center from feature properties if available
+  let x: number = 0;
+  let z: number = 0;
+  let useCalculated = false;
+  
+  if (centroid && centroid.length >= 2) {
+    // Use provided centroid [lon, lat]
+    const [projX, projY] = project(centroid[0], centroid[1]);
+    x = projX - bbox.centerX;
+    z = projY - bbox.centerY;
+  } else if (centerProp && centerProp.length >= 2) {
+    // Use provided center [lon, lat]
+    const [projX, projY] = project(centerProp[0], centerProp[1]);
+    x = projX - bbox.centerX;
+    z = projY - bbox.centerY;
+  } else {
+    useCalculated = true;
+  }
+  
+  // If using provided center and it's far outside the map bounds, fall back to calculated center
+  if (!useCalculated) {
+    const maxDist = 60; // Maximum reasonable distance from center
+    const dist = Math.sqrt(x * x + z * z);
+    if (dist > maxDist) {
+      console.log(`Province ${name} center too far: dist=${dist.toFixed(2)}, x=${x.toFixed(2)}, z=${z.toFixed(2)}`);
+      useCalculated = true;
+    }
+  }
+  
+  // Skip if name is empty or data has no players
+  if (!name || !data.hasData) {
+    return null;
+  }
+  
+  if (useCalculated) {
+    // Fallback to calculated center
+    const center = calculatePolygonCenter(feature);
+    if (!center) return null;
+    x = center.x - bbox.centerX;
+    z = center.y - bbox.centerY;
+  }
 
   const beamWidth = 0.08;
   const beamColor = isHovered ? '#00ffff' : '#00d4ff';
