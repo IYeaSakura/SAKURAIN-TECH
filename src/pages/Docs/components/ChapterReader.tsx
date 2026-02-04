@@ -1,12 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ChevronLeft, ChevronRight, List, Bookmark } from 'lucide-react';
 import { useDocument } from '../hooks';
-import { MarkdownRenderer } from './MarkdownRenderer';
 import { UnifiedToc } from './UnifiedToc';
-import { DocSearch } from './DocSearch';
 import { ThemeToggleButton } from './ThemeToggleButton';
 import type { Chapter, DocSeries, DocCategory, TocItem } from '../types';
+
+// Lazy load heavy components to reduce initial bundle size
+const DocSearch = lazy(() => import('./DocSearch').then(m => ({ default: m.DocSearch })));
+const MarkdownRenderer = lazy(() => import('./MarkdownRenderer').then(m => ({ default: m.MarkdownRenderer })));
 
 interface ChapterReaderProps {
   chapter: Chapter;
@@ -177,11 +179,13 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
           </div>
           <div className="flex items-center gap-2">
             {/* 文档内搜索 */}
-            <DocSearch 
-              onSearch={searchContent}
-              onSelectResult={handleSearchSelect}
-              placeholder="搜索本章内容..."
-            />
+            <Suspense fallback={<div className="w-8 h-8" />}>
+              <DocSearch
+                onSearch={searchContent}
+                onSelectResult={handleSearchSelect}
+                placeholder="搜索本章内容..."
+              />
+            </Suspense>
             <ThemeToggleButton />
             <button 
               onClick={() => setShowToc(!showToc)} 
@@ -225,7 +229,9 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
                   <h1 className="text-3xl font-bold mb-3" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{chapter.title}</h1>
                   <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>{chapter.description}</p>
                 </div>
-                <MarkdownRenderer content={content} />
+                <Suspense fallback={<div className="p-4 text-center" style={{ color: 'var(--text-muted)' }}>加载内容...</div>}>
+                  <MarkdownRenderer content={content} />
+                </Suspense>
               </motion.article>
             )}
 
