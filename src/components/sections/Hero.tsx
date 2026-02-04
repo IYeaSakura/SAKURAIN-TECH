@@ -1,21 +1,18 @@
 import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown, Globe, Box, Waves, Network, Maximize2, X, Layers } from 'lucide-react';
+import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown, Globe, Map, Maximize2, X, Layers } from 'lucide-react';
 import { 
   AmbientGlow, 
   TwinklingStars,
 } from '@/components/effects';
 import { CesiumGlobe } from '@/components/effects/CesiumGlobe';
-import { ParticleField } from '@/components/effects/ParticleField';
-import { WaveAnimation } from '@/components/effects/WaveAnimation';
-import { NeuralNetwork } from '@/components/effects/NeuralNetwork';
-import { Globe3D } from '@/components/effects/Globe3D';
+import { ChinaMap3D } from '@/components/effects/ChinaMap3D';
 import { GradientText } from '@/components/effects/TextEffects';
 import { useTheme } from '@/hooks';
 import { usePrefersReducedMotion, useThrottledScroll, useIsMobile } from '@/lib/performance';
 import type { SiteData } from '@/types';
 
-type DemoType = 'cesium' | 'globe3d' | 'particles' | 'waves' | 'neural';
+
 
 interface DemoConfig {
   id: DemoType;
@@ -26,10 +23,10 @@ interface DemoConfig {
 
 const DEMOS: DemoConfig[] = [
   { id: 'cesium', icon: Globe, label: 'Cesium 地球', title: '地球Online' },
-  { id: 'particles', icon: Box, label: '粒子场', title: '粒子场' },
-  { id: 'waves', icon: Waves, label: '波动可视化', title: '波动可视化' },
-  { id: 'neural', icon: Network, label: '神经网络', title: '神经网络' },
+  { id: 'chinamap', icon: Map, label: '中国地图', title: '地球Online-国服' },
 ];
+
+type DemoType = 'cesium' | 'chinamap';
 
 // FPS 计数器 Hook
 function useFPS() {
@@ -555,14 +552,8 @@ const DemoContent = memo(({ demo, isDark }: { demo: DemoType; isDark: boolean })
   switch (demo) {
     case 'cesium':
       return <CesiumGlobe isDark={isDark} />;
-    case 'globe3d':
-      return <Globe3D />;
-    case 'particles':
-      return <ParticleField isDark={isDark} />;
-    case 'waves':
-      return <WaveAnimation isDark={isDark} />;
-    case 'neural':
-      return <NeuralNetwork isDark={isDark} />;
+    case 'chinamap':
+      return <ChinaMap3D isDark={isDark} />;
     default:
       return <CesiumGlobe isDark={isDark} />;
   }
@@ -579,7 +570,7 @@ const getDemoConfig = (demo: DemoType): DemoConfig => {
 const getNextDemo = (current: DemoType): DemoType => {
   const currentIndex = DEMOS.findIndex(d => d.id === current);
   const nextIndex = (currentIndex + 1) % DEMOS.length;
-  return DEMOS[nextIndex].id;
+  return DEMOS[nextIndex].id as DemoType;
 };
 
 // 地球展示卡片

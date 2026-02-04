@@ -52,6 +52,10 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const animationFrameRef = useRef<number | undefined>(undefined);
   const timeIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const [isRotationPaused, setIsRotationPaused] = useState(false);
+  const isRotationPausedRef = useRef(false);
+  const cityEntitiesRef = useRef<Cesium.Entity[]>([]);
+  const tradeLine = useRef<Cesium.Entity[]>([]);
 
   // 更新北京时间
   useEffect(() => {
@@ -71,6 +75,28 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
       }
     };
   }, []);
+
+  // 同步滚动暂停状态
+  useEffect(() => {
+    isRotationPausedRef.current = isRotationPaused;
+  }, [isRotationPaused]);
+
+  // 控制城市点和连线的显示/隐藏
+  useEffect(() => {
+    if (!viewerRef.current) return;
+    
+    cityEntitiesRef.current.forEach(entity => {
+      if (entity.show !== undefined) {
+        entity.show = !isRotationPaused;
+      }
+    });
+    
+    tradeLine.current.forEach(entity => {
+      if (entity.show !== undefined) {
+        entity.show = !isRotationPaused;
+      }
+    });
+  }, [isRotationPaused]);
 
   // 创建国际贸易连线
   const createTradeLines = useCallback((viewer: Cesium.Viewer) => {
@@ -103,7 +129,7 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
         curvePoints.push(new Cesium.Cartesian3(x, y, z));
       }
 
-      viewer.entities.add({
+      const entity = viewer.entities.add({
         polyline: {
           positions: curvePoints,
           width: 1.5,
@@ -114,6 +140,9 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
           arcType: Cesium.ArcType.NONE,
         },
       });
+      if (entity) {
+        tradeLine.current.push(entity);
+      }
     });
   }, []);
 
@@ -187,7 +216,7 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
       scene.globe.lightingFadeInDistance = 100000;
 
       CITIES.forEach((city) => {
-        viewer.entities.add({
+        const entity = viewer.entities.add({
           position: Cesium.Cartesian3.fromDegrees(city.lon, city.lat, 50000),
           point: {
             pixelSize: 8,
@@ -209,6 +238,9 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
             disableDepthTestDistance: Number.POSITIVE_INFINITY,
           },
         });
+        if (entity) {
+          cityEntitiesRef.current.push(entity);
+        }
       });
 
       createTradeLines(viewer);
@@ -223,7 +255,7 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
       });
 
       // 缩放限制 - 允许更大程度的放大
-      viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000000; // 可以放大到1000km
+      viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000; // 可以放大到1000km
       viewer.scene.screenSpaceCameraController.maximumZoomDistance = 40000000;
       viewer.scene.screenSpaceCameraController.enableTilt = false;
 
@@ -231,11 +263,15 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
         let lastTime = Date.now();
         const rotate = () => {
           if (!viewerRef.current) return;
-          const now = Date.now();
-          const delta = now - lastTime;
-          lastTime = now;
-          
-          viewer.scene.camera.rotateRight(0.00004 * delta);
+          if (!isRotationPausedRef.current) {
+            const now = Date.now();
+            const delta = now - lastTime;
+            lastTime = now;
+            
+            viewer.scene.camera.rotateRight(0.00004 * delta);
+          } else {
+            lastTime = Date.now();
+          }
           animationFrameRef.current = requestAnimationFrame(rotate);
         };
         rotate();
@@ -269,6 +305,21 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
           background: isDark ? '#050505' : '#1e4d6b',
         }}
       />
+      
+      {/* 暂停/恢复滚动按钮 */}
+      <div className="absolute top-4 right-4 z-20">
+        <button
+          onClick={() => setIsRotationPaused(!isRotationPaused)}
+          className="px-4 py-2 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
+          style={{
+            background: 'rgba(0, 0, 0, 0.5)',
+            border: '1px solid rgba(96, 165, 250, 0.3)',
+            color: '#60a5fa',
+          }}
+        >
+          {isRotationPaused ? '▶ 恢复滚动' : '⏸ 暂停滚动'}
+        </button>
+      </div>
       
       {/* 北京时间显示 */}
       <div className="absolute bottom-4 right-4 z-20 pointer-events-none">
