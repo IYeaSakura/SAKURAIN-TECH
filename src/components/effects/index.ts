@@ -70,3 +70,9 @@ export {
 
 // 3D地球
 export { Globe3D } from './Globe3D';
+export { CesiumGlobe } from './CesiumGlobe';
+
+// WebGL演示组件
+export { ParticleField } from './ParticleField';
+export { WaveAnimation } from './WaveAnimation';
+export { NeuralNetwork } from './NeuralNetwork';

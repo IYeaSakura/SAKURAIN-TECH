@@ -372,6 +372,19 @@ strong, b {
   * {
     cursor: none !important;
   }
+  
+  /* Restore default cursor in fullscreen container */
+  .fullscreen-container,
+  .fullscreen-container * {
+    cursor: default !important;
+  }
+  
+  /* But allow pointer cursor on interactive elements in fullscreen */
+  .fullscreen-container button,
+  .fullscreen-container a,
+  .fullscreen-container [role="button"] {
+    cursor: pointer !important;
+  }
 }
 
 /* ============================================
