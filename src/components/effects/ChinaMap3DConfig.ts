@@ -43,7 +43,7 @@ export const MAP_HEIGHT = 1.0;  // 地图厚度
 
 // 相机配置
 export const CAMERA_CONFIG = {
-  position: [0, 50, 50] as [number, number, number],
+  position: [0, 80, 10] as [number, number, number],
   fov: 45,
 };
 

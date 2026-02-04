@@ -141,10 +141,10 @@ function calculateCameraFit(features: Feature[], canvasWidth: number, canvasHeig
   const fov = CAMERA_CONFIG.fov * (Math.PI / 180);
   const distanceHeight = (height / 2) / Math.tan(fov / 2);
   const distanceWidth = (width / 2) / Math.tan(fov / 2) / aspect;
-  const distance = Math.max(distanceHeight, distanceWidth) * 1.5; // 1.5倍边距确保完整显示
+  const distance = Math.max(distanceHeight, distanceWidth) * 1.1;
 
   // 二维平面俯瞰视角
-  const pitchAngle = 75; // 俯仰角度（相对于地图平面，度），更接近垂直
+  const pitchAngle = 85;
   const polarAngle = (90 - pitchAngle) * (Math.PI / 180);
 
   return {
@@ -533,6 +533,73 @@ function MapScene({
     return mapData.features.find(f => f.properties.name === hoveredRegion) || null;
   }, [mapData, hoveredRegion]);
 
+  // 右键单击复位功能
+  const mouseDownPosRef = useRef<{ x: number; y: number } | null>(null);
+  const isRightClickRef = useRef(false);
+
+  const handleMouseDown = useCallback((event: MouseEvent) => {
+    if (event.button === 2) {
+      isRightClickRef.current = true;
+      mouseDownPosRef.current = { x: event.clientX, y: event.clientY };
+    }
+  }, []);
+
+  const handleMouseUp = useCallback((event: MouseEvent) => {
+    if (event.button === 2 && isRightClickRef.current && mouseDownPosRef.current) {
+      const dx = Math.abs(event.clientX - mouseDownPosRef.current.x);
+      const dy = Math.abs(event.clientY - mouseDownPosRef.current.y);
+      
+      // 如果移动距离小于 5 像素，视为单击
+      if (dx < 5 && dy < 5) {
+        const [x, y, z] = cameraFit.cameraPosition;
+        const [tx, ty, tz] = cameraFit.target;
+        
+        const startPos = camera.position.clone();
+        const targetPos = new THREE.Vector3(x, y, z);
+        const startTarget = controlsRef.current?.target.clone() || new THREE.Vector3(0, 0, 0);
+        const endTarget = new THREE.Vector3(tx, ty, tz);
+        
+        let progress = 0;
+        const duration = 500;
+        const startTime = Date.now();
+        
+        const animate = () => {
+          const elapsed = Date.now() - startTime;
+          progress = Math.min(elapsed / duration, 1);
+          const easeProgress = 1 - Math.pow(1 - progress, 3);
+          
+          camera.position.lerpVectors(startPos, targetPos, easeProgress);
+          
+          if (controlsRef.current) {
+            const currentTarget = new THREE.Vector3().lerpVectors(startTarget, endTarget, easeProgress);
+            controlsRef.current.target.copy(currentTarget);
+            controlsRef.current.update();
+          }
+          
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          }
+        };
+        
+        animate();
+      }
+    }
+    
+    isRightClickRef.current = false;
+    mouseDownPosRef.current = null;
+  }, [camera, cameraFit]);
+
+  // 添加鼠标事件监听
+  useEffect(() => {
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseDown, handleMouseUp]);
+
   // 自动适配相机位置 - 当 mapData 变化时（如下钻）重新调整视角
   useEffect(() => {
     const [x, y, z] = cameraFit.cameraPosition;
@@ -608,17 +675,19 @@ function MapScene({
         ))}
       </group>
 
-      {/* 数据柱 */}
-      <group>
-        {mapData.features.map((feature, index) => (
-          <DataBar
-            key={`bar-${feature.properties.adcode}-${index}`}
-            feature={feature}
-            bbox={bbox}
-            isHovered={hoveredRegion === feature.properties.name}
-          />
-        ))}
-      </group>
+      {/* 数据柱 - 只在国家级地图显示 */}
+      {!isDrilledDown && (
+        <group>
+          {mapData.features.map((feature, index) => (
+            <DataBar
+              key={`bar-${feature.properties.adcode}-${index}`}
+              feature={feature}
+              bbox={bbox}
+              isHovered={hoveredRegion === feature.properties.name}
+            />
+          ))}
+        </group>
+      )}
 
       {/* 悬浮信息面板 */}
       <HoverInfo
@@ -632,13 +701,17 @@ function MapScene({
         ref={controlsRef}
         enablePan={true}
         enableZoom={true}
-        enableRotate={false}  // 禁止旋转
+        enableRotate={false}
         minDistance={10}
         maxDistance={300}
         target={new THREE.Vector3(0, 0, 0)}
-        // 固定极角为15度（相对于Y轴），即75度俯仰角（相对于地图平面）
-        minPolarAngle={Math.PI / 12}
-        maxPolarAngle={Math.PI / 12}
+        minPolarAngle={Math.PI / 36}
+        maxPolarAngle={Math.PI / 36}
+        mouseButtons={{
+          LEFT: 2,
+          MIDDLE: 2,
+          RIGHT: 0
+        }}
       />
     </>
   );
@@ -748,8 +821,13 @@ export function ChinaMap3D({ isDark }: { isDark: boolean }) {
   }, []);
 
   const handleRegionClick = useCallback((regionData: RegionData) => {
-    setRegionStack(prev => [...prev, regionData]);
-    setCurrentAdcode(regionData.adcode);
+    setRegionStack(prev => {
+      if (prev.length < 2) {
+        setCurrentAdcode(regionData.adcode);
+        return [...prev, regionData];
+      }
+      return prev;
+    });
   }, []);
 
   const handleBack = useCallback(() => {
