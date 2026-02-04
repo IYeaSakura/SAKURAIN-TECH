@@ -41,7 +41,7 @@ interface RegionData {
 }
 
 // ============ 常量 ============
-const DATAV_GEO_URL = 'https://geo.datav.aliyun.com/areas_v3/bound';
+const DATAV_GEO_URL = '/map-data';
 
 // ============ 工具函数 ============
 function project(lon: number, lat: number): [number, number] {
@@ -203,7 +203,12 @@ function useMapData(adcode: string | number = '100000') {
     setError(null);
 
     fetch(`${DATAV_GEO_URL}/${adcode}_full.json`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) {
+          throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+        }
+        return r.json();
+      })
       .then(data => {
         if (!cancelled) {
           setMapData(data);
@@ -748,9 +753,15 @@ export function ChinaMap3D({ isDark }: { isDark: boolean }) {
   }, []);
 
   const handleBack = useCallback(() => {
-    setRegionStack([]);
-    setCurrentAdcode('100000');
-  }, []);
+    if (regionStack.length > 1) {
+      const newStack = regionStack.slice(0, regionStack.length - 1);
+      setRegionStack(newStack);
+      setCurrentAdcode(newStack[newStack.length - 1].adcode);
+    } else {
+      setRegionStack([]);
+      setCurrentAdcode('100000');
+    }
+  }, [regionStack]);
 
   const currentName = regionStack.length > 0
     ? regionStack[regionStack.length - 1].name
