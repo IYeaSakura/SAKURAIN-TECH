@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Html, OrbitControls, Line } from '@react-three/drei';
+import { OrbitControls, Line } from '@react-three/drei';
 import {
   COLORS,
   MAP_HEIGHT,
@@ -106,7 +106,7 @@ function getRegionColor(name: string, isHovered: boolean, isDrilledDown: boolean
 }
 
 // 计算地图包围盒并返回适配的相机参数
-function calculateCameraFit(features: Feature[], canvasWidth: number, canvasHeight: number) {
+function calculateCameraFit(features: Feature[], canvasWidth: number, canvasHeight: number, drillLevel: number = 0) {
   let minX = Infinity, maxX = -Infinity;
   let minY = Infinity, maxY = -Infinity;
 
@@ -141,7 +141,12 @@ function calculateCameraFit(features: Feature[], canvasWidth: number, canvasHeig
   const fov = CAMERA_CONFIG.fov * (Math.PI / 180);
   const distanceHeight = (height / 2) / Math.tan(fov / 2);
   const distanceWidth = (width / 2) / Math.tan(fov / 2) / aspect;
-  const distance = Math.max(distanceHeight, distanceWidth) * 1.1;
+  
+  // 根据下钻级别调整缩放比例
+  // drillLevel: 0=国家级, 1=省级, 2=地市级
+  const zoomFactors = [1.1, 1.0, 0.6];
+  const zoomFactor = zoomFactors[Math.min(drillLevel, zoomFactors.length - 1)];
+  const distance = Math.max(distanceHeight, distanceWidth) * zoomFactor;
 
   // 二维平面俯瞰视角
   const pitchAngle = 85;
@@ -330,13 +335,28 @@ function MapRegion({
     onClick({ name, adcode, level, center });
   }, [onClick, name, adcode, level, center]);
 
+  const handlePointerOver = useCallback(() => {
+    onHover(name);
+  }, [onHover, name]);
+
+  const handlePointerOut = useCallback(() => {
+    onHover(null);
+  }, [onHover]);
+
   const fillColor = getRegionColor(name, isHovered, isDrilledDown);
 
   return (
-    <group onClick={handleClick} onPointerOver={() => onHover(name)} onPointerOut={() => onHover(null)}>
+    <group>
       {/* 平面填充 - 每个独立的 polygon 都有独立的 mesh */}
       {fillGeometries.map((geo, idx) => (
-        <mesh key={`fill-${idx}`} geometry={geo} position={[0, 0, 0]}>
+        <mesh 
+          key={`fill-${idx}`} 
+          geometry={geo} 
+          position={[0, 0, 0]}
+          onClick={handleClick}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        >
           <meshBasicMaterial
             color={fillColor}
             side={THREE.DoubleSide}
@@ -456,37 +476,29 @@ function DataBar({
   );
 }
 
-// ============ 组件：悬浮信息面板 ============
+// ============ 组件：悬浮信息面板（纯UI组件） ============
 function HoverInfo({
   feature,
-  bbox,
   visible
 }: {
   feature: Feature | null;
-  bbox: { centerX: number; centerY: number };
   visible: boolean;
 }) {
   if (!visible || !feature) return null;
 
   const { name } = feature.properties;
-
-  const center = calculatePolygonCenter(feature);
-  if (!center) return null;
-
   const data = getPlayerData(name);
-  const x = center.x - bbox.centerX;
-  const z = center.y - bbox.centerY;
 
   return (
-    <Html position={[x, 10, z]} center>
-      <div className="min-w-[200px] px-5 py-4 rounded-2xl border border-cyan-400/40 bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl shadow-2xl shadow-cyan-500/30">
-        <div className="flex items-center gap-3 mb-3 pb-3 border-b border-cyan-400/30">
-          <div className="w-2 h-8 rounded-full bg-gradient-to-b from-cyan-400 to-cyan-600 shadow-lg shadow-cyan-400/50" />
-          <div className="flex-1">
-            <div className="text-cyan-300 font-bold text-lg tracking-wide">{name}</div>
-            <div className="text-cyan-500/60 text-xs mt-0.5">区域信息</div>
-          </div>
+    <div className="min-w-[200px] px-5 py-4 rounded-2xl border border-cyan-400/40 bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl shadow-2xl shadow-cyan-500/30">
+      <div className="flex items-center gap-3 mb-3 pb-3 border-b border-cyan-400/30">
+        <div className="w-2 h-8 rounded-full bg-gradient-to-b from-cyan-400 to-cyan-600 shadow-lg shadow-cyan-400/50" />
+        <div className="flex-1">
+          <div className="text-cyan-300 font-bold text-lg tracking-wide">{name}</div>
+          <div className="text-cyan-500/60 text-xs mt-0.5">区域信息</div>
         </div>
+      </div>
+      {data.hasData ? (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-slate-400 text-sm">玩家人数</span>
@@ -497,8 +509,12 @@ function HoverInfo({
             <span className="text-emerald-400 font-mono font-bold text-base">{data.online} <span className="text-xs text-emerald-500/70">万</span></span>
           </div>
         </div>
-      </div>
-    </Html>
+      ) : (
+        <div className="text-center py-2">
+          <span className="text-slate-400 text-sm">仅供演示，暂无数据</span>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -510,6 +526,7 @@ function MapScene({
   onHover,
   canvasSize,
   isDrilledDown,
+  drillLevel,
 }: {
   mapData: MapData;
   onRegionClick: (data: RegionData) => void;
@@ -517,6 +534,7 @@ function MapScene({
   onHover: (name: string | null) => void;
   canvasSize: { width: number; height: number };
   isDrilledDown: boolean;
+  drillLevel: number;
 }) {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
@@ -524,14 +542,8 @@ function MapScene({
 
   // 计算相机适配参数
   const cameraFit = useMemo(() => {
-    return calculateCameraFit(mapData.features, canvasSize.width, canvasSize.height);
-  }, [mapData, canvasSize]);
-
-  // 获取当前悬浮的feature
-  const hoveredFeature = useMemo(() => {
-    if (!hoveredRegion) return null;
-    return mapData.features.find(f => f.properties.name === hoveredRegion) || null;
-  }, [mapData, hoveredRegion]);
+    return calculateCameraFit(mapData.features, canvasSize.width, canvasSize.height, drillLevel);
+  }, [mapData, canvasSize, drillLevel]);
 
   // 右键单击复位功能
   const mouseDownPosRef = useRef<{ x: number; y: number } | null>(null);
@@ -689,13 +701,6 @@ function MapScene({
         </group>
       )}
 
-      {/* 悬浮信息面板 */}
-      <HoverInfo
-        feature={hoveredFeature}
-        bbox={bbox}
-        visible={!!hoveredRegion}
-      />
-
       {/* 相机控制器 - 只允许平移和缩放，禁止旋转 */}
       <OrbitControls
         ref={controlsRef}
@@ -847,6 +852,11 @@ export function ChinaMap3D({ isDark }: { isDark: boolean }) {
     ? regionStack[regionStack.length - 1].name
     : '中国';
 
+  const hoveredFeature = useMemo(() => {
+    if (!hoveredRegion || !mapData) return null;
+    return mapData.features.find(f => f.properties.name === hoveredRegion) || null;
+  }, [hoveredRegion, mapData]);
+
   return (
     <div ref={containerRef} className="w-full h-full relative">
       {/* 头部导航 */}
@@ -864,6 +874,14 @@ export function ChinaMap3D({ isDark }: { isDark: boolean }) {
           <span>返回上级</span>
         </button>
       )}
+
+      {/* 悬浮信息面板 - 始终显示在右上角 */}
+      <div className="absolute top-4 right-4 z-10">
+        <HoverInfo
+          feature={hoveredFeature}
+          visible={!!hoveredRegion}
+        />
+      </div>
 
       {/* 图例 */}
       <div className="absolute bottom-4 left-4 z-10 p-4 rounded-xl border border-cyan-500/20 bg-slate-900/60 backdrop-blur-md">
@@ -889,6 +907,13 @@ export function ChinaMap3D({ isDark }: { isDark: boolean }) {
         </div>
       )}
 
+      {/* 调试信息 - 显示当前悬浮的区域 */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
+        <span className="text-xs px-4 py-2 rounded-full border border-yellow-500/30 bg-slate-900/80 backdrop-blur-md text-yellow-400">
+          悬浮区域: <span className="font-bold">{hoveredRegion || '无'}</span>
+        </span>
+      </div>
+
       {isVisible ? (
         loading ? (
           <Loader />
@@ -911,6 +936,7 @@ export function ChinaMap3D({ isDark }: { isDark: boolean }) {
               onHover={setHoveredRegion}
               canvasSize={canvasSize}
               isDrilledDown={regionStack.length > 0}
+              drillLevel={regionStack.length}
             />
           </Canvas>
         ) : null
