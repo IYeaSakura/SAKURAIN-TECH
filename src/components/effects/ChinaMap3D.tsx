@@ -775,8 +775,8 @@ function MapScene({
         enablePan={true}
         enableZoom={true}
         enableRotate={false}
-        minDistance={10}
-        maxDistance={300}
+        minDistance={drillLevel === 0 ? 10 : drillLevel === 1 ? 5 : 2}
+        maxDistance={drillLevel === 0 ? 300 : drillLevel === 1 ? 150 : 80}
         minPolarAngle={0}
         maxPolarAngle={0}
         mouseButtons={{
