@@ -1,15 +1,65 @@
-import { memo, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown, Globe } from 'lucide-react';
+import { memo, useState, useCallback, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown, Globe, Box, Waves, Network, Maximize2, X, Layers } from 'lucide-react';
 import { 
   AmbientGlow, 
   TwinklingStars,
 } from '@/components/effects';
 import { CesiumGlobe } from '@/components/effects/CesiumGlobe';
+import { ParticleField } from '@/components/effects/ParticleField';
+import { WaveAnimation } from '@/components/effects/WaveAnimation';
+import { NeuralNetwork } from '@/components/effects/NeuralNetwork';
+import { Globe3D } from '@/components/effects/Globe3D';
 import { GradientText } from '@/components/effects/TextEffects';
 import { useTheme } from '@/hooks';
 import { usePrefersReducedMotion, useThrottledScroll, useIsMobile } from '@/lib/performance';
 import type { SiteData } from '@/types';
+
+type DemoType = 'cesium' | 'globe3d' | 'particles' | 'waves' | 'neural';
+
+interface DemoConfig {
+  id: DemoType;
+  icon: typeof Globe;
+  label: string;
+  title: string;
+}
+
+const DEMOS: DemoConfig[] = [
+  { id: 'cesium', icon: Globe, label: 'Cesium 地球', title: '地球Online' },
+  { id: 'particles', icon: Box, label: '粒子场', title: '粒子场' },
+  { id: 'waves', icon: Waves, label: '波动可视化', title: '波动可视化' },
+  { id: 'neural', icon: Network, label: '神经网络', title: '神经网络' },
+];
+
+// FPS 计数器 Hook
+function useFPS() {
+  const [fps, setFps] = useState(0);
+  const frameCount = useRef(0);
+  const lastTime = useRef(performance.now());
+
+  useEffect(() => {
+    let rafId: number;
+    
+    const updateFPS = () => {
+      frameCount.current++;
+      const now = performance.now();
+      const delta = now - lastTime.current;
+      
+      if (delta >= 1000) {
+        setFps(Math.round((frameCount.current * 1000) / delta));
+        frameCount.current = 0;
+        lastTime.current = now;
+      }
+      
+      rafId = requestAnimationFrame(updateFPS);
+    };
+    
+    rafId = requestAnimationFrame(updateFPS);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+
+  return fps;
+}
 
 interface HeroProps {
   data: SiteData['hero'];
@@ -500,49 +550,162 @@ const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
 
 GlowScrollIndicator.displayName = 'GlowScrollIndicator';
 
+// 演示内容渲染
+const DemoContent = memo(({ demo, isDark }: { demo: DemoType; isDark: boolean }) => {
+  switch (demo) {
+    case 'cesium':
+      return <CesiumGlobe isDark={isDark} />;
+    case 'globe3d':
+      return <Globe3D />;
+    case 'particles':
+      return <ParticleField isDark={isDark} />;
+    case 'waves':
+      return <WaveAnimation isDark={isDark} />;
+    case 'neural':
+      return <NeuralNetwork isDark={isDark} />;
+    default:
+      return <CesiumGlobe isDark={isDark} />;
+  }
+});
+
+DemoContent.displayName = 'DemoContent';
+
+// 获取演示配置
+const getDemoConfig = (demo: DemoType): DemoConfig => {
+  return DEMOS.find(d => d.id === demo) || DEMOS[0];
+};
+
+// 获取下一个演示
+const getNextDemo = (current: DemoType): DemoType => {
+  const currentIndex = DEMOS.findIndex(d => d.id === current);
+  const nextIndex = (currentIndex + 1) % DEMOS.length;
+  return DEMOS[nextIndex].id;
+};
+
 // 地球展示卡片
 const GlobeShowcase = memo(() => {
   const [isHovered, setIsHovered] = useState(false);
+  const [currentDemo, setCurrentDemo] = useState<DemoType>('cesium');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const isDark = theme !== 'light';
+  const fps = useFPS();
+  
+  const demoConfig = getDemoConfig(currentDemo);
+
+  // 进入全屏
+  const enterFullscreen = useCallback(async () => {
+    const container = containerRef.current;
+    if (!container) return;
+    
+    try {
+      if (container.requestFullscreen) {
+        await container.requestFullscreen();
+      } else if ((container as any).webkitRequestFullscreen) {
+        await (container as any).webkitRequestFullscreen();
+      } else if ((container as any).msRequestFullscreen) {
+        await (container as any).msRequestFullscreen();
+      }
+    } catch (error) {
+      console.error('Fullscreen error:', error);
+    }
+  }, []);
+
+  // 退出全屏
+  const exitFullscreen = useCallback(async () => {
+    try {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        await (document as any).webkitExitFullscreen();
+      } else if ((document as any).msExitFullscreen) {
+        await (document as any).msExitFullscreen();
+      }
+    } catch (error) {
+      console.error('Exit fullscreen error:', error);
+    }
+  }, []);
+
+  // 监听全屏变化
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFs = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isFs);
+      if (!isFs) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // 切换下一个演示
+  const handleSwitchDemo = useCallback(() => {
+    setCurrentDemo(prev => getNextDemo(prev));
+  }, []);
+
+  // 选择特定演示
+  const handleSelectDemo = useCallback((demoId: DemoType) => {
+    setCurrentDemo(demoId);
+    setShowDropdown(false);
+  }, []);
 
   return (
     <motion.div
+      ref={containerRef}
       initial={{ opacity: 0, x: 100 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className="relative hidden xl:block xl:mr-[-60px] 2xl:mr-[-100px]"
+      className={`relative hidden xl:block ${isFullscreen ? 'fixed inset-0 z-50 flex items-center justify-center bg-black fullscreen-container' : 'xl:mr-[-60px] 2xl:mr-[-100px]'}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* 外发光边框 */}
-      <div
-        className="absolute -inset-4 rounded-3xl transition-all duration-500"
-        style={{
-          background: isHovered
-            ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))'
-            : 'transparent',
-          backgroundSize: '300% 300%',
-          animation: isHovered ? 'gradient-shift 4s ease infinite' : 'none',
-          opacity: isHovered ? 0.5 : 0,
-          filter: 'blur(20px)',
-        }}
-      />
+      {!isFullscreen && (
+        <div
+          className="absolute -inset-4 rounded-3xl transition-all duration-500"
+          style={{
+            background: isHovered
+              ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))'
+              : 'transparent',
+            backgroundSize: '300% 300%',
+            animation: isHovered ? 'gradient-shift 4s ease infinite' : 'none',
+            opacity: isHovered ? 0.5 : 0,
+            filter: 'blur(20px)',
+          }}
+        />
+      )}
       
       {/* 主容器 */}
       <div
-        className="relative w-[500px] h-[500px] rounded-2xl overflow-hidden transition-all duration-500"
+        className={`relative rounded-2xl overflow-hidden transition-all duration-500 ${
+          isFullscreen ? 'w-full h-full rounded-none' : 'w-[500px] h-[500px]'
+        }`}
         style={{
           background: 'var(--bg-card)',
-          border: '2px solid',
+          border: isFullscreen ? 'none' : '2px solid',
           borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
-          boxShadow: isHovered
+          boxShadow: isHovered && !isFullscreen
             ? '0 25px 50px -12px var(--accent-glow), inset 0 0 60px var(--accent-primary)10'
             : '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         }}
       >
-        {/* 顶部标签 - 地球Online */}
-        <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between">
+        {/* 顶部标签栏 */}
+        <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Globe className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
             <span 
@@ -552,36 +715,223 @@ const GlobeShowcase = memo(() => {
                 textShadow: '0 0 10px var(--accent-glow)',
               }}
             >
-              地球Online
+              {demoConfig.title}
             </span>
           </div>
+          
+          {/* 右侧按钮组 */}
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>运行中</span>
-          </div>
-        </div>
-
-        {/* Cesium 3D地球 */}
-        <div className="absolute inset-0 pt-8">
-          <CesiumGlobe isDark={isDark} />
-        </div>
-
-        {/* 底部信息 - 在线人数 */}
-        <div className="absolute bottom-4 left-4 right-4 z-20">
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22c55e' }} />
-                <span style={{ color: 'var(--text-muted)' }}>在线人数</span>
-                <span className="font-mono font-bold" style={{ color: '#60a5fa' }}>80.45亿</span>
-              </div>
-              <div className="flex items-center gap-1.5 pl-3">
-                <span style={{ color: 'var(--text-muted)' }}>国服人数:</span>
-                <span className="font-mono font-bold" style={{ color: '#fbbf24' }}>14.12亿</span>
-              </div>
+            {/* 切换按钮 - 在非全屏时显示 */}
+            {!isFullscreen && (
+              <button
+                onClick={handleSwitchDemo}
+                className="flex items-center justify-center w-7 h-7 rounded-md transition-all duration-200 hover:bg-white/10"
+                style={{
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  cursor: 'pointer',
+                }}
+                title="切换特效"
+              >
+                <Layers className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />
+              </button>
+            )}
+            
+            {/* 全屏/退出按钮 */}
+            <button
+              onClick={isFullscreen ? exitFullscreen : enterFullscreen}
+              className="flex items-center justify-center w-7 h-7 rounded-md transition-all duration-200 hover:bg-white/10"
+              style={{
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                background: 'rgba(0, 0, 0, 0.3)',
+                cursor: 'pointer',
+              }}
+              title={isFullscreen ? "退出全屏" : "全屏观看"}
+            >
+              {isFullscreen ? (
+                <X className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />
+              ) : (
+                <Maximize2 className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />
+              )}
+            </button>
+            
+            {/* 运行中状态 */}
+            <div className="flex items-center gap-1.5 ml-1">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>运行中</span>
             </div>
           </div>
         </div>
+
+        {/* 全屏模式下的控制栏 */}
+        <AnimatePresence>
+          {isFullscreen && (
+            <>
+              {/* 左上方 - 渲染器信息 */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="absolute top-14 left-4 z-30 flex items-center gap-3"
+              >
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                  }}
+                >
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>渲染器:</span>
+                  <span className="text-xs font-mono font-bold" style={{ color: '#fbbf24' }}>
+                    {currentDemo === 'cesium' ? 'Cesium' : 'Three.js'}
+                  </span>
+                </div>
+              </motion.div>
+
+              {/* 右上方 - FPS */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="absolute top-4 right-32 z-30"
+              >
+                <div
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                  }}
+                >
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>FPS:</span>
+                  <span className="text-xs font-mono font-bold" style={{ color: '#22c55e' }}>
+                    {fps}
+                  </span>
+                </div>
+              </motion.div>
+
+              {/* 中间控制栏 - 切换按钮和下拉选择 */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="absolute top-14 left-4 right-4 z-30 flex items-center justify-center gap-4"
+              >
+                {/* 切换按钮 */}
+                <button
+                  onClick={handleSwitchDemo}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:bg-white/10"
+                  style={{
+                    border: '1px solid rgba(59, 130, 246, 0.5)',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    backdropFilter: 'blur(10px)',
+                  }}
+                >
+                  <Layers className="w-4 h-4" style={{ color: '#60a5fa' }} />
+                  <span className="text-sm font-medium" style={{ color: '#60a5fa' }}>切换特效</span>
+                </button>
+
+                {/* 下拉选择 */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowDropdown(!showDropdown)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
+                    style={{
+                      border: '1px solid rgba(59, 130, 246, 0.5)',
+                      background: 'rgba(0, 0, 0, 0.5)',
+                      backdropFilter: 'blur(10px)',
+                    }}
+                  >
+                    <demoConfig.icon className="w-4 h-4" style={{ color: '#60a5fa' }} />
+                    <span className="text-sm font-medium" style={{ color: '#60a5fa' }}>{demoConfig.label}</span>
+                    <ChevronDown className="w-4 h-4" style={{ color: '#60a5fa' }} />
+                  </button>
+
+                  {/* 下拉菜单 */}
+                  <AnimatePresence>
+                    {showDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute top-full left-0 mt-2 w-40 rounded-lg overflow-hidden"
+                        style={{
+                          background: 'rgba(0, 0, 0, 0.8)',
+                          backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(59, 130, 246, 0.3)',
+                        }}
+                      >
+                        {DEMOS.map((demo) => {
+                          const Icon = demo.icon;
+                          const isActive = currentDemo === demo.id;
+                          return (
+                            <button
+                              key={demo.id}
+                              onClick={() => handleSelectDemo(demo.id)}
+                              className="flex items-center gap-2 w-full px-4 py-2.5 text-left transition-all duration-200 hover:bg-white/10"
+                            >
+                              <Icon
+                                className="w-4 h-4"
+                                style={{ color: isActive ? '#60a5fa' : 'rgba(156, 163, 175, 0.8)' }}
+                              />
+                              <span
+                                className="text-sm"
+                                style={{ color: isActive ? '#60a5fa' : 'rgba(156, 163, 175, 0.8)' }}
+                              >
+                                {demo.label}
+                              </span>
+                              {isActive && (
+                                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* WebGL 演示内容 */}
+        <div className={`absolute inset-0 ${isFullscreen ? 'pt-24' : 'pt-8'}`} style={{ cursor: 'default' }}>
+          <DemoContent demo={currentDemo} isDark={isDark} />
+        </div>
+
+        {/* 底部信息 - 恢复原来的在线人数 */}
+        {!isFullscreen && (
+          <div className="absolute bottom-4 left-4 right-4 z-20">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22c55e' }} />
+                  <span style={{ color: 'var(--text-muted)' }}>在线人数</span>
+                  <span className="font-mono font-bold" style={{ color: '#60a5fa' }}>80.45亿</span>
+                </div>
+                <div className="flex items-center gap-1.5 pl-3">
+                  <span style={{ color: 'var(--text-muted)' }}>国服人数:</span>
+                  <span className="font-mono font-bold" style={{ color: '#fbbf24' }}>14.12亿</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 全屏模式下的底部信息 */}
+        {isFullscreen && (
+          <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22c55e' }} />
+              <span style={{ color: 'var(--text-muted)' }}>在线人数</span>
+              <span className="font-mono font-bold" style={{ color: '#60a5fa' }}>80.45亿</span>
+              <span className="ml-3" style={{ color: 'var(--text-muted)' }}>国服:</span>
+              <span className="font-mono font-bold" style={{ color: '#fbbf24' }}>14.12亿</span>
+            </div>
+          </div>
+        )}
 
         {/* 角落装饰 */}
         <div className="absolute top-0 right-0 w-20 h-20 opacity-30">
