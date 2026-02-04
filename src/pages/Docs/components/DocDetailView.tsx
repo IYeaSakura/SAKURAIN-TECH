@@ -1,12 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Folder } from 'lucide-react';
 import { useDocument } from '../hooks';
-import { MarkdownRenderer } from './MarkdownRenderer';
 import { TocNav } from './TocNav';
-import { DocSearch } from './DocSearch';
 import { ThemeToggleButton } from './ThemeToggleButton';
 import type { SingleDoc, DocCategory, TocItem } from '../types';
+
+// Lazy load heavy components to reduce initial bundle size
+const DocSearch = lazy(() => import('./DocSearch').then(m => ({ default: m.DocSearch })));
+const MarkdownRenderer = lazy(() => import('./MarkdownRenderer').then(m => ({ default: m.MarkdownRenderer })));
 
 interface DocDetailViewProps {
   doc: SingleDoc;
@@ -158,11 +160,13 @@ export function DocDetailView({ doc, category, onBack }: DocDetailViewProps) {
           </div>
           <div className="flex items-center gap-2">
             {/* 文档内搜索 */}
-            <DocSearch 
-              onSearch={searchContent}
-              onSelectResult={handleSearchSelect}
-              placeholder="搜索本文档..."
-            />
+            <Suspense fallback={<div className="w-8 h-8" />}>
+              <DocSearch
+                onSearch={searchContent}
+                onSelectResult={handleSearchSelect}
+                placeholder="搜索本文档..."
+              />
+            </Suspense>
             {/* 主题切换按钮 */}
             <div className="hidden lg:block">
               <ThemeToggleButton />
@@ -198,7 +202,9 @@ export function DocDetailView({ doc, category, onBack }: DocDetailViewProps) {
               <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{doc.title}</h1>
                 <p className="text-lg mb-8" style={{ color: 'var(--text-secondary)' }}>{doc.description}</p>
-                <MarkdownRenderer content={content} />
+                <Suspense fallback={<div className="p-4 text-center" style={{ color: 'var(--text-muted)' }}>加载内容...</div>}>
+                  <MarkdownRenderer content={content} />
+                </Suspense>
               </motion.article>
             )}
           </div>
