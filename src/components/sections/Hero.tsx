@@ -892,34 +892,15 @@ const GlobeShowcase = memo(() => {
           <DemoContent demo={currentDemo} isDark={isDark} />
         </div>
 
-        {/* 底部信息 - 恢复原来的在线人数 */}
-        {!isFullscreen && (
-          <div className="absolute bottom-4 left-4 right-4 z-20">
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22c55e' }} />
-                  <span style={{ color: 'var(--text-muted)' }}>在线人数</span>
-                  <span className="font-mono font-bold" style={{ color: '#60a5fa' }}>80.45亿</span>
-                </div>
-                <div className="flex items-center gap-1.5 pl-3">
-                  <span style={{ color: 'var(--text-muted)' }}>国服人数:</span>
-                  <span className="font-mono font-bold" style={{ color: '#fbbf24' }}>14.12亿</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 全屏模式下的底部信息 */}
-        {isFullscreen && (
+        {/* 底部信息 - 只在地球Online页显示 */}
+        {currentDemo === 'cesium' && (
           <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center text-xs">
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22c55e' }} />
               <span style={{ color: 'var(--text-muted)' }}>在线人数</span>
               <span className="font-mono font-bold" style={{ color: '#60a5fa' }}>80.45亿</span>
               <span className="ml-3" style={{ color: 'var(--text-muted)' }}>国服:</span>
-              <span className="font-mono font-bold" style={{ color: '#fbbf24' }}>14.12亿</span>
+              <span className="font-mono font-bold" style={{ color: 'fbbf24' }}>14.12亿</span>
             </div>
           </div>
         )}
