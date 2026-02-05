@@ -1,0 +1,253 @@
+{
+  "data": {
+    "北京市": {
+      "population": 2183,
+      "unit": "万人",
+      "year": 2024,
+      "change": -3,
+      "changeUnit": "万人"
+    },
+    "天津市": {
+      "population": 1364,
+      "unit": "万人",
+      "year": 2024,
+      "change": 0,
+      "changeUnit": "万人"
+    },
+    "河北省": {
+      "population": 7378,
+      "unit": "万人",
+      "year": 2024,
+      "change": -15,
+      "changeUnit": "万人"
+    },
+    "山西省": {
+      "population": 3446,
+      "unit": "万人",
+      "year": 2024,
+      "change": -20,
+      "changeUnit": "万人"
+    },
+    "内蒙古自治区": {
+      "population": 2388,
+      "unit": "万人",
+      "year": 2024,
+      "change": -8,
+      "changeUnit": "万人"
+    },
+    "辽宁省": {
+      "population": 4155,
+      "unit": "万人",
+      "year": 2024,
+      "change": -27,
+      "changeUnit": "万人"
+    },
+    "吉林省": {
+      "population": 2317,
+      "unit": "万人",
+      "year": 2024,
+      "change": -22,
+      "changeUnit": "万人"
+    },
+    "黑龙江省": {
+      "population": 3029,
+      "unit": "万人",
+      "year": 2024,
+      "change": -33,
+      "changeUnit": "万人"
+    },
+    "上海市": {
+      "population": 2480,
+      "unit": "万人",
+      "year": 2024,
+      "change": -7,
+      "changeUnit": "万人"
+    },
+    "江苏省": {
+      "population": 8526,
+      "unit": "万人",
+      "year": 2024,
+      "change": 0,
+      "changeUnit": "万人"
+    },
+    "浙江省": {
+      "population": 6670,
+      "unit": "万人",
+      "year": 2024,
+      "change": 43,
+      "changeUnit": "万人"
+    },
+    "安徽省": {
+      "population": 6123,
+      "unit": "万人",
+      "year": 2024,
+      "change": 2,
+      "changeUnit": "万人"
+    },
+    "福建省": {
+      "population": 4193,
+      "unit": "万人",
+      "year": 2024,
+      "change": 10,
+      "changeUnit": "万人"
+    },
+    "江西省": {
+      "population": 4502,
+      "unit": "万人",
+      "year": 2024,
+      "change": -13,
+      "changeUnit": "万人"
+    },
+    "山东省": {
+      "population": 10080,
+      "unit": "万人",
+      "year": 2024,
+      "change": -43,
+      "changeUnit": "万人"
+    },
+    "河南省": {
+      "population": 9785,
+      "unit": "万人",
+      "year": 2024,
+      "change": -30,
+      "changeUnit": "万人"
+    },
+    "湖北省": {
+      "population": 5834,
+      "unit": "万人",
+      "year": 2024,
+      "change": -4,
+      "changeUnit": "万人"
+    },
+    "湖南省": {
+      "population": 6539,
+      "unit": "万人",
+      "year": 2024,
+      "change": -29,
+      "changeUnit": "万人"
+    },
+    "广东省": {
+      "population": 12780,
+      "unit": "万人",
+      "year": 2024,
+      "change": 74,
+      "changeUnit": "万人"
+    },
+    "广西壮族自治区": {
+      "population": 5013,
+      "unit": "万人",
+      "year": 2024,
+      "change": -14,
+      "changeUnit": "万人"
+    },
+    "海南省": {
+      "population": 1048,
+      "unit": "万人",
+      "year": 2024,
+      "change": 5,
+      "changeUnit": "万人"
+    },
+    "重庆市": {
+      "population": 3190,
+      "unit": "万人",
+      "year": 2024,
+      "change": -1,
+      "changeUnit": "万人"
+    },
+    "四川省": {
+      "population": 8364,
+      "unit": "万人",
+      "year": 2024,
+      "change": -4,
+      "changeUnit": "万人"
+    },
+    "贵州省": {
+      "population": 3860,
+      "unit": "万人",
+      "year": 2024,
+      "change": -5,
+      "changeUnit": "万人"
+    },
+    "云南省": {
+      "population": 4655,
+      "unit": "万人",
+      "year": 2024,
+      "change": -18,
+      "changeUnit": "万人"
+    },
+    "西藏自治区": {
+      "population": 370,
+      "unit": "万人",
+      "year": 2024,
+      "change": 5,
+      "changeUnit": "万人"
+    },
+    "陕西省": {
+      "population": 3953,
+      "unit": "万人",
+      "year": 2024,
+      "change": 1,
+      "changeUnit": "万人"
+    },
+    "甘肃省": {
+      "population": 2458,
+      "unit": "万人",
+      "year": 2024,
+      "change": -7,
+      "changeUnit": "万人"
+    },
+    "青海省": {
+      "population": 593,
+      "unit": "万人",
+      "year": 2024,
+      "change": -1,
+      "changeUnit": "万人"
+    },
+    "宁夏回族自治区": {
+      "population": 729,
+      "unit": "万人",
+      "year": 2024,
+      "change": 0,
+      "changeUnit": "万人"
+    },
+    "新疆维吾尔自治区": {
+      "population": 2623,
+      "unit": "万人",
+      "year": 2024,
+      "change": 25,
+      "changeUnit": "万人"
+    },
+    "台湾省": {
+      "population": 2300,
+      "unit": "万人",
+      "year": 2024,
+      "change": 0,
+      "changeUnit": "万人",
+      "note": "模拟数据"
+    },
+    "香港特别行政区": {
+      "population": 750,
+      "unit": "万人",
+      "year": 2024,
+      "change": 0,
+      "changeUnit": "万人",
+      "note": "模拟数据"
+    },
+    "澳门特别行政区": {
+      "population": 68,
+      "unit": "万人",
+      "year": 2024,
+      "change": 0,
+      "changeUnit": "万人",
+      "note": "模拟数据"
+    }
+  },
+  "summary": {
+    "total": 141178,
+    "unit": "万人",
+    "year": 2024,
+    "note": "中国大陆地区数据，不含港澳台"
+  },
+  "source": "聚汇数据 (https://population.gotohui.com/topic-4861)",
+  "updateDate": "2025-06-10"
+}
