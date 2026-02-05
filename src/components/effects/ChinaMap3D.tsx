@@ -895,6 +895,28 @@ export function ChinaMap3D({ isDark }: { isDark: boolean }) {
     };
   }, []);
 
+  // 监听全屏变化，强制更新尺寸
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setTimeout(() => {
+        if (containerRef.current) {
+          const { width, height } = containerRef.current.getBoundingClientRect();
+          setCanvasSize({ width, height });
+        }
+      }, 100);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
   const handleRegionClick = useCallback((regionData: RegionData) => {
     setRegionStack(prev => {
       if (prev.length < 2) {

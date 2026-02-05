@@ -47,6 +47,8 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
                 src="/image/logo.webp"
                 alt="SAKURAIN"
                 className="w-10 h-10 object-contain"
+                loading="lazy"
+                decoding="async"
               />
               <span
                 className="font-pixel"

@@ -71,6 +71,9 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                 src="/image/logo.webp"
                 alt="SAKURAIN"
                 className="w-8 h-8 sm:w-10 sm:h-10 object-contain flex-shrink-0"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
               />
               <span
                 className="font-pixel text-lg sm:text-2xl lg:text-3xl truncate max-w-[120px] sm:max-w-none"
