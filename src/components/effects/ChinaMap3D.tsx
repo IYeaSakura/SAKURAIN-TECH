@@ -557,28 +557,30 @@ function HoverInfo({
   const data = getPlayerData(name);
 
   return (
-    <div className="min-w-[200px] px-5 py-4 rounded-2xl border border-cyan-400/40 bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl shadow-2xl shadow-cyan-500/30">
-      <div className="flex items-center gap-3 mb-3 pb-3 border-b border-cyan-400/30">
-        <div className="w-2 h-8 rounded-full bg-gradient-to-b from-cyan-400 to-cyan-600 shadow-lg shadow-cyan-400/50" />
+    <div className="min-w-[280px] p-4 rounded-xl border border-cyan-500/30 bg-slate-900/60 backdrop-blur-md shadow-lg shadow-cyan-500/20">
+      <div className="flex items-center gap-3 mb-3 pb-3 border-b border-cyan-500/20">
+        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-lg shadow-cyan-400/50 flex items-center justify-center">
+          <span className="text-white text-lg font-bold">{name.charAt(0)}</span>
+        </div>
         <div className="flex-1">
-          <div className="text-cyan-300 font-bold text-lg tracking-wide">{name}</div>
-          <div className="text-cyan-500/60 text-xs mt-0.5">区域信息</div>
+          <div className="font-primary text-base font-bold tracking-wide" style={{ color: 'var(--text-primary)' }}>{name}</div>
+          <div className="font-primary text-xs mt-1" style={{ color: 'var(--text-muted)' }}>区域详情</div>
         </div>
       </div>
       {data.hasData ? (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-slate-400 text-sm">玩家人数</span>
-            <span className="text-cyan-400 font-mono font-bold text-base">{(data.players / 10000).toFixed(2)} <span className="text-xs text-cyan-500/70">亿</span></span>
+        <div className="space-y-3">
+          <div className="p-2 rounded-lg bg-slate-800/40 border border-cyan-500/10">
+            <div className="font-primary text-xs mb-1" style={{ color: 'var(--text-muted)' }}>玩家人数</div>
+            <div className="font-primary font-mono font-bold text-base" style={{ color: '#0E639C' }}>{data.players.toFixed(0)}<span className="text-xs ml-1" style={{ color: '#0E639C80' }}>万</span></div>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-400 text-sm">在线人数</span>
-            <span className="text-emerald-400 font-mono font-bold text-base">{data.online} <span className="text-xs text-emerald-500/70">万</span></span>
+
+          <div className="text-center py-2 px-3 rounded-lg bg-slate-800/30 border border-cyan-500/10">
+            <span className="font-primary text-xs" style={{ color: 'var(--text-muted)' }}>数据来源：聚汇数据 (2024年)</span>
           </div>
         </div>
       ) : (
-        <div className="text-center py-2">
-          <span className="text-slate-400 text-sm">仅供演示，暂无数据</span>
+        <div className="text-center py-3 px-4 rounded-lg bg-slate-800/30 border border-cyan-500/10">
+          <span className="font-primary text-sm" style={{ color: 'var(--text-muted)' }}>仅供演示，暂无数据</span>
         </div>
       )}
     </div>
@@ -796,11 +798,11 @@ function Loader() {
   return (
     <div className="w-full h-full flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div className="relative w-16 h-16">
+        <div className="relative w-20 h-20">
           <div className="absolute inset-0 border-2 border-cyan-500/30 rounded-full" />
           <div className="absolute inset-0 border-t-2 border-cyan-400 rounded-full animate-spin" />
         </div>
-        <span className="text-sm text-cyan-400 tracking-wider">加载地图数据...</span>
+        <span className="font-primary text-base tracking-wider" style={{ color: '#0E639C' }}>加载地图数据...</span>
       </div>
     </div>
   );
@@ -810,10 +812,10 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   return (
     <div className="w-full h-full flex items-center justify-center">
       <div className="flex flex-col items-center gap-4 p-8 rounded-xl border border-red-500/30 bg-slate-900/80">
-        <span className="text-red-400 text-sm">{message}</span>
+        <span className="font-primary text-base" style={{ color: '#ef4444' }}>{message}</span>
         <button
           onClick={onRetry}
-          className="px-6 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm transition-colors"
+          className="px-6 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-base font-semibold transition-colors"
         >
           重新加载
         </button>
@@ -832,19 +834,22 @@ function Breadcrumb({
   currentName: string;
 }) {
   return (
-    <div className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl backdrop-blur-md border border-cyan-500/30 bg-slate-900/60">
+    <div className="flex items-center gap-2 px-5 py-3 rounded-xl border border-cyan-500/30 bg-slate-900/60 backdrop-blur-md">
       {stack.length === 0 ? (
-        <span className="text-cyan-400 font-semibold">中国</span>
+        <span className="font-primary text-base font-bold" style={{ color: '#0E639C' }}>中国</span>
       ) : (
         <>
           <button
             onClick={() => onBack(-1)}
-            className="text-slate-400 hover:text-cyan-400 transition-colors"
+            className="font-primary text-base font-semibold transition-colors"
+            style={{ color: 'var(--text-muted)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#0E639C'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
           >
             中国
           </button>
-          <span className="text-slate-600">/</span>
-          <span className="text-cyan-400 font-semibold">{currentName}</span>
+          <span className="font-primary text-base" style={{ color: 'var(--text-muted)' }}>/</span>
+          <span className="font-primary text-base font-bold" style={{ color: '#0E639C' }}>{currentName}</span>
         </>
       )}
     </div>
@@ -948,16 +953,41 @@ export function ChinaMap3D({ isDark }: { isDark: boolean }) {
 
   return (
     <div ref={containerRef} className="w-full h-full relative">
-      {/* 头部导航 */}
-      <div className="absolute top-4 left-4 z-10">
-        <Breadcrumb stack={regionStack} onBack={handleBack} currentName={currentName} />
-      </div>
+      {/* 顶部装饰条 */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50" />
+      <div className="absolute top-0 left-0 w-20 h-20 border-t-2 border-l-2 border-cyan-500/30 rounded-tl-3xl" />
+      <div className="absolute top-0 right-0 w-20 h-20 border-t-2 border-r-2 border-cyan-500/30 rounded-tr-3xl" />
+
+      {/* 底部装饰条 */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50" />
+      <div className="absolute bottom-0 left-0 w-20 h-20 border-b-2 border-l-2 border-cyan-500/30 rounded-bl-3xl" />
+      <div className="absolute bottom-0 right-0 w-20 h-20 border-b-2 border-r-2 border-cyan-500/30 rounded-br-3xl" />
+
+      {/* 头部标题面板 - 只在地球页面显示 */}
+      {regionStack.length === 0 && (
+        <div className="absolute top-4 left-4 z-10">
+          <div className="px-6 py-4 rounded-xl border border-cyan-500/30 bg-slate-900/60 backdrop-blur-md">
+            <div className="font-primary text-lg font-bold tracking-wide" style={{ color: '#0E639C' }}>中国地图 · 玩家分布</div>
+            <div className="font-primary text-xs mt-1" style={{ color: 'var(--text-muted)' }}>实时数据监控平台</div>
+          </div>
+        </div>
+      )}
+
+      {/* 头部导航 - 下钻时显示 */}
+      {regionStack.length > 0 && (
+        <div className="absolute top-4 left-4 z-10">
+          <Breadcrumb stack={regionStack} onBack={handleBack} currentName={currentName} />
+        </div>
+      )}
 
       {/* 返回按钮 */}
       {regionStack.length > 0 && (
         <button
           onClick={handleBack}
-          className="absolute top-4 right-4 z-10 px-4 py-2 rounded-xl border border-cyan-500/30 bg-slate-900/60 backdrop-blur-md text-cyan-400 text-sm hover:bg-cyan-500/20 transition-all flex items-center gap-2"
+          className="absolute top-4 right-4 z-10 px-5 py-3 rounded-xl border border-cyan-500/30 bg-slate-900/60 backdrop-blur-md font-primary text-base font-semibold transition-all flex items-center gap-2"
+          style={{ color: '#0E639C' }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = '#6A9955'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = '#0E639C'; }}
         >
           <span>←</span>
           <span>返回上级</span>
@@ -975,9 +1005,45 @@ export function ChinaMap3D({ isDark }: { isDark: boolean }) {
       {/* 提示 - 只在地球页面显示 */}
       {regionStack.length === 0 && (
         <div className="absolute bottom-4 right-4 z-10">
-          <span className="text-xs px-4 py-2 rounded-full border border-cyan-500/20 bg-slate-900/60 backdrop-blur-md text-slate-400">
+          <span className="font-primary text-sm px-5 py-3 rounded-full border border-cyan-500/20 bg-slate-900/60 backdrop-blur-md" style={{ color: 'var(--text-muted)' }}>
             点击省份下钻 · 悬停查看详情
           </span>
+        </div>
+      )}
+
+      {/* 数据统计面板 - 地球页面显示 */}
+      {regionStack.length === 0 && (
+        <div className="absolute bottom-4 left-4 z-10">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap gap-3">
+              <div className="px-5 py-3 rounded-xl border border-cyan-500/30 bg-slate-900/60 backdrop-blur-md">
+                <div className="font-primary text-xs mb-1" style={{ color: 'var(--text-muted)' }}>国服玩家</div>
+                <div className="font-primary font-mono font-bold text-lg" style={{ color: '#0E639C' }}>14.12 <span className="text-xs ml-1" style={{ color: '#0E639C80' }}>亿</span></div>
+              </div>
+              <div className="px-5 py-3 rounded-xl border border-cyan-500/30 bg-slate-900/60 backdrop-blur-md">
+                <div className="font-primary text-xs mb-1" style={{ color: 'var(--text-muted)' }}>全球玩家</div>
+                <div className="font-primary font-mono font-bold text-lg" style={{ color: '#6A9955' }}>80.45 <span className="text-xs ml-1" style={{ color: '#6A995580' }}>亿</span></div>
+              </div>
+              <div className="px-5 py-3 rounded-xl border border-cyan-500/30 bg-slate-900/60 backdrop-blur-md">
+                <div className="font-primary text-xs mb-1" style={{ color: 'var(--text-muted)' }}>区域数量</div>
+                <div className="font-primary font-mono font-bold text-lg" style={{ color: '#9B59B6' }}>34 <span className="text-xs ml-1" style={{ color: '#9B59B680' }}>个</span></div>
+              </div>
+            </div>
+            <div className="text-center px-3 py-2 rounded-lg bg-slate-800/30 border border-cyan-500/10">
+              <span className="font-primary text-xs" style={{ color: 'var(--text-muted)' }}>数据来源：聚汇数据 (2024年)</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 数据统计面板 - 下钻时显示 */}
+      {regionStack.length > 0 && (
+        <div className="absolute bottom-4 left-4 right-4 z-10">
+          <div className="flex flex-col gap-3 items-center">
+            <div className="text-center px-4 py-3 rounded-xl border border-cyan-500/30 bg-slate-900/60 backdrop-blur-md">
+              <span className="font-primary text-sm" style={{ color: 'var(--text-muted)' }}>仅供演示，暂无数据</span>
+            </div>
+          </div>
         </div>
       )}
 

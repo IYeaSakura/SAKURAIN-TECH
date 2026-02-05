@@ -897,9 +897,9 @@ const GlobeShowcase = memo(() => {
           <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center text-xs">
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22c55e' }} />
-              <span style={{ color: 'var(--text-muted)' }}>在线人数</span>
+              <span style={{ color: 'var(--text-muted)' }}>全球玩家</span>
               <span className="font-mono font-bold" style={{ color: '#60a5fa' }}>80.45亿</span>
-              <span className="ml-3" style={{ color: 'var(--text-muted)' }}>国服:</span>
+              <span className="ml-3" style={{ color: 'var(--text-muted)' }}>国服玩家:</span>
               <span className="font-mono font-bold" style={{ color: 'fbbf24' }}>14.12亿</span>
             </div>
           </div>
