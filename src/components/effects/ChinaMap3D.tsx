@@ -8,8 +8,7 @@ import {
   CAMERA_CONFIG,
   PROJECTION_CONFIG,
   getPlayerData,
-  getMaxPlayers,
-  getTotalChinaPlayers
+  getMaxPlayers
 } from './ChinaMap3DConfig';
 
 // ============ 类型定义 ============
@@ -973,21 +972,6 @@ export function ChinaMap3D({ isDark }: { isDark: boolean }) {
         />
       </div>
 
-      {/* 图例 */}
-      <div className="absolute bottom-4 left-4 z-10 p-4 rounded-xl border border-cyan-500/20 bg-slate-900/60 backdrop-blur-md">
-        <div className="text-xs text-cyan-300 mb-2 font-medium">地球Online在线人数</div>
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm bg-cyan-400 shadow shadow-cyan-400/50" />
-            <span className="text-xs text-slate-300">国服总人数: <span className="text-cyan-400 font-mono font-bold">{(getTotalChinaPlayers() / 10000).toFixed(2)}</span> 亿</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm bg-purple-400 shadow shadow-purple-400/50" />
-            <span className="text-xs text-slate-300">当前区域: <span className="text-purple-400 font-mono font-bold">{currentName}</span></span>
-          </div>
-        </div>
-      </div>
-
       {/* 提示 - 只在地球页面显示 */}
       {regionStack.length === 0 && (
         <div className="absolute bottom-4 right-4 z-10">
@@ -996,13 +980,6 @@ export function ChinaMap3D({ isDark }: { isDark: boolean }) {
           </span>
         </div>
       )}
-
-      {/* 调试信息 - 显示当前悬浮的区域 */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
-        <span className="text-xs px-4 py-2 rounded-full border border-yellow-500/30 bg-slate-900/80 backdrop-blur-md text-yellow-400">
-          悬浮区域: <span className="font-bold">{hoveredRegion || '无'}</span>
-        </span>
-      </div>
 
       {isVisible ? (
         loading ? (
