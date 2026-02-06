@@ -692,7 +692,7 @@ const GlobeShowcase = memo(() => {
           isFullscreen ? 'w-full h-full rounded-none' : 'w-[500px] h-[500px]'
         }`}
         style={{
-          background: 'var(--bg-card)',
+          background: '#0D0D0D',
           border: isFullscreen ? 'none' : '2px solid',
           borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
           boxShadow: isHovered && !isFullscreen
@@ -724,7 +724,7 @@ const GlobeShowcase = memo(() => {
                 className="flex items-center justify-center w-7 h-7 rounded-md transition-all duration-200 hover:bg-white/10"
                 style={{
                   border: '1px solid rgba(59, 130, 246, 0.3)',
-                  background: 'rgba(0, 0, 0, 0.3)',
+                  background: 'rgba(0, 0, 0, 0.5)',
                   cursor: 'pointer',
                 }}
                 title="切换特效"
@@ -739,7 +739,7 @@ const GlobeShowcase = memo(() => {
               className="flex items-center justify-center w-7 h-7 rounded-md transition-all duration-200 hover:bg-white/10"
               style={{
                 border: '1px solid rgba(59, 130, 246, 0.3)',
-                background: 'rgba(0, 0, 0, 0.3)',
+                background: 'rgba(0, 0, 0, 0.5)',
                 cursor: 'pointer',
               }}
               title={isFullscreen ? "退出全屏" : "全屏观看"}
