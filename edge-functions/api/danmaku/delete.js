@@ -17,10 +17,10 @@ export async function onRequestPost(context) {
       });
     }
 
-    // 获取 KV
-    let kv = context.env.DANMAKU_KV;
-    if (!kv && typeof DANMAKU_KV !== 'undefined') {
-      kv = DANMAKU_KV;
+    // 直接访问全局变量 DANMAKU_KV
+    let kv = DANMAKU_KV;
+    if (!kv && context.env) {
+      kv = context.env.DANMAKU_KV;
     }
     
     if (!kv) {
