@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { usePrefersReducedMotion } from '@/lib/performance';
+import { DanmakuSatellite } from './DanmakuSatellite';
 
 // 城市数据 - 主要国际贸易城市
 const CITIES = [
@@ -344,6 +345,10 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
           </div>
         </div>
       </div>
+
+      {isLoaded && viewerRef.current && (
+        <DanmakuSatellite viewer={viewerRef.current} isDark={isDark} />
+      )}
 
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-card)]">
