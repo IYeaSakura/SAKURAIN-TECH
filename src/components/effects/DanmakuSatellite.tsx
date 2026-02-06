@@ -43,6 +43,7 @@ interface Danmaku {
   inclination: number;
   altitude: number;
   orbitType: OrbitType;
+  raan?: number; // 升交点赤经 (Right Ascension of Ascending Node)，用于确定轨道平面
 }
 
 interface DanmakuSatelliteProps {
@@ -153,6 +154,9 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     // 轨道倾角：-90°到+90°均匀分布（从赤道到极地）
     const inclination = (Math.random() - 0.5) * Math.PI;
     
+    // 升交点赤经 (RAAN)：0-360度均匀分布，确定轨道平面在空间中的方向
+    const raan = Math.random() * Math.PI * 2;
+    
     // 高度：在轨道范围内均匀分布
     const altitude = range.min + Math.random() * (range.max - range.min);
     
@@ -162,7 +166,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     // 方向：正向/反向概率均等（50%）
     const speed = angularVelocity * (Math.random() > 0.5 ? 1 : -1);
     
-    return { angle, inclination, altitude, speed, orbitType: type };
+    return { angle, inclination, altitude, speed, orbitType: type, raan };
   }, []);
 
   // 加载北斗卫星数据（本地JSON）
@@ -197,11 +201,22 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       if (response.ok) {
         const data = await response.json();
         debugLog('Fetched danmakus count:', data.length);
-        // 为旧数据补充轨道类型
-        const processedData = data.map((d: Partial<Danmaku>) => ({
-          ...generateOrbitParams(d.orbitType || 'medium'),
-          ...d,
-        }));
+        // 为旧数据补充轨道参数和timestamp
+        const processedData = data.map((d: Partial<Danmaku>) => {
+          const orbitParams = d.orbitType 
+            ? generateOrbitParams(d.orbitType)
+            : generateOrbitParams('medium');
+          return {
+            ...orbitParams,
+            timestamp: Date.now(), // 如果没有timestamp，使用当前时间
+            ...d,
+            // 确保必须有这些字段
+            id: d.id || `danmaku-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            text: d.text || '',
+            userId: d.userId || 'unknown',
+            color: d.color || '#60a5fa',
+          } as Danmaku;
+        });
         setDanmakus(processedData);
       }
     } catch (error) {
@@ -333,24 +348,36 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       ? [...danmakus, ...beidouSatellites]
       : danmakus;
 
-    // 计算卫星位置
+    // 计算卫星位置（考虑升交点赤经 RAAN）
     const calculatePosition = (danmaku: Danmaku, elapsedSeconds: number) => {
       const radius = EARTH_RADIUS + danmaku.altitude;
       // speed 已经是 rad/s，直接乘以时间（秒）得到转过的角度
       const currentAngle = danmaku.angle + (danmaku.speed * elapsedSeconds);
-      const x = Math.cos(currentAngle) * radius;
-      const y = Math.sin(currentAngle) * radius;
+      
+      // 在轨道平面内的坐标
+      const xOrbital = Math.cos(currentAngle) * radius;
+      const yOrbital = Math.sin(currentAngle) * radius;
+      
       const inclination = danmaku.inclination;
-      const rotatedY = y * Math.cos(inclination);
-      const rotatedZ = y * Math.sin(inclination);
-      return new Cesium.Cartesian3(x, rotatedY, rotatedZ);
+      const raan = danmaku.raan || 0; // 升交点赤经，默认为0
+      
+      // 应用倾角旋转（绕x轴）和升交点赤经旋转（绕z轴）
+      // 步骤1: 应用倾角（绕x轴旋转）
+      const yAfterInclination = yOrbital * Math.cos(inclination);
+      const zAfterInclination = yOrbital * Math.sin(inclination);
+      
+      // 步骤2: 应用升交点赤经 RAAN（绕z轴旋转）
+      const cosRaan = Math.cos(raan);
+      const sinRaan = Math.sin(raan);
+      const x = xOrbital * cosRaan - yAfterInclination * sinRaan;
+      const y = xOrbital * sinRaan + yAfterInclination * cosRaan;
+      const z = zAfterInclination;
+      
+      return new Cesium.Cartesian3(x, y, z);
     };
 
     // 创建卫星实体（包含文字和点）
     const createSatelliteEntity = (danmaku: Danmaku) => {
-      // 判断是否为北斗卫星 (ID格式: BD-G3-1, BD-M2-1 等)
-      const isBeidou = danmaku.id.startsWith('BD-') || danmaku.userId === 'beidou';
-      
       const entity = viewer.entities.add({
         position: new Cesium.CallbackProperty(() => {
           const now = Date.now();
@@ -358,57 +385,65 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           return calculatePosition(danmaku, elapsed);
         }, false) as unknown as Cesium.PositionProperty,
         point: {
-          pixelSize: isBeidou ? 6 : 8,
-          color: isBeidou ? Cesium.Color.GOLD : Cesium.Color.fromCssColorString(danmaku.color),
-          outlineColor: isBeidou ? Cesium.Color.ORANGE : Cesium.Color.WHITE,
-          outlineWidth: isBeidou ? 1 : 2,
+          pixelSize: 8,
+          color: Cesium.Color.fromCssColorString(danmaku.color),
+          outlineColor: Cesium.Color.WHITE,
+          outlineWidth: 2,
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          scaleByDistance: new Cesium.NearFarScalar(1.5e7, isBeidou ? 1.2 : 1.5, 5.0e7, 0.8),
+          scaleByDistance: new Cesium.NearFarScalar(1.5e7, 1.5, 5.0e7, 0.8),
           show: showSatellite && showAll,
         },
         label: {
           text: danmaku.text,
-          font: isBeidou ? 'bold 12px "Microsoft YaHei", sans-serif' : 'bold 14px "Microsoft YaHei", sans-serif',
-          fillColor: isBeidou ? Cesium.Color.GOLD : Cesium.Color.fromCssColorString(danmaku.color),
+          font: 'bold 14px "Microsoft YaHei", sans-serif',
+          fillColor: Cesium.Color.fromCssColorString(danmaku.color),
           outlineColor: Cesium.Color.BLACK,
-          outlineWidth: isBeidou ? 2 : 3,
+          outlineWidth: 3,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          pixelOffset: new Cesium.Cartesian2(0, -20),
+          pixelOffset: new Cesium.Cartesian2(0, -25),
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
           show: showText && showAll,
-          scaleByDistance: new Cesium.NearFarScalar(1.5e7, isBeidou ? 0.8 : 1.0, 5.0e7, 0.7),
+          scaleByDistance: new Cesium.NearFarScalar(1.5e7, 1.0, 5.0e7, 0.7),
           translucencyByDistance: new Cesium.NearFarScalar(3.0e7, 1.0, 5.0e7, 0.5),
         },
       });
       return entity;
     };
 
-    // 创建轨道线
+    // 创建轨道线（考虑升交点赤经 RAAN）
     const createOrbitLine = (danmaku: Danmaku) => {
-      const isBeidou = danmaku.id.startsWith('BD-');
       const radius = EARTH_RADIUS + danmaku.altitude;
       const inclination = danmaku.inclination;
       const angleOffset = danmaku.angle;
+      const raan = danmaku.raan || 0;
+      const cosRaan = Math.cos(raan);
+      const sinRaan = Math.sin(raan);
 
       const positions: Cesium.Cartesian3[] = [];
       for (let i = 0; i <= 64; i++) {
         const theta = (i / 64) * Math.PI * 2 + angleOffset;
-        const x = Math.cos(theta) * radius;
-        const y = Math.sin(theta) * radius;
-        const rotatedY = y * Math.cos(inclination);
-        const rotatedZ = y * Math.sin(inclination);
-        positions.push(new Cesium.Cartesian3(x, rotatedY, rotatedZ));
+        const xOrbital = Math.cos(theta) * radius;
+        const yOrbital = Math.sin(theta) * radius;
+        
+        // 应用倾角（绕x轴）
+        const yAfterInclination = yOrbital * Math.cos(inclination);
+        const zAfterInclination = yOrbital * Math.sin(inclination);
+        
+        // 应用升交点赤经 RAAN（绕z轴）
+        const x = xOrbital * cosRaan - yAfterInclination * sinRaan;
+        const y = xOrbital * sinRaan + yAfterInclination * cosRaan;
+        const z = zAfterInclination;
+        
+        positions.push(new Cesium.Cartesian3(x, y, z));
       }
 
       const entity = viewer.entities.add({
         polyline: {
           positions: positions,
-          width: isBeidou ? 1 : 1.5,
+          width: 1.5,
           material: new Cesium.PolylineDashMaterialProperty({
-            color: isBeidou 
-              ? Cesium.Color.GOLD.withAlpha(0.3) 
-              : Cesium.Color.fromCssColorString(danmaku.color).withAlpha(0.4),
-            dashLength: isBeidou ? 12 : 16,
+            color: Cesium.Color.fromCssColorString(danmaku.color).withAlpha(0.4),
+            dashLength: 16,
           }),
           show: showOrbitLine && showAll,
         },
