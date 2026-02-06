@@ -46,6 +46,15 @@
   ],
   "friends": [
     {
+      "id": "nektropy",
+      "name": "熵",
+      "url": "https://nektropy.github.io",
+      "icon": "https://nektropy.github.io/head.png",
+      "description": "世界本就浑浊，罪与爱同歌",
+      "category": "blogs",
+      "featured": true
+    },
+    {
       "id": "mclans",
       "name": "Mc服务器演示站",
       "url": "https://mclans.sakurain.net",
