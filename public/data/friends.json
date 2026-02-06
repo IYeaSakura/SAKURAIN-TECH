@@ -1,0 +1,166 @@
+{
+  "title": "友情链接",
+  "subtitle": "与优秀的网站建立连接，共同探索技术的无限可能",
+  "description": "这里展示了我们推荐的优质网站和技术社区，欢迎访问交流",
+  "applyInfo": {
+    "title": "申请友链",
+    "description": "如果您希望与我们交换友情链接，请通过以下方式联系我们",
+    "requirements": [
+      "网站内容健康、合法",
+      "网站稳定运行，无恶意代码",
+      "技术类、设计类、创意类网站优先"
+    ],
+    "contact": "Yae_SakuRain@outlook.com"
+  },
+  "categories": [
+    {
+      "id": "demo",
+      "name": "演示网站",
+      "icon": "Monitor",
+      "description": "我们的演示项目和示例网站"
+    },
+    {
+      "id": "tech",
+      "name": "技术社区",
+      "icon": "Code",
+      "description": "优秀的技术社区和开发者平台"
+    },
+    {
+      "id": "design",
+      "name": "设计资源",
+      "icon": "Palette",
+      "description": "设计灵感与资源网站"
+    },
+    {
+      "id": "tools",
+      "name": "开发工具",
+      "icon": "Wrench",
+      "description": "实用的开发工具和服务"
+    },
+    {
+      "id": "blogs",
+      "name": "技术博客",
+      "icon": "BookOpen",
+      "description": "个人技术博客和知识分享"
+    }
+  ],
+  "friends": [
+    {
+      "id": "mclans",
+      "name": "Mc服务器官网演示站",
+      "url": "https://mclans.sakurain.net",
+      "icon": "https://sakurain.net/image/logo.webp",
+      "description": "Minecraft 服务器官方网站演示项目，展示服务器信息和玩家社区功能",
+      "category": "demo",
+      "featured": true
+    },
+    {
+      "id": "github",
+      "name": "GitHub",
+      "url": "https://github.com",
+      "icon": "https://github.com/favicon.ico",
+      "description": "全球最大的代码托管平台，开发者的乐园",
+      "category": "tech",
+      "featured": false
+    },
+    {
+      "id": "stackoverflow",
+      "name": "Stack Overflow",
+      "url": "https://stackoverflow.com",
+      "icon": "https://stackoverflow.com/favicon.ico",
+      "description": "程序员问答社区，解决技术难题的首选",
+      "category": "tech",
+      "featured": false
+    },
+    {
+      "id": "mdn",
+      "name": "MDN Web Docs",
+      "url": "https://developer.mozilla.org",
+      "icon": "https://developer.mozilla.org/favicon.ico",
+      "description": "Mozilla 开发者网络，最权威的 Web 技术文档",
+      "category": "tech",
+      "featured": false
+    },
+    {
+      "id": "dribbble",
+      "name": "Dribbble",
+      "url": "https://dribbble.com",
+      "icon": "https://dribbble.com/favicon.ico",
+      "description": "设计师社区，发现顶级设计灵感",
+      "category": "design",
+      "featured": false
+    },
+    {
+      "id": "behance",
+      "name": "Behance",
+      "url": "https://www.behance.net",
+      "icon": "https://www.behance.net/favicon.ico",
+      "description": "Adobe 旗下创意作品展示平台",
+      "category": "design",
+      "featured": false
+    },
+    {
+      "id": "figma",
+      "name": "Figma",
+      "url": "https://www.figma.com",
+      "icon": "https://www.figma.com/favicon.ico",
+      "description": "协作式界面设计工具",
+      "category": "design",
+      "featured": false
+    },
+    {
+      "id": "vercel",
+      "name": "Vercel",
+      "url": "https://vercel.com",
+      "icon": "https://vercel.com/favicon.ico",
+      "description": "前端部署平台，支持 Next.js 等框架",
+      "category": "tools",
+      "featured": false
+    },
+    {
+      "id": "netlify",
+      "name": "Netlify",
+      "url": "https://www.netlify.com",
+      "icon": "https://www.netlify.com/favicon.ico",
+      "description": "静态网站托管和持续部署平台",
+      "category": "tools",
+      "featured": false
+    },
+    {
+      "id": "codepen",
+      "name": "CodePen",
+      "url": "https://codepen.io",
+      "icon": "https://codepen.io/favicon.ico",
+      "description": "前端代码在线编辑和分享平台",
+      "category": "tools",
+      "featured": false
+    },
+    {
+      "id": "css-tricks",
+      "name": "CSS-Tricks",
+      "url": "https://css-tricks.com",
+      "icon": "https://css-tricks.com/favicon.ico",
+      "description": "CSS 技巧和前端开发教程",
+      "category": "blogs",
+      "featured": false
+    },
+    {
+      "id": "smashingmagazine",
+      "name": "Smashing Magazine",
+      "url": "https://www.smashingmagazine.com",
+      "icon": "https://www.smashingmagazine.com/favicon.ico",
+      "description": "Web 设计和开发专业杂志",
+      "category": "blogs",
+      "featured": false
+    },
+    {
+      "id": "webdev",
+      "name": "web.dev",
+      "url": "https://web.dev",
+      "icon": "https://web.dev/favicon.ico",
+      "description": "Google 的 Web 开发者资源平台",
+      "category": "blogs",
+      "featured": false
+    }
+  ]
+}

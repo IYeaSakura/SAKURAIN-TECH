@@ -75,3 +75,9 @@ export { CesiumGlobe } from './CesiumGlobe';
 // 中国3D地图
 export { ChinaMap3D } from './ChinaMap3D';
 export * from './ChinaMap3DConfig';
+
+// 安全保护
+export { SecurityProtection } from './SecurityProtection';
+
+// WebContainer 终端
+export { WebTerminal } from './WebTerminal';

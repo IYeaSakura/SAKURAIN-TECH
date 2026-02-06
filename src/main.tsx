@@ -4,8 +4,9 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import './index.css';
 import App from './App.tsx';
 
-// 懒加载 Docs 页面
+// 懒加载页面
 const DocsPage = lazy(() => import('./pages/Docs'));
+const FriendsPage = lazy(() => import('./pages/Friends'));
 
 // 简单的加载占位组件
 const PageFallback = () => (
@@ -54,6 +55,14 @@ createRoot(document.getElementById('root')!).render(
           element={
             <Suspense fallback={<PageFallback />}>
               <DocsPage />
+            </Suspense>
+          } 
+        />
+        <Route 
+          path="/friends" 
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <FriendsPage />
             </Suspense>
           } 
         />

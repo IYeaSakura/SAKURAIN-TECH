@@ -1,9 +1,11 @@
 import { memo, useState, useCallback, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown, Globe, Map, Maximize2, X, Layers } from 'lucide-react';
+import { motion, 
+AnimatePresence } from 'framer-motion';
+import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown, Globe, Map, Maximize2, X, Layers, Terminal as TerminalIcon } from 'lucide-react';
 import { 
   AmbientGlow, 
   TwinklingStars,
+  WebTerminal,
 } from '@/components/effects';
 import { CesiumGlobe } from '@/components/effects/CesiumGlobe';
 import { ChinaMap3D } from '@/components/effects/ChinaMap3D';
@@ -24,9 +26,10 @@ interface DemoConfig {
 const DEMOS: DemoConfig[] = [
   { id: 'cesium', icon: Globe, label: 'Cesium 地球', title: '地球Online' },
   { id: 'chinamap', icon: Map, label: '中国地图', title: '地球Online-国服' },
+  { id: 'terminal', icon: TerminalIcon, label: 'Web终端', title: 'WebContainer Terminal' },
 ];
 
-type DemoType = 'cesium' | 'chinamap';
+type DemoType = 'cesium' | 'chinamap' | 'terminal';
 
 // FPS 计数器 Hook
 function useFPS() {
@@ -548,12 +551,14 @@ const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
 GlowScrollIndicator.displayName = 'GlowScrollIndicator';
 
 // 演示内容渲染
-const DemoContent = memo(({ demo, isDark }: { demo: DemoType; isDark: boolean }) => {
-  switch (demo) {
+const DemoContent = memo(({ demo, isDark }: { demo: { type: DemoType; isFullscreen: boolean; onFullscreenToggle: () => void }; isDark: boolean }) => {
+  switch (demo.type) {
     case 'cesium':
       return <CesiumGlobe isDark={isDark} />;
     case 'chinamap':
       return <ChinaMap3D isDark={isDark} />;
+    case 'terminal':
+      return <WebTerminal isFullscreen={demo.isFullscreen} onFullscreenToggle={demo.onFullscreenToggle} />;
     default:
       return <CesiumGlobe isDark={isDark} />;
   }
@@ -889,7 +894,14 @@ const GlobeShowcase = memo(() => {
 
         {/* WebGL 演示内容 */}
         <div className={`absolute inset-0 ${isFullscreen ? 'pt-24' : 'pt-8'}`} style={{ cursor: 'default' }}>
-          <DemoContent demo={currentDemo} isDark={isDark} />
+          <DemoContent 
+            demo={{ 
+              type: currentDemo, 
+              isFullscreen, 
+              onFullscreenToggle: isFullscreen ? exitFullscreen : enterFullscreen 
+            }} 
+            isDark={isDark} 
+          />
         </div>
 
         {/* 底部信息 - 只在地球Online页显示 */}
