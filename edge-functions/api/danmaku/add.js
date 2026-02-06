@@ -49,12 +49,12 @@ export async function onRequestPost(context) {
       userId: String(body.userId || 'anon'),
       timestamp: Date.now(),
       color: String(body.color || '#60a5fa'),
-      // 近地轨道参数
+      // 轨道类型
+      orbitType: String(body.orbitType || 'medium'),
+      // 轨道参数
       angle: body.angle != null ? body.angle : Math.random() * Math.PI * 2,
       inclination: body.inclination != null ? body.inclination : (Math.random() - 0.5) * Math.PI / 1.5,
-      // 高度 500km - 1500km (近地轨道)
       altitude: body.altitude != null ? body.altitude : (500000 + Math.random() * 1000000),
-      // 速度根据高度调整
       speed: body.speed != null ? body.speed : (2 + Math.random()),
     };
 
