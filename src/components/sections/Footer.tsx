@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, ArrowUp } from 'lucide-react';
+import { Link } from 'react-router';
 import { FloatingBubbles, TwinklingStars } from '@/components/effects';
 import type { SiteData } from '@/types';
 
@@ -100,6 +101,26 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
                 {link.label}
               </button>
             ))}
+            <Link
+              to="/friends"
+              className="font-primary"
+              style={{
+                fontSize: 'var(--text-base)',
+                fontWeight: 600,
+                color: 'var(--text-secondary)',
+                letterSpacing: '0.05em',
+                padding: '4px 8px',
+                transition: 'color 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--accent-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }}
+            >
+              友链
+            </Link>
           </nav>
 
           {/* Back to Top */}

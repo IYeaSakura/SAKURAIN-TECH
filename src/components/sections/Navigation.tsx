@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, BookOpen } from 'lucide-react';
+import { Menu, X, BookOpen, Heart } from 'lucide-react';
 import { Link } from 'react-router';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/atoms';
@@ -118,6 +118,19 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                 <BookOpen className="w-4 h-4" />
                 文档
               </Link>
+              <Link
+                to="/friends"
+                className="mc-nav-link flex items-center gap-1"
+                style={{
+                  fontFamily: 'var(--font-primary)',
+                  fontSize: 'var(--text-base)',
+                  fontWeight: 600,
+                  letterSpacing: '0.05em',
+                }}
+              >
+                <Heart className="w-4 h-4" />
+                友链
+              </Link>
             </div>
 
             {/* CTA Button & Theme Toggle */}
@@ -230,6 +243,25 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   >
                     <BookOpen className="w-4 h-4" />
                     文档
+                  </Link>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: (data.links.length + 1) * 0.05 }}
+                >
+                  <Link
+                    to="/friends"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
+                    style={{ 
+                      fontFamily: 'var(--font-primary)',
+                      fontSize: 'var(--text-base)',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <Heart className="w-4 h-4" />
+                    友链
                   </Link>
                 </motion.div>
                 <motion.button

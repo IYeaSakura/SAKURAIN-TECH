@@ -1,0 +1,8 @@
+{
+  "security": {
+    "disableCopy": true,
+    "disableF12": true,
+    "disableDevTools": true,
+    "disableDebug": true
+  }
+}

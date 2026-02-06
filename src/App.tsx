@@ -6,6 +6,7 @@ import {
   TwinklingStars,
   FlowingGradient,
   LightBeam,
+  SecurityProtection,
 } from '@/components/effects';
 import { Navigation } from '@/components/sections/Navigation';
 import { Hero } from '@/components/sections/Hero';
@@ -117,6 +118,9 @@ function App() {
       className="relative min-h-screen"
       style={{ background: 'var(--bg-primary)' }}
     >
+      {/* 安全保护 */}
+      <SecurityProtection />
+
       {/* 全局特效 */}
       <ScrollProgress />
       <MagneticCursor />
