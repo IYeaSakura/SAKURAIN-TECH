@@ -2,7 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, MessageSquare, X } from 'lucide-react';
 import * as Cesium from 'cesium';
 
-const API_BASE_URL = '/api/danmaku';
+// API 基础路径 - 根据环境自动判断
+const API_BASE_URL = import.meta.env.DEV 
+  ? '/api/danmaku' 
+  : '/api/danmaku'; // 生产环境使用相对路径
 
 interface Danmaku {
   id: string;
@@ -49,10 +52,19 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
 
   const fetchDanmakus = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/list`);
+      const response = await fetch(`${API_BASE_URL}/list`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setDanmakus(data);
+      } else {
+        console.error('Failed to fetch danmakus, status:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
       }
     } catch (error) {
       console.error('Failed to fetch danmakus:', error);
@@ -78,13 +90,21 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify(newDanmaku),
       });
 
       if (response.ok) {
-        setDanmakus(prev => [...prev, newDanmaku]);
-        setInputText('');
+        const result = await response.json();
+        if (result.success) {
+          setDanmakus(prev => [...prev, result.danmaku || newDanmaku]);
+          setInputText('');
+        }
+      } else {
+        console.error('Failed to add danmaku, status:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
       }
     } catch (error) {
       console.error('Failed to add danmaku:', error);
@@ -99,12 +119,17 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify({ id }),
       });
 
       if (response.ok) {
         setDanmakus(prev => prev.filter(d => d.id !== id));
+      } else {
+        console.error('Failed to delete danmaku, status:', response.status);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
       }
     } catch (error) {
       console.error('Failed to delete danmaku:', error);
