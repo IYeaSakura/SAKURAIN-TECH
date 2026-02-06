@@ -1,11 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, MessageSquare, X, AlertCircle, Orbit } from 'lucide-react';
+import { Send, X, AlertCircle, Orbit, Eye, EyeOff, Satellite, Type } from 'lucide-react';
 import * as Cesium from 'cesium';
 
-// API 基础路径 - 根据环境判断
-const API_BASE_URL = import.meta.env.DEV 
-  ? '/api/danmaku' 
-  : '/api/danmaku';
+// API 基础路径
+const API_BASE_URL = '/api/danmaku';
 
 // 调试日志
 const debugLog = (...args: unknown[]) => {
@@ -21,8 +19,15 @@ const RATE_LIMIT = {
 
 // 地球和轨道常量
 const EARTH_RADIUS = 6371000; // 地球半径 (米)
-const MIN_ALTITUDE = 500000; // 最低轨道高度 500km
-const MAX_ALTITUDE = 1500000; // 最高轨道高度 1500km
+
+// 轨道高度范围 (米)
+const ORBIT_RANGES = {
+  low: { min: 200000, max: 600000, label: '低轨', desc: '200-600km' },    // 低轨
+  medium: { min: 600000, max: 1200000, label: '中轨', desc: '600-1200km' }, // 中轨 (默认)
+  high: { min: 1200000, max: 2000000, label: '高轨', desc: '1200-2000km' }, // 高轨
+};
+
+type OrbitType = 'low' | 'medium' | 'high';
 
 interface Danmaku {
   id: string;
@@ -34,6 +39,7 @@ interface Danmaku {
   color: string;
   inclination: number;
   altitude: number;
+  orbitType: OrbitType;
 }
 
 interface DanmakuSatelliteProps {
@@ -81,21 +87,27 @@ class RateLimiter {
 
 export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   const [danmakus, setDanmakus] = useState<Danmaku[]>([]);
-  const [showDanmaku, setShowDanmaku] = useState(true);
   const [inputText, setInputText] = useState('');
   const [isInputVisible, setIsInputVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [remainingQuota, setRemainingQuota] = useState({ perMinute: RATE_LIMIT.maxPerMinute, perHour: RATE_LIMIT.maxPerHour });
+  const [selectedOrbit, setSelectedOrbit] = useState<OrbitType>('medium');
+  
+  // 可见性控制 - 分别控制文字、卫星、轨道
+  const [showText, setShowText] = useState(true);
+  const [showSatellite, setShowSatellite] = useState(true);
+  const [showOrbitLine, setShowOrbitLine] = useState(true);
+  // 总开关
+  const [showAll, setShowAll] = useState(true);
   
   const userId = useRef(`user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const entitiesRef = useRef<Map<string, Cesium.Entity>>(new Map());
+  const orbitEntitiesRef = useRef<Map<string, Cesium.Entity>>(new Map());
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const rateLimiterRef = useRef(new RateLimiter());
   const isFetchingRef = useRef(false);
   const isMountedRef = useRef(false);
-
-  debugLog('Component mounted, API_BASE_URL:', API_BASE_URL);
 
   const colors = isDark ? [
     '#60a5fa', '#fbbf24', '#4ec9b0', '#f472b6', '#a78bfa', '#34d399',
@@ -107,26 +119,19 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
 
   const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
-  const [showOrbits, setShowOrbits] = useState(true);
-  const orbitEntitiesRef = useRef<Map<string, Cesium.Entity>>(new Map());
-
-  const generateOrbitParams = () => {
+  const generateOrbitParams = useCallback((orbitType: OrbitType = 'medium') => {
+    const range = ORBIT_RANGES[orbitType];
     const angle = Math.random() * Math.PI * 2;
     const inclination = (Math.random() - 0.5) * Math.PI / 1.5;
-    // 近地轨道：500km - 1500km
-    const altitude = MIN_ALTITUDE + Math.random() * (MAX_ALTITUDE - MIN_ALTITUDE);
-    // 速度根据轨道高度调整（越低越快）
-    const baseSpeed = 2 + Math.random();
+    const altitude = range.min + Math.random() * (range.max - range.min);
+    // 速度：轨道越低速度越快
+    const baseSpeed = 3 - ((altitude - 200000) / 1800000) * 2; // 3 ~ 1
     const speed = baseSpeed * (Math.random() > 0.5 ? 1 : -1);
-    return { angle, inclination, altitude, speed };
-  };
+    return { angle, inclination, altitude, speed, orbitType };
+  }, []);
 
   const fetchDanmakus = useCallback(async () => {
-    // 防止重复请求
-    if (isFetchingRef.current) {
-      debugLog('Fetch already in progress, skipping');
-      return;
-    }
+    if (isFetchingRef.current) return;
     
     const url = `${API_BASE_URL}/list`;
     debugLog('Fetching danmakus from:', url);
@@ -137,29 +142,25 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
       });
-      debugLog('Fetch response status:', response.status, response.statusText);
       if (response.ok) {
         const data = await response.json();
         debugLog('Fetched danmakus count:', data.length);
+        // 为旧数据补充轨道类型
         const processedData = data.map((d: Partial<Danmaku>) => ({
-          ...generateOrbitParams(),
+          ...generateOrbitParams(d.orbitType || 'medium'),
           ...d,
         }));
         setDanmakus(processedData);
-      } else {
-        const errorText = await response.text();
-        console.error('Failed to fetch danmakus, status:', response.status, errorText);
       }
     } catch (error) {
       console.error('Failed to fetch danmakus:', error);
     } finally {
       isFetchingRef.current = false;
     }
-  }, []);
+  }, [generateOrbitParams]);
 
   const addDanmaku = useCallback(async (text: string) => {
     if (!text.trim()) return;
-    debugLog('Adding danmaku:', text);
 
     const rateCheck = rateLimiterRef.current.canSend();
     if (!rateCheck.allowed) {
@@ -171,7 +172,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     setIsLoading(true);
     setErrorMessage(null);
 
-    const orbitParams = generateOrbitParams();
+    const orbitParams = generateOrbitParams(selectedOrbit);
     const newDanmaku: Danmaku = {
       id: `danmaku-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       text: text.trim(),
@@ -181,25 +182,15 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       ...orbitParams,
     };
 
-    const url = `${API_BASE_URL}/add`;
-    debugLog('Sending POST to:', url, 'body:', newDanmaku);
-
     try {
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/add`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify(newDanmaku),
       });
 
-      debugLog('Add response status:', response.status, response.statusText);
-      debugLog('Response headers:', Object.fromEntries(response.headers.entries()));
-
       if (response.ok) {
         const result = await response.json();
-        debugLog('Add success, result:', result);
         if (result.success) {
           rateLimiterRef.current.recordSend();
           setDanmakus(prev => [...prev, result.danmaku || newDanmaku]);
@@ -207,46 +198,28 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           setRemainingQuota(rateLimiterRef.current.getRemainingQuota());
         }
       } else {
-        let errorMessage = '发送失败，请重试';
-        try {
-          const errorData = await response.json();
-          debugLog('Error response body:', errorData);
-          errorMessage = errorData.error || errorMessage;
-        } catch (e) {
-          const errorText = await response.text();
-          debugLog('Error response text:', errorText);
-        }
-        setErrorMessage(errorMessage);
+        const errorData = await response.json().catch(() => ({}));
+        setErrorMessage(errorData.error || '发送失败');
         setTimeout(() => setErrorMessage(null), 3000);
       }
     } catch (error) {
-      console.error('Failed to add danmaku, network error:', error);
-      setErrorMessage('网络错误，请检查连接');
+      setErrorMessage('网络错误');
       setTimeout(() => setErrorMessage(null), 3000);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedOrbit, generateOrbitParams]);
 
   const deleteDanmaku = useCallback(async (id: string) => {
-    const url = `${API_BASE_URL}/delete`;
-    debugLog('Deleting danmaku:', id, 'url:', url);
     try {
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE_URL}/delete`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({ id }),
       });
 
-      debugLog('Delete response status:', response.status);
       if (response.ok) {
         setDanmakus(prev => prev.filter(d => d.id !== id));
-      } else {
-        const errorText = await response.text();
-        console.error('Failed to delete danmaku, status:', response.status, errorText);
       }
     } catch (error) {
       console.error('Failed to delete danmaku:', error);
@@ -266,25 +239,21 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     }
   }, [handleSend]);
 
-  const toggleDanmaku = useCallback(() => {
-    setShowDanmaku(prev => !prev);
-  }, []);
-
-  const toggleOrbits = useCallback(() => {
-    setShowOrbits(prev => !prev);
-  }, []);
+  // 总开关控制所有
+  const toggleAll = useCallback(() => {
+    const newValue = !showAll;
+    setShowAll(newValue);
+    setShowText(newValue);
+    setShowSatellite(newValue);
+    setShowOrbitLine(newValue);
+  }, [showAll]);
 
   useEffect(() => {
-    // 防止 React StrictMode 双重执行导致的重复请求
     if (isMountedRef.current) return;
     isMountedRef.current = true;
     
-    debugLog('Initial fetch triggered');
     fetchDanmakus();
-    
-    pollingIntervalRef.current = setInterval(() => {
-      fetchDanmakus();
-    }, 5000);
+    pollingIntervalRef.current = setInterval(fetchDanmakus, 5000);
     
     return () => {
       if (pollingIntervalRef.current) {
@@ -292,7 +261,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         pollingIntervalRef.current = undefined;
       }
     };
-  }, []);  // 空依赖数组，只在组件挂载时执行
+  }, [fetchDanmakus]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -301,6 +270,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     return () => clearInterval(interval);
   }, []);
 
+  // 创建和更新 Cesium 实体
   useEffect(() => {
     if (!viewer) return;
 
@@ -315,7 +285,8 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       return new Cesium.Cartesian3(x, rotatedY, rotatedZ);
     };
 
-    const createDanmakuEntity = (danmaku: Danmaku) => {
+    // 创建卫星实体（包含文字和点）
+    const createSatelliteEntity = (danmaku: Danmaku) => {
       const entity = viewer.entities.add({
         position: new Cesium.CallbackProperty(() => {
           const now = Date.now();
@@ -323,12 +294,13 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           return calculatePosition(danmaku, elapsed);
         }, false) as unknown as Cesium.PositionProperty,
         point: {
-          pixelSize: 6,
+          pixelSize: 8,
           color: Cesium.Color.fromCssColorString(danmaku.color),
           outlineColor: Cesium.Color.WHITE,
           outlineWidth: 2,
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
           scaleByDistance: new Cesium.NearFarScalar(1.5e7, 1.5, 5.0e7, 0.8),
+          show: showSatellite && showAll,
         },
         label: {
           text: danmaku.text,
@@ -339,7 +311,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
           pixelOffset: new Cesium.Cartesian2(0, -25),
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          show: showDanmaku,
+          show: showText && showAll,
           scaleByDistance: new Cesium.NearFarScalar(1.5e7, 1.0, 5.0e7, 0.7),
           translucencyByDistance: new Cesium.NearFarScalar(3.0e7, 1.0, 5.0e7, 0.5),
         },
@@ -353,7 +325,6 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       const inclination = danmaku.inclination;
       const angleOffset = danmaku.angle;
       
-      // 生成轨道上的点
       const positions: Cesium.Cartesian3[] = [];
       for (let i = 0; i <= 64; i++) {
         const theta = (i / 64) * Math.PI * 2 + angleOffset;
@@ -367,12 +338,12 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       const entity = viewer.entities.add({
         polyline: {
           positions: positions,
-          width: 1,
+          width: 1.5,
           material: new Cesium.PolylineDashMaterialProperty({
-            color: Cesium.Color.fromCssColorString(danmaku.color).withAlpha(0.3),
+            color: Cesium.Color.fromCssColorString(danmaku.color).withAlpha(0.4),
             dashLength: 16,
           }),
-          show: showOrbits,
+          show: showOrbitLine && showAll,
         },
       });
       return entity;
@@ -380,21 +351,15 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
 
     danmakus.forEach(danmaku => {
       if (!entitiesRef.current.has(danmaku.id)) {
-        const entity = createDanmakuEntity(danmaku);
-        if (entity) {
-          entitiesRef.current.set(danmaku.id, entity);
-        }
+        const entity = createSatelliteEntity(danmaku);
+        if (entity) entitiesRef.current.set(danmaku.id, entity);
       }
-      // 创建轨道线
       if (!orbitEntitiesRef.current.has(danmaku.id)) {
         const orbitEntity = createOrbitLine(danmaku);
-        if (orbitEntity) {
-          orbitEntitiesRef.current.set(danmaku.id, orbitEntity);
-        }
+        if (orbitEntity) orbitEntitiesRef.current.set(danmaku.id, orbitEntity);
       }
     });
 
-    // 清理已删除的弹幕实体和轨道
     const currentIds = new Set(danmakus.map(d => d.id));
     entitiesRef.current.forEach((entity, id) => {
       if (!currentIds.has(id)) {
@@ -411,47 +376,43 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
 
     // 更新可见性
     entitiesRef.current.forEach((entity) => {
-      if (entity.label) {
-        entity.label.show = new Cesium.ConstantProperty(showDanmaku);
-      }
+      if (entity.point) entity.point.show = new Cesium.ConstantProperty(showSatellite && showAll);
+      if (entity.label) entity.label.show = new Cesium.ConstantProperty(showText && showAll);
     });
     orbitEntitiesRef.current.forEach((entity) => {
-      if (entity.polyline) {
-        entity.polyline.show = new Cesium.ConstantProperty(showOrbits);
-      }
+      if (entity.polyline) entity.polyline.show = new Cesium.ConstantProperty(showOrbitLine && showAll);
     });
 
     return () => {
-      entitiesRef.current.forEach((entity) => {
-        viewer.entities.remove(entity);
-      });
+      entitiesRef.current.forEach((entity) => viewer.entities.remove(entity));
       entitiesRef.current.clear();
-      orbitEntitiesRef.current.forEach((entity) => {
-        viewer.entities.remove(entity);
-      });
+      orbitEntitiesRef.current.forEach((entity) => viewer.entities.remove(entity));
       orbitEntitiesRef.current.clear();
     };
-  }, [viewer, danmakus, showDanmaku, showOrbits]);
+  }, [viewer, danmakus, showText, showSatellite, showOrbitLine, showAll]);
 
   const myDanmakus = danmakus.filter(d => d.userId === userId.current);
 
   return (
-    <div className="absolute bottom-4 left-4 z-30">
+    // 移到右上角，避免遮挡左下角数据
+    <div className="absolute top-4 right-4 z-30">
       <div className="flex flex-col gap-2">
+        {/* 主控制栏 */}
         <div className="flex items-center gap-2">
+          {/* 总开关 */}
           <button
-            onClick={toggleDanmaku}
+            onClick={toggleAll}
             className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
             style={{
-              background: 'rgba(0, 0, 0, 0.5)',
-              border: '1px solid rgba(96, 165, 250, 0.3)',
-              color: '#60a5fa',
+              background: showAll ? 'rgba(96, 165, 250, 0.3)' : 'rgba(0, 0, 0, 0.5)',
+              border: showAll ? '1px solid rgba(96, 165, 250, 0.5)' : '1px solid rgba(96, 165, 250, 0.2)',
+              color: showAll ? '#60a5fa' : '#94a3b8',
             }}
-            title={showDanmaku ? '隐藏弹幕' : '显示弹幕'}
+            title={showAll ? '隐藏全部' : '显示全部'}
           >
-            <MessageSquare className="w-4 h-4" />
+            {showAll ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             <span className="text-sm font-medium">
-              {showDanmaku ? `弹幕开 (${danmakus.length})` : '弹幕关'}
+              {showAll ? `弹幕 (${danmakus.length})` : '已隐藏'}
             </span>
           </button>
           
@@ -467,23 +428,59 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           >
             <Send className="w-4 h-4" />
           </button>
-
-          <button
-            onClick={toggleOrbits}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
-            style={{
-              background: 'rgba(0, 0, 0, 0.5)',
-              border: showOrbits 
-                ? '1px solid rgba(96, 165, 250, 0.5)' 
-                : '1px solid rgba(96, 165, 250, 0.2)',
-              color: showOrbits ? '#60a5fa' : '#94a3b8',
-            }}
-            title={showOrbits ? '隐藏轨道' : '显示轨道'}
-          >
-            <Orbit className="w-4 h-4" />
-          </button>
         </div>
 
+        {/* 详细控制栏 - 只在显示全部时显示 */}
+        {showAll && (
+          <div className="flex items-center gap-2 justify-end">
+            {/* 文字开关 */}
+            <button
+              onClick={() => setShowText(prev => !prev)}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{
+                background: 'rgba(0, 0, 0, 0.5)',
+                border: showText ? '1px solid rgba(96, 165, 250, 0.5)' : '1px solid rgba(96, 165, 250, 0.2)',
+                color: showText ? '#60a5fa' : '#64748b',
+              }}
+              title="文字"
+            >
+              <Type className="w-3.5 h-3.5" />
+              <span className="text-xs">字</span>
+            </button>
+
+            {/* 卫星开关 */}
+            <button
+              onClick={() => setShowSatellite(prev => !prev)}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{
+                background: 'rgba(0, 0, 0, 0.5)',
+                border: showSatellite ? '1px solid rgba(96, 165, 250, 0.5)' : '1px solid rgba(96, 165, 250, 0.2)',
+                color: showSatellite ? '#60a5fa' : '#64748b',
+              }}
+              title="卫星"
+            >
+              <Satellite className="w-3.5 h-3.5" />
+              <span className="text-xs">星</span>
+            </button>
+
+            {/* 轨道开关 */}
+            <button
+              onClick={() => setShowOrbitLine(prev => !prev)}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{
+                background: 'rgba(0, 0, 0, 0.5)',
+                border: showOrbitLine ? '1px solid rgba(96, 165, 250, 0.5)' : '1px solid rgba(96, 165, 250, 0.2)',
+                color: showOrbitLine ? '#60a5fa' : '#64748b',
+              }}
+              title="轨道"
+            >
+              <Orbit className="w-3.5 h-3.5" />
+              <span className="text-xs">轨</span>
+            </button>
+          </div>
+        )}
+
+        {/* 输入面板 */}
         {isInputVisible && (
           <div
             className="flex flex-col gap-2 p-3 rounded-lg backdrop-blur-sm"
@@ -499,6 +496,28 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                 <span>{errorMessage}</span>
               </div>
             )}
+            
+            {/* 轨道高度选择 */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs text-gray-400">轨道高度</span>
+              <div className="flex gap-2">
+                {(Object.keys(ORBIT_RANGES) as OrbitType[]).map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setSelectedOrbit(type)}
+                    className="flex-1 px-2 py-1.5 rounded text-xs transition-all duration-200"
+                    style={{
+                      background: selectedOrbit === type ? 'rgba(96, 165, 250, 0.3)' : 'rgba(255, 255, 255, 0.1)',
+                      border: selectedOrbit === type ? '1px solid rgba(96, 165, 250, 0.5)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      color: selectedOrbit === type ? '#60a5fa' : '#94a3b8',
+                    }}
+                  >
+                    <div className="font-medium">{ORBIT_RANGES[type].label}</div>
+                    <div className="text-[10px] opacity-70">{ORBIT_RANGES[type].desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
             
             <input
               type="text"
@@ -558,11 +577,8 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                         border: '1px solid rgba(96, 165, 250, 0.2)',
                       }}
                     >
-                      <span
-                        className="flex-1 truncate"
-                        style={{ color: danmaku.color }}
-                      >
-                        {danmaku.text}
+                      <span className="flex-1 truncate" style={{ color: danmaku.color }}>
+                        [{ORBIT_RANGES[danmaku.orbitType || 'medium'].label}] {danmaku.text}
                       </span>
                       <button
                         onClick={() => deleteDanmaku(danmaku.id)}
