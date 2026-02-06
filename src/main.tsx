@@ -7,6 +7,7 @@ import App from './App.tsx';
 // 懒加载页面
 const DocsPage = lazy(() => import('./pages/Docs'));
 const FriendsPage = lazy(() => import('./pages/Friends'));
+const NotFoundPage = lazy(() => import('./pages/NotFound'));
 
 // 简单的加载占位组件
 const PageFallback = () => (
@@ -63,6 +64,14 @@ createRoot(document.getElementById('root')!).render(
           element={
             <Suspense fallback={<PageFallback />}>
               <FriendsPage />
+            </Suspense>
+          } 
+        />
+        <Route 
+          path="*" 
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <NotFoundPage />
             </Suspense>
           } 
         />
