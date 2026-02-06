@@ -1,60 +1,91 @@
 export async function onRequestPost(context) {
   try {
-    const body = await context.request.json();
+    // 1. 解析请求体
+    let body;
+    try {
+      body = await context.request.json();
+    } catch (e) {
+      return new Response(JSON.stringify({ error: 'Invalid JSON' }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
 
+    // 2. 验证字段
     if (!body.text || !body.userId || !body.color) {
-      return Response.json({ error: 'Missing fields' }, { status: 400 });
+      return new Response(JSON.stringify({ error: 'Missing fields' }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
     }
 
     const text = body.text.trim();
     if (!text || text.length > 50) {
-      return Response.json({ error: 'Invalid text length' }, { status: 400 });
+      return new Response(JSON.stringify({ error: 'Invalid text' }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
     }
 
-    // 获取 KV
+    // 3. 检查 KV
     const kv = context.env.DANMAKU_KV;
     if (!kv) {
-      return Response.json({ error: 'KV not bound' }, { status: 500 });
+      return new Response(JSON.stringify({ error: 'KV not bound' }), { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
     }
 
-    // 获取现有数据
+    // 4. 获取现有数据
     let danmakus = [];
-    const existing = await kv.get('danmakus');
-    if (existing) {
-      try {
+    try {
+      const existing = await kv.get('danmakus');
+      if (existing) {
         danmakus = JSON.parse(existing);
         if (!Array.isArray(danmakus)) danmakus = [];
-      } catch {
-        danmakus = [];
       }
+    } catch (e) {
+      danmakus = [];
     }
 
-    // 创建新弹幕
-    const id = 'd-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
+    // 5. 创建新弹幕（简化轨道参数）
     const newDanmaku = {
-      id,
-      text,
+      id: 'd' + Date.now(),
+      text: text,
       userId: body.userId,
       timestamp: Date.now(),
       color: body.color,
-      angle: body.angle ?? Math.random() * 6.28,
-      inclination: body.inclination ?? ((Math.random() - 0.5) * 2),
-      altitude: body.altitude ?? (15000000 + Math.random() * 20000000),
-      speed: body.speed ?? (0.5 + Math.random()),
+      angle: Math.random() * Math.PI * 2,
+      inclination: 0,
+      altitude: 20000000,
+      speed: 1,
     };
 
+    // 6. 添加到数组
     danmakus.push(newDanmaku);
-    
-    // 只保留200条
     if (danmakus.length > 200) {
       danmakus = danmakus.slice(-200);
     }
 
+    // 7. 保存到 KV
     await kv.put('danmakus', JSON.stringify(danmakus));
 
-    return Response.json({ success: true, danmaku: newDanmaku });
+    // 8. 返回成功
+    return new Response(JSON.stringify({ success: true, danmaku: newDanmaku }), {
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
+
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    return new Response(JSON.stringify({ error: err.message }), { 
+      status: 500,
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
   }
 }
 
