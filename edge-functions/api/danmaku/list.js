@@ -1,10 +1,25 @@
 export async function onRequestGet(context) {
   try {
-    const kv = context.env.DANMAKU_KV;
+    // 调试：检查 context.env
+    const envKeys = Object.keys(context.env || {});
+    
+    // 尝试不同的方式获取 KV
+    let kv = context.env.DANMAKU_KV;
+    
     if (!kv) {
-      return new Response(JSON.stringify({ error: 'KV not bound' }), {
+      return new Response(JSON.stringify({ 
+        error: 'KV not bound',
+        debug: {
+          envKeys: envKeys,
+          hasEnv: !!context.env,
+          kvType: typeof kv
+        }
+      }), {
         status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Access-Control-Allow-Origin': '*' 
+        }
       });
     }
 
@@ -19,12 +34,21 @@ export async function onRequestGet(context) {
     }
 
     return new Response(JSON.stringify(danmakus), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Access-Control-Allow-Origin': '*' 
+      }
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
+    return new Response(JSON.stringify({ 
+      error: String(err),
+      stack: err.stack 
+    }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      headers: { 
+        'Content-Type': 'application/json', 
+        'Access-Control-Allow-Origin': '*' 
+      }
     });
   }
 }
