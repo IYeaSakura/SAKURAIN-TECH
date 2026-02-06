@@ -47,10 +47,10 @@
   "friends": [
     {
       "id": "mclans",
-      "name": "Mc服务器官网演示站",
+      "name": "Mc服务器演示站",
       "url": "https://mclans.sakurain.net",
       "icon": "https://sakurain.net/image/logo.webp",
-      "description": "Minecraft 服务器官方网站演示项目，展示服务器信息和玩家社区功能",
+      "description": "Minecraft 服务器网站演示项目，展示服务器信息和玩家社区功能",
       "category": "demo",
       "featured": true
     },

@@ -1,12 +1,9 @@
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router';
-import { motion } from 'framer-motion';
-import {
-  Code, Palette, Wrench, BookOpen, Monitor, ArrowLeft, ExternalLink,
-  Heart, Mail, Sparkles, Globe, Star
-} from 'lucide-react';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { ArrowLeft, Code, Palette, Wrench, BookOpen, Monitor, ExternalLink, Heart, Mail, Sparkles, Globe, Star } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
-import {
+import { 
   MagneticCursor, VelocityCursor,
   TwinklingStars, FlowingGradient, LightBeam
 } from '@/components/effects';
@@ -110,7 +107,7 @@ const SectionTitle = memo(function SectionTitle({
   );
 });
 
-// Friend Card Component
+// Friend Card Component - Enhanced with 3D tilt and glow effects
 const FriendCard = memo(function FriendCard({
   friend,
   index
@@ -118,97 +115,179 @@ const FriendCard = memo(function FriendCard({
   friend: Friend;
   index: number;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const cardRef = useRef<HTMLAnchorElement>(null);
+  const color = 'var(--accent-primary)';
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+    const element = cardRef.current;
+    if (!element) return;
+    const rect = element.getBoundingClientRect();
+    const x = (e.clientX - rect.left - rect.width / 2) / 20;
+    const y = (e.clientY - rect.top - rect.height / 2) / 20;
+    mouseX.set(x);
+    mouseY.set(y);
+  }, [mouseX, mouseY]);
+
+  const handleMouseLeave = useCallback(() => {
+    mouseX.set(0);
+    mouseY.set(0);
+    setIsHovered(false);
+  }, [mouseX]);
+
+  const rotateX = useSpring(mouseY, { stiffness: 300, damping: 30 });
+  const rotateY = useSpring(mouseX, { stiffness: 300, damping: 30 });
+  const rotateXValue = useTransform(rotateX, (value) => isHovered ? value : 0);
+  const rotateYValue = useTransform(rotateY, (value) => isHovered ? value : 0);
+  const [currentRotateX, setCurrentRotateX] = useState(0);
+  const [currentRotateY, setCurrentRotateY] = useState(0);
+  
+  useEffect(() => {
+    const unsubscribeX = rotateXValue.on('change', setCurrentRotateX);
+    const unsubscribeY = rotateYValue.on('change', setCurrentRotateY);
+    return () => {
+      unsubscribeX();
+      unsubscribeY();
+    };
+  }, [rotateXValue, rotateYValue]);
+
   return (
     <motion.a
+      ref={cardRef}
       href={friend.url}
       target="_blank"
       rel="noopener noreferrer"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
-      whileHover={{ y: -4, scale: 1.02 }}
-      className="group relative block p-6 rounded-xl transition-all duration-300"
-      style={{
-        background: 'var(--bg-card)',
-        border: '1px solid var(--border-subtle)',
-        boxShadow: '0 4px 20px var(--shadow-color)'
+      initial={{ opacity: 0, y: 50, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ 
+        duration: 0.6, 
+        delay: index * 0.05,
+        type: 'spring',
+        stiffness: 100,
       }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={handleMouseLeave}
+      style={{ 
+        perspective: '1000px',
+        background: 'var(--bg-card)',
+        border: '3px solid',
+        borderColor: isHovered ? color : 'var(--border-subtle)',
+        transform: isHovered ? 'translateY(-8px) scale(1.02)' : 'none',
+        boxShadow: isHovered 
+          ? `0 20px 40px var(--accent-glow), 0 0 30px ${color}20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)` 
+          : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
+      }}
+      className="group relative block p-6 rounded-xl cursor-default"
     >
-      {/* Featured Badge */}
-      {friend.featured && (
-        <div
-          className="absolute -top-2 -right-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium"
+        {/* Glow background - radial gradient */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none rounded-xl"
           style={{
-            background: 'var(--accent-primary)',
-            color: 'white'
+            background: `radial-gradient(circle at 50% 0%, ${color}20, transparent 60%)`,
           }}
-        >
-          <Star className="w-3 h-3" />
-          精选
-        </div>
-      )}
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+        />
+        
+        {/* Shine effect - diagonal sheen */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none rounded-xl"
+          style={{
+            background: `linear-gradient(105deg, transparent 40%, ${color}15 45%, ${color}30 50%, ${color}15 55%, transparent 60%)`,
+            transform: 'translateX(-100%)',
+          }}
+          animate={isHovered ? { x: '200%' } : { x: '-100%' }}
+          transition={{ duration: 0.6 }}
+        />
 
-      <div className="flex items-start gap-4">
-        {/* Icon */}
-        <div
-          className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden"
-          style={{
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-subtle)'
-          }}
-        >
-          <img
-            src={friend.icon}
-            alt={friend.name}
-            className="w-8 h-8 object-contain"
-            onError={(e) => {
-              // Fallback to globe icon if favicon fails to load
-              (e.target as HTMLImageElement).style.display = 'none';
-              (e.target as HTMLImageElement).parentElement?.classList.add('fallback-icon');
+        {/* Featured Badge */}
+        {friend.featured && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring' }}
+            className="absolute -top-3 -right-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold"
+            style={{
+              background: `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 80%, var(--accent-secondary)))`,
+              color: 'white',
+              boxShadow: `0 4px 15px ${color}40`,
             }}
-          />
-          <Globe
-            className="w-8 h-8 fallback-icon hidden"
-            style={{ color: 'var(--accent-primary)' }}
-          />
-        </div>
+          >
+            <Star className="w-3.5 h-3.5" />
+            精选
+          </motion.div>
+        )}
 
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2">
-            <h3
-              className="font-bold text-lg truncate"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              {friend.name}
-            </h3>
-            <ExternalLink
-              className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity"
+        <div className="flex items-start gap-4 relative z-10">
+          {/* Icon */}
+          <motion.div
+            animate={{ 
+              rotateX: currentRotateX,
+              rotateY: currentRotateY,
+            }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="flex-shrink-0 w-14 h-14 rounded-xl flex items-center justify-center overflow-hidden"
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            <img
+              src={friend.icon}
+              alt={friend.name}
+              className="w-8 h-8 object-contain"
+              onError={(e) => {
+                // Fallback to globe icon if favicon fails to load
+                (e.target as HTMLImageElement).style.display = 'none';
+                (e.target as HTMLImageElement).parentElement?.classList.add('fallback-icon');
+              }}
+            />
+            <Globe
+              className="w-8 h-8 fallback-icon hidden"
               style={{ color: 'var(--accent-primary)' }}
             />
-          </div>
-          <p
-            className="text-sm line-clamp-2"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            {friend.description}
-          </p>
-        </div>
-      </div>
+          </motion.div>
 
-      {/* Hover Glow Effect */}
-      <div
-        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-        style={{
-          background: 'linear-gradient(135deg, var(--accent-primary) 0%, transparent 50%)',
-          opacity: 0.05
-        }}
-      />
-    </motion.a>
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <motion.h3
+                animate={{ 
+                  scale: isHovered ? 1.05 : 1,
+                }}
+                transition={{ duration: 0.2 }}
+                className="font-bold text-lg truncate"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                {friend.name}
+              </motion.h3>
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ExternalLink
+                  className="w-4 h-4"
+                  style={{ color: 'var(--accent-primary)' }}
+                />
+              </motion.div>
+            </div>
+            <p
+              className="text-sm line-clamp-2"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              {friend.description}
+            </p>
+          </div>
+        </div>
+      </motion.a>
   );
 });
 
-// Category Section Component
+// Category Section Component - Enhanced with glow effects
 const CategorySection = memo(function CategorySection({
   category,
   friends,
@@ -219,50 +298,77 @@ const CategorySection = memo(function CategorySection({
   index: number;
 }) {
   const IconComponent = iconMap[category.icon] || Globe;
-
+  const color = 'var(--accent-primary)';
+  
   return (
     <motion.section
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="mb-16"
+      transition={{ 
+        duration: 0.6, 
+        delay: index * 0.1,
+        type: 'spring',
+        stiffness: 100,
+      }}
+      className="mb-20"
     >
       {/* Category Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <div
-          className="flex items-center justify-center w-12 h-12 rounded-xl"
+      <motion.div 
+        initial={{ opacity: 0, x: -30 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: index * 0.1 + 0.1 }}
+        className="flex items-center gap-4 mb-10"
+      >
+        <motion.div
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          className="flex items-center justify-center w-12 h-12 rounded-xl relative"
           style={{
             background: 'var(--bg-secondary)',
-            border: '1px solid var(--border-subtle)'
+            border: '2px solid var(--border-subtle)',
+            boxShadow: `0 0 20px ${color}20`,
           }}
         >
-          <IconComponent
-            className="w-6 h-6"
+          {/* Glow effect */}
+          <div 
+            className="absolute inset-0 rounded-xl"
+            style={{
+              background: `radial-gradient(circle at 50% 50%, ${color}30, transparent 70%)`,
+            }}
+          />
+          <IconComponent 
+            className="w-6 h-6 relative z-10" 
             style={{ color: 'var(--accent-primary)' }}
           />
-        </div>
+        </motion.div>
         <div>
-          <h2
+          <motion.h2
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: index * 0.1 + 0.2 }}
             className="font-pixel text-2xl"
             style={{ color: 'var(--text-primary)' }}
           >
             {category.name}
-          </h2>
-          <p
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: index * 0.1 + 0.3 }}
             className="text-sm"
             style={{ color: 'var(--text-muted)' }}
           >
             {category.description}
-          </p>
+          </motion.p>
         </div>
-      </div>
-
+      </motion.div>
+      
       {/* Friends Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {friends.map((friend, friendIndex) => (
-          <FriendCard
-            key={friend.id}
-            friend={friend}
+          <FriendCard 
+            key={friend.id} 
+            friend={friend} 
             index={friendIndex}
           />
         ))}
@@ -271,71 +377,146 @@ const CategorySection = memo(function CategorySection({
   );
 });
 
-// Apply Section Component
+// Apply Section Component - Enhanced with glow effects
 const ApplySection = memo(function ApplySection({
   applyInfo
 }: {
   applyInfo: ApplyInfo;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const color = 'var(--accent-primary)';
+  
   return (
     <motion.section
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.4 }}
-      className="mt-20 p-8 md:p-12 rounded-2xl"
+      transition={{ 
+        duration: 0.6, 
+        delay: 0.4,
+        type: 'spring',
+        stiffness: 100,
+      }}
+      className="mt-20 p-8 md:p-12 rounded-2xl relative overflow-hidden"
       style={{
         background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%)',
-        border: '1px solid var(--border-subtle)'
+        border: '2px solid var(--border-subtle)',
       }}
     >
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+      {/* Glow background */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(circle at 50% 0%, ${color}10, transparent 70%)`,
+        }}
+        animate={{ opacity: isHovered ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+      />
+      
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 relative z-10">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-4">
-            <Sparkles
-              className="w-6 h-6"
-              style={{ color: 'var(--accent-primary)' }}
-            />
-            <h2
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="flex items-center gap-3 mb-4"
+          >
+            <motion.div
+              whileHover={{ scale: 1.1, rotate: 10 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              className="flex items-center justify-center w-12 h-12 rounded-xl relative"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '2px solid var(--border-subtle)',
+                boxShadow: `0 0 20px ${color}20`,
+              }}
+            >
+              <div 
+                className="absolute inset-0 rounded-xl"
+                style={{
+                  background: `radial-gradient(circle at 50% 50%, ${color}30, transparent 70%)`,
+                }}
+              />
+              <Sparkles
+                className="w-6 h-6 relative z-10"
+                style={{ color: 'var(--accent-primary)' }}
+              />
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
               className="font-pixel text-2xl"
               style={{ color: 'var(--text-primary)' }}
             >
               {applyInfo.title}
-            </h2>
-          </div>
-          <p
+            </motion.h2>
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
             className="mb-6"
             style={{ color: 'var(--text-secondary)' }}
           >
             {applyInfo.description}
-          </p>
-          <ul className="space-y-2">
+          </motion.p>
+          <motion.ul
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="space-y-3"
+          >
             {applyInfo.requirements.map((req, index) => (
-              <li
+              <motion.li
                 key={index}
-                className="flex items-center gap-2 text-sm"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 + index * 0.1 }}
+                className="flex items-center gap-3 text-sm"
                 style={{ color: 'var(--text-muted)' }}
               >
-                <div
-                  className="w-1.5 h-1.5 rounded-full"
+                <motion.div
+                  whileHover={{ scale: 1.2 }}
+                  transition={{ type: 'spring', stiffness: 400 }}
+                  className="w-2 h-2 rounded-full"
                   style={{ background: 'var(--accent-primary)' }}
                 />
                 {req}
-              </li>
+              </motion.li>
             ))}
-          </ul>
+          </motion.ul>
         </div>
 
-        <a
+        <motion.a
           href={`mailto:${applyInfo.contact}`}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 hover:scale-105"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5, type: 'spring' }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all duration-300"
           style={{
-            background: 'var(--accent-primary)',
-            color: 'white'
+            background: `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 80%, var(--accent-secondary)))`,
+            color: 'white',
+            boxShadow: isHovered 
+              ? `0 8px 30px var(--accent-glow), 0 0 60px ${color}40, inset 0 0 20px rgba(255,255,255,0.2)` 
+              : '0 4px 20px var(--accent-glow)',
+            transform: isHovered ? 'scale(1.05)' : 'scale(1)',
           }}
         >
+          {/* Shine effect */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none rounded-xl"
+            style={{
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+              transform: 'translateX(-100%)',
+            }}
+            animate={isHovered ? { x: '200%' } : { x: '-100%' }}
+            transition={{ duration: 0.6 }}
+          />
           <Mail className="w-5 h-5" />
           联系我们
-        </a>
+        </motion.a>
       </div>
     </motion.section>
   );
@@ -536,23 +717,53 @@ export default function FriendsPage() {
           {/* Featured Friends */}
           {data.friends.some(f => f.featured) && (
             <motion.section
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="mb-16"
+              transition={{ 
+                duration: 0.6, 
+                delay: 0.1,
+                type: 'spring',
+                stiffness: 100,
+              }}
+              className="mb-20"
             >
-              <div className="flex items-center gap-3 mb-8">
-                <Star
-                  className="w-6 h-6"
-                  style={{ color: 'var(--accent-primary)' }}
-                />
-                <h2
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="flex items-center gap-3 mb-10"
+              >
+                <motion.div
+                  whileHover={{ scale: 1.1, rotate: 10 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  className="flex items-center justify-center w-12 h-12 rounded-xl relative"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    border: '2px solid var(--border-subtle)',
+                    boxShadow: `0 0 20px var(--accent-primary)20`,
+                  }}
+                >
+                  <div 
+                    className="absolute inset-0 rounded-xl"
+                    style={{
+                      background: 'radial-gradient(circle at 50% 50%, var(--accent-primary)30, transparent 70%)',
+                    }}
+                  />
+                  <Star
+                    className="w-6 h-6 relative z-10"
+                    style={{ color: 'var(--accent-primary)' }}
+                  />
+                </motion.div>
+                <motion.h2
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
                   className="font-pixel text-2xl"
                   style={{ color: 'var(--text-primary)' }}
                 >
                   精选推荐
-                </h2>
-              </div>
+                </motion.h2>
+              </motion.div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {data.friends
                   .filter(f => f.featured)
