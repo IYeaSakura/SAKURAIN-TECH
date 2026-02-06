@@ -2,11 +2,21 @@ export async function onRequestGet(context) {
   try {
     const kv = context.env.DANMAKU_KV;
     if (!kv) {
-      return Response.json({ error: 'KV not bound' }, { status: 500 });
+      return new Response(JSON.stringify({ error: 'KV not bound' }), { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     const data = await kv.get('danmakus');
-    if (!data) return Response.json([]);
+    if (!data) {
+      return new Response(JSON.stringify([]), {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
 
     let danmakus = [];
     try {
@@ -16,9 +26,20 @@ export async function onRequestGet(context) {
       danmakus = [];
     }
 
-    return Response.json(danmakus);
+    return new Response(JSON.stringify(danmakus), {
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    return new Response(JSON.stringify({ error: err.message }), { 
+      status: 500,
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
   }
 }
 

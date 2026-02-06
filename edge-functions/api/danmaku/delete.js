@@ -2,12 +2,18 @@ export async function onRequestPost(context) {
   try {
     const body = await context.request.json();
     if (!body.id) {
-      return Response.json({ error: 'Missing id' }, { status: 400 });
+      return new Response(JSON.stringify({ error: 'Missing id' }), { 
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     const kv = context.env.DANMAKU_KV;
     if (!kv) {
-      return Response.json({ error: 'KV not bound' }, { status: 500 });
+      return new Response(JSON.stringify({ error: 'KV not bound' }), { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     let danmakus = [];
@@ -24,9 +30,20 @@ export async function onRequestPost(context) {
     const filtered = danmakus.filter(d => d.id !== body.id);
     await kv.put('danmakus', JSON.stringify(filtered));
 
-    return Response.json({ success: true });
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    return new Response(JSON.stringify({ error: err.message }), { 
+      status: 500,
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
   }
 }
 
