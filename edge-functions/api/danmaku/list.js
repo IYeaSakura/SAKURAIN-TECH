@@ -1,4 +1,5 @@
-// 获取弹幕列表
+// 获取弹幕列表 - Edge Function
+
 export async function onRequestGet(context) {
   try {
     const danmakus = await context.env.DANMAKU_KV.get('danmakus') || '[]';
@@ -6,7 +7,7 @@ export async function onRequestGet(context) {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
       },
     });
@@ -22,13 +23,12 @@ export async function onRequestGet(context) {
   }
 }
 
-// 处理 CORS 预检请求
 export async function onRequestOptions(context) {
   return new Response(null, {
     status: 204,
     headers: {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, DELETE',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Max-Age': '86400',
     },
