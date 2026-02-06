@@ -66,10 +66,10 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
       const minutes = now.getMinutes().toString().padStart(2, '0');
       setBeijingTime(`${hours}:${minutes}`);
     };
-    
+
     updateTime();
     timeIntervalRef.current = setInterval(updateTime, 1000);
-    
+
     return () => {
       if (timeIntervalRef.current) {
         clearInterval(timeIntervalRef.current);
@@ -85,13 +85,13 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
   // 控制城市点和连线的显示/隐藏
   useEffect(() => {
     if (!viewerRef.current) return;
-    
+
     cityEntitiesRef.current.forEach(entity => {
       if (entity.show !== undefined) {
         entity.show = !isRotationPaused;
       }
     });
-    
+
     tradeLine.current.forEach(entity => {
       if (entity.show !== undefined) {
         entity.show = !isRotationPaused;
@@ -112,7 +112,7 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
       Cesium.Cartesian3.multiplyByScalar(mid, 0.5, mid);
       const distance = Cesium.Cartesian3.distance(start, end);
       const height = Math.min(distance * 0.3, 2000000);
-      
+
       const midCartographic = Cesium.Cartographic.fromCartesian(mid);
       midCartographic.height = height;
       const midPoint = Cesium.Cartesian3.fromRadians(
@@ -185,7 +185,7 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
 
       viewer.imageryLayers.removeAll();
       const imageryLayer = viewer.imageryLayers.addImageryProvider(imageryProvider);
-      
+
       // 保持影像原色
       imageryLayer.alpha = 1.0;
       imageryLayer.brightness = 1.0;
@@ -210,7 +210,7 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
       scene.globe.lightingFadeInDistance = 1000000;
       scene.globe.dynamicAtmosphereLighting = true;
       scene.globe.dynamicAtmosphereLightingFromSun = true;
-      
+
       // 增强光照对比 - 亮处更亮，暗处更暗
       scene.globe.atmosphereLightIntensity = 2.0;
       scene.globe.lightingFadeOutDistance = 100000000;
@@ -255,9 +255,9 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
         },
       });
 
-      // 缩放限制 - 允许更大程度的放大
-      viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000; // 可以放大到1000km
-      viewer.scene.screenSpaceCameraController.maximumZoomDistance = 40000000;
+      // 缩放限制 - 允许观察高轨道卫星（北斗GEO/IGSO约36000km）
+      viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000; // 最近1000km
+      viewer.scene.screenSpaceCameraController.maximumZoomDistance = 80000000; // 最远80000km，可清晰观察高轨卫星
       viewer.scene.screenSpaceCameraController.enableTilt = false;
 
       if (!prefersReducedMotion) {
@@ -268,7 +268,7 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
             const now = Date.now();
             const delta = now - lastTime;
             lastTime = now;
-            
+
             viewer.scene.camera.rotateRight(0.00004 * delta);
           } else {
             lastTime = Date.now();
@@ -306,7 +306,7 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
           background: isDark ? '#050505' : '#1e4d6b',
         }}
       />
-      
+
       {/* 暂停/恢复滚动按钮 */}
       <div className="absolute top-4 right-4 z-20">
         <button
@@ -321,19 +321,19 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
           {isRotationPaused ? '▶ 恢复滚动' : '⏸ 暂停滚动'}
         </button>
       </div>
-      
+
       {/* 北京时间显示 */}
       <div className="absolute bottom-4 right-4 z-20 pointer-events-none">
-        <div 
+        <div
           className="px-3 py-2 rounded-lg backdrop-blur-sm text-right"
           style={{
             background: 'rgba(0, 0, 0, 0.5)',
             border: '1px solid rgba(251, 191, 36, 0.3)',
           }}
         >
-          <div 
+          <div
             className="text-lg font-mono font-bold tracking-wider"
-            style={{ 
+            style={{
               color: '#fbbf24',
               textShadow: '0 0 8px rgba(251, 191, 36, 0.3)',
             }}
