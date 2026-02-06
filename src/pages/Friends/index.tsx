@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { ArrowLeft, Code, Palette, Wrench, BookOpen, Monitor, ExternalLink, Heart, Mail, Sparkles, Globe, Star } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
-import { 
+import {
   MagneticCursor, VelocityCursor,
   TwinklingStars, FlowingGradient, LightBeam,
   FloatingBubbles, AmbientGlow
@@ -117,6 +117,7 @@ const FriendCard = memo(function FriendCard({
   index: number;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const cardRef = useRef<HTMLAnchorElement>(null);
@@ -144,7 +145,7 @@ const FriendCard = memo(function FriendCard({
   const rotateYValue = useTransform(rotateY, (value) => isHovered ? value : 0);
   const [currentRotateX, setCurrentRotateX] = useState(0);
   const [currentRotateY, setCurrentRotateY] = useState(0);
-  
+
   useEffect(() => {
     const unsubscribeX = rotateXValue.on('change', setCurrentRotateX);
     const unsubscribeY = rotateYValue.on('change', setCurrentRotateY);
@@ -161,10 +162,9 @@ const FriendCard = memo(function FriendCard({
       target="_blank"
       rel="noopener noreferrer"
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ margin: '-50px' }}
-      transition={{ 
-        duration: 0.6, 
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        duration: 0.6,
         delay: index * 0.05,
         type: 'spring',
         stiffness: 100,
@@ -172,14 +172,14 @@ const FriendCard = memo(function FriendCard({
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={handleMouseLeave}
-      style={{ 
+      style={{
         perspective: '1000px',
         background: 'var(--bg-card)',
         border: '3px solid',
         borderColor: isHovered ? color : 'var(--border-subtle)',
         transform: isHovered ? 'translateY(-8px) scale(1.02)' : 'none',
-        boxShadow: isHovered 
-          ? `0 20px 40px var(--accent-glow), 0 0 30px ${color}20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)` 
+        boxShadow: isHovered
+          ? `0 20px 40px var(--accent-glow), 0 0 30px ${color}20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)`
           : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
       }}
       className="group relative block p-6 rounded-xl cursor-default overflow-hidden"
@@ -193,7 +193,7 @@ const FriendCard = memo(function FriendCard({
           animate={{ opacity: isHovered ? 1 : 0 }}
           transition={{ duration: 0.3 }}
         />
-        
+
         {/* Shine effect - diagonal sheen */}
         <motion.div
           className="absolute inset-0 pointer-events-none rounded-xl"
@@ -226,7 +226,7 @@ const FriendCard = memo(function FriendCard({
         <div className="flex items-start gap-4 relative z-10">
           {/* Icon */}
           <motion.div
-            animate={{ 
+            animate={{
               rotateX: currentRotateX,
               rotateY: currentRotateY,
             }}
@@ -237,27 +237,26 @@ const FriendCard = memo(function FriendCard({
               border: '1px solid var(--border-subtle)',
             }}
           >
-            <img
-              src={friend.icon}
-              alt={friend.name}
-              className="w-8 h-8 object-contain"
-              onError={(e) => {
-                // Fallback to globe icon if favicon fails to load
-                (e.target as HTMLImageElement).style.display = 'none';
-                (e.target as HTMLImageElement).parentElement?.classList.add('fallback-icon');
-              }}
-            />
-            <Globe
-              className="w-8 h-8 fallback-icon hidden"
-              style={{ color: 'var(--accent-primary)' }}
-            />
+            {!imageError ? (
+              <img
+                src={friend.icon}
+                alt={friend.name}
+                className="w-8 h-8 object-contain"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <Globe
+                className="w-8 h-8"
+                style={{ color: 'var(--accent-primary)' }}
+              />
+            )}
           </motion.div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <motion.h3
-                animate={{ 
+                animate={{
                   scale: isHovered ? 1.05 : 1,
                 }}
                 transition={{ duration: 0.2 }}
@@ -301,14 +300,13 @@ const CategorySection = memo(function CategorySection({
 }) {
   const IconComponent = iconMap[category.icon] || Globe;
   const color = 'var(--accent-primary)';
-  
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ margin: '-50px' }}
-      transition={{ 
-        duration: 0.6, 
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.6,
         delay: index * 0.1,
         type: 'spring',
         stiffness: 100,
@@ -316,10 +314,9 @@ const CategorySection = memo(function CategorySection({
       className="mb-24"
     >
       {/* Category Header */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, x: -30 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ margin: '-50px' }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: index * 0.1 + 0.1 }}
         className="flex items-center gap-4 mb-10"
       >
@@ -335,7 +332,7 @@ const CategorySection = memo(function CategorySection({
           }}
         >
           {/* Glow effect */}
-          <motion.div 
+          <motion.div
             className="absolute inset-0 rounded-xl"
             style={{
               background: `radial-gradient(circle at 50% 50%, ${color}30, transparent 70%)`,
@@ -350,19 +347,18 @@ const CategorySection = memo(function CategorySection({
               ease: 'easeInOut',
             }}
           />
-          <IconComponent 
-            className="w-7 h-7 relative z-10" 
+          <IconComponent
+            className="w-7 h-7 relative z-10"
             style={{ color: 'var(--accent-primary)' }}
           />
         </motion.div>
         <div>
           <motion.h2
             initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ margin: '-50px' }}
+            animate={{ opacity: 1 }}
             transition={{ delay: index * 0.1 + 0.2 }}
             className="font-pixel text-2xl"
-            style={{ 
+            style={{
               color: 'var(--text-primary)',
               textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
             }}
@@ -371,8 +367,7 @@ const CategorySection = memo(function CategorySection({
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ margin: '-50px' }}
+            animate={{ opacity: 1 }}
             transition={{ delay: index * 0.1 + 0.3 }}
             className="text-sm font-medium"
             style={{ color: 'var(--text-muted)' }}
@@ -381,13 +376,13 @@ const CategorySection = memo(function CategorySection({
           </motion.p>
         </div>
       </motion.div>
-      
+
       {/* Friends Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {friends.map((friend, friendIndex) => (
-          <FriendCard 
-            key={friend.id} 
-            friend={friend} 
+          <FriendCard
+            key={friend.id}
+            friend={friend}
             index={friendIndex}
           />
         ))}
@@ -404,32 +399,32 @@ const ApplySection = memo(function ApplySection({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const color = 'var(--accent-primary)';
-  
+
   const handleApplyClick = useCallback(() => {
     const subject = '申请友链 - SAKURAIN';
-    const body = `您好，我想申请添加友链。
+    const body = `此邮件用于申请添加友链。
 
-请填写以下信息：
+以下是站点信息：
 
 网站名称：
-网站链接：
-图标链接：
+网站URL：
+图标URL：
 网站描述：
+
+发送邮件即代表承诺网站内容健康、合法、无恶意代码。
 
 ---
 此邮件由 SAKURAIN 网站友链申请自动生成`;
-    
+
     const mailtoLink = `mailto:${applyInfo.contact}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailtoLink;
   }, [applyInfo.contact]);
-  
-  return (
+   return (
     <motion.section
       initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ margin: '-50px' }}
-      transition={{ 
-        duration: 0.6, 
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.6,
         delay: 0.4,
         type: 'spring',
         stiffness: 100,
@@ -449,7 +444,7 @@ const ApplySection = memo(function ApplySection({
         animate={{ opacity: isHovered ? 1 : 0 }}
         transition={{ duration: 0.3 }}
       />
-      
+
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 relative z-10">
         <div className="flex-1">
           <motion.div
@@ -470,7 +465,7 @@ const ApplySection = memo(function ApplySection({
                 boxShadow: `0 0 20px ${color}20`,
               }}
             >
-              <motion.div 
+              <motion.div
                 className="absolute inset-0 rounded-xl"
                 style={{
                   background: `radial-gradient(circle at 50% 50%, ${color}30, transparent 70%)`,
@@ -496,7 +491,7 @@ const ApplySection = memo(function ApplySection({
               viewport={{ margin: '-50px' }}
               transition={{ delay: 0.2 }}
               className="font-pixel text-2xl"
-              style={{ 
+              style={{
                 color: 'var(--text-primary)',
                 textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
               }}
@@ -555,8 +550,8 @@ const ApplySection = memo(function ApplySection({
           style={{
             background: `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 80%, var(--accent-secondary)))`,
             color: 'white',
-            boxShadow: isHovered 
-              ? `0 8px 30px var(--accent-glow), 0 0 60px ${color}40, inset 0 0 20px rgba(255,255,255,0.2)` 
+            boxShadow: isHovered
+              ? `0 8px 30px var(--accent-glow), 0 0 60px ${color}40, inset 0 0 20px rgba(255,255,255,0.2)`
               : '0 4px 20px var(--accent-glow)',
             transform: isHovered ? 'scale(1.05)' : 'scale(1)',
           }}
@@ -647,21 +642,36 @@ export default function FriendsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<Theme>('dark');
+  const THEME_STORAGE_KEY = 'sakurain-theme';
 
   // Load theme from localStorage
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme;
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme;
     if (savedTheme) {
       setTheme(savedTheme);
       document.documentElement.setAttribute('data-theme', savedTheme);
     }
   }, []);
 
+  // Listen for theme changes from other pages
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === THEME_STORAGE_KEY && e.newValue) {
+        const newTheme = e.newValue as Theme;
+        setTheme(newTheme);
+        document.documentElement.setAttribute('data-theme', newTheme);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   // Toggle theme
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
-    localStorage.setItem('theme', newTheme);
+    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
   };
 
@@ -789,8 +799,8 @@ export default function FriendsPage() {
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ margin: '-50px' }}
-              transition={{ 
-                duration: 0.6, 
+              transition={{
+                duration: 0.6,
                 delay: 0.1,
                 type: 'spring',
                 stiffness: 100,
@@ -815,7 +825,7 @@ export default function FriendsPage() {
                     boxShadow: `0 0 20px var(--accent-primary)20`,
                   }}
                 >
-                  <motion.div 
+                  <motion.div
                     className="absolute inset-0 rounded-xl"
                     style={{
                       background: 'radial-gradient(circle at 50% 50%, var(--accent-primary)30, transparent 70%)',
@@ -841,7 +851,7 @@ export default function FriendsPage() {
                   viewport={{ margin: '-50px' }}
                   transition={{ delay: 0.3 }}
                   className="font-pixel text-2xl"
-                  style={{ 
+                  style={{
                     color: 'var(--text-primary)',
                     textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
                   }}
@@ -889,14 +899,14 @@ export default function FriendsPage() {
         <div className="absolute inset-0 pointer-events-none opacity-15">
           <FloatingBubbles count={8} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
         </div>
-        
+
         {/* Twinkling stars */}
         <div className="absolute inset-0 pointer-events-none hidden lg:block">
           <TwinklingStars count={20} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
         </div>
-        
+
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p 
+          <p
             className="flex items-center justify-center gap-2"
             style={{ color: 'var(--text-muted)' }}
           >
