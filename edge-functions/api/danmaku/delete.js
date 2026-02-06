@@ -26,16 +26,25 @@ export async function onRequestPost(context) {
       danmakus = [];
     }
 
-    // 过滤掉要删除的弹幕
-    const originalLength = danmakus.length;
-    danmakus = danmakus.filter(d => d.id !== body.id);
-
-    // 如果有变化，保存回 KV
-    if (danmakus.length !== originalLength) {
-      await context.env.DANMAKU_KV.put('danmakus', JSON.stringify(danmakus));
+    // 查找要删除的弹幕
+    const danmakuToDelete = danmakus.find(d => d.id === body.id);
+    if (!danmakuToDelete) {
+      return new Response(JSON.stringify({ error: 'Danmaku not found' }), {
+        status: 404,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    // 过滤掉要删除的弹幕
+    const filteredDanmakus = danmakus.filter(d => d.id !== body.id);
+
+    // 保存回 KV
+    await context.env.DANMAKU_KV.put('danmakus', JSON.stringify(filteredDanmakus));
+
+    return new Response(JSON.stringify({ success: true, deleted: body.id }), {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
