@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, MessageSquare, X, AlertCircle } from 'lucide-react';
+import { Send, MessageSquare, X, AlertCircle, Orbit } from 'lucide-react';
 import * as Cesium from 'cesium';
 
 // API 基础路径 - 根据环境判断
@@ -18,6 +18,11 @@ const RATE_LIMIT = {
   maxPerMinute: 10,
   maxPerHour: 50,
 };
+
+// 地球和轨道常量
+const EARTH_RADIUS = 6371000; // 地球半径 (米)
+const MIN_ALTITUDE = 500000; // 最低轨道高度 500km
+const MAX_ALTITUDE = 1500000; // 最高轨道高度 1500km
 
 interface Danmaku {
   id: string;
@@ -102,11 +107,17 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
 
   const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
+  const [showOrbits, setShowOrbits] = useState(true);
+  const orbitEntitiesRef = useRef<Map<string, Cesium.Entity>>(new Map());
+
   const generateOrbitParams = () => {
     const angle = Math.random() * Math.PI * 2;
     const inclination = (Math.random() - 0.5) * Math.PI / 1.5;
-    const altitude = 15000000 + Math.random() * 20000000;
-    const speed = (0.5 + Math.random() * 1.0) * (Math.random() > 0.5 ? 1 : -1);
+    // 近地轨道：500km - 1500km
+    const altitude = MIN_ALTITUDE + Math.random() * (MAX_ALTITUDE - MIN_ALTITUDE);
+    // 速度根据轨道高度调整（越低越快）
+    const baseSpeed = 2 + Math.random();
+    const speed = baseSpeed * (Math.random() > 0.5 ? 1 : -1);
     return { angle, inclination, altitude, speed };
   };
 
@@ -259,6 +270,10 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     setShowDanmaku(prev => !prev);
   }, []);
 
+  const toggleOrbits = useCallback(() => {
+    setShowOrbits(prev => !prev);
+  }, []);
+
   useEffect(() => {
     // 防止 React StrictMode 双重执行导致的重复请求
     if (isMountedRef.current) return;
@@ -290,8 +305,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     if (!viewer) return;
 
     const calculatePosition = (danmaku: Danmaku, elapsedSeconds: number) => {
-      const earthRadius = 6371000;
-      const radius = earthRadius + danmaku.altitude;
+      const radius = EARTH_RADIUS + danmaku.altitude;
       const currentAngle = danmaku.angle + (danmaku.speed * elapsedSeconds * 0.001);
       const x = Math.cos(currentAngle) * radius;
       const y = Math.sin(currentAngle) * radius;
@@ -333,6 +347,37 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       return entity;
     };
 
+    // 创建轨道线
+    const createOrbitLine = (danmaku: Danmaku) => {
+      const radius = EARTH_RADIUS + danmaku.altitude;
+      const inclination = danmaku.inclination;
+      const angleOffset = danmaku.angle;
+      
+      // 生成轨道上的点
+      const positions: Cesium.Cartesian3[] = [];
+      for (let i = 0; i <= 64; i++) {
+        const theta = (i / 64) * Math.PI * 2 + angleOffset;
+        const x = Math.cos(theta) * radius;
+        const y = Math.sin(theta) * radius;
+        const rotatedY = y * Math.cos(inclination);
+        const rotatedZ = y * Math.sin(inclination);
+        positions.push(new Cesium.Cartesian3(x, rotatedY, rotatedZ));
+      }
+
+      const entity = viewer.entities.add({
+        polyline: {
+          positions: positions,
+          width: 1,
+          material: new Cesium.PolylineDashMaterialProperty({
+            color: Cesium.Color.fromCssColorString(danmaku.color).withAlpha(0.3),
+            dashLength: 16,
+          }),
+          show: showOrbits,
+        },
+      });
+      return entity;
+    };
+
     danmakus.forEach(danmaku => {
       if (!entitiesRef.current.has(danmaku.id)) {
         const entity = createDanmakuEntity(danmaku);
@@ -340,8 +385,16 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           entitiesRef.current.set(danmaku.id, entity);
         }
       }
+      // 创建轨道线
+      if (!orbitEntitiesRef.current.has(danmaku.id)) {
+        const orbitEntity = createOrbitLine(danmaku);
+        if (orbitEntity) {
+          orbitEntitiesRef.current.set(danmaku.id, orbitEntity);
+        }
+      }
     });
 
+    // 清理已删除的弹幕实体和轨道
     const currentIds = new Set(danmakus.map(d => d.id));
     entitiesRef.current.forEach((entity, id) => {
       if (!currentIds.has(id)) {
@@ -349,10 +402,22 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         entitiesRef.current.delete(id);
       }
     });
+    orbitEntitiesRef.current.forEach((entity, id) => {
+      if (!currentIds.has(id)) {
+        viewer.entities.remove(entity);
+        orbitEntitiesRef.current.delete(id);
+      }
+    });
 
+    // 更新可见性
     entitiesRef.current.forEach((entity) => {
       if (entity.label) {
         entity.label.show = new Cesium.ConstantProperty(showDanmaku);
+      }
+    });
+    orbitEntitiesRef.current.forEach((entity) => {
+      if (entity.polyline) {
+        entity.polyline.show = new Cesium.ConstantProperty(showOrbits);
       }
     });
 
@@ -361,8 +426,12 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         viewer.entities.remove(entity);
       });
       entitiesRef.current.clear();
+      orbitEntitiesRef.current.forEach((entity) => {
+        viewer.entities.remove(entity);
+      });
+      orbitEntitiesRef.current.clear();
     };
-  }, [viewer, danmakus, showDanmaku]);
+  }, [viewer, danmakus, showDanmaku, showOrbits]);
 
   const myDanmakus = danmakus.filter(d => d.userId === userId.current);
 
@@ -397,6 +466,21 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
             title="发送弹幕"
           >
             <Send className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={toggleOrbits}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
+            style={{
+              background: 'rgba(0, 0, 0, 0.5)',
+              border: showOrbits 
+                ? '1px solid rgba(96, 165, 250, 0.5)' 
+                : '1px solid rgba(96, 165, 250, 0.2)',
+              color: showOrbits ? '#60a5fa' : '#94a3b8',
+            }}
+            title={showOrbits ? '隐藏轨道' : '显示轨道'}
+          >
+            <Orbit className="w-4 h-4" />
           </button>
         </div>
 

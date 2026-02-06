@@ -17,12 +17,15 @@ export async function onRequestPost(context) {
       });
     }
 
-    // 直接访问全局变量 DANMAKU_KV
-    let kv = DANMAKU_KV;
-    if (!kv && context.env) {
-      kv = context.env.DANMAKU_KV;
+    const text = String(body.text).trim();
+    if (!text || text.length > 50) {
+      return new Response(JSON.stringify({ error: 'Invalid text length' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
     }
-    
+
+    const kv = DANMAKU_KV;
     if (!kv) {
       return new Response(JSON.stringify({ error: 'KV not bound' }), {
         status: 500,
@@ -41,15 +44,18 @@ export async function onRequestPost(context) {
     }
 
     const newDanmaku = {
-      id: String(Date.now()),
-      text: String(body.text).trim(),
+      id: 'd' + Date.now(),
+      text: text,
       userId: String(body.userId || 'anon'),
       timestamp: Date.now(),
       color: String(body.color || '#60a5fa'),
-      angle: Math.random() * 6.28,
-      inclination: 0,
-      altitude: 20000000,
-      speed: 1
+      // 近地轨道参数
+      angle: body.angle != null ? body.angle : Math.random() * Math.PI * 2,
+      inclination: body.inclination != null ? body.inclination : (Math.random() - 0.5) * Math.PI / 1.5,
+      // 高度 500km - 1500km (近地轨道)
+      altitude: body.altitude != null ? body.altitude : (500000 + Math.random() * 1000000),
+      // 速度根据高度调整
+      speed: body.speed != null ? body.speed : (2 + Math.random()),
     };
 
     danmakus.push(newDanmaku);

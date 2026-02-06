@@ -17,12 +17,7 @@ export async function onRequestPost(context) {
       });
     }
 
-    // 直接访问全局变量 DANMAKU_KV
-    let kv = DANMAKU_KV;
-    if (!kv && context.env) {
-      kv = context.env.DANMAKU_KV;
-    }
-    
+    const kv = DANMAKU_KV;
     if (!kv) {
       return new Response(JSON.stringify({ error: 'KV not bound' }), {
         status: 500,
