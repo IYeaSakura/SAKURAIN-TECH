@@ -17,7 +17,12 @@ export async function onRequestPost(context) {
       });
     }
 
-    const kv = context.env.DANMAKU_KV;
+    // 获取 KV
+    let kv = context.env.DANMAKU_KV;
+    if (!kv && typeof DANMAKU_KV !== 'undefined') {
+      kv = DANMAKU_KV;
+    }
+    
     if (!kv) {
       return new Response(JSON.stringify({ error: 'KV not bound' }), {
         status: 500,
