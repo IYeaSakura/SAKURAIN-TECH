@@ -2,14 +2,21 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, MessageSquare, X, AlertCircle } from 'lucide-react';
 import * as Cesium from 'cesium';
 
-// API 基础路径
-const API_BASE_URL = '/api/danmaku';
+// API 基础路径 - 根据环境判断
+const API_BASE_URL = import.meta.env.DEV 
+  ? '/api/danmaku' 
+  : '/api/danmaku';
+
+// 调试日志
+const debugLog = (...args: unknown[]) => {
+  console.log('[Danmaku]', ...args);
+};
 
 // 频率限制配置
 const RATE_LIMIT = {
-  minInterval: 5000, // 最少间隔 5 秒
-  maxPerMinute: 10,  // 每分钟最多 10 条
-  maxPerHour: 50,    // 每小时最多 50 条
+  minInterval: 5000,
+  maxPerMinute: 10,
+  maxPerHour: 50,
 };
 
 interface Danmaku {
@@ -17,11 +24,11 @@ interface Danmaku {
   text: string;
   userId: string;
   timestamp: number;
-  angle: number;      // 轨道平面角度 (0 - 2π)
-  speed: number;      // 角速度
+  angle: number;
+  speed: number;
   color: string;
-  inclination: number; // 轨道倾角 (-π/2 到 π/2)
-  altitude: number;   // 轨道高度
+  inclination: number;
+  altitude: number;
 }
 
 interface DanmakuSatelliteProps {
@@ -29,15 +36,12 @@ interface DanmakuSatelliteProps {
   isDark: boolean;
 }
 
-// 频率限制管理
 class RateLimiter {
   private records: number[] = [];
   private lastSendTime: number = 0;
 
   canSend(): { allowed: boolean; waitTime?: number; message?: string } {
     const now = Date.now();
-    
-    // 检查最小间隔
     const timeSinceLastSend = now - this.lastSendTime;
     if (timeSinceLastSend < RATE_LIMIT.minInterval) {
       return {
@@ -46,27 +50,11 @@ class RateLimiter {
         message: `发送太频繁，请等待 ${Math.ceil((RATE_LIMIT.minInterval - timeSinceLastSend) / 1000)} 秒`,
       };
     }
-
-    // 清理过期记录（超过1小时的）
     this.records = this.records.filter(time => now - time < 3600000);
-
-    // 检查每小时限制
-    if (this.records.length >= RATE_LIMIT.maxPerHour) {
-      return {
-        allowed: false,
-        message: '您本小时发送弹幕已达上限，请稍后再试',
-      };
-    }
-
-    // 检查每分钟限制
     const recentRecords = this.records.filter(time => now - time < 60000);
     if (recentRecords.length >= RATE_LIMIT.maxPerMinute) {
-      return {
-        allowed: false,
-        message: '发送太频繁，请稍后再试',
-      };
+      return { allowed: false, message: '发送太频繁，请稍后再试' };
     }
-
     return { allowed: true };
   }
 
@@ -99,6 +87,10 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   const entitiesRef = useRef<Map<string, Cesium.Entity>>(new Map());
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const rateLimiterRef = useRef(new RateLimiter());
+  const isFetchingRef = useRef(false);
+  const isMountedRef = useRef(false);
+
+  debugLog('Component mounted, API_BASE_URL:', API_BASE_URL);
 
   const colors = isDark ? [
     '#60a5fa', '#fbbf24', '#4ec9b0', '#f472b6', '#a78bfa', '#34d399',
@@ -110,46 +102,54 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
 
   const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
-  // 生成随机轨道参数
   const generateOrbitParams = () => {
-    // 轨道平面角度 (0 - 2π)
     const angle = Math.random() * Math.PI * 2;
-    // 轨道倾角 (-60° 到 60°，避免太陡的轨道)
     const inclination = (Math.random() - 0.5) * Math.PI / 1.5;
-    // 轨道高度 (15,000km - 35,000km，确保在地球上方可见)
     const altitude = 15000000 + Math.random() * 20000000;
-    // 角速度 (每分钟 1-3 圈)
     const speed = (0.5 + Math.random() * 1.0) * (Math.random() > 0.5 ? 1 : -1);
-    
     return { angle, inclination, altitude, speed };
   };
 
   const fetchDanmakus = useCallback(async () => {
+    // 防止重复请求
+    if (isFetchingRef.current) {
+      debugLog('Fetch already in progress, skipping');
+      return;
+    }
+    
+    const url = `${API_BASE_URL}/list`;
+    debugLog('Fetching danmakus from:', url);
+    
+    isFetchingRef.current = true;
     try {
-      const response = await fetch(`${API_BASE_URL}/list`, {
+      const response = await fetch(url, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
       });
+      debugLog('Fetch response status:', response.status, response.statusText);
       if (response.ok) {
         const data = await response.json();
-        // 为旧数据补充轨道参数
+        debugLog('Fetched danmakus count:', data.length);
         const processedData = data.map((d: Partial<Danmaku>) => ({
           ...generateOrbitParams(),
           ...d,
         }));
         setDanmakus(processedData);
       } else {
-        console.error('Failed to fetch danmakus, status:', response.status);
+        const errorText = await response.text();
+        console.error('Failed to fetch danmakus, status:', response.status, errorText);
       }
     } catch (error) {
       console.error('Failed to fetch danmakus:', error);
+    } finally {
+      isFetchingRef.current = false;
     }
   }, []);
 
   const addDanmaku = useCallback(async (text: string) => {
     if (!text.trim()) return;
+    debugLog('Adding danmaku:', text);
 
-    // 检查频率限制
     const rateCheck = rateLimiterRef.current.canSend();
     if (!rateCheck.allowed) {
       setErrorMessage(rateCheck.message || '发送太频繁');
@@ -170,8 +170,11 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       ...orbitParams,
     };
 
+    const url = `${API_BASE_URL}/add`;
+    debugLog('Sending POST to:', url, 'body:', newDanmaku);
+
     try {
-      const response = await fetch(`${API_BASE_URL}/add`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,8 +183,12 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         body: JSON.stringify(newDanmaku),
       });
 
+      debugLog('Add response status:', response.status, response.statusText);
+      debugLog('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (response.ok) {
         const result = await response.json();
+        debugLog('Add success, result:', result);
         if (result.success) {
           rateLimiterRef.current.recordSend();
           setDanmakus(prev => [...prev, result.danmaku || newDanmaku]);
@@ -189,13 +196,21 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           setRemainingQuota(rateLimiterRef.current.getRemainingQuota());
         }
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        setErrorMessage(errorData.error || '发送失败，请重试');
+        let errorMessage = '发送失败，请重试';
+        try {
+          const errorData = await response.json();
+          debugLog('Error response body:', errorData);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          const errorText = await response.text();
+          debugLog('Error response text:', errorText);
+        }
+        setErrorMessage(errorMessage);
         setTimeout(() => setErrorMessage(null), 3000);
       }
     } catch (error) {
-      console.error('Failed to add danmaku:', error);
-      setErrorMessage('网络错误，请重试');
+      console.error('Failed to add danmaku, network error:', error);
+      setErrorMessage('网络错误，请检查连接');
       setTimeout(() => setErrorMessage(null), 3000);
     } finally {
       setIsLoading(false);
@@ -203,8 +218,10 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   }, []);
 
   const deleteDanmaku = useCallback(async (id: string) => {
+    const url = `${API_BASE_URL}/delete`;
+    debugLog('Deleting danmaku:', id, 'url:', url);
     try {
-      const response = await fetch(`${API_BASE_URL}/delete`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -213,10 +230,12 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         body: JSON.stringify({ id }),
       });
 
+      debugLog('Delete response status:', response.status);
       if (response.ok) {
         setDanmakus(prev => prev.filter(d => d.id !== id));
       } else {
-        console.error('Failed to delete danmaku, status:', response.status);
+        const errorText = await response.text();
+        console.error('Failed to delete danmaku, status:', response.status, errorText);
       }
     } catch (error) {
       console.error('Failed to delete danmaku:', error);
@@ -240,16 +259,26 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     setShowDanmaku(prev => !prev);
   }, []);
 
-  // 定期获取弹幕
   useEffect(() => {
+    // 防止 React StrictMode 双重执行导致的重复请求
+    if (isMountedRef.current) return;
+    isMountedRef.current = true;
+    
+    debugLog('Initial fetch triggered');
     fetchDanmakus();
-    pollingIntervalRef.current = setInterval(fetchDanmakus, 5000);
+    
+    pollingIntervalRef.current = setInterval(() => {
+      fetchDanmakus();
+    }, 5000);
+    
     return () => {
-      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = undefined;
+      }
     };
-  }, [fetchDanmakus]);
+  }, []);  // 空依赖数组，只在组件挂载时执行
 
-  // 更新剩余配额显示
   useEffect(() => {
     const interval = setInterval(() => {
       setRemainingQuota(rateLimiterRef.current.getRemainingQuota());
@@ -257,36 +286,26 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // 创建和管理弹幕实体
   useEffect(() => {
     if (!viewer) return;
 
-    // 计算3D位置的函数 - 使用球面坐标
     const calculatePosition = (danmaku: Danmaku, elapsedSeconds: number) => {
-      const earthRadius = 6371000; // 地球半径 (米)
-      const radius = earthRadius + danmaku.altitude; // 轨道半径
-      
-      // 计算当前角度（考虑速度，单位：弧度/秒）
+      const earthRadius = 6371000;
+      const radius = earthRadius + danmaku.altitude;
       const currentAngle = danmaku.angle + (danmaku.speed * elapsedSeconds * 0.001);
-      
-      // 在轨道平面上的位置
       const x = Math.cos(currentAngle) * radius;
       const y = Math.sin(currentAngle) * radius;
-      
-      // 应用轨道倾角旋转
       const inclination = danmaku.inclination;
       const rotatedY = y * Math.cos(inclination);
       const rotatedZ = y * Math.sin(inclination);
-      
       return new Cesium.Cartesian3(x, rotatedY, rotatedZ);
     };
 
-    // 创建弹幕实体
     const createDanmakuEntity = (danmaku: Danmaku) => {
       const entity = viewer.entities.add({
-        position: new Cesium.CallbackProperty((_time) => {
+        position: new Cesium.CallbackProperty(() => {
           const now = Date.now();
-          const elapsed = (now - danmaku.timestamp) / 1000; // 转换为秒
+          const elapsed = (now - danmaku.timestamp) / 1000;
           return calculatePosition(danmaku, elapsed);
         }, false) as unknown as Cesium.PositionProperty,
         point: {
@@ -314,7 +333,6 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       return entity;
     };
 
-    // 添加新弹幕实体
     danmakus.forEach(danmaku => {
       if (!entitiesRef.current.has(danmaku.id)) {
         const entity = createDanmakuEntity(danmaku);
@@ -324,7 +342,6 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       }
     });
 
-    // 清理已删除的弹幕实体
     const currentIds = new Set(danmakus.map(d => d.id));
     entitiesRef.current.forEach((entity, id) => {
       if (!currentIds.has(id)) {
@@ -333,7 +350,6 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       }
     });
 
-    // 更新可见性
     entitiesRef.current.forEach((entity) => {
       if (entity.label) {
         entity.label.show = new Cesium.ConstantProperty(showDanmaku);
@@ -393,7 +409,6 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
               minWidth: '280px',
             }}
           >
-            {/* 错误提示 */}
             {errorMessage && (
               <div className="flex items-center gap-2 px-2 py-1.5 rounded text-sm" style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#f87171' }}>
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -441,7 +456,6 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
               </button>
             </div>
 
-            {/* 频率限制提示 */}
             <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
               <span>剩余: {remainingQuota.perMinute}/分</span>
               <span>{remainingQuota.perHour}/时</span>
