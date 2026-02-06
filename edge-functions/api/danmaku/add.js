@@ -54,7 +54,7 @@ export async function onRequestPost(context) {
       // 轨道参数
       angle: body.angle != null ? body.angle : Math.random() * Math.PI * 2,
       inclination: body.inclination != null ? body.inclination : (Math.random() - 0.5) * Math.PI / 1.5,
-      altitude: body.altitude != null ? body.altitude : (500000 + Math.random() * 1000000),
+      altitude: body.altitude != null ? body.altitude : (2000000 + Math.random() * 1000000), // 默认2000-3000km
       speed: body.speed != null ? body.speed : (2 + Math.random()),
     };
 

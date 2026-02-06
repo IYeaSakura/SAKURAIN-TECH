@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, X, AlertCircle, Orbit, Eye, EyeOff, Satellite, Type } from 'lucide-react';
+import { Send, X, AlertCircle, Orbit, Eye, EyeOff, Satellite, Type, Globe } from 'lucide-react';
 import * as Cesium from 'cesium';
 
 // API 基础路径
@@ -20,11 +20,14 @@ const RATE_LIMIT = {
 // 地球和轨道常量
 const EARTH_RADIUS = 6371000; // 地球半径 (米)
 
-// 轨道高度范围 (米) - 拉大范围让差异更明显
+// 轨道高度范围 (米) - 真实轨道定义
 const ORBIT_RANGES = {
-  low: { min: 300000, max: 500000, label: '低轨', desc: '300-500km' },      // 低轨: 近地轨道
-  medium: { min: 1500000, max: 2500000, label: '中轨', desc: '1500-2500km' }, // 中轨: 中地球轨道 (默认)
-  high: { min: 5000000, max: 8000000, label: '高轨', desc: '5000-8000km' },  // 高轨: 高地球轨道
+  // 低轨 LEO: 200-2000km
+  low: { min: 200000, max: 2000000, label: '低轨 LEO', desc: '200-2000km' },
+  // 中轨 MEO: 2000-35786km
+  medium: { min: 2000000, max: 35786000, label: '中轨 MEO', desc: '2000-35786km' },
+  // 高轨 GEO: 35786km
+  high: { min: 35786000, max: 60000000, label: '高轨 GEO', desc: '~35786km' },
 };
 
 type OrbitType = 'low' | 'medium' | 'high';
@@ -93,7 +96,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [remainingQuota, setRemainingQuota] = useState({ perMinute: RATE_LIMIT.maxPerMinute, perHour: RATE_LIMIT.maxPerHour });
   const [selectedOrbit, setSelectedOrbit] = useState<OrbitType>('medium');
-  
+
   // 可见性控制 - 分别控制文字、卫星、轨道
   const [showText, setShowText] = useState(true);
   const [showSatellite, setShowSatellite] = useState(true);
@@ -101,10 +104,13 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   // 总开关
   const [showAll, setShowAll] = useState(true);
   
+  // 北斗卫星数据
+  const [beidouSatellites, setBeidouSatellites] = useState<Danmaku[]>([]);
+  const [showBeidou, setShowBeidou] = useState(false);
+
   const userId = useRef(`user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const entitiesRef = useRef<Map<string, Cesium.Entity>>(new Map());
   const orbitEntitiesRef = useRef<Map<string, Cesium.Entity>>(new Map());
-  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const rateLimiterRef = useRef(new RateLimiter());
   const isFetchingRef = useRef(false);
   const isMountedRef = useRef(false);
@@ -123,31 +129,65 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   // 返回每秒转过的角度（弧度）
   const calculateAngularVelocity = (altitude: number): number => {
     const radius = EARTH_RADIUS + altitude;
-    // 参考低轨(400km)周期约90分钟，角速度约 2π/5400 ≈ 0.00116 rad/s
-    // 使用比例关系：ω = ω₀ × (r₀/r)^(3/2)
-    const referenceRadius = EARTH_RADIUS + 400000; // 400km参考轨道
-    const referenceOmega = 0.0012; // 参考角速度 rad/s
+    const referenceRadius = EARTH_RADIUS + 400000;
+    const referenceOmega = 0.0012;
     const omega = referenceOmega * Math.pow(referenceRadius / radius, 1.5);
-    return omega;
+    // 视觉加速：50倍速（真实轨道很高，需要更大的加速才能看清运动）
+    return omega * 50;
   };
 
-  const generateOrbitParams = useCallback((orbitType: OrbitType = 'medium') => {
-    const range = ORBIT_RANGES[orbitType];
+  // 随机选择轨道类型（低/中/高轨概率均等 1/3）
+  const getRandomOrbitType = (): OrbitType => {
+    const types: OrbitType[] = ['low', 'medium', 'high'];
+    return types[Math.floor(Math.random() * 3)];
+  };
+
+  const generateOrbitParams = useCallback((orbitType?: OrbitType) => {
+    // 如果没有指定类型，随机选择（三种轨道概率一致 1/3）
+    const type = orbitType || getRandomOrbitType();
+    const range = ORBIT_RANGES[type];
+    
+    // 初始角度：0-360度均匀分布
     const angle = Math.random() * Math.PI * 2;
-    const inclination = (Math.random() - 0.5) * Math.PI / 1.5;
+    
+    // 轨道倾角：-90°到+90°均匀分布（从赤道到极地）
+    const inclination = (Math.random() - 0.5) * Math.PI;
+    
+    // 高度：在轨道范围内均匀分布
     const altitude = range.min + Math.random() * (range.max - range.min);
-    // 使用物理规律计算角速度（低轨高速短周期，高轨低速长周期）
+    
+    // 角速度：根据高度计算（低轨高速，高轨低速）
     const angularVelocity = calculateAngularVelocity(altitude);
+    
+    // 方向：正向/反向概率均等（50%）
     const speed = angularVelocity * (Math.random() > 0.5 ? 1 : -1);
-    return { angle, inclination, altitude, speed, orbitType };
+    
+    return { angle, inclination, altitude, speed, orbitType: type };
   }, []);
+
+  // 加载北斗卫星数据（本地JSON）
+  const loadBeidouSatellites = useCallback(async () => {
+    if (beidouSatellites.length > 0) return; // 已加载过
+    
+    try {
+      debugLog('Loading Beidou satellites...');
+      const response = await fetch('/data/beidou-satellites.json');
+      if (response.ok) {
+        const satellites = await response.json();
+        setBeidouSatellites(satellites);
+        debugLog('Loaded Beidou satellites:', satellites.length);
+      }
+    } catch (err) {
+      console.error('Failed to load Beidou satellites:', err);
+    }
+  }, [beidouSatellites.length]);
 
   const fetchDanmakus = useCallback(async () => {
     if (isFetchingRef.current) return;
-    
+
     const url = `${API_BASE_URL}/list`;
     debugLog('Fetching danmakus from:', url);
-    
+
     isFetchingRef.current = true;
     try {
       const response = await fetch(url, {
@@ -208,6 +248,8 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           setDanmakus(prev => [...prev, result.danmaku || newDanmaku]);
           setInputText('');
           setRemainingQuota(rateLimiterRef.current.getRemainingQuota());
+          // 发送成功后刷新列表
+          fetchDanmakus();
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -263,17 +305,9 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   useEffect(() => {
     if (isMountedRef.current) return;
     isMountedRef.current = true;
-    
+
     fetchDanmakus();
-    // 减少请求频率：每30秒轮询一次，避免频繁请求
-    pollingIntervalRef.current = setInterval(fetchDanmakus, 30000);
-    
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = undefined;
-      }
-    };
+    // 移除定时轮询，只在需要时请求
   }, [fetchDanmakus]);
 
   useEffect(() => {
@@ -283,12 +317,23 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     return () => clearInterval(interval);
   }, []);
 
+  // 当打开输入面板时请求最新数据
+  useEffect(() => {
+    if (isInputVisible) {
+      fetchDanmakus();
+    }
+  }, [isInputVisible, fetchDanmakus]);
+
   // 创建和更新 Cesium 实体
   useEffect(() => {
     if (!viewer) return;
 
+    // 合并用户弹幕和北斗卫星数据（如果启用）
+    const allSatellites = showBeidou 
+      ? [...danmakus, ...beidouSatellites]
+      : danmakus;
+
     // 计算卫星位置
-    // speed 是角速度（弧度/秒），符合开普勒定律：低轨高速短周期，高轨低速长周期
     const calculatePosition = (danmaku: Danmaku, elapsedSeconds: number) => {
       const radius = EARTH_RADIUS + danmaku.altitude;
       // speed 已经是 rad/s，直接乘以时间（秒）得到转过的角度
@@ -303,6 +348,9 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
 
     // 创建卫星实体（包含文字和点）
     const createSatelliteEntity = (danmaku: Danmaku) => {
+      // 判断是否为北斗卫星 (ID格式: BD-G3-1, BD-M2-1 等)
+      const isBeidou = danmaku.id.startsWith('BD-') || danmaku.userId === 'beidou';
+      
       const entity = viewer.entities.add({
         position: new Cesium.CallbackProperty(() => {
           const now = Date.now();
@@ -310,25 +358,25 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           return calculatePosition(danmaku, elapsed);
         }, false) as unknown as Cesium.PositionProperty,
         point: {
-          pixelSize: 8,
-          color: Cesium.Color.fromCssColorString(danmaku.color),
-          outlineColor: Cesium.Color.WHITE,
-          outlineWidth: 2,
+          pixelSize: isBeidou ? 6 : 8,
+          color: isBeidou ? Cesium.Color.GOLD : Cesium.Color.fromCssColorString(danmaku.color),
+          outlineColor: isBeidou ? Cesium.Color.ORANGE : Cesium.Color.WHITE,
+          outlineWidth: isBeidou ? 1 : 2,
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          scaleByDistance: new Cesium.NearFarScalar(1.5e7, 1.5, 5.0e7, 0.8),
+          scaleByDistance: new Cesium.NearFarScalar(1.5e7, isBeidou ? 1.2 : 1.5, 5.0e7, 0.8),
           show: showSatellite && showAll,
         },
         label: {
           text: danmaku.text,
-          font: 'bold 14px "Microsoft YaHei", sans-serif',
-          fillColor: Cesium.Color.fromCssColorString(danmaku.color),
+          font: isBeidou ? 'bold 12px "Microsoft YaHei", sans-serif' : 'bold 14px "Microsoft YaHei", sans-serif',
+          fillColor: isBeidou ? Cesium.Color.GOLD : Cesium.Color.fromCssColorString(danmaku.color),
           outlineColor: Cesium.Color.BLACK,
-          outlineWidth: 3,
+          outlineWidth: isBeidou ? 2 : 3,
           style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-          pixelOffset: new Cesium.Cartesian2(0, -25),
+          pixelOffset: new Cesium.Cartesian2(0, -20),
           disableDepthTestDistance: Number.POSITIVE_INFINITY,
           show: showText && showAll,
-          scaleByDistance: new Cesium.NearFarScalar(1.5e7, 1.0, 5.0e7, 0.7),
+          scaleByDistance: new Cesium.NearFarScalar(1.5e7, isBeidou ? 0.8 : 1.0, 5.0e7, 0.7),
           translucencyByDistance: new Cesium.NearFarScalar(3.0e7, 1.0, 5.0e7, 0.5),
         },
       });
@@ -337,10 +385,11 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
 
     // 创建轨道线
     const createOrbitLine = (danmaku: Danmaku) => {
+      const isBeidou = danmaku.id.startsWith('BD-');
       const radius = EARTH_RADIUS + danmaku.altitude;
       const inclination = danmaku.inclination;
       const angleOffset = danmaku.angle;
-      
+
       const positions: Cesium.Cartesian3[] = [];
       for (let i = 0; i <= 64; i++) {
         const theta = (i / 64) * Math.PI * 2 + angleOffset;
@@ -354,10 +403,12 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       const entity = viewer.entities.add({
         polyline: {
           positions: positions,
-          width: 1.5,
+          width: isBeidou ? 1 : 1.5,
           material: new Cesium.PolylineDashMaterialProperty({
-            color: Cesium.Color.fromCssColorString(danmaku.color).withAlpha(0.4),
-            dashLength: 16,
+            color: isBeidou 
+              ? Cesium.Color.GOLD.withAlpha(0.3) 
+              : Cesium.Color.fromCssColorString(danmaku.color).withAlpha(0.4),
+            dashLength: isBeidou ? 12 : 16,
           }),
           show: showOrbitLine && showAll,
         },
@@ -365,7 +416,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       return entity;
     };
 
-    danmakus.forEach(danmaku => {
+    allSatellites.forEach(danmaku => {
       if (!entitiesRef.current.has(danmaku.id)) {
         const entity = createSatelliteEntity(danmaku);
         if (entity) entitiesRef.current.set(danmaku.id, entity);
@@ -376,7 +427,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       }
     });
 
-    const currentIds = new Set(danmakus.map(d => d.id));
+    const currentIds = new Set(allSatellites.map(d => d.id));
     entitiesRef.current.forEach((entity, id) => {
       if (!currentIds.has(id)) {
         viewer.entities.remove(entity);
@@ -405,7 +456,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       orbitEntitiesRef.current.forEach((entity) => viewer.entities.remove(entity));
       orbitEntitiesRef.current.clear();
     };
-  }, [viewer, danmakus, showText, showSatellite, showOrbitLine, showAll]);
+  }, [viewer, danmakus, beidouSatellites, showBeidou, showText, showSatellite, showOrbitLine, showAll]);
 
   const myDanmakus = danmakus.filter(d => d.userId === userId.current);
 
@@ -428,10 +479,10 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           >
             {showAll ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             <span className="text-sm font-medium">
-              {showAll ? `弹幕 (${danmakus.length})` : '已隐藏'}
+              {showAll ? `卫星 (${danmakus.length + (showBeidou ? beidouSatellites.length : 0)})` : '已隐藏'}
             </span>
           </button>
-          
+
           <button
             onClick={() => setIsInputVisible(!isInputVisible)}
             className="flex items-center gap-2 px-3.5 py-2 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
@@ -493,6 +544,26 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
               <Orbit className="w-3.5 h-3.5" />
               <span className="text-xs">轨</span>
             </button>
+
+            {/* 北斗开关 */}
+            <button
+              onClick={() => {
+                if (!showBeidou) {
+                  loadBeidouSatellites();
+                }
+                setShowBeidou(prev => !prev);
+              }}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{
+                background: 'rgba(0, 0, 0, 0.5)',
+                border: showBeidou ? '1px solid rgba(234, 179, 8, 0.5)' : '1px solid rgba(96, 165, 250, 0.2)',
+                color: showBeidou ? '#eab308' : '#64748b',
+              }}
+              title="北斗卫星"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span className="text-xs">北斗</span>
+            </button>
           </div>
         )}
 
@@ -512,7 +583,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                 <span>{errorMessage}</span>
               </div>
             )}
-            
+
             {/* 轨道高度选择 */}
             <div className="flex flex-col gap-1.5">
               <span className="text-xs text-gray-400">轨道高度</span>
@@ -534,7 +605,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                 ))}
               </div>
             </div>
-            
+
             <input
               type="text"
               value={inputText}
@@ -549,7 +620,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                 border: '1px solid rgba(96, 165, 250, 0.3)',
               }}
             />
-            
+
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400">
                 {inputText.length}/50
@@ -576,7 +647,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
             </div>
 
             <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
-              <span>剩余: {remainingQuota.perMinute}/分</span>
+              <span>限制: {remainingQuota.perMinute}/分</span>
               <span>{remainingQuota.perHour}/时</span>
             </div>
 
