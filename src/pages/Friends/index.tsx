@@ -5,7 +5,8 @@ import { ArrowLeft, Code, Palette, Wrench, BookOpen, Monitor, ExternalLink, Hear
 import type { LucideProps } from 'lucide-react';
 import { 
   MagneticCursor, VelocityCursor,
-  TwinklingStars, FlowingGradient, LightBeam
+  TwinklingStars, FlowingGradient, LightBeam,
+  FloatingBubbles, AmbientGlow
 } from '@/components/effects';
 import { ThemeToggle } from '@/components/atoms';
 
@@ -160,7 +161,8 @@ const FriendCard = memo(function FriendCard({
       target="_blank"
       rel="noopener noreferrer"
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ margin: '-50px' }}
       transition={{ 
         duration: 0.6, 
         delay: index * 0.05,
@@ -180,7 +182,7 @@ const FriendCard = memo(function FriendCard({
           ? `0 20px 40px var(--accent-glow), 0 0 30px ${color}20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)` 
           : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
       }}
-      className="group relative block p-6 rounded-xl cursor-default"
+      className="group relative block p-6 rounded-xl cursor-default overflow-hidden"
     >
         {/* Glow background - radial gradient */}
         <motion.div
@@ -209,14 +211,14 @@ const FriendCard = memo(function FriendCard({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: 'spring' }}
-            className="absolute -top-3 -right-3 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold"
+            className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold z-20"
             style={{
               background: `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 80%, var(--accent-secondary)))`,
               color: 'white',
-              boxShadow: `0 4px 15px ${color}40`,
+              boxShadow: `0 2px 10px ${color}40`,
             }}
           >
-            <Star className="w-3.5 h-3.5" />
+            <Star className="w-3 h-3" />
             精选
           </motion.div>
         )}
@@ -303,26 +305,29 @@ const CategorySection = memo(function CategorySection({
   return (
     <motion.section
       initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ margin: '-50px' }}
       transition={{ 
         duration: 0.6, 
         delay: index * 0.1,
         type: 'spring',
         stiffness: 100,
       }}
-      className="mb-20"
+      className="mb-24"
     >
       {/* Category Header */}
       <motion.div 
         initial={{ opacity: 0, x: -30 }}
-        animate={{ opacity: 1, x: 0 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ margin: '-50px' }}
         transition={{ duration: 0.5, delay: index * 0.1 + 0.1 }}
         className="flex items-center gap-4 mb-10"
       >
         <motion.div
           whileHover={{ scale: 1.1, rotate: 5 }}
+          whileTap={{ scale: 0.95 }}
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          className="flex items-center justify-center w-12 h-12 rounded-xl relative"
+          className="flex items-center justify-center w-14 h-14 rounded-xl relative overflow-hidden"
           style={{
             background: 'var(--bg-secondary)',
             border: '2px solid var(--border-subtle)',
@@ -330,32 +335,46 @@ const CategorySection = memo(function CategorySection({
           }}
         >
           {/* Glow effect */}
-          <div 
+          <motion.div 
             className="absolute inset-0 rounded-xl"
             style={{
               background: `radial-gradient(circle at 50% 50%, ${color}30, transparent 70%)`,
             }}
+            animate={{
+              opacity: [0.5, 1, 0.5],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
           />
           <IconComponent 
-            className="w-6 h-6 relative z-10" 
+            className="w-7 h-7 relative z-10" 
             style={{ color: 'var(--accent-primary)' }}
           />
         </motion.div>
         <div>
           <motion.h2
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ margin: '-50px' }}
             transition={{ delay: index * 0.1 + 0.2 }}
             className="font-pixel text-2xl"
-            style={{ color: 'var(--text-primary)' }}
+            style={{ 
+              color: 'var(--text-primary)',
+              textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
+            }}
           >
             {category.name}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ margin: '-50px' }}
             transition={{ delay: index * 0.1 + 0.3 }}
-            className="text-sm"
+            className="text-sm font-medium"
             style={{ color: 'var(--text-muted)' }}
           >
             {category.description}
@@ -386,10 +405,29 @@ const ApplySection = memo(function ApplySection({
   const [isHovered, setIsHovered] = useState(false);
   const color = 'var(--accent-primary)';
   
+  const handleApplyClick = useCallback(() => {
+    const subject = '申请友链 - SAKURAIN';
+    const body = `您好，我想申请添加友链。
+
+请填写以下信息：
+
+网站名称：
+网站链接：
+图标链接：
+网站描述：
+
+---
+此邮件由 SAKURAIN 网站友链申请自动生成`;
+    
+    const mailtoLink = `mailto:${applyInfo.contact}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+  }, [applyInfo.contact]);
+  
   return (
     <motion.section
       initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ margin: '-50px' }}
       transition={{ 
         duration: 0.6, 
         delay: 0.4,
@@ -416,24 +454,35 @@ const ApplySection = memo(function ApplySection({
         <div className="flex-1">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ margin: '-50px' }}
             transition={{ duration: 0.5, delay: 0.1 }}
             className="flex items-center gap-3 mb-4"
           >
             <motion.div
               whileHover={{ scale: 1.1, rotate: 10 }}
+              whileTap={{ scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="flex items-center justify-center w-12 h-12 rounded-xl relative"
+              className="flex items-center justify-center w-12 h-12 rounded-xl relative overflow-hidden"
               style={{
                 background: 'var(--bg-secondary)',
                 border: '2px solid var(--border-subtle)',
                 boxShadow: `0 0 20px ${color}20`,
               }}
             >
-              <div 
+              <motion.div 
                 className="absolute inset-0 rounded-xl"
                 style={{
                   background: `radial-gradient(circle at 50% 50%, ${color}30, transparent 70%)`,
+                }}
+                animate={{
+                  opacity: [0.5, 1, 0.5],
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
                 }}
               />
               <Sparkles
@@ -443,17 +492,22 @@ const ApplySection = memo(function ApplySection({
             </motion.div>
             <motion.h2
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ margin: '-50px' }}
               transition={{ delay: 0.2 }}
               className="font-pixel text-2xl"
-              style={{ color: 'var(--text-primary)' }}
+              style={{ 
+                color: 'var(--text-primary)',
+                textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
+              }}
             >
               {applyInfo.title}
             </motion.h2>
           </motion.div>
           <motion.p
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ margin: '-50px' }}
             transition={{ delay: 0.3 }}
             className="mb-6"
             style={{ color: 'var(--text-secondary)' }}
@@ -462,7 +516,8 @@ const ApplySection = memo(function ApplySection({
           </motion.p>
           <motion.ul
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ margin: '-50px' }}
             transition={{ delay: 0.4 }}
             className="space-y-3"
           >
@@ -470,9 +525,10 @@ const ApplySection = memo(function ApplySection({
               <motion.li
                 key={index}
                 initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ margin: '-50px' }}
                 transition={{ delay: 0.4 + index * 0.1 }}
-                className="flex items-center gap-3 text-sm"
+                className="flex items-center gap-3 text-sm font-medium"
                 style={{ color: 'var(--text-muted)' }}
               >
                 <motion.div
@@ -487,14 +543,15 @@ const ApplySection = memo(function ApplySection({
           </motion.ul>
         </div>
 
-        <motion.a
-          href={`mailto:${applyInfo.contact}`}
+        <motion.button
+          onClick={handleApplyClick}
           initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ margin: '-50px' }}
           transition={{ delay: 0.5, type: 'spring' }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all duration-300"
+          className="relative flex items-center gap-2 px-8 py-4 rounded-xl font-bold transition-all duration-300 overflow-hidden"
           style={{
             background: `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 80%, var(--accent-secondary)))`,
             color: 'white',
@@ -515,8 +572,8 @@ const ApplySection = memo(function ApplySection({
             transition={{ duration: 0.6 }}
           />
           <Mail className="w-5 h-5" />
-          联系我们
-        </motion.a>
+          申请友链
+        </motion.button>
       </div>
     </motion.section>
   );
@@ -688,6 +745,7 @@ export default function FriendsPage() {
         />
       </div>
 
+      {/* Flowing gradient background */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <FlowingGradient
           colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
@@ -696,6 +754,17 @@ export default function FriendsPage() {
         />
       </div>
 
+      {/* Ambient glow effects */}
+      <AmbientGlow position="center" color="var(--accent-primary)" size={500} opacity={0.15} />
+      <AmbientGlow position="top-left" color="var(--accent-secondary)" size={300} opacity={0.12} />
+      <AmbientGlow position="bottom-right" color="var(--accent-tertiary)" size={400} opacity={0.1} />
+
+      {/* Floating bubbles */}
+      <div className="fixed inset-0 pointer-events-none z-0 opacity-20">
+        <FloatingBubbles count={8} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
+      </div>
+
+      {/* Light beams */}
       <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
 
       {/* Navigation */}
@@ -718,7 +787,8 @@ export default function FriendsPage() {
           {data.friends.some(f => f.featured) && (
             <motion.section
               initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ margin: '-50px' }}
               transition={{ 
                 duration: 0.6, 
                 delay: 0.1,
@@ -729,24 +799,35 @@ export default function FriendsPage() {
             >
               <motion.div
                 initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ margin: '-50px' }}
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="flex items-center gap-3 mb-10"
               >
                 <motion.div
                   whileHover={{ scale: 1.1, rotate: 10 }}
+                  whileTap={{ scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                  className="flex items-center justify-center w-12 h-12 rounded-xl relative"
+                  className="flex items-center justify-center w-12 h-12 rounded-xl relative overflow-hidden"
                   style={{
                     background: 'var(--bg-secondary)',
                     border: '2px solid var(--border-subtle)',
                     boxShadow: `0 0 20px var(--accent-primary)20`,
                   }}
                 >
-                  <div 
+                  <motion.div 
                     className="absolute inset-0 rounded-xl"
                     style={{
                       background: 'radial-gradient(circle at 50% 50%, var(--accent-primary)30, transparent 70%)',
+                    }}
+                    animate={{
+                      opacity: [0.5, 1, 0.5],
+                      scale: [1, 1.1, 1],
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
                     }}
                   />
                   <Star
@@ -756,10 +837,14 @@ export default function FriendsPage() {
                 </motion.div>
                 <motion.h2
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ margin: '-50px' }}
                   transition={{ delay: 0.3 }}
                   className="font-pixel text-2xl"
-                  style={{ color: 'var(--text-primary)' }}
+                  style={{ 
+                    color: 'var(--text-primary)',
+                    textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
+                  }}
                 >
                   精选推荐
                 </motion.h2>
@@ -797,15 +882,27 @@ export default function FriendsPage() {
 
       {/* Footer */}
       <footer
-        className="relative py-8"
-        style={{
-          background: 'var(--bg-secondary)',
-          borderTop: '1px solid var(--border-subtle)'
-        }}
+        className="relative py-16 overflow-hidden"
+        style={{ borderTop: '4px solid var(--border-subtle)' }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p style={{ color: 'var(--text-muted)' }}>
-            © {new Date().getFullYear()} SAKURAIN 技术工作室 · 用代码构建未来
+        {/* Floating bubbles */}
+        <div className="absolute inset-0 pointer-events-none opacity-15">
+          <FloatingBubbles count={8} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
+        </div>
+        
+        {/* Twinkling stars */}
+        <div className="absolute inset-0 pointer-events-none hidden lg:block">
+          <TwinklingStars count={20} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
+        </div>
+        
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p 
+            className="flex items-center justify-center gap-2"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            © {new Date().getFullYear()} SAKURAIN 技术工作室
+            <Heart className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+            用代码构建未来
           </p>
         </div>
       </footer>
