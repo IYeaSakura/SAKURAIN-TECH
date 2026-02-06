@@ -1,6 +1,5 @@
 export async function onRequestPost(context) {
   try {
-    // 获取请求体
     let body = {};
     try {
       body = await context.request.json();
@@ -11,7 +10,6 @@ export async function onRequestPost(context) {
       });
     }
 
-    // 简单验证
     if (!body.text) {
       return new Response(JSON.stringify({ error: 'Missing text' }), {
         status: 400,
@@ -20,7 +18,11 @@ export async function onRequestPost(context) {
     }
 
     // 获取 KV
-    const kv = context.env.DANMAKU_KV;
+    let kv = context.env.DANMAKU_KV;
+    if (!kv && typeof DANMAKU_KV !== 'undefined') {
+      kv = DANMAKU_KV;
+    }
+    
     if (!kv) {
       return new Response(JSON.stringify({ error: 'KV not bound' }), {
         status: 500,
@@ -28,7 +30,6 @@ export async function onRequestPost(context) {
       });
     }
 
-    // 获取现有数据
     let danmakus = [];
     const data = await kv.get('danmakus');
     if (data) {
@@ -39,7 +40,6 @@ export async function onRequestPost(context) {
       }
     }
 
-    // 创建新弹幕
     const newDanmaku = {
       id: String(Date.now()),
       text: String(body.text).trim(),
@@ -53,19 +53,15 @@ export async function onRequestPost(context) {
     };
 
     danmakus.push(newDanmaku);
-
-    // 限制200条
     if (danmakus.length > 200) {
       danmakus.shift();
     }
 
-    // 保存
     await kv.put('danmakus', JSON.stringify(danmakus));
 
     return new Response(JSON.stringify({ success: true, danmaku: newDanmaku }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
-
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
