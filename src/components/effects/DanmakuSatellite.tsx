@@ -99,8 +99,6 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   const entitiesRef = useRef<Map<string, Cesium.Entity>>(new Map());
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const rateLimiterRef = useRef(new RateLimiter());
-  const animationFrameRef = useRef<number | undefined>(undefined);
-  const lastUpdateRef = useRef<number>(Date.now());
 
   const colors = isDark ? [
     '#60a5fa', '#fbbf24', '#4ec9b0', '#f472b6', '#a78bfa', '#34d399',
@@ -286,7 +284,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     // 创建弹幕实体
     const createDanmakuEntity = (danmaku: Danmaku) => {
       const entity = viewer.entities.add({
-        position: new Cesium.CallbackProperty((time) => {
+        position: new Cesium.CallbackProperty((_time) => {
           const now = Date.now();
           const elapsed = (now - danmaku.timestamp) / 1000; // 转换为秒
           return calculatePosition(danmaku, elapsed);
