@@ -1,9 +1,21 @@
 // 获取弹幕列表 - Edge Function
+// 弹幕持久化存储，只限制总数不限制时间
 
 export async function onRequestGet(context) {
   try {
-    const danmakus = await context.env.DANMAKU_KV.get('danmakus') || '[]';
-    return new Response(danmakus, {
+    let danmakus = [];
+    try {
+      const existingData = await context.env.DANMAKU_KV.get('danmakus');
+      if (existingData) {
+        danmakus = JSON.parse(existingData);
+      }
+    } catch (parseError) {
+      console.error('Error parsing danmakus:', parseError);
+      danmakus = [];
+    }
+
+    // 返回所有弹幕（持久化存储）
+    return new Response(JSON.stringify(danmakus), {
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
