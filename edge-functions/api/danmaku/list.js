@@ -1,42 +1,25 @@
-// 注意：DANMAKU_KV 是通过环境变量绑定的 KV 命名空间
-// 在 Edge Functions 中，绑定的 KV 可以直接通过全局变量名访问
+// EdgeOne Pages 中 KV 可以直接通过绑定的变量名访问
+// DANMAKU_KV 是绑定的变量名，应该可以直接使用
 
 export async function onRequestGet(context) {
   try {
-    // 尝试通过 context.env 访问
-    let kv = context.env.DANMAKU_KV;
+    // 尝试直接访问全局变量 DANMAKU_KV
+    // 在 EdgeOne Pages 中，绑定的 KV 命名空间会直接作为全局变量暴露
+    let kv = DANMAKU_KV;
     
-    // 如果不行，尝试全局变量（某些版本可能直接暴露）
-    if (!kv && typeof DANMAKU_KV !== 'undefined') {
-      kv = DANMAKU_KV;
+    // 如果全局变量不存在，尝试从 env 获取
+    if (!kv && context.env) {
+      kv = context.env.DANMAKU_KV;
     }
     
-    // 调试信息
-    const debug = {
-      fromEnv: !!context.env.DANMAKU_KV,
-      fromGlobal: typeof DANMAKU_KV !== 'undefined',
-      kvType: typeof kv,
-      envKeys: Object.keys(context.env || {})
-    };
-
     if (!kv) {
       return new Response(JSON.stringify({ 
         error: 'KV not bound',
-        debug: debug
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
-    }
-
-    // 检查 kv 的方法
-    const methods = Object.keys(kv || {});
-    debug.kvMethods = methods;
-
-    if (typeof kv.get !== 'function') {
-      return new Response(JSON.stringify({ 
-        error: 'KV.get is not a function',
-        debug: debug
+        debug: {
+          hasGlobal: typeof DANMAKU_KV !== 'undefined',
+          globalType: typeof DANMAKU_KV,
+          envType: context.env ? typeof context.env.DANMAKU_KV : 'no env'
+        }
       }), {
         status: 500,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
