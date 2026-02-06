@@ -20,11 +20,11 @@ const RATE_LIMIT = {
 // 地球和轨道常量
 const EARTH_RADIUS = 6371000; // 地球半径 (米)
 
-// 轨道高度范围 (米)
+// 轨道高度范围 (米) - 拉大范围让差异更明显
 const ORBIT_RANGES = {
-  low: { min: 200000, max: 600000, label: '低轨', desc: '200-600km' },    // 低轨
-  medium: { min: 600000, max: 1200000, label: '中轨', desc: '600-1200km' }, // 中轨 (默认)
-  high: { min: 1200000, max: 2000000, label: '高轨', desc: '1200-2000km' }, // 高轨
+  low: { min: 300000, max: 500000, label: '低轨', desc: '300-500km' },      // 低轨: 近地轨道
+  medium: { min: 1500000, max: 2500000, label: '中轨', desc: '1500-2500km' }, // 中轨: 中地球轨道 (默认)
+  high: { min: 5000000, max: 8000000, label: '高轨', desc: '5000-8000km' },  // 高轨: 高地球轨道
 };
 
 type OrbitType = 'low' | 'medium' | 'high';
@@ -119,14 +119,26 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
 
   const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
 
+  // 根据开普勒定律计算角速度：ω ∝ r^(-3/2)
+  // 返回每秒转过的角度（弧度）
+  const calculateAngularVelocity = (altitude: number): number => {
+    const radius = EARTH_RADIUS + altitude;
+    // 参考低轨(400km)周期约90分钟，角速度约 2π/5400 ≈ 0.00116 rad/s
+    // 使用比例关系：ω = ω₀ × (r₀/r)^(3/2)
+    const referenceRadius = EARTH_RADIUS + 400000; // 400km参考轨道
+    const referenceOmega = 0.0012; // 参考角速度 rad/s
+    const omega = referenceOmega * Math.pow(referenceRadius / radius, 1.5);
+    return omega;
+  };
+
   const generateOrbitParams = useCallback((orbitType: OrbitType = 'medium') => {
     const range = ORBIT_RANGES[orbitType];
     const angle = Math.random() * Math.PI * 2;
     const inclination = (Math.random() - 0.5) * Math.PI / 1.5;
     const altitude = range.min + Math.random() * (range.max - range.min);
-    // 速度：轨道越低速度越快
-    const baseSpeed = 3 - ((altitude - 200000) / 1800000) * 2; // 3 ~ 1
-    const speed = baseSpeed * (Math.random() > 0.5 ? 1 : -1);
+    // 使用物理规律计算角速度（低轨高速短周期，高轨低速长周期）
+    const angularVelocity = calculateAngularVelocity(altitude);
+    const speed = angularVelocity * (Math.random() > 0.5 ? 1 : -1);
     return { angle, inclination, altitude, speed, orbitType };
   }, []);
 
@@ -253,7 +265,8 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     isMountedRef.current = true;
     
     fetchDanmakus();
-    pollingIntervalRef.current = setInterval(fetchDanmakus, 5000);
+    // 减少请求频率：每30秒轮询一次，避免频繁请求
+    pollingIntervalRef.current = setInterval(fetchDanmakus, 30000);
     
     return () => {
       if (pollingIntervalRef.current) {
@@ -274,9 +287,12 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   useEffect(() => {
     if (!viewer) return;
 
+    // 计算卫星位置
+    // speed 是角速度（弧度/秒），符合开普勒定律：低轨高速短周期，高轨低速长周期
     const calculatePosition = (danmaku: Danmaku, elapsedSeconds: number) => {
       const radius = EARTH_RADIUS + danmaku.altitude;
-      const currentAngle = danmaku.angle + (danmaku.speed * elapsedSeconds * 0.001);
+      // speed 已经是 rad/s，直接乘以时间（秒）得到转过的角度
+      const currentAngle = danmaku.angle + (danmaku.speed * elapsedSeconds);
       const x = Math.cos(currentAngle) * radius;
       const y = Math.sin(currentAngle) * radius;
       const inclination = danmaku.inclination;
@@ -394,8 +410,8 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   const myDanmakus = danmakus.filter(d => d.userId === userId.current);
 
   return (
-    // 移到右上角，避免遮挡左下角数据
-    <div className="absolute top-4 right-4 z-30">
+    // 移到左上角，避免遮挡左下角数据
+    <div className="absolute top-4 left-4 z-30">
       <div className="flex flex-col gap-2">
         {/* 主控制栏 */}
         <div className="flex items-center gap-2">
