@@ -55,6 +55,15 @@
       "featured": true
     },
     {
+      "id": "mxw2024",
+      "name": "孟轩网",
+      "url": "https://www.mxw2024.top/",
+      "icon": "https://www.mxw2024.top/favicon.ico",
+      "description": "一个简洁、美观、纯净、无广告的小站",
+      "category": "blogs",
+      "featured": true
+    },
+    {
       "id": "mclans",
       "name": "Mc服务器演示站",
       "url": "https://mclans.sakurain.net",
