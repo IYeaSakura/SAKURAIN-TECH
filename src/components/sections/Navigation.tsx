@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, BookOpen, Heart } from 'lucide-react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/atoms';
 import type { SiteData } from '@/types';
@@ -19,6 +19,7 @@ interface NavigationProps {
 export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }: NavigationProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -62,8 +63,8 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
             {/* Logo - 添加 max-w 防止溢出 */}
-            <motion.a
-              href="#"
+            <motion.button
+              onClick={() => navigate('/')}
               className="flex items-center gap-2 sm:gap-3 flex-shrink-0"
               whileHover={{ scale: 1.02 }}
             >
@@ -86,7 +87,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               >
                 {data.logo}
               </span>
-            </motion.a>
+            </motion.button>
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
