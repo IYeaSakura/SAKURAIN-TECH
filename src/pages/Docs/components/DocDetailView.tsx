@@ -142,53 +142,59 @@ export function DocDetailView({ doc, category, onBack }: DocDetailViewProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header - 固定 */}
-        <header 
-          className="h-16 border-b flex items-center justify-between px-4 flex-shrink-0" 
-          style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
+        <motion.header
+          initial={{ y: -100 }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="fixed top-0 left-0 right-0 z-50 mc-navbar"
         >
-          <div className="flex items-center gap-4">
-            {!showToc && (
-              <button onClick={onBack} className="p-2 rounded-lg hover:opacity-80" style={{ color: 'var(--text-secondary)' }}>
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-            )}
-            <div className="flex items-center gap-2 text-sm">
-              <span style={{ color: 'var(--text-muted)' }}>{category.name}</span>
-              <span style={{ color: 'var(--text-muted)' }}>/</span>
-              <span className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>{doc.title}</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* 文档内搜索 */}
-            <Suspense fallback={<div className="w-8 h-8" />}>
-              <DocSearch
-                onSearch={searchContent}
-                onSelectResult={handleSearchSelect}
-                placeholder="搜索本文档..."
-              />
-            </Suspense>
-            {/* 主题切换按钮 */}
-            <div className="hidden lg:block">
-              <ThemeToggleButton />
-            </div>
-            {hasToc && (
-              <button 
-                onClick={() => setShowToc(!showToc)} 
-                className="lg:hidden p-2 rounded-lg text-sm" 
-                style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16 lg:h-20">
+              <motion.button
+                onClick={onBack}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-subtle)',
+                  color: 'var(--text-primary)'
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                目录
-              </button>
-            )}
+                <ArrowLeft className="w-5 h-5" />
+                <span className="font-medium">返回</span>
+              </motion.button>
+
+              <div className="flex items-center gap-2">
+                {/* 文档内搜索 */}
+                <Suspense fallback={<div className="w-8 h-8" />}>
+                  <DocSearch
+                    onSearch={searchContent}
+                    onSelectResult={handleSearchSelect}
+                    placeholder="搜索本文档..."
+                  />
+                </Suspense>
+                <ThemeToggleButton />
+                {hasToc && (
+                  <button 
+                    onClick={() => setShowToc(!showToc)} 
+                    className="lg:hidden p-2 rounded-lg text-sm" 
+                    style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
+                  >
+                    目录
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-        </header>
+        </motion.header>
 
         {/* Content - 可滚动 */}
         <main 
           ref={mainRef}
           className="flex-1 overflow-y-auto scroll-smooth"
         >
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-28 pb-12">
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent-primary)' }} />

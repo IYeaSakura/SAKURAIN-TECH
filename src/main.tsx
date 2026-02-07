@@ -22,11 +22,14 @@ function RedirectHandler() {
 // 懒加载页面
 const DocsPage = lazy(() => import('./pages/Docs/index'));
 const FriendsPage = lazy(() => import('./pages/Friends/index'));
+const BlogPage = lazy(() => import('./pages/Blog/index'));
+const BlogPostPage = lazy(() => import('./pages/Blog/[slug]'));
 const NotFoundPage = lazy(() => import('./pages/NotFound/index'));
 
 // 预加载加载器
 let docsLoader: Promise<any> | null = null;
 let friendsLoader: Promise<any> | null = null;
+let blogLoader: Promise<any> | null = null;
 
 export function preloadDocs() {
   if (!docsLoader) {
@@ -40,6 +43,13 @@ export function preloadFriends() {
     friendsLoader = import('./pages/Friends/index');
   }
   return friendsLoader;
+}
+
+export function preloadBlog() {
+  if (!blogLoader) {
+    blogLoader = import('./pages/Blog/index');
+  }
+  return blogLoader;
 }
 
 // 简单的加载占位组件
@@ -84,6 +94,16 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/friends" element={
           <Suspense fallback={<PageFallback />}>
             <FriendsPage />
+          </Suspense>
+        } />
+        <Route path="/blog" element={
+          <Suspense fallback={<PageFallback />}>
+            <BlogPage />
+          </Suspense>
+        } />
+        <Route path="/blog/:slug" element={
+          <Suspense fallback={<PageFallback />}>
+            <BlogPostPage />
           </Suspense>
         } />
         <Route path="*" element={

@@ -1,0 +1,26 @@
+{
+  "title": "SAKURAIN 博客",
+  "description": "分享技术见解、项目经验和学习心得",
+  "posts": [
+    {
+      "slug": "hello-world",
+      "title": "欢迎来到 SAKURAIN 博客",
+      "description": "这是我的第一篇博客文章，介绍这个博客系统的设计理念和技术栈。",
+      "date": "2025-02-07",
+      "author": "SAKURAIN",
+      "tags": ["博客", "介绍"],
+      "cover": "/image/logo.webp",
+      "featured": true
+    },
+    {
+      "slug": "getting-started",
+      "title": "React + TypeScript + Vite 快速上手指南",
+      "description": "从零开始搭建一个现代化的 React 开发环境，包含最佳实践和常用配置。",
+      "date": "2025-02-06",
+      "author": "SAKURAIN",
+      "tags": ["React", "TypeScript", "Vite", "教程"],
+      "cover": "/image/logo.webp",
+      "featured": false
+    }
+  ]
+}

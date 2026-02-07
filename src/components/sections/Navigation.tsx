@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, BookOpen, Heart } from 'lucide-react';
+import { Menu, X, BookOpen, Heart, Pen } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/atoms';
 import type { SiteData } from '@/types';
-import { preloadDocs, preloadFriends } from '@/main';
+import { preloadDocs, preloadFriends, preloadBlog } from '@/main';
 
 // Theme type definition
 type Theme = 'light' | 'dark';
@@ -58,6 +58,11 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
   const handleFriendsClick = () => {
     preloadFriends();
     navigate('/friends');
+  };
+
+  const handleBlogClick = () => {
+    preloadBlog();
+    navigate('/blog');
   };
 
 
@@ -132,6 +137,19 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               >
                 <BookOpen className="w-4 h-4" />
                 文档
+              </button>
+              <button
+                onClick={handleBlogClick}
+                className="mc-nav-link flex items-center gap-1"
+                style={{
+                  fontFamily: 'var(--font-primary)',
+                  fontSize: 'var(--text-base)',
+                  fontWeight: 600,
+                  letterSpacing: '0.05em',
+                }}
+              >
+                <Pen className="w-4 h-4" />
+                博客
               </button>
               <button
                 onClick={handleFriendsClick}
@@ -263,6 +281,24 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: (data.links.length + 1) * 0.05 }}
+                  onClick={() => {
+                    handleBlogClick();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
+                  style={{ 
+                    fontFamily: 'var(--font-primary)',
+                    fontSize: 'var(--text-base)',
+                    fontWeight: 600,
+                  }}
+                >
+                  <Pen className="w-4 h-4" />
+                  博客
+                </motion.button>
+                <motion.button
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: (data.links.length + 2) * 0.05 }}
                   onClick={() => {
                     handleFriendsClick();
                     setIsMobileMenuOpen(false);

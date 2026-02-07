@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, lazy, Suspense, memo } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Home, Sparkles, Terminal } from 'lucide-react';
+import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Home, Sparkles } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import { MagneticCursor, VelocityCursor, AmbientGlow } from '@/components/effects';
 import { useConfig } from '@/hooks';
@@ -448,54 +448,52 @@ function DocHomeView({ config, onSelectCategory, iconMap }: DocHomeViewProps) {
       <CodeDecoration className="bottom-32 right-8 hidden lg:block" />
 
       {/* Header */}
-      <header 
-        className="sticky top-0 z-50 border-b backdrop-blur-md"
-        style={{ 
-          background: 'color-mix(in srgb, var(--bg-primary) 90%, transparent)', 
-          borderColor: 'var(--border-subtle)' 
-        }}
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="fixed top-0 left-0 right-0 z-50 mc-navbar"
       >
-        <div className="flex items-center justify-between px-4 sm:px-6 h-16 max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => navigate('/')} 
-              className="flex items-center gap-2 text-sm font-medium transition-all duration-300 hover:opacity-80 group"
-              style={{ color: 'var(--text-secondary)' }}
-            >
-              <div 
-                className="p-1.5 rounded-lg transition-all duration-300 group-hover:shadow-lg"
-                style={{ 
-                  background: 'var(--bg-card)',
-                  boxShadow: 'inset -2px -2px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
-                }}
-              >
-                <Home className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-              </div>
-              <span className="hidden sm:inline font-primary">返回主站</span>
-            </button>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Terminal className="w-5 h-5 hidden sm:block" style={{ color: 'var(--accent-primary)' }} />
-            <h1 
-              className="text-lg font-bold font-primary hidden sm:block"
-              style={{ 
-                color: 'var(--text-primary)',
-                textShadow: '0 0 20px var(--accent-glow)',
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 lg:h-20">
+            <motion.button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-subtle)',
+                color: 'var(--text-primary)'
               }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              {config.title}
-            </h1>
-          </div>
-          
-          <div className="flex items-center">
-            <ThemeToggleButton />
+              <Home className="w-5 h-5" />
+              <span className="font-medium">返回首页</span>
+            </motion.button>
+
+            <div className="flex items-center gap-3">
+              <img
+                src="/image/logo.webp"
+                alt="SAKURAIN"
+                className="w-8 h-8 object-contain"
+              />
+              <span
+                className="font-pixel text-xl hidden sm:block"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                SAKURAIN
+              </span>
+            </div>
+
+            <div className="flex items-center">
+              <ThemeToggleButton />
+            </div>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Hero */}
-      <div className="relative py-20 sm:py-28 px-4">
+      <div className="relative pt-24 lg:pt-28 py-20 sm:py-28 px-4">
         <div className="max-w-6xl mx-auto text-center relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 30 }} 
