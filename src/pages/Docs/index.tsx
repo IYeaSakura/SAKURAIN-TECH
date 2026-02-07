@@ -3,12 +3,12 @@ import { useParams, useNavigate } from 'react-router';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Home, Sparkles } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
-import { MagneticCursor, VelocityCursor, AmbientGlow } from '@/components/effects';
+import { MagneticCursor, VelocityCursor, AmbientGlow, FloatingBubbles, TwinklingStars } from '@/components/effects';
 import { useConfig } from '@/hooks';
 import { DocListView } from './components/DocListView';
 import { SeriesDetailView } from './components/SeriesDetailView';
 import { ThemeToggleButton } from './components/ThemeToggleButton';
-import { Footer } from '@/components/sections/Footer';
+import { Heart } from 'lucide-react';
 import type { DocCategory, DocItem, DocSeries, Chapter, DocsConfig } from './types';
 import type { SiteData } from '@/types';
 
@@ -416,7 +416,7 @@ const CodeDecoration = memo(({ className }: { className?: string }) => {
 
 CodeDecoration.displayName = 'CodeDecoration';
 
-function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeViewProps) {
+function DocHomeView({ config, onSelectCategory, iconMap }: DocHomeViewProps) {
   const navigate = useNavigate();
 
   return (
@@ -573,7 +573,81 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
         }}
       />
 
-      {siteData && <Footer data={siteData.footer} />}
+      {/* Footer */}
+      <footer
+        className="relative py-16 overflow-hidden"
+        style={{ borderTop: '4px solid var(--border-subtle)' }}
+      >
+        {/* Floating bubbles */}
+        <div className="absolute inset-0 pointer-events-none opacity-15">
+          <FloatingBubbles count={8} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
+        </div>
+
+        {/* Twinkling stars */}
+        <div className="absolute inset-0 pointer-events-none hidden lg:block">
+          <TwinklingStars count={20} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p
+            className="flex items-center justify-center gap-2 font-primary"
+            style={{
+              fontSize: 'var(--text-sm)',
+              fontWeight: 500,
+              color: 'var(--text-muted)',
+            }}
+          >
+            © {new Date().getFullYear()} SAKURAIN 技术工作室
+            <Heart className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+            用代码构建未来
+          </p>
+          {/* 备案信息 */}
+          <div
+            className="mt-4 flex flex-wrap flex-col md:flex-row items-center justify-center gap-4 font-primary"
+            style={{
+              fontSize: 'var(--text-xs)',
+              color: 'var(--text-muted)',
+            }}
+          >
+            <a
+              href="https://beian.miit.gov.cn/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline"
+              style={{ transition: 'color 0.2s ease' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--accent-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }}
+            >
+              皖ICP备2025073165号-1
+            </a>
+            <span>|</span>
+            <a
+              href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34130202000598"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline flex items-centerx gap-1"
+              style={{ transition: 'color 0.2s ease' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--accent-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }}
+            >
+              <img
+                src="/image/ghs.png"
+                alt="公安备案图标"
+                className="w-3 h-3"
+              />
+              皖公网安备34130202000598号
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
