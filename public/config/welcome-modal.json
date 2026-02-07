@@ -5,7 +5,7 @@
   "updates": "- refactor(danmaku): 优化弹幕数据存储和显示逻辑\n- feat(弹幕卫星): 优化弹幕系统功能与UI\n- feat(danmaku): 添加Markdown内容支持及显示功能\n- feat(弹幕轨道): 添加升交点赤经(RAAN)参数支持",
   "link": {
     "text": "本站技术详解",
-    "href": "#/docs/courses/site-tech/chapter01"
+    "href": "/docs/courses/site-tech/chapter01"
   },
   "confirmButtonText": "不再显示",
   "closeButtonText": "关闭",
