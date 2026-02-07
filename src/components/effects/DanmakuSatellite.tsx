@@ -45,6 +45,7 @@ interface Danmaku {
   altitude: number;
   orbitType: OrbitType;
   raan?: number; // 升交点赤经 (Right Ascension of Ascending Node)，用于确定轨道平面
+  markdown?: string; // Markdown 内容，默认为空
 }
 
 interface DanmakuSatelliteProps {
@@ -106,7 +107,6 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   // Markdown 内容显示
   const [selectedDanmaku, setSelectedDanmaku] = useState<Danmaku | null>(null);
   const [markdownContent, setMarkdownContent] = useState<string | null>(null);
-  const [isLoadingMarkdown, setIsLoadingMarkdown] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // 控制模态框显示
 
   // 可见性控制 - 分别控制文字、卫星、轨道
@@ -126,6 +126,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   const rateLimiterRef = useRef(new RateLimiter());
   const isFetchingRef = useRef(false);
   const isMountedRef = useRef(false);
+  const hasLoadedDanmakusRef = useRef(false); // 标记是否已加载过弹幕数据
 
   const colors = isDark ? [
     '#60a5fa', '#fbbf24', '#4ec9b0', '#f472b6', '#a78bfa', '#34d399',
@@ -197,7 +198,13 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     }
   }, [beidouSatellites.length]);
 
-  const fetchDanmakus = useCallback(async () => {
+  const fetchDanmakus = useCallback(async (force = false) => {
+    // 如果已经加载过且不是强制刷新，则直接返回（使用内存缓存）
+    if (hasLoadedDanmakusRef.current && !force) {
+      debugLog('Using cached danmakus from memory, count:', danmakus.length);
+      return;
+    }
+    
     if (isFetchingRef.current) return;
 
     const url = `${API_BASE_URL}/list`;
@@ -233,13 +240,14 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           } as Danmaku;
         });
         setDanmakus(processedData);
+        hasLoadedDanmakusRef.current = true; // 标记已加载
       }
     } catch (error) {
       console.error('Failed to fetch danmakus:', error);
     } finally {
       isFetchingRef.current = false;
     }
-  }, [generateOrbitParams]);
+  }, [generateOrbitParams, danmakus.length]);
 
   const addDanmaku = useCallback(async (text: string) => {
     if (!text.trim()) return;
@@ -270,7 +278,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
           ...newDanmaku,
-          markdownContent: markdownText.trim() || undefined,
+          markdown: markdownText.trim(),
         }),
       });
 
@@ -278,13 +286,13 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         const result = await response.json();
         if (result.success) {
           rateLimiterRef.current.recordSend();
+          // 直接使用服务器返回的数据更新本地状态，不重新请求整个列表
           setDanmakus(prev => [...prev, result.danmaku || newDanmaku]);
           setInputText('');
           setMarkdownText('');
           setShowMarkdownInput(false);
           setRemainingQuota(rateLimiterRef.current.getRemainingQuota());
-          // 发送成功后刷新列表
-          fetchDanmakus();
+          // 不再调用 fetchDanmakus() 重新请求，节省流量和请求次数
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -297,7 +305,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedOrbit, generateOrbitParams]);
+  }, [selectedOrbit, generateOrbitParams, markdownText]);
 
   const deleteDanmaku = useCallback(async (id: string) => {
     try {
@@ -328,8 +336,8 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     }
   }, [handleSend]);
 
-  // 获取 Markdown 内容
-  const fetchMarkdownContent = useCallback(async (danmaku: Danmaku) => {
+  // 显示 Markdown 内容（直接从已加载的数据中获取）
+  const showDanmakuDetail = useCallback((danmaku: Danmaku) => {
     // 如果点击的是同一个卫星，则关闭显示
     if (selectedDanmaku?.id === danmaku.id) {
       setSelectedDanmaku(null);
@@ -338,29 +346,10 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       return;
     }
     
-    setIsLoadingMarkdown(true);
     setSelectedDanmaku(danmaku);
-    setMarkdownContent(null);
+    // 直接从弹幕数据中获取 markdown，无需额外请求
+    setMarkdownContent(danmaku.markdown || null);
     setIsModalOpen(false);
-    
-    try {
-      const response = await fetch(`${API_BASE_URL}/get-text?id=${encodeURIComponent(danmaku.id)}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setMarkdownContent(data.markdownText);
-        }
-      } else if (response.status === 404) {
-        setMarkdownContent('该卫星暂无详细内容');
-      } else {
-        setMarkdownContent('加载失败，请重试');
-      }
-    } catch (error) {
-      console.error('Failed to fetch markdown:', error);
-      setMarkdownContent('加载失败，请重试');
-    } finally {
-      setIsLoadingMarkdown(false);
-    }
   }, [selectedDanmaku]);
 
   // 处理卫星点击事件
@@ -382,7 +371,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         });
         
         if (danmaku) {
-          fetchMarkdownContent(danmaku);
+          showDanmakuDetail(danmaku);
         }
       }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
@@ -390,7 +379,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     return () => {
       handler.destroy();
     };
-  }, [viewer, danmakus, beidouSatellites, showBeidou, fetchMarkdownContent]);
+  }, [viewer, danmakus, beidouSatellites, showBeidou, showDanmakuDetail]);
 
   // 总开关控制所有
   const toggleAll = useCallback(() => {
@@ -405,8 +394,8 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     if (isMountedRef.current) return;
     isMountedRef.current = true;
 
+    // 首次加载时获取数据
     fetchDanmakus();
-    // 移除定时轮询，只在需要时请求
   }, [fetchDanmakus]);
 
   useEffect(() => {
@@ -416,12 +405,8 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // 当打开输入面板时请求最新数据
-  useEffect(() => {
-    if (isInputVisible) {
-      fetchDanmakus();
-    }
-  }, [isInputVisible, fetchDanmakus]);
+  // 打开输入面板时不再重新请求数据，使用内存缓存
+  // 如需刷新数据，可手动添加刷新按钮或定时刷新机制
 
   // 创建和更新 Cesium 实体
   useEffect(() => {
@@ -689,7 +674,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         {/* Markdown 内容侧边栏 - 缩小半透明版本 */}
         {selectedDanmaku && !isModalOpen && (
           <div
-            className="fixed right-4 top-32 w-64 z-40 flex flex-col rounded-lg backdrop-blur-sm overflow-hidden"
+            className="fixed right-4 top-1/2 -translate-y-1/2 w-64 z-40 flex flex-col rounded-lg backdrop-blur-sm overflow-hidden"
             style={{
               background: 'rgba(15, 23, 42, 0.7)',
               border: '1px solid rgba(96, 165, 250, 0.2)',
@@ -725,59 +710,51 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
             
             {/* 内容区域 */}
             <div className="flex-1 overflow-auto p-2 text-gray-200 text-xs leading-relaxed">
-              {isLoadingMarkdown ? (
-                <div className="flex items-center justify-center py-4">
-                  <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#60a5fa', borderTopColor: 'transparent' }} />
+              {/* 卫星参数信息 */}
+              <div className="mb-2 p-1.5 rounded" style={{ background: 'rgba(96, 165, 250, 0.1)' }}>
+                <div className="text-[10px] text-gray-400 mb-1">轨道参数</div>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px]">
+                  <span className="text-gray-500">类型:</span>
+                  <span className="text-gray-300">{ORBIT_RANGES[selectedDanmaku.orbitType || 'medium'].label}</span>
+                  <span className="text-gray-500">高度:</span>
+                  <span className="text-gray-300">{(selectedDanmaku.altitude / 1000).toFixed(0)} km</span>
+                  <span className="text-gray-500">倾角:</span>
+                  <span className="text-gray-300">{(selectedDanmaku.inclination * 180 / Math.PI).toFixed(1)}°</span>
+                  <span className="text-gray-500">速度:</span>
+                  <span className="text-gray-300">{(selectedDanmaku.speed * 1000).toFixed(2)} rad/s</span>
+                </div>
+              </div>
+              
+              {/* Markdown 内容 - 截断显示 */}
+              {markdownContent ? (
+                <div>
+                  <div className="text-[10px] text-gray-400 mb-1">详细内容</div>
+                  <div className="line-clamp-6">
+                    <ReactMarkdown
+                      components={{
+                        h1: ({ children }) => <h1 className="text-xs font-bold text-white mb-1">{children}</h1>,
+                        h2: ({ children }) => <h2 className="text-xs font-semibold text-white mt-2 mb-0.5">{children}</h2>,
+                        h3: ({ children }) => <h3 className="text-[10px] font-medium text-white mt-1 mb-0.5">{children}</h3>,
+                        p: ({ children }) => <p className="mb-1 text-gray-300 text-[10px]">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc pl-3 mb-1 space-y-0 text-[10px]">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-3 mb-1 space-y-0 text-[10px]">{children}</ol>,
+                        li: ({ children }) => <li className="text-gray-300">{children}</li>,
+                        code: ({ children }) => <code className="bg-gray-800 px-0.5 rounded text-[9px] font-mono text-blue-300">{children}</code>,
+                        pre: ({ children }) => <pre className="bg-gray-800 p-1 rounded overflow-x-auto mb-1 text-[9px]">{children}</pre>,
+                        blockquote: ({ children }) => <blockquote className="border-l border-blue-500 pl-2 italic text-gray-400 my-1 text-[10px]">{children}</blockquote>,
+                        a: ({ children, href }) => <a href={href} className="text-blue-400 hover:text-blue-300 underline text-[10px]" target="_blank" rel="noopener noreferrer">{children}</a>,
+                        hr: () => <hr className="border-gray-700 my-1" />,
+                      }}
+                    >{markdownContent.length > 150 ? markdownContent.slice(0, 150) + '...' : markdownContent}</ReactMarkdown>
+                  </div>
+                  {markdownContent.length > 150 && (
+                    <div className="mt-1 text-[10px] text-blue-400 cursor-pointer hover:text-blue-300" onClick={() => setIsModalOpen(true)}>
+                      点击查看完整内容 →
+                    </div>
+                  )}
                 </div>
               ) : (
-                <>
-                  {/* 卫星参数信息 */}
-                  <div className="mb-2 p-1.5 rounded" style={{ background: 'rgba(96, 165, 250, 0.1)' }}>
-                    <div className="text-[10px] text-gray-400 mb-1">轨道参数</div>
-                    <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px]">
-                      <span className="text-gray-500">类型:</span>
-                      <span className="text-gray-300">{ORBIT_RANGES[selectedDanmaku.orbitType || 'medium'].label}</span>
-                      <span className="text-gray-500">高度:</span>
-                      <span className="text-gray-300">{(selectedDanmaku.altitude / 1000).toFixed(0)} km</span>
-                      <span className="text-gray-500">倾角:</span>
-                      <span className="text-gray-300">{(selectedDanmaku.inclination * 180 / Math.PI).toFixed(1)}°</span>
-                      <span className="text-gray-500">速度:</span>
-                      <span className="text-gray-300">{(selectedDanmaku.speed * 1000).toFixed(2)} rad/s</span>
-                    </div>
-                  </div>
-                  
-                  {/* Markdown 内容 - 截断显示 */}
-                  {markdownContent ? (
-                    <div>
-                      <div className="text-[10px] text-gray-400 mb-1">详细内容</div>
-                      <div className="line-clamp-6">
-                        <ReactMarkdown
-                          components={{
-                            h1: ({ children }) => <h1 className="text-xs font-bold text-white mb-1">{children}</h1>,
-                            h2: ({ children }) => <h2 className="text-xs font-semibold text-white mt-2 mb-0.5">{children}</h2>,
-                            h3: ({ children }) => <h3 className="text-[10px] font-medium text-white mt-1 mb-0.5">{children}</h3>,
-                            p: ({ children }) => <p className="mb-1 text-gray-300 text-[10px]">{children}</p>,
-                            ul: ({ children }) => <ul className="list-disc pl-3 mb-1 space-y-0 text-[10px]">{children}</ul>,
-                            ol: ({ children }) => <ol className="list-decimal pl-3 mb-1 space-y-0 text-[10px]">{children}</ol>,
-                            li: ({ children }) => <li className="text-gray-300">{children}</li>,
-                            code: ({ children }) => <code className="bg-gray-800 px-0.5 rounded text-[9px] font-mono text-blue-300">{children}</code>,
-                            pre: ({ children }) => <pre className="bg-gray-800 p-1 rounded overflow-x-auto mb-1 text-[9px]">{children}</pre>,
-                            blockquote: ({ children }) => <blockquote className="border-l border-blue-500 pl-2 italic text-gray-400 my-1 text-[10px]">{children}</blockquote>,
-                            a: ({ children, href }) => <a href={href} className="text-blue-400 hover:text-blue-300 underline text-[10px]" target="_blank" rel="noopener noreferrer">{children}</a>,
-                            hr: () => <hr className="border-gray-700 my-1" />,
-                          }}
-                        >{markdownContent.length > 150 ? markdownContent.slice(0, 150) + '...' : markdownContent}</ReactMarkdown>
-                      </div>
-                      {markdownContent.length > 150 && (
-                        <div className="mt-1 text-[10px] text-blue-400 cursor-pointer hover:text-blue-300" onClick={() => setIsModalOpen(true)}>
-                          点击查看完整内容 →
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 text-[10px]">暂无详细内容</p>
-                  )}
-                </>
+                <p className="text-gray-500 text-[10px]">暂无详细内容</p>
               )}
             </div>
           </div>
@@ -848,33 +825,25 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
               </div>
               
               <div className="text-gray-200 text-sm leading-relaxed">
-                {isLoadingMarkdown ? (
-                  <div className="flex items-center justify-center py-6">
-                    <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#60a5fa', borderTopColor: 'transparent' }} />
-                  </div>
+                {markdownContent ? (
+                  <ReactMarkdown
+                    components={{
+                      h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2">{children}</h1>,
+                      h2: ({ children }) => <h2 className="text-base font-semibold text-white mt-3 mb-1.5">{children}</h2>,
+                      h3: ({ children }) => <h3 className="text-sm font-medium text-white mt-2 mb-1">{children}</h3>,
+                      p: ({ children }) => <p className="mb-2 text-gray-300 text-xs">{children}</p>,
+                      ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-0.5 text-xs">{children}</ul>,
+                      ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5 text-xs">{children}</ol>,
+                      li: ({ children }) => <li className="text-gray-300">{children}</li>,
+                      code: ({ children }) => <code className="bg-gray-800 px-1 py-0.5 rounded text-[10px] font-mono text-blue-300">{children}</code>,
+                      pre: ({ children }) => <pre className="bg-gray-800 p-2 rounded-lg overflow-x-auto mb-2 text-xs">{children}</pre>,
+                      blockquote: ({ children }) => <blockquote className="border-l-2 border-blue-500 pl-3 italic text-gray-400 my-2 text-xs">{children}</blockquote>,
+                      a: ({ children, href }) => <a href={href} className="text-blue-400 hover:text-blue-300 underline text-xs" target="_blank" rel="noopener noreferrer">{children}</a>,
+                      hr: () => <hr className="border-gray-700 my-2" />,
+                    }}
+                  >{markdownContent}</ReactMarkdown>
                 ) : (
-                  <>
-                    {markdownContent ? (
-                      <ReactMarkdown
-                        components={{
-                          h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2">{children}</h1>,
-                          h2: ({ children }) => <h2 className="text-base font-semibold text-white mt-3 mb-1.5">{children}</h2>,
-                          h3: ({ children }) => <h3 className="text-sm font-medium text-white mt-2 mb-1">{children}</h3>,
-                          p: ({ children }) => <p className="mb-2 text-gray-300 text-xs">{children}</p>,
-                          ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-0.5 text-xs">{children}</ul>,
-                          ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5 text-xs">{children}</ol>,
-                          li: ({ children }) => <li className="text-gray-300">{children}</li>,
-                          code: ({ children }) => <code className="bg-gray-800 px-1 py-0.5 rounded text-[10px] font-mono text-blue-300">{children}</code>,
-                          pre: ({ children }) => <pre className="bg-gray-800 p-2 rounded-lg overflow-x-auto mb-2 text-xs">{children}</pre>,
-                          blockquote: ({ children }) => <blockquote className="border-l-2 border-blue-500 pl-3 italic text-gray-400 my-2 text-xs">{children}</blockquote>,
-                          a: ({ children, href }) => <a href={href} className="text-blue-400 hover:text-blue-300 underline text-xs" target="_blank" rel="noopener noreferrer">{children}</a>,
-                          hr: () => <hr className="border-gray-700 my-2" />,
-                        }}
-                      >{markdownContent}</ReactMarkdown>
-                    ) : (
-                      <p className="text-gray-500 text-xs">暂无详细内容</p>
-                    )}
-                  </>
+                  <p className="text-gray-500 text-xs">暂无详细内容</p>
                 )}
               </div>
             </div>
