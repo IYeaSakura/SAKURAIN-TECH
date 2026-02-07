@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/docs",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/docs/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/friends",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/friends/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}
