@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, BookOpen, Heart } from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/atoms';
 import type { SiteData } from '@/types';
@@ -106,8 +106,8 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   {link.label}
                 </button>
               ))}
-              <Link
-                to="/docs"
+              <a
+                href="/docs"
                 className="mc-nav-link flex items-center gap-1"
                 style={{
                   fontFamily: 'var(--font-primary)',
@@ -118,9 +118,9 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               >
                 <BookOpen className="w-4 h-4" />
                 文档
-              </Link>
-              <Link
-                to="/friends"
+              </a>
+              <a
+                href="/friends"
                 className="mc-nav-link flex items-center gap-1"
                 style={{
                   fontFamily: 'var(--font-primary)',
@@ -131,7 +131,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               >
                 <Heart className="w-4 h-4" />
                 友链
-              </Link>
+              </a>
             </div>
 
             {/* CTA Button & Theme Toggle */}
@@ -232,8 +232,8 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: data.links.length * 0.05 }}
                 >
-                  <Link
-                    to="/docs"
+                  <a
+                    href="/docs"
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
                     style={{ 
@@ -244,15 +244,15 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   >
                     <BookOpen className="w-4 h-4" />
                     文档
-                  </Link>
+                  </a>
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: (data.links.length + 1) * 0.05 }}
                 >
-                  <Link
-                    to="/friends"
+                  <a
+                    href="/friends"
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
                     style={{ 
@@ -263,7 +263,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   >
                     <Heart className="w-4 h-4" />
                     友链
-                  </Link>
+                  </a>
                 </motion.div>
                 <motion.button
                   initial={{ opacity: 0, y: 10 }}

@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, useNavigate } from 'react-router';
 import './index.css';
 import App from './App.tsx';
 
-// 处理静态部署 404 重定向
+// 处理静态部署硬跳转重定向
 function RedirectHandler() {
   const navigate = useNavigate();
   
