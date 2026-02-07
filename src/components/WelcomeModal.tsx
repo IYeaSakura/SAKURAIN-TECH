@@ -539,6 +539,11 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                           {children}
                                         </h3>
                                       ),
+                                      h4: ({ children }) => (
+                                        <h4 className="text-sm font-normal mb-2 mt-3 w-full" style={{ color: 'var(--text-primary)' }}>
+                                          {children}
+                                        </h4>
+                                      ),
                                       p: ({ children }) => (
                                         <p className="mb-3 leading-relaxed w-full" style={{ color: 'var(--text-secondary)' }}>
                                           {children}
