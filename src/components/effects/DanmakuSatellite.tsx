@@ -686,69 +686,96 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           </div>
         )}
 
-        {/* Markdown 内容侧边栏 - 默认显示在右侧 */}
+        {/* Markdown 内容侧边栏 - 缩小半透明版本 */}
         {selectedDanmaku && !isModalOpen && (
           <div
-            className="fixed right-4 top-20 bottom-4 w-80 z-40 flex flex-col rounded-lg backdrop-blur-md overflow-hidden"
+            className="fixed right-4 top-20 w-64 z-40 flex flex-col rounded-lg backdrop-blur-sm overflow-hidden"
             style={{
-              background: 'rgba(15, 23, 42, 0.9)',
-              border: '1px solid rgba(96, 165, 250, 0.3)',
+              background: 'rgba(15, 23, 42, 0.7)',
+              border: '1px solid rgba(96, 165, 250, 0.2)',
+              maxHeight: '320px',
             }}
           >
             {/* 头部 - 包含标题和按钮 */}
-            <div className="flex items-center justify-between p-3 border-b" style={{ borderColor: 'rgba(96, 165, 250, 0.2)' }}>
-              <div className="flex items-center gap-2 min-w-0">
-                <Satellite className="w-4 h-4 flex-shrink-0" style={{ color: selectedDanmaku.color }} />
-                <span className="font-bold text-sm truncate" style={{ color: selectedDanmaku.color }}>
+            <div className="flex items-center justify-between px-2 py-1.5 border-b" style={{ borderColor: 'rgba(96, 165, 250, 0.15)' }}>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Satellite className="w-3 h-3 flex-shrink-0" style={{ color: selectedDanmaku.color }} />
+                <span className="font-bold text-xs truncate" style={{ color: selectedDanmaku.color }}>
                   {selectedDanmaku.text}
                 </span>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5">
                 {/* 弹窗按钮 */}
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="p-1.5 rounded hover:bg-white/10 transition-colors"
-                  title="放大查看"
+                  className="p-1 rounded hover:bg-white/10 transition-colors"
+                  title="放大查看完整内容"
                 >
-                  <Maximize2 className="w-4 h-4 text-gray-400" />
+                  <Maximize2 className="w-3 h-3 text-gray-400" />
                 </button>
                 {/* 关闭按钮 */}
                 <button
                   onClick={() => setSelectedDanmaku(null)}
-                  className="p-1.5 rounded hover:bg-white/10 transition-colors"
+                  className="p-1 rounded hover:bg-white/10 transition-colors"
                 >
-                  <X className="w-4 h-4 text-gray-400" />
+                  <X className="w-3 h-3 text-gray-400" />
                 </button>
               </div>
             </div>
             
             {/* 内容区域 */}
-            <div className="flex-1 overflow-auto p-4 text-gray-200 text-sm leading-relaxed">
+            <div className="flex-1 overflow-auto p-2 text-gray-200 text-xs leading-relaxed">
               {isLoadingMarkdown ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#60a5fa', borderTopColor: 'transparent' }} />
+                <div className="flex items-center justify-center py-4">
+                  <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#60a5fa', borderTopColor: 'transparent' }} />
                 </div>
               ) : (
                 <>
+                  {/* 卫星参数信息 */}
+                  <div className="mb-2 p-1.5 rounded" style={{ background: 'rgba(96, 165, 250, 0.1)' }}>
+                    <div className="text-[10px] text-gray-400 mb-1">轨道参数</div>
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[10px]">
+                      <span className="text-gray-500">类型:</span>
+                      <span className="text-gray-300">{ORBIT_RANGES[selectedDanmaku.orbitType || 'medium'].label}</span>
+                      <span className="text-gray-500">高度:</span>
+                      <span className="text-gray-300">{(selectedDanmaku.altitude / 1000).toFixed(0)} km</span>
+                      <span className="text-gray-500">倾角:</span>
+                      <span className="text-gray-300">{(selectedDanmaku.inclination * 180 / Math.PI).toFixed(1)}°</span>
+                      <span className="text-gray-500">速度:</span>
+                      <span className="text-gray-300">{(selectedDanmaku.speed * 1000).toFixed(2)} rad/s</span>
+                    </div>
+                  </div>
+                  
+                  {/* Markdown 内容 - 截断显示 */}
                   {markdownContent ? (
-                    <ReactMarkdown
-                      components={{
-                        h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2">{children}</h1>,
-                        h2: ({ children }) => <h2 className="text-base font-semibold text-white mt-3 mb-1">{children}</h2>,
-                        h3: ({ children }) => <h3 className="text-sm font-medium text-white mt-2 mb-1">{children}</h3>,
-                        p: ({ children }) => <p className="mb-2 text-gray-300 text-xs">{children}</p>,
-                        ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-0.5 text-xs">{children}</ul>,
-                        ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5 text-xs">{children}</ol>,
-                        li: ({ children }) => <li className="text-gray-300">{children}</li>,
-                        code: ({ children }) => <code className="bg-gray-800 px-1 py-0.5 rounded text-[10px] font-mono text-blue-300">{children}</code>,
-                        pre: ({ children }) => <pre className="bg-gray-800 p-2 rounded-lg overflow-x-auto mb-2 text-xs">{children}</pre>,
-                        blockquote: ({ children }) => <blockquote className="border-l-2 border-blue-500 pl-3 italic text-gray-400 my-2 text-xs">{children}</blockquote>,
-                        a: ({ children, href }) => <a href={href} className="text-blue-400 hover:text-blue-300 underline text-xs" target="_blank" rel="noopener noreferrer">{children}</a>,
-                        hr: () => <hr className="border-gray-700 my-2" />,
-                      }}
-                    >{markdownContent}</ReactMarkdown>
+                    <div>
+                      <div className="text-[10px] text-gray-400 mb-1">详细内容</div>
+                      <div className="line-clamp-6">
+                        <ReactMarkdown
+                          components={{
+                            h1: ({ children }) => <h1 className="text-xs font-bold text-white mb-1">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-xs font-semibold text-white mt-2 mb-0.5">{children}</h2>,
+                            h3: ({ children }) => <h3 className="text-[10px] font-medium text-white mt-1 mb-0.5">{children}</h3>,
+                            p: ({ children }) => <p className="mb-1 text-gray-300 text-[10px]">{children}</p>,
+                            ul: ({ children }) => <ul className="list-disc pl-3 mb-1 space-y-0 text-[10px]">{children}</ul>,
+                            ol: ({ children }) => <ol className="list-decimal pl-3 mb-1 space-y-0 text-[10px]">{children}</ol>,
+                            li: ({ children }) => <li className="text-gray-300">{children}</li>,
+                            code: ({ children }) => <code className="bg-gray-800 px-0.5 rounded text-[9px] font-mono text-blue-300">{children}</code>,
+                            pre: ({ children }) => <pre className="bg-gray-800 p-1 rounded overflow-x-auto mb-1 text-[9px]">{children}</pre>,
+                            blockquote: ({ children }) => <blockquote className="border-l border-blue-500 pl-2 italic text-gray-400 my-1 text-[10px]">{children}</blockquote>,
+                            a: ({ children, href }) => <a href={href} className="text-blue-400 hover:text-blue-300 underline text-[10px]" target="_blank" rel="noopener noreferrer">{children}</a>,
+                            hr: () => <hr className="border-gray-700 my-1" />,
+                          }}
+                        >{markdownContent.length > 150 ? markdownContent.slice(0, 150) + '...' : markdownContent}</ReactMarkdown>
+                      </div>
+                      {markdownContent.length > 150 && (
+                        <div className="mt-1 text-[10px] text-blue-400 cursor-pointer hover:text-blue-300" onClick={() => setIsModalOpen(true)}>
+                          点击查看完整内容 →
+                        </div>
+                      )}
+                    </div>
                   ) : (
-                    <p className="text-gray-500 text-xs">暂无内容</p>
+                    <p className="text-gray-500 text-[10px]">暂无详细内容</p>
                   )}
                 </>
               )}
@@ -756,7 +783,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           </div>
         )}
 
-        {/* Markdown 内容模态框 - 点击放大按钮时显示 */}
+        {/* Markdown 内容模态框 - 完整显示 */}
         {isModalOpen && selectedDanmaku && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -764,20 +791,20 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
             onClick={() => setIsModalOpen(false)}
           >
             <div
-              className="max-w-3xl w-full max-h-[85vh] overflow-auto rounded-lg backdrop-blur-md p-6"
+              className="max-w-2xl w-full max-h-[85vh] overflow-auto rounded-lg backdrop-blur-md p-5"
               style={{
                 background: 'rgba(15, 23, 42, 0.95)',
                 border: '1px solid rgba(96, 165, 250, 0.3)',
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Satellite className="w-5 h-5" style={{ color: selectedDanmaku.color }} />
-                  <span className="text-lg font-bold" style={{ color: selectedDanmaku.color }}>
+                  <Satellite className="w-4 h-4" style={{ color: selectedDanmaku.color }} />
+                  <span className="text-base font-bold" style={{ color: selectedDanmaku.color }}>
                     {selectedDanmaku.text}
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'rgba(96, 165, 250, 0.2)', color: '#94a3b8' }}>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(96, 165, 250, 0.2)', color: '#94a3b8' }}>
                     {ORBIT_RANGES[selectedDanmaku.orbitType || 'medium'].label}
                   </span>
                 </div>
@@ -785,36 +812,67 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                   onClick={() => setIsModalOpen(false)}
                   className="p-1 rounded hover:bg-white/10 transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-4 h-4 text-gray-400" />
                 </button>
               </div>
               
-              <div className="text-gray-200 space-y-4 text-sm leading-relaxed">
+              {/* 完整卫星参数 */}
+              <div className="mb-3 p-2 rounded" style={{ background: 'rgba(96, 165, 250, 0.1)' }}>
+                <div className="text-xs text-gray-400 mb-1.5">轨道参数</div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">轨道类型:</span>
+                    <span className="text-gray-300">{ORBIT_RANGES[selectedDanmaku.orbitType || 'medium'].label}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">轨道高度:</span>
+                    <span className="text-gray-300">{(selectedDanmaku.altitude / 1000).toFixed(0)} km</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">轨道倾角:</span>
+                    <span className="text-gray-300">{(selectedDanmaku.inclination * 180 / Math.PI).toFixed(2)}°</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">角速度:</span>
+                    <span className="text-gray-300">{(selectedDanmaku.speed * 1000).toFixed(3)} rad/s</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">初始角度:</span>
+                    <span className="text-gray-300">{(selectedDanmaku.angle * 180 / Math.PI).toFixed(2)}°</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">升交点赤经:</span>
+                    <span className="text-gray-300">{((selectedDanmaku.raan || 0) * 180 / Math.PI).toFixed(2)}°</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-gray-200 text-sm leading-relaxed">
                 {isLoadingMarkdown ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#60a5fa', borderTopColor: 'transparent' }} />
+                  <div className="flex items-center justify-center py-6">
+                    <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#60a5fa', borderTopColor: 'transparent' }} />
                   </div>
                 ) : (
                   <>
                     {markdownContent ? (
                       <ReactMarkdown
                         components={{
-                          h1: ({ children }) => <h1 className="text-xl font-bold text-white mb-3">{children}</h1>,
-                          h2: ({ children }) => <h2 className="text-lg font-semibold text-white mt-4 mb-2">{children}</h2>,
-                          h3: ({ children }) => <h3 className="text-base font-medium text-white mt-3 mb-2">{children}</h3>,
-                          p: ({ children }) => <p className="mb-3 text-gray-300">{children}</p>,
-                          ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
-                          ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
+                          h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2">{children}</h1>,
+                          h2: ({ children }) => <h2 className="text-base font-semibold text-white mt-3 mb-1.5">{children}</h2>,
+                          h3: ({ children }) => <h3 className="text-sm font-medium text-white mt-2 mb-1">{children}</h3>,
+                          p: ({ children }) => <p className="mb-2 text-gray-300 text-xs">{children}</p>,
+                          ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-0.5 text-xs">{children}</ul>,
+                          ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-0.5 text-xs">{children}</ol>,
                           li: ({ children }) => <li className="text-gray-300">{children}</li>,
-                          code: ({ children }) => <code className="bg-gray-800 px-1.5 py-0.5 rounded text-xs font-mono text-blue-300">{children}</code>,
-                          pre: ({ children }) => <pre className="bg-gray-800 p-3 rounded-lg overflow-x-auto mb-3">{children}</pre>,
-                          blockquote: ({ children }) => <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-400 my-3">{children}</blockquote>,
-                          a: ({ children, href }) => <a href={href} className="text-blue-400 hover:text-blue-300 underline" target="_blank" rel="noopener noreferrer">{children}</a>,
-                          hr: () => <hr className="border-gray-700 my-4" />,
+                          code: ({ children }) => <code className="bg-gray-800 px-1 py-0.5 rounded text-[10px] font-mono text-blue-300">{children}</code>,
+                          pre: ({ children }) => <pre className="bg-gray-800 p-2 rounded-lg overflow-x-auto mb-2 text-xs">{children}</pre>,
+                          blockquote: ({ children }) => <blockquote className="border-l-2 border-blue-500 pl-3 italic text-gray-400 my-2 text-xs">{children}</blockquote>,
+                          a: ({ children, href }) => <a href={href} className="text-blue-400 hover:text-blue-300 underline text-xs" target="_blank" rel="noopener noreferrer">{children}</a>,
+                          hr: () => <hr className="border-gray-700 my-2" />,
                         }}
                       >{markdownContent}</ReactMarkdown>
                     ) : (
-                      <p className="text-gray-500">暂无内容</p>
+                      <p className="text-gray-500 text-xs">暂无详细内容</p>
                     )}
                   </>
                 )}
@@ -867,7 +925,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="输入弹幕内容（卫星标题）..."
-              maxLength={50}
+              maxLength={15}
               disabled={isLoading}
               className="w-full px-3 py-2 rounded-md text-sm text-white placeholder-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50"
               style={{
@@ -891,23 +949,29 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
 
             {/* Markdown 输入框 */}
             {showMarkdownInput && (
-              <textarea
-                value={markdownText}
-                onChange={(e) => setMarkdownText(e.target.value)}
-                placeholder="输入 Markdown 格式的详细内容..."
-                rows={4}
-                disabled={isLoading}
-                className="w-full px-3 py-2 rounded-md text-sm text-white placeholder-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 resize-none"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(96, 165, 250, 0.3)',
-                }}
-              />
+              <>
+                <textarea
+                  value={markdownText}
+                  onChange={(e) => setMarkdownText(e.target.value)}
+                  placeholder="输入 Markdown 格式的详细内容..."
+                  rows={4}
+                  maxLength={300}
+                  disabled={isLoading}
+                  className="w-full px-3 py-2 rounded-md text-sm text-white placeholder-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 resize-none"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    border: '1px solid rgba(96, 165, 250, 0.3)',
+                  }}
+                />
+                <div className="text-xs text-gray-500 text-right">
+                  {markdownText.length}/300
+                </div>
+              </>
             )}
 
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-400">
-                {inputText.length}/50
+                {inputText.length}/15
               </span>
               <button
                 onClick={handleSend}

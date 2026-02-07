@@ -18,7 +18,7 @@ export async function onRequestPost(context) {
     }
 
     const text = String(body.text).trim();
-    if (!text || text.length > 50) {
+    if (!text || text.length > 15) {
       return new Response(JSON.stringify({ error: 'Invalid text length' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
@@ -33,8 +33,7 @@ export async function onRequestPost(context) {
       });
     }
 
-    const textKv = DANMAKU_TEXT_KV;
-
+    // 获取弹幕列表
     let danmakus = [];
     const data = await kv.get('danmakus');
     if (data) {
@@ -64,16 +63,54 @@ export async function onRequestPost(context) {
 
     danmakus.push(newDanmaku);
     if (danmakus.length > 200) {
-      danmakus.shift();
+      // 如果超过200条，删除最早的弹幕及其markdown内容
+      const removedDanmaku = danmakus.shift();
+      if (removedDanmaku) {
+        // 删除对应的markdown内容
+        const textData = await kv.get('text');
+        if (textData) {
+          try {
+            const textMap = JSON.parse(textData);
+            if (textMap && typeof textMap === 'object' && removedDanmaku.id in textMap) {
+              delete textMap[removedDanmaku.id];
+              await kv.put('text', JSON.stringify(textMap));
+            }
+          } catch (e) {
+            // 忽略解析错误
+          }
+        }
+      }
     }
 
     await kv.put('danmakus', JSON.stringify(danmakus));
 
-    // 如果有 markdown 文本，保存到 DANMAKU_TEXT_KV
-    if (body.markdownContent && textKv) {
+    // 如果有 markdown 文本，保存到 text 键
+    if (body.markdownContent) {
       const markdownText = String(body.markdownContent).trim();
       if (markdownText) {
-        await textKv.put(`text:${newDanmaku.id}`, markdownText);
+        // 限制 markdown 长度不超过 300 字符
+        if (markdownText.length > 300) {
+          return new Response(JSON.stringify({ error: 'Markdown content too long (max 300 chars)' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+          });
+        }
+        // 获取现有的 text 数据
+        let textMap = {};
+        const textData = await kv.get('text');
+        if (textData) {
+          try {
+            textMap = JSON.parse(textData);
+            if (typeof textMap !== 'object' || textMap === null) {
+              textMap = {};
+            }
+          } catch (e) {
+            textMap = {};
+          }
+        }
+        // 添加新的 markdown 内容
+        textMap[newDanmaku.id] = markdownText;
+        await kv.put('text', JSON.stringify(textMap));
       }
     }
 
