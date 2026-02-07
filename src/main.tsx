@@ -20,9 +20,9 @@ function RedirectHandler() {
 }
 
 // 懒加载页面
-const DocsPage = lazy(() => import('./pages/Docs'));
-const FriendsPage = lazy(() => import('./pages/Friends'));
-const NotFoundPage = lazy(() => import('./pages/NotFound'));
+const DocsPage = lazy(() => import('./pages/Docs/index'));
+const FriendsPage = lazy(() => import('./pages/Friends/index'));
+const NotFoundPage = lazy(() => import('./pages/NotFound/index'));
 
 // 简单的加载占位组件
 const PageFallback = () => (
