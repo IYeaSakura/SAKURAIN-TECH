@@ -1140,13 +1140,62 @@ export default function FriendsPage() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p
-            className="flex items-center justify-center gap-2"
-            style={{ color: 'var(--text-muted)' }}
+            className="flex items-center justify-center gap-2 font-primary"
+            style={{
+              fontSize: 'var(--text-sm)',
+              fontWeight: 500,
+              color: 'var(--text-muted)',
+            }}
           >
             © {new Date().getFullYear()} SAKURAIN 技术工作室
             <Heart className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
             用代码构建未来
           </p>
+          {/* 备案信息 */}
+          <div
+            className="mt-4 flex flex-wrap items-center justify-center gap-4 font-primary"
+            style={{
+              fontSize: 'var(--text-xs)',
+              color: 'var(--text-muted)',
+            }}
+          >
+            <a
+              href="https://beian.miit.gov.cn/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline"
+              style={{ transition: 'color 0.2s ease' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--accent-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }}
+            >
+              皖ICP备2025073165号-1
+            </a>
+            <span>|</span>
+            <a
+              href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34130202000598"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:underline flex items-center gap-1"
+              style={{ transition: 'color 0.2s ease' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--accent-primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }}
+            >
+              <img
+                src="/image/ghs.png"
+                alt="公安备案图标"
+                className="w-3 h-3"
+              />
+              皖公网安备34130202000598号
+            </a>
+          </div>
         </div>
       </footer>
 

@@ -1,17 +1,28 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Search, Grid, List, Sparkles, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { MagneticCursor, VelocityCursor, AmbientGlow } from '@/components/effects';
+import { ArrowLeft, Search, Grid, List, Sparkles, X, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
+import { MagneticCursor, VelocityCursor, AmbientGlow, FloatingBubbles, TwinklingStars } from '@/components/effects';
 import { ThemeToggle } from '@/components/atoms';
-import { useTheme, useConfig } from '@/hooks';
+import { useTheme } from '@/hooks';
 import { BlogCard } from './components/BlogCard';
 import { getBlogIndex } from './utils';
-import { Footer } from '@/components/sections/Footer';
+import { Heart } from 'lucide-react';
 import { BlogArchiveHeatmap } from '@/components/BlogArchiveHeatmap';
+import { BlogTagCloud } from '@/components/BlogTagCloud';
 import { useBlogArchive, useMultipleMonthArchives } from '@/hooks/useBlogArchive';
 import type { BlogIndex, BlogPost } from './types';
-import type { SiteData } from '@/types';
+
+interface TagData {
+  name: string;
+  count: number;
+}
+
+interface TagsResponse {
+  tags: TagData[];
+  total: number;
+  generatedAt: string;
+}
 
 type ViewMode = 'grid' | 'list';
 
@@ -20,7 +31,6 @@ const POSTS_PER_PAGE = 9;
 export default function BlogIndex() {
   const navigate = useNavigate();
   const { theme, isTransitioning, toggleTheme } = useTheme();
-  const { data: siteData } = useConfig<SiteData>('/data/site-data.json');
   const [data, setData] = useState<BlogIndex | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -30,14 +40,16 @@ export default function BlogIndex() {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
+  const [showAuthorDropdown, setShowAuthorDropdown] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [tagsData, setTagsData] = useState<TagsResponse | null>(null);
 
   const { data: archiveData, loading: archiveLoading } = useBlogArchive();
   const monthsToLoad = useMemo(() => {
     if (!archiveData?.months.length) return [];
-    const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
-    const endIndex = startIndex + POSTS_PER_PAGE;
-    return archiveData.months.slice(startIndex, endIndex);
-  }, [archiveData, currentPage]);
+    return archiveData.months;
+  }, [archiveData]);
 
   const { data: regularPosts, loading: regularPostsLoading } = useMultipleMonthArchives(monthsToLoad);
 
@@ -50,6 +62,20 @@ export default function BlogIndex() {
       .catch((error) => {
         console.error('Failed to load blog index:', error);
         setLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    fetch('/blog/tags.json')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to load tags data');
+        return res.json();
+      })
+      .then((data: TagsResponse) => {
+        setTagsData(data);
+      })
+      .catch((error) => {
+        console.error('Failed to load tags data:', error);
       });
   }, []);
 
@@ -234,6 +260,19 @@ export default function BlogIndex() {
 
               <div className="flex items-center gap-2">
                 <button
+                  onClick={() => setShowStats(!showStats)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
+                  style={{
+                    background: showStats ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                    border: '1px solid var(--border-subtle)',
+                    color: showStats ? 'white' : 'var(--text-primary)',
+                  }}
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span className="text-sm font-medium hidden sm:block">统计</span>
+                </button>
+
+                <button
                   onClick={() => setShowArchive(!showArchive)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
                   style={{
@@ -249,11 +288,7 @@ export default function BlogIndex() {
                 {allTags.length > 0 && (
                   <div className="relative">
                     <button
-                      onClick={() => {
-                        if (selectedTag) {
-                          setSelectedTag(null);
-                        }
-                      }}
+                      onClick={() => setShowTagDropdown(!showTagDropdown)}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
                       style={{
                         background: selectedTag ? 'var(--accent-primary)' : 'var(--bg-secondary)',
@@ -265,7 +300,7 @@ export default function BlogIndex() {
                       <span className="text-sm font-medium hidden sm:block">标签</span>
                     </button>
 
-                    {selectedTag && (
+                    {showTagDropdown && (
                       <div className="absolute top-full left-0 mt-2 p-3 rounded-lg min-w-[200px] max-h-[300px] overflow-auto z-50"
                         style={{
                           background: 'var(--bg-card)',
@@ -277,7 +312,10 @@ export default function BlogIndex() {
                           {allTags.map(tag => (
                             <button
                               key={tag}
-                              onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
+                              onClick={() => {
+                                setSelectedTag(tag === selectedTag ? null : tag);
+                                setShowTagDropdown(false);
+                              }}
                               className="px-3 py-1.5 rounded-md text-sm transition-all duration-200"
                               style={{
                                 background: tag === selectedTag ? 'var(--accent-primary)' : 'var(--bg-secondary)',
@@ -296,11 +334,7 @@ export default function BlogIndex() {
                 {allAuthors.length > 0 && (
                   <div className="relative">
                     <button
-                      onClick={() => {
-                        if (selectedAuthor) {
-                          setSelectedAuthor(null);
-                        }
-                      }}
+                      onClick={() => setShowAuthorDropdown(!showAuthorDropdown)}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
                       style={{
                         background: selectedAuthor ? 'var(--accent-primary)' : 'var(--bg-secondary)',
@@ -312,7 +346,7 @@ export default function BlogIndex() {
                       <span className="text-sm font-medium hidden sm:block">作者</span>
                     </button>
 
-                    {selectedAuthor && (
+                    {showAuthorDropdown && (
                       <div className="absolute top-full left-0 mt-2 p-3 rounded-lg min-w-[200px] max-h-[300px] overflow-auto z-50"
                         style={{
                           background: 'var(--bg-card)',
@@ -324,7 +358,10 @@ export default function BlogIndex() {
                           {allAuthors.map(author => (
                             <button
                               key={author}
-                              onClick={() => setSelectedAuthor(author === selectedAuthor ? null : author)}
+                              onClick={() => {
+                                setSelectedAuthor(author === selectedAuthor ? null : author);
+                                setShowAuthorDropdown(false);
+                              }}
                               className="px-3 py-1.5 rounded-md text-sm transition-all duration-200"
                               style={{
                                 background: author === selectedAuthor ? 'var(--accent-primary)' : 'var(--bg-secondary)',
@@ -580,6 +617,167 @@ export default function BlogIndex() {
         </main>
 
         <AnimatePresence>
+          {showStats && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              style={{ background: 'rgba(0, 0, 0, 0.8)' }}
+              onClick={() => setShowStats(false)}
+            >
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-4xl max-h-[80vh] overflow-auto rounded-2xl p-6 relative"
+                style={{
+                  background: 'var(--bg-card)',
+                  border: '2px solid var(--border-subtle)',
+                }}
+              >
+                <button
+                  onClick={() => setShowStats(false)}
+                  className="absolute top-4 right-4 p-2 rounded-lg transition-all duration-200 hover:scale-105"
+                  style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="space-y-8">
+                  <div>
+                    <h2
+                      className="font-pixel text-2xl mb-4"
+                      style={{
+                        color: 'var(--text-primary)',
+                        textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
+                      }}
+                    >
+                      博客统计
+                    </h2>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div
+                        className="p-4 rounded-xl text-center"
+                        style={{
+                          background: 'var(--bg-secondary)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        <div className="text-3xl font-bold mb-1" style={{ color: 'var(--accent-primary)' }}>
+                          {data?.posts.length || 0}
+                        </div>
+                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                          精选文章
+                        </div>
+                      </div>
+
+                      <div
+                        className="p-4 rounded-xl text-center"
+                        style={{
+                          background: 'var(--bg-secondary)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        <div className="text-3xl font-bold mb-1" style={{ color: 'var(--accent-secondary)' }}>
+                          {regularPosts?.length || 0}
+                        </div>
+                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                          普通文章
+                        </div>
+                      </div>
+
+                      <div
+                        className="p-4 rounded-xl text-center"
+                        style={{
+                          background: 'var(--bg-secondary)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        <div className="text-3xl font-bold mb-1" style={{ color: 'var(--accent-tertiary)' }}>
+                          {tagsData?.total || 0}
+                        </div>
+                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                          标签总数
+                        </div>
+                      </div>
+
+                      <div
+                        className="p-4 rounded-xl text-center"
+                        style={{
+                          background: 'var(--bg-secondary)',
+                          border: '1px solid var(--border-subtle)',
+                        }}
+                      >
+                        <div className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+                          {archiveData?.months.length || 0}
+                        </div>
+                        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                          归档月份
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h2
+                      className="font-pixel text-2xl mb-4"
+                      style={{
+                        color: 'var(--text-primary)',
+                        textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
+                      }}
+                    >
+                      文章发布热力图
+                    </h2>
+                    {archiveLoading ? (
+                      <div className="flex items-center justify-center py-20">
+                        <div
+                          className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+                          style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
+                        />
+                      </div>
+                    ) : (
+                      <BlogArchiveHeatmap
+                        data={archiveData}
+                        onSelectMonth={(month) => {
+                          setSelectedMonth(month);
+                        }}
+                        selectedMonth={selectedMonth}
+                      />
+                    )}
+                  </div>
+
+                  <div>
+                    <h2
+                      className="font-pixel text-2xl mb-4"
+                      style={{
+                        color: 'var(--text-primary)',
+                        textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
+                      }}
+                    >
+                      标签词云
+                    </h2>
+                    {tagsData ? (
+                      <BlogTagCloud
+                        tags={tagsData.tags}
+                        selectedTag={selectedTag}
+                        onSelectTag={setSelectedTag}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center py-20">
+                        <div
+                          className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+                          style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+
           {showArchive && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -630,7 +828,81 @@ export default function BlogIndex() {
           )}
         </AnimatePresence>
 
-        {siteData && <Footer data={siteData.footer} />}
+        {/* Footer */}
+        <footer
+          className="relative py-16 overflow-hidden"
+          style={{ borderTop: '4px solid var(--border-subtle)' }}
+        >
+          {/* Floating bubbles */}
+          <div className="absolute inset-0 pointer-events-none opacity-15">
+            <FloatingBubbles count={8} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
+          </div>
+
+          {/* Twinkling stars */}
+          <div className="absolute inset-0 pointer-events-none hidden lg:block">
+            <TwinklingStars count={20} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
+          </div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p
+              className="flex items-center justify-center gap-2 font-primary"
+              style={{
+                fontSize: 'var(--text-sm)',
+                fontWeight: 500,
+                color: 'var(--text-muted)',
+              }}
+            >
+              © {new Date().getFullYear()} SAKURAIN 技术工作室
+              <Heart className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+              用代码构建未来
+            </p>
+            {/* 备案信息 */}
+            <div
+              className="mt-4 flex flex-wrap flex-col md:flex-row items-center justify-center gap-4 font-primary"
+              style={{
+                fontSize: 'var(--text-xs)',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <a
+                href="https://beian.miit.gov.cn/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline"
+                style={{ transition: 'color 0.2s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--accent-primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--text-muted)';
+                }}
+              >
+                皖ICP备2025073165号-1
+              </a>
+              <span>|</span>
+              <a
+                href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34130202000598"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline flex items-centerx gap-1"
+                style={{ transition: 'color 0.2s ease' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = 'var(--accent-primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'var(--text-muted)';
+                }}
+              >
+                <img
+                  src="/image/ghs.png"
+                  alt="公安备案图标"
+                  className="w-3 h-3"
+                />
+                皖公网安备34130202000598号
+              </a>
+            </div>
+          </div>
+        </footer>
       </div>
     </>
   );
