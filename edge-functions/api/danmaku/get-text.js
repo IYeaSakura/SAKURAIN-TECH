@@ -10,18 +10,36 @@ export async function onRequestGet(context) {
       });
     }
 
-    const textKv = DANMAKU_TEXT_KV;
-    if (!textKv) {
-      return new Response(JSON.stringify({ error: 'DANMAKU_TEXT_KV not bound' }), {
+    const kv = DANMAKU_KV;
+    if (!kv) {
+      return new Response(JSON.stringify({ error: 'KV not bound' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       });
     }
 
-    // 从 KV 中获取 markdown 文本
-    const markdownText = await textKv.get(`text:${id}`);
+    // 从 text 键获取 markdown 内容
+    const textData = await kv.get('text');
+    if (!textData) {
+      return new Response(JSON.stringify({ error: 'Not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      });
+    }
 
-    if (markdownText === null) {
+    let textMap = {};
+    try {
+      textMap = JSON.parse(textData);
+      if (typeof textMap !== 'object' || textMap === null) {
+        textMap = {};
+      }
+    } catch (e) {
+      textMap = {};
+    }
+
+    const markdownText = textMap[id];
+
+    if (markdownText === undefined || markdownText === null || markdownText === '') {
       return new Response(JSON.stringify({ error: 'Not found' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
@@ -47,6 +65,7 @@ export function onRequestOptions() {
   return new Response(null, {
     status: 204,
     headers: {
+      'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type'
