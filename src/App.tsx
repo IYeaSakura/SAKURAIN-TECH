@@ -15,6 +15,7 @@ import { Hero } from '@/components/sections/Hero';
 import { WelcomeModal } from '@/components/WelcomeModal';
 import { useTheme } from '@/hooks';
 import type { SiteData } from '@/types';
+import { preloadDocs, preloadFriends } from '@/main';
 import './styles/globals.css';
 
 // 懒加载非首屏组件
@@ -77,6 +78,16 @@ function App() {
         console.error('Failed to load site data:', error);
         setLoading(false);
       });
+  }, []);
+
+  useEffect(() => {
+    // 预加载路由页面组件
+    const preloadTimer = setTimeout(() => {
+      preloadDocs();
+      preloadFriends();
+    }, 2000);
+
+    return () => clearTimeout(preloadTimer);
   }, []);
 
   if (loading) {

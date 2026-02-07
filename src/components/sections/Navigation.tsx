@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/atoms';
 import type { SiteData } from '@/types';
+import { preloadDocs, preloadFriends } from '@/main';
 
 // Theme type definition
 type Theme = 'light' | 'dark';
@@ -47,6 +48,16 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
       element.scrollIntoView({ behavior: 'smooth' });
     }
     setIsMobileMenuOpen(false);
+  };
+
+  const handleDocsClick = () => {
+    preloadDocs();
+    navigate('/docs');
+  };
+
+  const handleFriendsClick = () => {
+    preloadFriends();
+    navigate('/friends');
   };
 
 
@@ -110,7 +121,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                 </button>
               ))}
               <button
-                onClick={() => window.location.href = '/docs'}
+                onClick={handleDocsClick}
                 className="mc-nav-link flex items-center gap-1"
                 style={{
                   fontFamily: 'var(--font-primary)',
@@ -123,7 +134,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                 文档
               </button>
               <button
-                onClick={() => window.location.href = '/friends'}
+                onClick={handleFriendsClick}
                 className="mc-nav-link flex items-center gap-1"
                 style={{
                   fontFamily: 'var(--font-primary)',
@@ -235,7 +246,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: data.links.length * 0.05 }}
                   onClick={() => {
-                    window.location.href = '/docs';
+                    handleDocsClick();
                     setIsMobileMenuOpen(false);
                   }}
                   className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
@@ -253,7 +264,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: (data.links.length + 1) * 0.05 }}
                   onClick={() => {
-                    window.location.href = '/friends';
+                    handleFriendsClick();
                     setIsMobileMenuOpen(false);
                   }}
                   className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"

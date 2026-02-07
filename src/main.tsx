@@ -24,6 +24,24 @@ const DocsPage = lazy(() => import('./pages/Docs/index'));
 const FriendsPage = lazy(() => import('./pages/Friends/index'));
 const NotFoundPage = lazy(() => import('./pages/NotFound/index'));
 
+// 预加载加载器
+let docsLoader: Promise<any> | null = null;
+let friendsLoader: Promise<any> | null = null;
+
+export function preloadDocs() {
+  if (!docsLoader) {
+    docsLoader = import('./pages/Docs/index');
+  }
+  return docsLoader;
+}
+
+export function preloadFriends() {
+  if (!friendsLoader) {
+    friendsLoader = import('./pages/Friends/index');
+  }
+  return friendsLoader;
+}
+
 // 简单的加载占位组件
 const PageFallback = () => (
   <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
