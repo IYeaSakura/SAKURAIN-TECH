@@ -1,8 +1,23 @@
-import { StrictMode, Suspense, lazy } from 'react';
+import { StrictMode, Suspense, lazy, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router';
 import './index.css';
 import App from './App.tsx';
+
+// 处理静态部署 404 重定向
+function RedirectHandler() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const redirect = sessionStorage.getItem('spa-redirect');
+    if (redirect) {
+      sessionStorage.removeItem('spa-redirect');
+      navigate(redirect, { replace: true });
+    }
+  }, [navigate]);
+  
+  return null;
+}
 
 // 懒加载页面
 const DocsPage = lazy(() => import('./pages/Docs'));
@@ -25,6 +40,7 @@ const PageFallback = () => (
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
+      <RedirectHandler />
       <Routes>
         <Route path="/" element={<App />} />
         <Route 

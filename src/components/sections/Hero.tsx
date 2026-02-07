@@ -670,6 +670,35 @@ const GlobeShowcase = memo(() => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      {/* 双击全屏悬浮提示 - 放在最外层避免被裁剪 */}
+      {!isFullscreen && isHovered && (
+        <motion.div 
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 5 }}
+          transition={{ duration: 0.2 }}
+          className="absolute -top-12 left-1/2 -translate-x-1/2 z-50 px-3 py-1.5 rounded-lg pointer-events-none"
+          style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--accent-primary)',
+            boxShadow: '0 4px 12px var(--accent-glow)',
+          }}
+        >
+          <span className="text-xs font-medium whitespace-nowrap" style={{ color: 'var(--accent-primary)' }}>
+            双击全屏体验
+          </span>
+          {/* 小三角箭头 */}
+          <div 
+            className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45"
+            style={{
+              background: 'var(--bg-card)',
+              borderRight: '1px solid var(--accent-primary)',
+              borderBottom: '1px solid var(--accent-primary)',
+            }}
+          />
+        </motion.div>
+      )}
+
       {/* 外发光边框 */}
       {!isFullscreen && (
         <div
@@ -893,7 +922,11 @@ const GlobeShowcase = memo(() => {
         </AnimatePresence>
 
         {/* WebGL 演示内容 */}
-        <div className={`absolute inset-0 ${isFullscreen ? 'pt-24' : 'pt-8'}`} style={{ cursor: 'default' }}>
+        <div 
+          className={`absolute inset-0 ${isFullscreen ? 'pt-24' : 'pt-8'}`} 
+          style={{ cursor: 'default' }}
+          onDoubleClick={isFullscreen ? undefined : enterFullscreen}
+        >
           <DemoContent 
             demo={{ 
               type: currentDemo, 
@@ -1121,6 +1154,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
           {/* 右侧地球展示 */}
           <GlobeShowcase />
         </div>
+
       </div>
 
       {/* 发光滚动指示器 */}

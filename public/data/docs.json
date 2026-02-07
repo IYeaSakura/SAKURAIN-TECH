@@ -9,6 +9,21 @@
       "items": [
         {
           "type": "series",
+          "id": "site-tech",
+          "title": "本站技术详解",
+          "description": "深入了解 SAKURAIN TECH 网站的技术栈、架构设计和核心功能实现原理",
+          "cover": "/images/site-tech-cover.png",
+          "chapters": [
+            {
+              "id": "site-tech-ch01",
+              "title": "技术栈概览与核心功能",
+              "description": "React 19、Vite、Three.js、CesiumJS 等技术详解",
+              "path": "/docs/courses/site-tech/chapter01.md"
+            }
+          ]
+        },
+        {
+          "type": "series",
           "id": "webgl-course",
           "title": "WebGL技术从入门到精通",
           "description": "系统学习WebGL图形编程，从基础概念到高级渲染技术",
