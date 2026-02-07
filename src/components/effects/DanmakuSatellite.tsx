@@ -91,6 +91,17 @@ class RateLimiter {
   }
 }
 
+const USER_ID_KEY = 'danmaku-user-id';
+
+const getUserId = (): string => {
+  let userId = localStorage.getItem(USER_ID_KEY);
+  if (!userId) {
+    userId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem(USER_ID_KEY, userId);
+  }
+  return userId;
+};
+
 export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   const [danmakus, setDanmakus] = useState<Danmaku[]>([]);
   const [inputText, setInputText] = useState('');
@@ -122,8 +133,11 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   
   // 弹幕列表展开/收起
   const [isDanmakuListOpen, setIsDanmakuListOpen] = useState(false);
+  
+  // 弹幕列表筛选 - 只显示自己发送的弹幕
+  const [filterOwnDanmakus, setFilterOwnDanmakus] = useState(false);
 
-  const userId = useRef(`user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  const userId = useRef(getUserId());
   const entitiesRef = useRef<Map<string, Cesium.Entity>>(new Map());
   const orbitEntitiesRef = useRef<Map<string, Cesium.Entity>>(new Map());
   const rateLimiterRef = useRef(new RateLimiter());
@@ -289,8 +303,11 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         const result = await response.json();
         if (result.success) {
           rateLimiterRef.current.recordSend();
-          // 直接使用服务器返回的数据更新本地状态，不重新请求整个列表
-          setDanmakus(prev => [...prev, result.danmaku || newDanmaku]);
+          // 删除之前相同 userId 的弹幕
+          setDanmakus(prev => {
+            const filtered = prev.filter(d => d.userId !== userId.current);
+            return [...filtered, result.danmaku || newDanmaku];
+          });
           setInputText('');
           setMarkdownText('');
           setShowMarkdownInput(false);
@@ -705,42 +722,83 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                 <Clock className="w-4 h-4" style={{ color: '#60a5fa' }} />
                 <span className="text-sm font-medium" style={{ color: '#60a5fa' }}>弹幕列表</span>
                 <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'rgba(96, 165, 250, 0.2)', color: '#94a3b8' }}>
-                  {danmakus.length}
+                  {filterOwnDanmakus ? danmakus.filter(d => d.userId === userId.current).length : danmakus.length}
                 </span>
               </div>
-              <button
-                onClick={() => setIsDanmakuListOpen(false)}
-                className="p-1 rounded hover:bg-white/10 transition-colors"
-              >
-                <X className="w-4 h-4 text-gray-400" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setFilterOwnDanmakus(prev => !prev)}
+                  className="flex items-center gap-1 px-2 py-1 rounded hover:bg-white/10 transition-colors"
+                  title={filterOwnDanmakus ? '显示所有弹幕' : '只显示我的弹幕'}
+                >
+                  <Eye className="w-3.5 h-3.5" style={{ color: filterOwnDanmakus ? '#60a5fa' : '#64748b' }} />
+                </button>
+                <button
+                  onClick={() => setIsDanmakuListOpen(false)}
+                  className="p-1 rounded hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-4 h-4 text-gray-400" />
+                </button>
+              </div>
             </div>
             
             <div className="overflow-y-auto flex-1">
-              {danmakus.length === 0 ? (
-                <div className="flex items-center justify-center h-20 text-gray-500 text-sm">
-                  暂无弹幕
-                </div>
-              ) : (
-                danmakus
+              {(() => {
+                const filteredDanmakus = filterOwnDanmakus 
+                  ? danmakus.filter(d => d.userId === userId.current)
+                  : danmakus;
+                
+                if (filteredDanmakus.length === 0) {
+                  return (
+                    <div className="flex items-center justify-center h-20 text-gray-500 text-sm">
+                      {filterOwnDanmakus ? '暂无我的弹幕' : '暂无弹幕'}
+                    </div>
+                  );
+                }
+                
+                return filteredDanmakus
                   .sort((a, b) => b.timestamp - a.timestamp)
-                  .map((danmaku) => (
-                    <button
-                      key={danmaku.id}
-                      onClick={() => showDanmakuDetail(danmaku)}
-                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/10 transition-colors border-b"
-                      style={{ borderColor: 'rgba(96, 165, 250, 0.1)' }}
-                    >
-                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: danmaku.color }} />
-                      <span className="flex-1 text-left text-xs truncate" style={{ color: '#e2e8f0' }}>
-                        {danmaku.text}
-                      </span>
-                      <span className="text-[10px] flex-shrink-0" style={{ color: '#64748b' }}>
-                        {new Date(danmaku.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </button>
-                  ))
-              )}
+                  .map((danmaku) => {
+                    const isOwnDanmaku = danmaku.userId === userId.current;
+                    return (
+                      <div
+                        key={danmaku.id}
+                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/10 transition-colors border-b"
+                        style={{ borderColor: 'rgba(96, 165, 250, 0.1)' }}
+                      >
+                        <button
+                          onClick={() => {
+                            setSelectedDanmaku(danmaku);
+                            setMarkdownContent(danmaku.markdown || null);
+                            setIsModalOpen(false);
+                            setIsDanmakuListOpen(false);
+                          }}
+                          className="flex items-center gap-2 flex-1 min-w-0"
+                        >
+                          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: danmaku.color }} />
+                          <span className="flex-1 text-left text-xs truncate" style={{ color: '#e2e8f0' }}>
+                            {danmaku.text}
+                          </span>
+                          <span className="text-[10px] flex-shrink-0" style={{ color: '#64748b' }}>
+                            {new Date(danmaku.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </button>
+                        {isOwnDanmaku && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteDanmaku(danmaku.id);
+                            }}
+                            className="p-1 rounded hover:bg-red-500/20 transition-colors flex-shrink-0"
+                            title="删除弹幕"
+                          >
+                            <X className="w-3 h-3 text-red-400" />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  });
+              })()}
             </div>
           </div>
         )}
