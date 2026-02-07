@@ -111,19 +111,21 @@ const SectionTitle = memo(function SectionTitle({
 // Friend Card Component - Enhanced with 3D tilt and glow effects
 const FriendCard = memo(function FriendCard({
   friend,
-  index
+  index,
+  onClick
 }: {
   friend: Friend;
   index: number;
+  onClick: (friend: Friend) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const cardRef = useRef<HTMLAnchorElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const color = 'var(--accent-primary)';
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const element = cardRef.current;
     if (!element) return;
     const rect = element.getBoundingClientRect();
@@ -156,11 +158,8 @@ const FriendCard = memo(function FriendCard({
   }, [rotateXValue, rotateYValue]);
 
   return (
-    <motion.a
+    <motion.div
       ref={cardRef}
-      href={friend.url}
-      target="_blank"
-      rel="noopener noreferrer"
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{
@@ -172,6 +171,7 @@ const FriendCard = memo(function FriendCard({
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={handleMouseLeave}
+      onClick={() => onClick(friend)}
       style={{
         perspective: '1000px',
         background: 'var(--bg-card)',
@@ -182,7 +182,7 @@ const FriendCard = memo(function FriendCard({
           ? `0 20px 40px var(--accent-glow), 0 0 30px ${color}20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)`
           : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
       }}
-      className="group relative block p-6 rounded-xl cursor-default overflow-hidden"
+      className="group relative block p-6 rounded-xl cursor-pointer overflow-hidden"
     >
         {/* Glow background - radial gradient */}
         <motion.div
@@ -219,7 +219,7 @@ const FriendCard = memo(function FriendCard({
             }}
           >
             <Star className="w-3 h-3" />
-            精选
+            友链
           </motion.div>
         )}
 
@@ -284,7 +284,7 @@ const FriendCard = memo(function FriendCard({
             </p>
           </div>
         </div>
-      </motion.a>
+      </motion.div>
   );
 });
 
@@ -292,11 +292,13 @@ const FriendCard = memo(function FriendCard({
 const CategorySection = memo(function CategorySection({
   category,
   friends,
-  index
+  index,
+  onClick
 }: {
   category: FriendCategory;
   friends: Friend[];
   index: number;
+  onClick: (friend: Friend) => void;
 }) {
   const IconComponent = iconMap[category.icon] || Globe;
   const color = 'var(--accent-primary)';
@@ -384,6 +386,7 @@ const CategorySection = memo(function CategorySection({
             key={friend.id}
             friend={friend}
             index={friendIndex}
+            onClick={onClick}
           />
         ))}
       </div>
@@ -574,6 +577,161 @@ const ApplySection = memo(function ApplySection({
   );
 });
 
+// Redirect Modal Component
+const RedirectModal = memo(function RedirectModal({
+  isOpen,
+  friend,
+  onConfirm,
+  onCancel
+}: {
+  isOpen: boolean;
+  friend: Friend | null;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const [progress, setProgress] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(3);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setProgress(0);
+      setTimeLeft(3);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return prev + 1;
+      });
+    }, 30);
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          onConfirm();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(timer);
+    };
+  }, [isOpen, onConfirm]);
+
+  if (!isOpen || !friend) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0"
+        style={{ background: 'rgba(0, 0, 0, 0.7)' }}
+        onClick={onCancel}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="relative w-full max-w-md p-6 rounded-2xl"
+        style={{
+          background: 'var(--bg-card)',
+          border: '2px solid var(--border-subtle)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        }}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center justify-center w-12 h-12 rounded-xl"
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-subtle)',
+            }}
+          >
+            <Globe className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
+              即将离开本站
+            </h3>
+            <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              跳转到友链网站
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-4 p-4 rounded-lg"
+          style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-subtle)',
+          }}
+        >
+          <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
+            {friend.name}
+          </p>
+          <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+            {friend.url}
+          </p>
+        </div>
+
+        <div className="mb-4">
+          <div className="flex justify-between text-sm mb-2">
+            <span style={{ color: 'var(--text-secondary)' }}>自动跳转</span>
+            <span style={{ color: 'var(--text-primary)' }}>{timeLeft} 秒</span>
+          </div>
+          <div className="h-2 rounded-full overflow-hidden"
+            style={{ background: 'var(--bg-secondary)' }}
+          >
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: 'var(--accent-primary)' }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.1 }}
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <motion.button
+            onClick={onCancel}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 px-4 py-2 rounded-lg font-medium transition-all"
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-subtle)',
+              color: 'var(--text-primary)',
+            }}
+          >
+            取消跳转
+          </motion.button>
+          <motion.button
+            onClick={onConfirm}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 px-4 py-2 rounded-lg font-medium transition-all"
+            style={{
+              background: 'var(--accent-primary)',
+              color: 'white',
+            }}
+          >
+            立即访问
+          </motion.button>
+        </div>
+      </motion.div>
+    </div>
+  );
+});
+
 // Navigation Header Component
 const NavigationHeader = memo(function NavigationHeader({
   theme,
@@ -642,7 +800,27 @@ export default function FriendsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<Theme>('dark');
+  const [redirectModalOpen, setRedirectModalOpen] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const THEME_STORAGE_KEY = 'sakurain-theme';
+
+  const handleFriendClick = useCallback((friend: Friend) => {
+    setSelectedFriend(friend);
+    setRedirectModalOpen(true);
+  }, []);
+
+  const handleConfirmRedirect = useCallback(() => {
+    if (selectedFriend) {
+      window.open(selectedFriend.url, '_blank', 'noopener,noreferrer');
+    }
+    setRedirectModalOpen(false);
+    setSelectedFriend(null);
+  }, [selectedFriend]);
+
+  const handleCancelRedirect = useCallback(() => {
+    setRedirectModalOpen(false);
+    setSelectedFriend(null);
+  }, []);
 
   // Load theme from localStorage
   useEffect(() => {
@@ -856,7 +1034,7 @@ export default function FriendsPage() {
                     textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
                   }}
                 >
-                  精选推荐
+                  友链推荐
                 </motion.h2>
               </motion.div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -867,6 +1045,7 @@ export default function FriendsPage() {
                       key={friend.id}
                       friend={friend}
                       index={index}
+                      onClick={handleFriendClick}
                     />
                   ))}
               </div>
@@ -881,6 +1060,7 @@ export default function FriendsPage() {
                 category={category}
                 friends={friends}
                 index={index + 2}
+                onClick={handleFriendClick}
               />
             )
           ))}
@@ -918,6 +1098,13 @@ export default function FriendsPage() {
       </footer>
 
       <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />
+
+      <RedirectModal
+        isOpen={redirectModalOpen}
+        friend={selectedFriend}
+        onConfirm={handleConfirmRedirect}
+        onCancel={handleCancelRedirect}
+      />
     </div>
   );
 }
