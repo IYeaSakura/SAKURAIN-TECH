@@ -66,25 +66,28 @@ export async function onRequestPost(context) {
       // 如果超过200条，删除最早的弹幕及其markdown内容
       const removedDanmaku = danmakus.shift();
       if (removedDanmaku) {
-        // 删除对应的markdown内容
+        // 删除对应的markdown内容（列表格式）
+        let textList = [];
         const textData = await kv.get('text');
         if (textData) {
           try {
-            const textMap = JSON.parse(textData);
-            if (textMap && typeof textMap === 'object' && removedDanmaku.id in textMap) {
-              delete textMap[removedDanmaku.id];
-              await kv.put('text', JSON.stringify(textMap));
+            textList = JSON.parse(textData);
+            if (!Array.isArray(textList)) {
+              textList = [];
             }
           } catch (e) {
-            // 忽略解析错误
+            textList = [];
           }
         }
+        // 过滤掉要删除的条目
+        textList = textList.filter((item) => item.id !== removedDanmaku.id);
+        await kv.put('text', JSON.stringify(textList));
       }
     }
 
     await kv.put('danmakus', JSON.stringify(danmakus));
 
-    // 如果有 markdown 文本，保存到 text 键
+    // 如果有 markdown 文本，保存到 text 键（列表格式）
     if (body.markdownContent) {
       const markdownText = String(body.markdownContent).trim();
       if (markdownText) {
@@ -95,22 +98,27 @@ export async function onRequestPost(context) {
             headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
           });
         }
-        // 获取现有的 text 数据
-        let textMap = {};
+        // 获取现有的 text 数据（列表格式）
+        let textList = [];
         const textData = await kv.get('text');
         if (textData) {
           try {
-            textMap = JSON.parse(textData);
-            if (typeof textMap !== 'object' || textMap === null) {
-              textMap = {};
+            textList = JSON.parse(textData);
+            if (!Array.isArray(textList)) {
+              textList = [];
             }
           } catch (e) {
-            textMap = {};
+            textList = [];
           }
         }
-        // 添加新的 markdown 内容
-        textMap[newDanmaku.id] = markdownText;
-        await kv.put('text', JSON.stringify(textMap));
+        // 检查是否已存在该 id 的条目，存在则更新，否则添加
+        const existingIndex = textList.findIndex((item) => item.id === newDanmaku.id);
+        if (existingIndex >= 0) {
+          textList[existingIndex].text = markdownText;
+        } else {
+          textList.push({ id: newDanmaku.id, text: markdownText });
+        }
+        await kv.put('text', JSON.stringify(textList));
       }
     }
 

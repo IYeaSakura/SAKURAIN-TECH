@@ -689,7 +689,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         {/* Markdown 内容侧边栏 - 缩小半透明版本 */}
         {selectedDanmaku && !isModalOpen && (
           <div
-            className="fixed right-4 top-20 w-64 z-40 flex flex-col rounded-lg backdrop-blur-sm overflow-hidden"
+            className="fixed right-4 top-32 w-64 z-40 flex flex-col rounded-lg backdrop-blur-sm overflow-hidden"
             style={{
               background: 'rgba(15, 23, 42, 0.7)',
               border: '1px solid rgba(96, 165, 250, 0.2)',

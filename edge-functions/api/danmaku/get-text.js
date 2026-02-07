@@ -18,7 +18,7 @@ export async function onRequestGet(context) {
       });
     }
 
-    // 从 text 键获取 markdown 内容
+    // 从 text 键获取 markdown 内容（列表格式）
     const textData = await kv.get('text');
     if (!textData) {
       return new Response(JSON.stringify({ error: 'Not found' }), {
@@ -27,19 +27,20 @@ export async function onRequestGet(context) {
       });
     }
 
-    let textMap = {};
+    let textList = [];
     try {
-      textMap = JSON.parse(textData);
-      if (typeof textMap !== 'object' || textMap === null) {
-        textMap = {};
+      textList = JSON.parse(textData);
+      if (!Array.isArray(textList)) {
+        textList = [];
       }
     } catch (e) {
-      textMap = {};
+      textList = [];
     }
 
-    const markdownText = textMap[id];
+    // 查找对应 id 的条目
+    const item = textList.find((entry) => entry.id === id);
 
-    if (markdownText === undefined || markdownText === null || markdownText === '') {
+    if (!item || !item.text) {
       return new Response(JSON.stringify({ error: 'Not found' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
@@ -49,7 +50,7 @@ export async function onRequestGet(context) {
     return new Response(JSON.stringify({
       success: true,
       id: id,
-      markdownText: markdownText
+      markdownText: item.text
     }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
     });
@@ -65,7 +66,6 @@ export function onRequestOptions() {
   return new Response(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type'
