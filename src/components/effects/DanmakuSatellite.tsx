@@ -102,6 +102,22 @@ const getUserId = (): string => {
   return userId;
 };
 
+const formatDanmakuTime = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  
+  const isSameDay = date.toDateString() === now.toDateString();
+  const isSameYear = date.getFullYear() === now.getFullYear();
+  
+  if (isSameDay) {
+    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  } else if (isSameYear) {
+    return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+  } else {
+    return date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  }
+};
+
 export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   const [danmakus, setDanmakus] = useState<Danmaku[]>([]);
   const [inputText, setInputText] = useState('');
@@ -608,7 +624,15 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           </button>
 
           <button
-            onClick={() => setIsInputVisible(!isInputVisible)}
+            onClick={() => {
+              setIsInputVisible(prev => {
+                const newValue = !prev;
+                if (newValue) {
+                  setIsDanmakuListOpen(false);
+                }
+                return newValue;
+              });
+            }}
             className="flex items-center gap-2 px-3.5 py-2 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
             style={{
               background: 'rgba(0, 0, 0, 0.5)',
@@ -691,7 +715,15 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
 
             {/* 弹幕列表开关 */}
             <button
-              onClick={() => setIsDanmakuListOpen(prev => !prev)}
+              onClick={() => {
+                setIsDanmakuListOpen(prev => {
+                  const newValue = !prev;
+                  if (newValue) {
+                    setIsInputVisible(false);
+                  }
+                  return newValue;
+                });
+              }}
               className="flex items-center gap-1 px-2 py-1.5 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
               style={{
                 background: 'rgba(0, 0, 0, 0.5)',
@@ -771,7 +803,6 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                             setSelectedDanmaku(danmaku);
                             setMarkdownContent(danmaku.markdown || null);
                             setIsModalOpen(false);
-                            setIsDanmakuListOpen(false);
                           }}
                           className="flex items-center gap-2 flex-1 min-w-0"
                         >
@@ -780,7 +811,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                             {danmaku.text}
                           </span>
                           <span className="text-[10px] flex-shrink-0" style={{ color: '#64748b' }}>
-                            {new Date(danmaku.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                            {formatDanmakuTime(danmaku.timestamp)}
                           </span>
                         </button>
                         {isOwnDanmaku && (

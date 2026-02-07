@@ -484,7 +484,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                 border: '1px solid rgba(239, 68, 68, 0.3)'
                               }}>
                                 <span className="w-2 h-2 rounded-full" style={{ background: '#ef4444' }} />
-                                <span className="text-sm" style={{ color: '#fca5a5' }}>建议使用桌面端访问，配置较低的电脑可能运行不流畅</span>
+                                <span className="text-sm" style={{ color: '#fca5a5' }}>暂不支持移动端，配置较低的电脑可能运行不流畅</span>
                               </div>
 
                               <motion.button
@@ -632,7 +632,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                   </div>
                                   <div>
                                     <span className="font-medium" style={{ color: 'var(--text-primary)' }}>网站描述：</span>
-                                    <span className="ml-2">一个高校大学生技术团队验证新技术的网站~</span>
+                                    <span className="ml-2">用代码构建未来</span>
                                   </div>
                                 </div>
                               </div>

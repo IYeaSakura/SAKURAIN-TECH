@@ -82,6 +82,15 @@
       "featured": true
     },
     {
+      "id": "iletter",
+      "name": "白荼日记",
+      "url": "https://blog.iletter.top/",
+      "icon": "https://www.ittoolman.top/images/avatar.png",
+      "description": "没有什么可以留住，除了死亡。",
+      "category": "blogs",
+      "featured": true
+    },
+    {
       "id": "mclans",
       "name": "Mc服务器演示站",
       "url": "https://mclans.sakurain.net",
