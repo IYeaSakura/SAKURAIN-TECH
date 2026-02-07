@@ -16,8 +16,6 @@
     "links": [
       { "label": "服务", "href": "#services" },
       { "label": "技术栈", "href": "#tech-stack" },
-      { "label": "定价", "href": "#pricing" },
-      { "label": "流程", "href": "#process" },
       { "label": "联系", "href": "#contact" }
     ],
     "cta": { "label": "开始项目", "href": "#contact" }
@@ -789,7 +787,7 @@
       { "platform": "GitHub", "url": "#", "icon": "Github" },
       { "platform": "Telegram", "url": "#", "icon": "Send" }
     ],
-    "note": "请直接发送邮件至 Yae_SakuRain@outlook.com"
+    "note": "请添加技术负责人QQ: 2059511644，并注明来意"
   },
   "footer": {
     "copyright": "© 2026 SAKURAIN 技术工作室",

@@ -52,23 +52,27 @@ export const CodeBlock = ({ language, value }: CodeBlockProps) => {
           )}
         </button>
       </div>
-      <SyntaxHighlighter
-        style={vscDarkPlus}
-        language={language || 'text'}
-        PreTag="div"
-        customStyle={{ 
-          margin: 0, 
-          borderRadius: '0 0 0.75rem 0.75rem', 
-          fontSize: '0.8125rem', 
-          lineHeight: '1.6', 
-          padding: '1.25rem',
-          fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace"
-        }}
-        showLineNumbers
-        lineNumberStyle={{ minWidth: '2.5em', paddingRight: '1em', color: '#4b5563', textAlign: 'right', fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace" }}
-      >
-        {value}
-      </SyntaxHighlighter>
+      <div className="overflow-x-auto">
+        <SyntaxHighlighter
+          style={vscDarkPlus}
+          language={language || 'text'}
+          PreTag="div"
+          customStyle={{ 
+            margin: 0, 
+            borderRadius: '0 0 0.75rem 0.75rem', 
+            fontSize: '0.8125rem', 
+            lineHeight: '1.6', 
+            padding: '1.25rem',
+            fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace",
+            whiteSpace: 'pre',
+            overflowX: 'auto'
+          }}
+          showLineNumbers
+          lineNumberStyle={{ minWidth: '2.5em', paddingRight: '1em', color: '#4b5563', textAlign: 'right', fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace" }}
+        >
+          {value}
+        </SyntaxHighlighter>
+      </div>
     </div>
   );
 };

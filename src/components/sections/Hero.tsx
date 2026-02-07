@@ -1,9 +1,9 @@
 import { memo, useState, useCallback, useRef, useEffect } from 'react';
-import { motion, 
+import { motion,
 AnimatePresence } from 'framer-motion';
 import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown, Globe, Map, Maximize2, X, Layers, Terminal as TerminalIcon } from 'lucide-react';
-import { 
-  AmbientGlow, 
+import {
+  AmbientGlow,
   TwinklingStars,
   WebTerminal,
 } from '@/components/effects';
@@ -39,21 +39,21 @@ function useFPS() {
 
   useEffect(() => {
     let rafId: number;
-    
+
     const updateFPS = () => {
       frameCount.current++;
       const now = performance.now();
       const delta = now - lastTime.current;
-      
+
       if (delta >= 1000) {
         setFps(Math.round((frameCount.current * 1000) / delta));
         frameCount.current = 0;
         lastTime.current = now;
       }
-      
+
       rafId = requestAnimationFrame(updateFPS);
     };
-    
+
     rafId = requestAnimationFrame(updateFPS);
     return () => cancelAnimationFrame(rafId);
   }, []);
@@ -68,7 +68,7 @@ interface HeroProps {
 // 使用 CSS 动画替代 JS 动画 - 性能更好
 const CodeDecoration = memo(({ className }: { className?: string }) => {
   return (
-    <div 
+    <div
       className={`absolute font-mono text-xs sm:text-sm opacity-20 pointer-events-none animate-float-slow ${className}`}
     >
       <div className="text-[var(--accent-primary)]">{'<System.init>'}</div>
@@ -92,7 +92,7 @@ const FloatingIcon = memo(({
   color?: string;
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
-  
+
   if (prefersReducedMotion) {
     return (
       <div className={`absolute ${className} opacity-30`}>
@@ -100,7 +100,7 @@ const FloatingIcon = memo(({
       </div>
     );
   }
-  
+
   return (
     <div className={`absolute ${className} opacity-30 animate-float`}>
       <Icon className="w-6 h-6 sm:w-8 sm:h-8" style={{ color }} />
@@ -166,7 +166,7 @@ const StatCard = memo(({
       <div
         className="absolute -inset-[2px] rounded-lg transition-opacity duration-500"
         style={{
-          background: isHovered 
+          background: isHovered
             ? `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))`
             : 'transparent',
           backgroundSize: '300% 300%',
@@ -183,8 +183,8 @@ const StatCard = memo(({
           border: '3px solid',
           borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
           transform: isHovered ? 'translateY(-8px) scale(1.02)' : 'none',
-          boxShadow: isHovered 
-            ? `0 20px 40px var(--accent-glow), 0 0 30px ${color}20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)` 
+          boxShadow: isHovered
+            ? `0 20px 40px var(--accent-glow), 0 0 30px ${color}20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)`
             : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
         }}
       >
@@ -197,7 +197,7 @@ const StatCard = memo(({
           animate={{ opacity: isHovered ? 1 : 0 }}
           transition={{ duration: 0.3 }}
         />
-        
+
         {/* Shine effect - 斜向光泽 */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
@@ -212,7 +212,7 @@ const StatCard = memo(({
         {/* 内容 */}
         <div
           className="font-primary text-3xl sm:text-4xl font-extrabold mb-2 transition-all duration-300 relative z-10"
-          style={{ 
+          style={{
             color: 'var(--accent-primary)',
             transform: isHovered ? 'scale(1.1)' : 'scale(1)',
             textShadow: isHovered ? `0 0 20px ${color}, 0 0 40px ${color}40` : 'none',
@@ -242,7 +242,7 @@ const PrimaryButton = memo(({
   onClick: () => void;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  
+
   return (
     <button
       onClick={onClick}
@@ -256,14 +256,14 @@ const PrimaryButton = memo(({
         letterSpacing: '0.05em',
         color: 'white',
         background: 'linear-gradient(135deg, var(--accent-primary), color-mix(in srgb, var(--accent-primary) 80%, var(--accent-secondary)))',
-        boxShadow: isHovered 
-          ? '0 8px 30px var(--accent-glow), 0 0 60px var(--accent-primary)40, inset 0 0 20px rgba(255,255,255,0.2)' 
+        boxShadow: isHovered
+          ? '0 8px 30px var(--accent-glow), 0 0 60px var(--accent-primary)40, inset 0 0 20px rgba(255,255,255,0.2)'
           : '0 4px 20px var(--accent-glow)',
         transform: isHovered ? 'scale(1.05)' : 'scale(1)',
       }}
     >
       {/* 光效背景 */}
-      <div 
+      <div
         className="absolute inset-0 transition-transform duration-600"
         style={{
           background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
@@ -272,7 +272,7 @@ const PrimaryButton = memo(({
         }}
       />
       {/* 脉冲光环 */}
-      <div 
+      <div
         className="absolute inset-0 rounded-xl transition-opacity duration-300"
         style={{
           boxShadow: `inset 0 0 20px rgba(255,255,255,0.3), 0 0 30px var(--accent-primary)`,
@@ -300,7 +300,7 @@ const SecondaryButton = memo(({
   onClick: () => void;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  
+
   return (
     <button
       onClick={onClick}
@@ -316,14 +316,14 @@ const SecondaryButton = memo(({
         background: 'transparent',
         border: '2px solid',
         borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
-        boxShadow: isHovered 
-          ? '0 0 30px var(--accent-glow), inset 0 0 20px var(--accent-primary)10' 
+        boxShadow: isHovered
+          ? '0 0 30px var(--accent-glow), inset 0 0 20px var(--accent-primary)10'
           : 'none',
         transform: isHovered ? 'scale(1.05)' : 'scale(1)',
       }}
     >
       {/* 悬停光晕 */}
-      <div 
+      <div
         className="absolute inset-0 rounded-xl transition-opacity duration-300"
         style={{
           background: `radial-gradient(circle at center, var(--accent-primary)20, transparent 70%)`,
@@ -341,7 +341,7 @@ SecondaryButton.displayName = 'SecondaryButton';
 const GlowBadge = memo(({ text }: { text: string }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
-  
+
   if (prefersReducedMotion || isMobile) {
     return (
       <div className="inline-flex items-center gap-2 mb-6 sm:mb-8 relative">
@@ -352,7 +352,7 @@ const GlowBadge = memo(({ text }: { text: string }) => {
             border: '2px solid var(--accent-primary)',
           }}
         >
-          <span 
+          <span
             className="w-2 h-2 rounded-full"
             style={{ background: 'var(--accent-primary)' }}
           />
@@ -366,7 +366,7 @@ const GlowBadge = memo(({ text }: { text: string }) => {
       </div>
     );
   }
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.8 }}
@@ -375,7 +375,7 @@ const GlowBadge = memo(({ text }: { text: string }) => {
       className="inline-flex items-center gap-2 mb-6 sm:mb-8 relative"
     >
       {/* 外发光 */}
-      <div 
+      <div
         className="absolute -inset-2 rounded-xl animate-pulse-glow"
         style={{
           background: `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary))`,
@@ -393,15 +393,15 @@ const GlowBadge = memo(({ text }: { text: string }) => {
         }}
       >
         {/* 内部光效 */}
-        <div 
+        <div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{
             background: `linear-gradient(90deg, transparent, var(--accent-primary)20, transparent)`,
           }}
         />
-        <span 
+        <span
           className="w-2 h-2 rounded-full animate-pulse"
-          style={{ 
+          style={{
             background: 'var(--accent-primary)',
             boxShadow: '0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary)',
           }}
@@ -423,7 +423,7 @@ GlowBadge.displayName = 'GlowBadge';
 const GlowTitle = memo(({ children }: { children: React.ReactNode }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
-  
+
   if (prefersReducedMotion || isMobile) {
     return (
       <div className="overflow-hidden mb-6 sm:mb-8">
@@ -442,7 +442,7 @@ const GlowTitle = memo(({ children }: { children: React.ReactNode }) => {
       </div>
     );
   }
-  
+
   return (
     <div className="overflow-hidden mb-6 sm:mb-8 relative">
       {/* 多层光晕 */}
@@ -496,7 +496,7 @@ GlowTitle.displayName = 'GlowTitle';
 const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
-  
+
   if (prefersReducedMotion || isMobile) {
     return (
       <div
@@ -512,7 +512,7 @@ const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
       </div>
     );
   }
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -522,7 +522,7 @@ const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
       onClick={onClick}
     >
       {/* 发光底座 */}
-      <div 
+      <div
         className="absolute inset-0 -m-4 rounded-full transition-opacity duration-300 opacity-0 group-hover:opacity-100"
         style={{
           background: `radial-gradient(circle, var(--accent-primary)30, transparent 70%)`,
@@ -536,12 +536,12 @@ const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
         >
           向下滚动
         </span>
-        <ChevronDown 
-          className="w-6 h-6 transition-all duration-300 group-hover:scale-125" 
-          style={{ 
+        <ChevronDown
+          className="w-6 h-6 transition-all duration-300 group-hover:scale-125"
+          style={{
             color: 'var(--accent-primary)',
             filter: 'drop-shadow(0 0 10px var(--accent-primary))',
-          }} 
+          }}
         />
       </div>
     </motion.div>
@@ -588,14 +588,14 @@ const GlobeShowcase = memo(() => {
   const { theme } = useTheme();
   const isDark = theme !== 'light';
   const fps = useFPS();
-  
+
   const demoConfig = getDemoConfig(currentDemo);
 
   // 进入全屏
   const enterFullscreen = useCallback(async () => {
     const container = containerRef.current;
     if (!container) return;
-    
+
     try {
       if (container.requestFullscreen) {
         await container.requestFullscreen();
@@ -660,6 +660,19 @@ const GlobeShowcase = memo(() => {
     setShowDropdown(false);
   }, []);
 
+  // 监听打开地球Online事件
+  useEffect(() => {
+    const handleOpenEarthOnline = () => {
+      enterFullscreen();
+    };
+
+    window.addEventListener('open-earth-online', handleOpenEarthOnline);
+
+    return () => {
+      window.removeEventListener('open-earth-online', handleOpenEarthOnline);
+    };
+  }, [enterFullscreen]);
+
   return (
     <motion.div
       ref={containerRef}
@@ -672,7 +685,7 @@ const GlobeShowcase = memo(() => {
     >
       {/* 双击全屏悬浮提示 - 放在最外层避免被裁剪 */}
       {!isFullscreen && isHovered && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 5 }}
@@ -688,7 +701,7 @@ const GlobeShowcase = memo(() => {
             双击全屏体验
           </span>
           {/* 小三角箭头 */}
-          <div 
+          <div
             className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45"
             style={{
               background: 'var(--bg-card)',
@@ -714,7 +727,7 @@ const GlobeShowcase = memo(() => {
           }}
         />
       )}
-      
+
       {/* 主容器 */}
       <div
         className={`relative rounded-2xl overflow-hidden transition-all duration-500 ${
@@ -733,9 +746,9 @@ const GlobeShowcase = memo(() => {
         <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Globe className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-            <span 
+            <span
               className="text-sm font-bold tracking-wider"
-              style={{ 
+              style={{
                 color: 'var(--accent-primary)',
                 textShadow: '0 0 10px var(--accent-glow)',
               }}
@@ -743,7 +756,7 @@ const GlobeShowcase = memo(() => {
               {demoConfig.title}
             </span>
           </div>
-          
+
           {/* 右侧按钮组 */}
           <div className="flex items-center gap-1.5">
             {/* 切换按钮 - 在非全屏时显示 */}
@@ -761,7 +774,7 @@ const GlobeShowcase = memo(() => {
                 <Layers className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />
               </button>
             )}
-            
+
             {/* 全屏/退出按钮 */}
             <button
               onClick={isFullscreen ? exitFullscreen : enterFullscreen}
@@ -779,7 +792,7 @@ const GlobeShowcase = memo(() => {
                 <Maximize2 className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />
               )}
             </button>
-            
+
             {/* 运行中状态 */}
             <div className="flex items-center gap-1.5 ml-1">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
@@ -922,18 +935,18 @@ const GlobeShowcase = memo(() => {
         </AnimatePresence>
 
         {/* WebGL 演示内容 */}
-        <div 
-          className={`absolute inset-0 ${isFullscreen ? 'pt-24' : 'pt-8'}`} 
+        <div
+          className={`absolute inset-0 ${isFullscreen ? 'pt-24' : 'pt-8'}`}
           style={{ cursor: 'default' }}
           onDoubleClick={isFullscreen ? undefined : enterFullscreen}
         >
-          <DemoContent 
-            demo={{ 
-              type: currentDemo, 
-              isFullscreen, 
-              onFullscreenToggle: isFullscreen ? exitFullscreen : enterFullscreen 
-            }} 
-            isDark={isDark} 
+          <DemoContent
+            demo={{
+              type: currentDemo,
+              isFullscreen,
+              onFullscreenToggle: isFullscreen ? exitFullscreen : enterFullscreen
+            }}
+            isDark={isDark}
           />
         </div>
 
@@ -945,7 +958,7 @@ const GlobeShowcase = memo(() => {
               <span style={{ color: 'var(--text-muted)' }}>全球玩家</span>
               <span className="font-mono font-bold" style={{ color: '#60a5fa' }}>80.45亿</span>
               <span className="ml-3" style={{ color: 'var(--text-muted)' }}>国服玩家:</span>
-              <span className="font-mono font-bold" style={{ color: 'fbbf24' }}>14.12亿</span>
+              <span className="font-mono font-bold" style={{ color: '#fbbf24' }}>14.12亿</span>
             </div>
           </div>
         )}
@@ -970,7 +983,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
   const { scrollY } = useThrottledScroll(16);
-  
+
   // 计算滚动动画值
   const scrollProgress = Math.min(scrollY / 300, 1);
   const opacity = prefersReducedMotion ? 1 : 1 - scrollProgress;
@@ -1005,7 +1018,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
         <>
           <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.15} />
           <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.1} />
-          
+
           {/* 闪烁星星 */}
           <div className="absolute inset-0">
             <TwinklingStars count={20} color="var(--accent-secondary)" secondaryColor="var(--mc-gold)" />

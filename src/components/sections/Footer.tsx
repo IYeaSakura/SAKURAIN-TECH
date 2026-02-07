@@ -33,12 +33,12 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
       <div className="absolute inset-0 pointer-events-none opacity-15">
         <FloatingBubbles count={8} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
       </div>
-      
+
       {/* 闪烁星星 */}
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
         <TwinklingStars count={20} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
       </div>
-      
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
           {/* Logo & Slogan */}
@@ -63,7 +63,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
                 SAKURAIN
               </span>
             </div>
-            <p 
+            <p
               className="font-primary"
               style={{
                 fontSize: 'var(--text-base)',
@@ -145,7 +145,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
           className="mt-12 pt-8 text-center"
           style={{ borderTop: '2px solid var(--border-subtle)' }}
         >
-          <p 
+          <p
             className="flex items-center justify-center gap-2 font-primary"
             style={{
               fontSize: 'var(--text-sm)',
@@ -158,16 +158,16 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
             用代码构建未来
           </p>
           {/* 备案信息 */}
-          <div 
+          <div
             className="mt-4 flex flex-wrap items-center justify-center gap-4 font-primary"
             style={{
               fontSize: 'var(--text-xs)',
               color: 'var(--text-muted)',
             }}
           >
-            <a 
-              href="https://beian.miit.gov.cn/" 
-              target="_blank" 
+            <a
+              href="https://beian.miit.gov.cn/"
+              target="_blank"
               rel="noopener noreferrer"
               className="hover:underline"
               style={{ transition: 'color 0.2s ease' }}
@@ -178,12 +178,12 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
                 e.currentTarget.style.color = 'var(--text-muted)';
               }}
             >
-              皖ICP备2022017801号-1
+              皖ICP备2025073165号-1
             </a>
             <span>|</span>
-            <a 
-              href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34130202000598" 
-              target="_blank" 
+            <a
+              href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34130202000598"
+              target="_blank"
               rel="noopener noreferrer"
               className="hover:underline flex items-center gap-1"
               style={{ transition: 'color 0.2s ease' }}
@@ -194,9 +194,9 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
                 e.currentTarget.style.color = 'var(--text-muted)';
               }}
             >
-              <img 
-                src="https://www.beian.gov.cn/img/ghs.png" 
-                alt="公安备案图标" 
+              <img
+                src="/image/ghs.png"
+                alt="公安备案图标"
                 className="w-3 h-3"
               />
               皖公网安备34130202000598号

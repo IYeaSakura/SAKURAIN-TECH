@@ -31,14 +31,22 @@
 
 #### 架构设计
 
+**渲染管线层级**
+
 ```
-┌─────────────────────────────────────────┐
-│           渲染管线架构                   │
-├─────────────────────────────────────────┤
-│  影像层 → 矢量层 → 特效层 → UI叠加层      │
-│  (瓦片)   (标记)   (后处理)  (HTML)      │
-└─────────────────────────────────────────┘
+影像层 → 矢量层 → 特效层 → UI叠加层
+  ↓         ↓         ↓         ↓
+瓦片加载   标记渲染   后处理   HTML界面
+LOD选择   贝塞尔曲线 动态光照  交互控件
+LRU缓存   实体聚合   大气渲染  信息面板
 ```
+
+**数据流向**
+
+1. **影像层**：接入高德地图Web服务，基于视锥体LOD选择，LRU缓存管理
+2. **矢量层**：接收几何数据，渲染标记点和贝塞尔曲线，执行实体聚合
+3. **特效层**：处理渲染对象，应用动态光照和大气效果
+4. **UI叠加层**：生成最终画面，提供用户交互和数据展示
 
 #### 关键技术实现
 
@@ -51,7 +59,7 @@
 ```typescript
 // 物理参数配置
 scene.globe.enableLighting = true;
-scene.globe.lightingFadeOutDistance = 100000000;  // 光照淡出距离
+scene.globe.lightingFadeOutDistance = 100000000;  // 光照淡出出距离
 scene.globe.lightingFadeInDistance = 100000;      // 光照淡入距离
 scene.globe.dynamicAtmosphereLighting = true;      // 动态大气光照
 scene.globe.atmosphereLightIntensity = 2.0;        // 增强对比
@@ -89,9 +97,14 @@ for (let t = 0; t <= 1; t += 0.05) {
 
 #### 技术架构
 
-**数据流**
+**数据处理流程**
+
 ```
-阿里云DataV GeoJSON → 自定义投影 → Three.js几何体 → WebGL渲染
+阿里云DataV → 自定义投影 → Three.js → WebGL
+  ↓              ↓            ↓          ↓
+GeoJSON数据    坐标转换     几何体生成   GPU渲染
+省市边界       优化墨卡托   三角化处理   实时光照
+行政区划       补偿拉伸     孔洞处理     阴影效果
 ```
 
 **投影算法（优化墨卡托）**
@@ -206,14 +219,21 @@ const calculatePosition = (d: Danmaku, elapsed: number) => {
 
 ```
 ┌─────────────────────────────────────────┐
-│  UI层：XTerm.js 终端模拟器               │
-│  - VT100协议支持、256色、鼠标事件         │
-├─────────────────────────────────────────┤
-│  运行时层：Wasmer SDK                   │
-│  - WASM模块加载、WASI系统接口            │
-├─────────────────────────────────────────┤
-│  语言运行时：预编译WASM模块              │
-│  - Python、Node.js、Ruby、Bash等         │
+│           UI层 (XTerm.js)              │
+│  • 终端仿真  • 命令解析  • 渲染引擎      │
+│  • VT100协议  • 256色渲染  • 鼠标事件  │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│       运行时层 (Wasmer SDK)            │
+│  • WASM模块加载  • WASI系统接口         │
+│  • 内存管理  • 安全沙箱                │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│       语言运行时 (WASM模块)            │
+│  • Python  • Node.js  • Ruby  • Bash  │
+│  • 沙箱隔离  • 资源限制  • 安全执行    │
 └─────────────────────────────────────────┘
 ```
 
@@ -411,48 +431,61 @@ const handler = useCallback(() => {
 
 ### 4.1 项目结构
 
-```bash
+```
 src/
 ├── components/
-│   ├── atoms/           # 原子组件（Button, Card, Badge）
-│   │   └── 设计令牌驱动，无业务逻辑
-│   ├── effects/         # 特效组件（3D, 动画, 粒子）
-│   │   ├── CesiumGlobe.tsx
-│   │   ├── ChinaMap3D.tsx
-│   │   ├── DanmakuSatellite.tsx
-│   │   ├── WebTerminal.tsx
+│   ├── atoms/          # 基础组件（设计令牌驱动，无业务逻辑）
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   └── Badge.tsx
+│   │
+│   ├── effects/        # 特效组件（3D可视化、粒子效果）
+│   │   ├── CesiumGlobe.tsx    # 3D地球可视化
+│   │   ├── ChinaMap3D.tsx     # 3D中国地图
+│   │   ├── DanmakuSatellite.tsx # 弹幕卫星
+│   │   ├── WebTerminal.tsx     # Web终端
 │   │   └── ...（粒子、光效、文字动画）
-│   ├── sections/        # 页面区块（Hero, Services, Contact）
-│   │   └── 业务逻辑聚合，组合atoms/effects
-│   └── ui/              # shadcn/ui 基础组件
-│       └── Radix UI封装 + 主题适配
-├── hooks/               # 自定义Hooks
-│   ├── useTheme.ts      # 主题状态
-│   ├── useLenis.ts      # 平滑滚动
-│   ├── usePerformance.ts # 性能监控
-│   └── ...
-├── lib/                 # 工具库
-│   ├── utils.ts         # 通用函数
-│   ├── animations.ts    # 动画配置
-│   └── performance.ts   # 性能工具
-├── pages/               # 路由页面
-│   ├── Docs/            # 文档系统（Markdown渲染）
-│   ├── Friends/         # 友链页面
-│   └── NotFound/        # 404页面
-├── styles/              # 全局样式
-│   ├── globals.css      # Tailwind + CSS变量
+│   │
+│   ├── sections/       # 业务组件（组合atoms/effects）
+│   │   ├── Hero.tsx
+│   │   ├── Services.tsx
+│   │   └── Contact.tsx
+│   │
+│   └── ui/            # UI组件（Radix UI封装 + 主题适配）
+│       └── ...
+│
+├── hooks/              # 自定义Hooks
+│   ├── useTheme.ts     # 主题状态管理
+│   ├── useLenis.ts     # 平滑滚动
+│   └── usePerformance.ts # 性能监控
+│
+├── lib/                # 工具库
+│   ├── utils.ts        # 通用工具函数
+│   ├── animations.ts   # 动画配置
+│   └── performance.ts  # 性能优化工具
+│
+├── pages/              # 页面组件
+│   ├── Docs/           # 文档系统（Markdown渲染）
+│   ├── Friends/        # 友链页面
+│   ├── Blog/           # 博客系统
+│   └── NotFound/       # 404页面
+│
+├── styles/             # 样式文件
+│   ├── globals.css     # Tailwind + CSS变量
 │   └── minecraft-theme.css # 主题特定样式
-└── types/               # TypeScript类型定义
-    └── index.ts         # 全局类型
+│
+└── types/              # 类型定义
+    └── index.ts        # 全局类型定义
 ```
 
 ### 4.2 文档系统架构
 
 **渲染管线**
+
 ```
 Markdown原文
     ↓
-react-markdown (解析)
+react-markdown (解析器)
     ↓
 remark-gfm (GitHub扩展)
     ↓
@@ -460,13 +493,16 @@ rehype-highlight (代码高亮)
     ↓
 自定义组件映射 (h1→Title, code→CodeBlock)
     ↓
-React组件树
+React组件树 (虚拟DOM)
+    ↓
+最终渲染 (响应式更新)
 ```
 
-**PlantUML支持**
-- 客户端编码：`plantuml-encoder`
-- 实时渲染：PlantUML Web服务
-- 支持图表：时序图、类图、流程图、组件图
+**支持的格式**
+- **Markdown格式**：标准Markdown语法
+- **GitHub扩展**：表格、删除线、任务列表
+- **代码高亮**：支持100+编程语言
+- **自定义组件**：标题、代码块、表格、引用
 
 **目录生成**
 - 解析AST提取标题层级
@@ -479,30 +515,49 @@ React组件树
 
 ### 5.1 构建流程
 
+**Vite构建系统**
+
 ```
 TypeScript源码
     ↓
-Vite构建
-    ├── ESBuild (快速转译)
-    ├── Rollup (打包优化)
-    │   ├── 代码分割
-    │   ├── Tree Shaking
-    │   └── 压缩(Minify)
-    └── 静态资源处理
-        ├── 图片优化
-        ├── 字体子集化
-        └── 哈希文件名
-    ↓
-dist/ (静态文件)
-    ├── index.html
-    ├── assets/
-    │   ├── index-[hash].js
-    │   ├── vendor-[hash].js
-    │   └── ...
-    └── 404.html (SPA路由适配)
-    ↓
-CDN分发 (全球边缘节点)
+Vite构建系统
+    ├─→ ESBuild (快速转译)
+    │   • 开发服务器
+    │   • HMR热更新
+    │   • 源码映射
+    │
+    └─→ Rollup (打包优化)
+        ├─→ 代码分割 (模块分割)
+        ├─→ Tree Shaking (死代码消除)
+        └─→ 代码压缩 (体积优化)
 ```
+
+**资源处理**
+
+```
+静态资源处理
+    ├─→ 图片优化 (WebP压缩)
+    ├─→ 字体子集化 (裁剪未使用字符)
+    └─→ 哈希文件名 (缓存策略)
+```
+
+**输出产物**
+
+```
+dist/
+├── index.html          # 入口文件
+├── assets/
+│   ├── index-[hash].js    # 主包
+│   ├── vendor-[hash].js   # 依赖包
+│   └── ... (其他资源)
+└── 404.html            # SPA路由适配
+```
+
+**分发部署**
+
+- **Vercel部署**：自动CI/CD，边缘计算
+- **全球CDN**：静态资源加速，低延迟
+- **HTTPS加速**：自动SSL证书，安全传输
 
 ### 5.2 SPA路由适配
 
