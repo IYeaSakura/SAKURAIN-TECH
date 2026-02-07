@@ -1,23 +1,35 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Search, Grid, List, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Search, Grid, List, Sparkles, X } from 'lucide-react';
 import { MagneticCursor, VelocityCursor, AmbientGlow } from '@/components/effects';
 import { ThemeToggle } from '@/components/atoms';
-import { useTheme } from '@/hooks';
+import { useTheme, useConfig } from '@/hooks';
 import { BlogCard } from './components/BlogCard';
 import { getBlogIndex } from './utils';
-import type { BlogIndex } from './types';
+import { Footer } from '@/components/sections/Footer';
+import { BlogArchiveHeatmap } from '@/components/BlogArchiveHeatmap';
+import { useBlogArchive, useMonthArchive } from '@/hooks/useBlogArchive';
+import type { BlogIndex, BlogPost } from './types';
+import type { SiteData } from '@/types';
 
 type ViewMode = 'grid' | 'list';
 
 export default function BlogIndex() {
   const navigate = useNavigate();
   const { theme, isTransitioning, toggleTheme } = useTheme();
+  const { data: siteData } = useConfig<SiteData>('/data/site-data.json');
   const [data, setData] = useState<BlogIndex | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showArchive, setShowArchive] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
+  
+  const { data: archiveData, loading: archiveLoading } = useBlogArchive();
+  const { data: monthData, loading: monthLoading } = useMonthArchive(selectedMonth || '');
 
   useEffect(() => {
     getBlogIndex()
@@ -33,23 +45,91 @@ export default function BlogIndex() {
 
   const filteredPosts = useMemo(() => {
     if (!data) return [];
-    if (!searchQuery.trim()) return data.posts;
-
+    
     const query = searchQuery.toLowerCase();
-    return data.posts.filter((post) => 
-      post.title.toLowerCase().includes(query) ||
-      post.description.toLowerCase().includes(query) ||
-      post.tags.some(tag => tag.toLowerCase().includes(query))
+    const hasQuery = query.trim().length > 0;
+    
+    return data.posts.filter((post) => {
+      const matchesQuery = !hasQuery || 
+        post.title.toLowerCase().includes(query) ||
+        post.description.toLowerCase().includes(query) ||
+        post.tags.some(tag => tag.toLowerCase().includes(query));
+      
+      const matchesTag = !selectedTag || post.tags.includes(selectedTag);
+      const matchesAuthor = !selectedAuthor || post.author === selectedAuthor;
+      
+      return matchesQuery && matchesTag && matchesAuthor;
+    });
+  }, [data, searchQuery, selectedTag, selectedAuthor]);
+
+  const featuredPosts = useMemo(() => {
+    if (!data) return [];
+    if (!searchQuery.trim()) return data.posts.filter(post => post.featured);
+    
+    const query = searchQuery.toLowerCase();
+    return data.posts.filter(post => 
+      post.featured && (
+        post.title.toLowerCase().includes(query) ||
+        post.description.toLowerCase().includes(query) ||
+        post.tags.some(tag => tag.toLowerCase().includes(query))
+      )
     );
   }, [data, searchQuery]);
 
-  const featuredPosts = useMemo(() => {
-    return filteredPosts.filter(post => post.featured);
-  }, [filteredPosts]);
-
   const regularPosts = useMemo(() => {
-    return filteredPosts.filter(post => !post.featured);
-  }, [filteredPosts]);
+    if (!data) return [];
+    if (!searchQuery.trim()) return data.posts.filter(post => !post.featured);
+    
+    const query = searchQuery.toLowerCase();
+    return data.posts.filter(post => 
+      !post.featured && (
+        post.title.toLowerCase().includes(query) ||
+        post.description.toLowerCase().includes(query) ||
+        post.tags.some(tag => tag.toLowerCase().includes(query))
+      )
+    );
+  }, [data, searchQuery]);
+
+  const postsByMonth = useMemo(() => {
+    const grouped: Record<string, typeof regularPosts> = {};
+    
+    regularPosts.forEach(post => {
+      const date = new Date(post.date);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const yearMonth = `${year}-${month}`;
+      
+      if (!grouped[yearMonth]) {
+        grouped[yearMonth] = [];
+      }
+      
+      grouped[yearMonth].push(post);
+    });
+    
+    return grouped;
+  }, [regularPosts]);
+
+  const sortedMonths = useMemo(() => {
+    return Object.keys(postsByMonth).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  }, [postsByMonth]);
+
+  const allTags = useMemo(() => {
+    if (!data) return [];
+    const tagSet = new Set<string>();
+    data.posts.forEach((post: BlogPost) => {
+      post.tags.forEach((tag: string) => tagSet.add(tag));
+    });
+    return Array.from(tagSet).sort();
+  }, [data]);
+
+  const allAuthors = useMemo(() => {
+    if (!data) return [];
+    const authorSet = new Set<string>();
+    data.posts.forEach((post: BlogPost) => {
+      authorSet.add(post.author);
+    });
+    return Array.from(authorSet).sort();
+  }, [data]);
 
   if (loading) {
     return (
@@ -147,6 +227,112 @@ export default function BlogIndex() {
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowArchive(!showArchive)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
+                  style={{
+                    background: showArchive ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                    border: '1px solid var(--border-subtle)',
+                    color: showArchive ? 'white' : 'var(--text-primary)',
+                  }}
+                >
+                  <Grid className="w-4 h-4" />
+                  <span className="text-sm font-medium hidden sm:block">归档</span>
+                </button>
+                
+                {allTags.length > 0 && (
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        if (selectedTag) {
+                          setSelectedTag(null);
+                        }
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
+                      style={{
+                        background: selectedTag ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                        border: '1px solid var(--border-subtle)',
+                        color: selectedTag ? 'white' : 'var(--text-primary)',
+                      }}
+                    >
+                      <List className="w-4 h-4" />
+                      <span className="text-sm font-medium hidden sm:block">标签</span>
+                    </button>
+                    
+                    {selectedTag && (
+                      <div className="absolute top-full left-0 mt-2 p-3 rounded-lg min-w-[200px] max-h-[300px] overflow-auto z-50"
+                        style={{
+                          background: 'var(--bg-card)',
+                          border: '1px solid var(--border-subtle)',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        }}
+                      >
+                        <div className="flex flex-wrap gap-2">
+                          {allTags.map(tag => (
+                            <button
+                              key={tag}
+                              onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
+                              className="px-3 py-1.5 rounded-md text-sm transition-all duration-200"
+                              style={{
+                                background: tag === selectedTag ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                                color: tag === selectedTag ? 'white' : 'var(--text-primary)',
+                              }}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {allAuthors.length > 0 && (
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        if (selectedAuthor) {
+                          setSelectedAuthor(null);
+                        }
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
+                      style={{
+                        background: selectedAuthor ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                        border: '1px solid var(--border-subtle)',
+                        color: selectedAuthor ? 'white' : 'var(--text-primary)',
+                      }}
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span className="text-sm font-medium hidden sm:block">作者</span>
+                    </button>
+                    
+                    {selectedAuthor && (
+                      <div className="absolute top-full left-0 mt-2 p-3 rounded-lg min-w-[200px] max-h-[300px] overflow-auto z-50"
+                        style={{
+                          background: 'var(--bg-card)',
+                          border: '1px solid var(--border-subtle)',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        }}
+                      >
+                        <div className="flex flex-wrap gap-2">
+                          {allAuthors.map(author => (
+                            <button
+                              key={author}
+                              onClick={() => setSelectedAuthor(author === selectedAuthor ? null : author)}
+                              className="px-3 py-1.5 rounded-md text-sm transition-all duration-200"
+                              style={{
+                                background: author === selectedAuthor ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                                color: author === selectedAuthor ? 'white' : 'var(--text-primary)',
+                              }}
+                            >
+                              {author}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                   <input
@@ -261,7 +447,7 @@ export default function BlogIndex() {
             </motion.section>
           )}
 
-          {regularPosts.length > 0 && (
+          {sortedMonths.length > 0 && (
             <motion.section
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -276,10 +462,40 @@ export default function BlogIndex() {
               >
                 全部文章
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {regularPosts.map((post, index) => (
-                  <BlogCard key={post.slug} post={post} index={index} />
-                ))}
+              <div className="space-y-12">
+                {sortedMonths.map((yearMonth, monthIndex) => {
+                  const posts = postsByMonth[yearMonth];
+                  const [year, month] = yearMonth.split('-');
+                  void monthIndex;
+                  
+                  return (
+                    <div key={yearMonth}>
+                      <div className="flex items-center gap-3 mb-6">
+                        <h3 
+                          className="font-pixel text-xl font-bold"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          {year}年{parseInt(month)}月
+                        </h3>
+                        <div className="flex-1 h-px" style={{ background: 'var(--border-subtle)' }} />
+                        <span 
+                          className="text-sm px-3 py-1 rounded-full"
+                          style={{ 
+                            background: 'var(--bg-secondary)',
+                            color: 'var(--text-muted)'
+                          }}
+                        >
+                          {posts.length} 篇
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {posts.map((post, index) => (
+                          <BlogCard key={post.slug} post={post} index={index} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </motion.section>
           )}
@@ -295,6 +511,95 @@ export default function BlogIndex() {
             </motion.div>
           )}
         </main>
+        
+        <AnimatePresence>
+          {showArchive && (
+            <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0, 0, 0, 0.8)' }}
+            onClick={() => setShowArchive(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-4xl max-h-[80vh] overflow-auto rounded-2xl p-6 relative"
+              style={{
+                background: 'var(--bg-card)',
+                border: '2px solid var(--border-subtle)',
+              }}
+            >
+              <button
+                onClick={() => setShowArchive(false)}
+                className="absolute top-4 right-4 p-2 rounded-lg transition-all duration-200 hover:scale-105"
+                style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              {selectedMonth ? (
+                <div>
+                  <button
+                    onClick={() => setSelectedMonth(null)}
+                    className="flex items-center gap-2 mb-4 px-4 py-2 rounded-lg transition-all duration-200 hover:scale-105"
+                    style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span className="text-sm font-medium">返回归档</span>
+                  </button>
+                  
+                  {monthLoading ? (
+                    <div className="flex items-center justify-center py-20">
+                      <div
+                        className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+                        style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
+                      />
+                    </div>
+                  ) : monthData && monthData.length > 0 ? (
+                    <div>
+                      <h2 className="text-xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+                        {selectedMonth} 文章列表
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {monthData.map((post, index) => (
+                          <BlogCard key={post.slug} post={post} index={index} />
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-20" style={{ color: 'var(--text-muted)' }}>
+                      该月份暂无文章
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {archiveLoading ? (
+                    <div className="flex items-center justify-center py-20">
+                      <div
+                        className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+                        style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
+                      />
+                    </div>
+                  ) : (
+                    <BlogArchiveHeatmap
+                      data={archiveData}
+                      onSelectMonth={setSelectedMonth}
+                      selectedMonth={selectedMonth}
+                    />
+                  )}
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+        </AnimatePresence>
+        
+        {siteData && <Footer data={siteData.footer} />}
       </div>
     </>
   );
