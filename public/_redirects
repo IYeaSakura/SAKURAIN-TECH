@@ -1,0 +1,4 @@
+# EdgeOne Pages 路由重定向规则
+# 将所有路径重定向到 index.html，支持 SPA 路由
+
+/*    /index.html   200
