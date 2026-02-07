@@ -2,7 +2,7 @@ import { memo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Clock, Send, Github, MessageCircle, Terminal, ChevronRight } from 'lucide-react';
 import { SectionTitle } from '@/components/atoms';
-import { 
+import {
   AmbientGlow,
   GlowingBorder,
   FloatingBubbles,
@@ -45,7 +45,7 @@ export const Contact = memo(function Contact({ data }: ContactProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     // 构造邮件内容
     const projectType = projectTypeMap[formData.project] || formData.project;
     const subject = `业务咨询 - ${projectType}`;
@@ -60,16 +60,16 @@ ${formData.message}
 
 ---
 此邮件由 SAKURAIN 网站联系表单自动生成`;
-    
+
     // 构造 mailto 链接
     const mailtoLink = `mailto:Yae_SakuRain@outlook.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
+
     // 打开邮箱客户端
     window.location.href = mailtoLink;
-    
+
     setIsSubmitting(false);
     setSubmitted(true);
-    
+
     // 3秒后重置表单状态
     setTimeout(() => {
       setSubmitted(false);
@@ -83,17 +83,17 @@ ${formData.message}
       <AmbientGlow position="center" color="var(--accent-primary)" size={500} opacity={0.15} />
       <AmbientGlow position="top-left" color="var(--accent-secondary)" size={300} opacity={0.12} />
       <AmbientGlow position="bottom-right" color="var(--accent-tertiary)" size={400} opacity={0.1} />
-      
+
       {/* 浮动气泡 */}
       <div className="absolute inset-0 pointer-events-none opacity-20">
         <FloatingBubbles count={8} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
       </div>
-      
+
       {/* 闪烁星星 */}
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
         <TwinklingStars count={30} color="var(--accent-secondary)" secondaryColor="var(--accent-tertiary)" />
       </div>
-      
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionTitle
           title={data.title}
@@ -115,7 +115,7 @@ ${formData.message}
                   <Mail className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
                 </div>
                 <div>
-                  <h4 
+                  <h4
                     className="mb-1 font-primary"
                     style={{
                       fontSize: 'var(--text-lg)',
@@ -125,7 +125,7 @@ ${formData.message}
                   >
                     电子邮箱
                   </h4>
-                  <a 
+                  <a
                     href={`mailto:${data.email}`}
                     className="font-mono mc-glow-emerald"
                     style={{
@@ -147,7 +147,7 @@ ${formData.message}
                   <Clock className="w-6 h-6" style={{ color: 'var(--accent-secondary)' }} />
                 </div>
                 <div>
-                  <h4 
+                  <h4
                     className="mb-1 font-primary"
                     style={{
                       fontSize: 'var(--text-lg)',
@@ -157,7 +157,7 @@ ${formData.message}
                   >
                     响应时间
                   </h4>
-                  <p 
+                  <p
                     className="font-primary"
                     style={{
                       fontSize: 'var(--text-base)',
@@ -178,7 +178,7 @@ ${formData.message}
                   <Terminal className="w-6 h-6" style={{ color: 'var(--mc-gold)' }} />
                 </div>
                 <div>
-                  <h4 
+                  <h4
                     className="mb-1 font-primary"
                     style={{
                       fontSize: 'var(--text-lg)',
@@ -188,7 +188,7 @@ ${formData.message}
                   >
                     快速联系
                   </h4>
-                  <p 
+                  <p
                     className="font-primary"
                     style={{
                       fontSize: 'var(--text-sm)',
@@ -219,7 +219,7 @@ ${formData.message}
                       fontWeight: 600,
                       color: 'var(--text-secondary)',
                     }}
-                    whileHover={{ 
+                    whileHover={{
                       scale: 1.05,
                       borderColor: 'var(--accent-primary)',
                       color: 'var(--accent-primary)',
@@ -243,7 +243,7 @@ ${formData.message}
           >
             <GlowingBorder color="var(--accent-primary)" intensity={0.8}>
               <div className="mc-panel p-6 sm:p-8">
-            <h3 
+            <h3
               className="mb-6 font-primary"
               style={{
                 fontSize: 'var(--text-2xl)',
@@ -261,7 +261,7 @@ ${formData.message}
                 animate={{ opacity: 1, scale: 1 }}
                 className="text-center py-12"
               >
-                <div 
+                <div
                   className="w-16 h-16 mx-auto mb-4 flex items-center justify-center"
                   style={{
                     background: 'var(--accent-secondary)',
@@ -271,7 +271,7 @@ ${formData.message}
                 >
                   <ChevronRight className="w-8 h-8 text-white" />
                 </div>
-                <h4 
+                <h4
                   className="font-primary mb-2"
                   style={{
                     fontSize: 'var(--text-xl)',
@@ -281,7 +281,7 @@ ${formData.message}
                 >
                   消息已发送！
                 </h4>
-                <p 
+                <p
                   className="font-primary"
                   style={{
                     fontSize: 'var(--text-base)',
@@ -295,7 +295,7 @@ ${formData.message}
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label 
+                  <label
                     className="block mb-2 font-primary"
                     style={{
                       fontSize: 'var(--text-sm)',
@@ -322,7 +322,7 @@ ${formData.message}
                 </div>
 
                 <div>
-                  <label 
+                  <label
                     className="block mb-2 font-primary"
                     style={{
                       fontSize: 'var(--text-sm)',
@@ -349,7 +349,7 @@ ${formData.message}
                 </div>
 
                 <div>
-                  <label 
+                  <label
                     className="block mb-2 font-primary"
                     style={{
                       fontSize: 'var(--text-sm)',
@@ -382,7 +382,7 @@ ${formData.message}
                 </div>
 
                 <div>
-                  <label 
+                  <label
                     className="block mb-2 font-primary"
                     style={{
                       fontSize: 'var(--text-sm)',

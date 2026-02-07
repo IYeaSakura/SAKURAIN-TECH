@@ -409,12 +409,27 @@ const ApplySection = memo(function ApplySection({
 
 以下是站点信息：
 
-网站名称：
-网站URL：
-图标URL：
-网站描述：
+{
+  "id": "sakurain",
+  "name": "SAKURAIN TEAM",
+  "url": "https://sakurain.net",
+  "icon": "https://sakurain.net/image/logo.webp",
+  "description": "用代码构建世界",
+  "category": "blogs",
+  "featured": true
+},
 
-发送邮件即代表承诺网站内容健康、合法、无恶意代码。
+字段说明：
+- id: 非必填，站点唯一标识符，用于存储索引，建议使用短域名或拼音缩写，只支持字母和数字。
+- name: 必填，站点名称。
+- url: 必填，站点链接。
+- icon: 必填，站点图标链接。
+- description: 必填，站点描述。
+- category: 非必填，站点分类，默认值为 "blogs"，可选值为 "blogs"（个人博客）、"tech"（技术社区）、"design"（设计资源）、"tools"（开发工具）。
+- featured: 非必填，是否作为推荐站点置顶显示，默认值为 false。
+
+已添加到友链列表中，并替换为自己的站点信息。
+发送本邮件即代表承诺网站内容健康、合法、无恶意代码。
 
 ---
 此邮件由 SAKURAIN 网站友链申请自动生成`;
