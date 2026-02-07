@@ -390,7 +390,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     return () => {
       handler.destroy();
     };
-  }, [viewer, danmaku, beidouSatellites, showBeidou, fetchMarkdownContent]);
+  }, [viewer, danmakus, beidouSatellites, showBeidou, fetchMarkdownContent]);
 
   // 总开关控制所有
   const toggleAll = useCallback(() => {
