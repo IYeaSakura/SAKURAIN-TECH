@@ -49,6 +49,8 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
     setIsMobileMenuOpen(false);
   };
 
+
+
   return (
     <>
       <motion.nav
@@ -106,8 +108,8 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   {link.label}
                 </button>
               ))}
-              <a
-                href="/docs"
+              <button
+                onClick={() => navigate('/docs')}
                 className="mc-nav-link flex items-center gap-1"
                 style={{
                   fontFamily: 'var(--font-primary)',
@@ -118,9 +120,9 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               >
                 <BookOpen className="w-4 h-4" />
                 文档
-              </a>
-              <a
-                href="/friends"
+              </button>
+              <button
+                onClick={() => navigate('/friends')}
                 className="mc-nav-link flex items-center gap-1"
                 style={{
                   fontFamily: 'var(--font-primary)',
@@ -131,7 +133,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               >
                 <Heart className="w-4 h-4" />
                 友链
-              </a>
+              </button>
             </div>
 
             {/* CTA Button & Theme Toggle */}
@@ -227,44 +229,42 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                     {link.label}
                   </motion.button>
                 ))}
-                <motion.div
+                <motion.button
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: data.links.length * 0.05 }}
+                  onClick={() => {
+                    navigate('/docs');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
+                  style={{ 
+                    fontFamily: 'var(--font-primary)',
+                    fontSize: 'var(--text-base)',
+                    fontWeight: 600,
+                  }}
                 >
-                  <a
-                    href="/docs"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
-                    style={{ 
-                      fontFamily: 'var(--font-primary)',
-                      fontSize: 'var(--text-base)',
-                      fontWeight: 600,
-                    }}
-                  >
-                    <BookOpen className="w-4 h-4" />
-                    文档
-                  </a>
-                </motion.div>
-                <motion.div
+                  <BookOpen className="w-4 h-4" />
+                  文档
+                </motion.button>
+                <motion.button
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: (data.links.length + 1) * 0.05 }}
+                  onClick={() => {
+                    navigate('/friends');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
+                  style={{ 
+                    fontFamily: 'var(--font-primary)',
+                    fontSize: 'var(--text-base)',
+                    fontWeight: 600,
+                  }}
                 >
-                  <a
-                    href="/friends"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
-                    style={{ 
-                      fontFamily: 'var(--font-primary)',
-                      fontSize: 'var(--text-base)',
-                      fontWeight: 600,
-                    }}
-                  >
-                    <Heart className="w-4 h-4" />
-                    友链
-                  </a>
-                </motion.div>
+                  <Heart className="w-4 h-4" />
+                  友链
+                </motion.button>
                 <motion.button
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
