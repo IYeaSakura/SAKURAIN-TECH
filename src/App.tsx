@@ -1,4 +1,6 @@
 import { useState, useEffect, Suspense, lazy, memo } from 'react';
+import { motion } from 'framer-motion';
+import { Bell } from 'lucide-react';
 import {
   ScrollProgress,
   MagneticCursor,
@@ -10,6 +12,7 @@ import {
 } from '@/components/effects';
 import { Navigation } from '@/components/sections/Navigation';
 import { Hero } from '@/components/sections/Hero';
+import { WelcomeModal } from '@/components/WelcomeModal';
 import { useTheme } from '@/hooks';
 import type { SiteData } from '@/types';
 import './styles/globals.css';
@@ -118,6 +121,9 @@ function App() {
       className="relative min-h-screen"
       style={{ background: 'var(--bg-primary)' }}
     >
+      {/* 欢迎弹窗 */}
+      <WelcomeModal />
+
       {/* 安全保护 */}
       <SecurityProtection />
 
@@ -197,6 +203,43 @@ function App() {
 
       {/* 底部光剑 */}
       <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />
+
+      {/* 贴边铃铛 - 打开欢迎弹窗 */}
+      <motion.button
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 2, duration: 0.5 }}
+        onClick={() => window.dispatchEvent(new CustomEvent('open-welcome-modal'))}
+        id="welcome-bell"
+        className="fixed left-0 top-[20%] z-50 hidden xl:flex flex-col items-center justify-center gap-1"
+        style={{
+          width: '28px',
+          height: '64px',
+          background: 'linear-gradient(180deg, var(--accent-primary) 0%, color-mix(in srgb, var(--accent-primary) 70%, var(--accent-secondary)) 100%)',
+          border: 'none',
+          borderRadius: '0 8px 8px 0',
+          boxShadow: '2px 0 12px var(--accent-glow), inset -2px 0 4px rgba(255,255,255,0.2)',
+        }}
+        whileHover={{ 
+          width: '32px',
+          x: 4,
+        }}
+      >
+        <Bell 
+          className="w-4 h-4" 
+          style={{ color: 'white' }} 
+        />
+        <span 
+          className="text-[9px] font-bold tracking-wider"
+          style={{ 
+            color: 'white',
+            writingMode: 'vertical-rl',
+            textOrientation: 'mixed',
+          }}
+        >
+          关于
+        </span>
+      </motion.button>
     </div>
   );
 }
