@@ -73,6 +73,15 @@
       "featured": true
     },
     {
+      "id": "mcxiaochen",
+      "name": "辰渊尘の个人博客",
+      "url": "https://blog.mcxiaochen.top/",
+      "icon": "https://blog.mcxiaochen.top/favicon.ico",
+      "description": "05后，高中生，内容偏技术向，希望能对你有用QwQ",
+      "category": "blogs",
+      "featured": true
+    },
+    {
       "id": "mclans",
       "name": "Mc服务器演示站",
       "url": "https://mclans.sakurain.net",
