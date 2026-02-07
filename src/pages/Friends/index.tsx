@@ -683,6 +683,25 @@ const RedirectModal = memo(function RedirectModal({
           </p>
         </div>
 
+        <div className="mb-4 p-3 rounded-lg"
+          style={{
+            background: 'rgba(251, 146, 60, 0.1)',
+            border: '1px solid rgba(251, 146, 60, 0.3)',
+          }}
+        >
+          <div className="flex items-start gap-2">
+            <span className="text-lg" style={{ color: '#fbbf24' }}>⚠️</span>
+            <div>
+              <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                注意
+              </p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+                即将访问外部网站，本站无法保证其安全性，请保持警惕
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2">
             <span style={{ color: 'var(--text-secondary)' }}>自动跳转</span>
