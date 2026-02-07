@@ -1,12 +1,16 @@
+import { addCorsHeaders } from '../../auth.js';
+
 export async function onRequestGet(context) {
   try {
-    const kv = DANMAKU_KV;
+    const kv = context.env.DANMAKU_KV;
     
     if (!kv) {
-      return new Response(JSON.stringify({ error: 'KV not bound' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
+      return addCorsHeaders(
+        new Response(JSON.stringify({ error: 'KV not bound' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
     }
 
     const data = await kv.get('danmakus');
@@ -19,14 +23,18 @@ export async function onRequestGet(context) {
       }
     }
 
-    return new Response(JSON.stringify(danmakus), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
+    return addCorsHeaders(
+      new Response(JSON.stringify(danmakus), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
+    return addCorsHeaders(
+      new Response(JSON.stringify({ error: String(err) }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
   }
 }
 

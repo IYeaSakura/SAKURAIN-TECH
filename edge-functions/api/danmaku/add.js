@@ -1,39 +1,54 @@
+import { verifyAuthHeaders, createAuthErrorResponse, addCorsHeaders } from '../../auth.js';
+
 export async function onRequestPost(context) {
   try {
+    const authResult = await verifyAuthHeaders(context.request.headers, context.env);
+
+    if (!authResult.success) {
+      return addCorsHeaders(createAuthErrorResponse(authResult));
+    }
+
     let body = {};
     try {
       body = await context.request.json();
     } catch (e) {
-      return new Response(JSON.stringify({ error: 'Bad JSON' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
+      return addCorsHeaders(
+        new Response(JSON.stringify({ error: 'Bad JSON' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
     }
 
     if (!body.text) {
-      return new Response(JSON.stringify({ error: 'Missing text' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
+      return addCorsHeaders(
+        new Response(JSON.stringify({ error: 'Missing text' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
     }
 
     const text = String(body.text).trim();
     if (!text || text.length > 15) {
-      return new Response(JSON.stringify({ error: 'Invalid text length' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
+      return addCorsHeaders(
+        new Response(JSON.stringify({ error: 'Invalid text length' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
     }
 
-    const kv = DANMAKU_KV;
+    const kv = context.env.DANMAKU_KV;
     if (!kv) {
-      return new Response(JSON.stringify({ error: 'KV not bound' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
+      return addCorsHeaders(
+        new Response(JSON.stringify({ error: 'KV not bound' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
     }
 
-    // 获取弹幕列表
     let danmakus = [];
     const data = await kv.get('danmakus');
     if (data) {
@@ -44,7 +59,6 @@ export async function onRequestPost(context) {
       }
     }
 
-    // 处理 markdown 内容
     let markdown = '';
     if (body.markdown) {
       const md = String(body.markdown).trim();
@@ -53,7 +67,6 @@ export async function onRequestPost(context) {
       }
     }
 
-    // 使用前端发送的 id 或生成新的
     const danmakuId = body.id || ('d' + Date.now());
     
     const newDanmaku = {
@@ -62,35 +75,34 @@ export async function onRequestPost(context) {
       userId: String(body.userId || 'anon'),
       timestamp: Date.now(),
       color: String(body.color || '#60a5fa'),
-      // 轨道类型
       orbitType: String(body.orbitType || 'medium'),
-      // 轨道参数
       angle: body.angle != null ? body.angle : Math.random() * Math.PI * 2,
       inclination: body.inclination != null ? body.inclination : (Math.random() - 0.5) * Math.PI / 1.5,
-      altitude: body.altitude != null ? body.altitude : (2000000 + Math.random() * 1000000), // 默认2000-3000km
+      altitude: body.altitude != null ? body.altitude : (2000000 + Math.random() * 1000000),
       speed: body.speed != null ? body.speed : (2 + Math.random()),
-      // 升交点赤经 RAAN，用于确定轨道平面方向
       raan: body.raan != null ? body.raan : Math.random() * Math.PI * 2,
-      // Markdown 内容，默认为空
       markdown: markdown,
     };
 
     danmakus.push(newDanmaku);
     if (danmakus.length > 256) {
-      // 如果超过256条，删除最早的弹幕
       danmakus.shift();
     }
 
     await kv.put('danmakus', JSON.stringify(danmakus));
 
-    return new Response(JSON.stringify({ success: true, danmaku: newDanmaku }), {
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
+    return addCorsHeaders(
+      new Response(JSON.stringify({ success: true, danmaku: newDanmaku }), {
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
   } catch (err) {
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
+    return addCorsHeaders(
+      new Response(JSON.stringify({ error: String(err) }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
   }
 }
 
@@ -100,7 +112,7 @@ export function onRequestOptions() {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
+      'Access-Control-Allow-Headers': 'Content-Type, X-Timestamp, X-Nonce, X-Signature'
     }
   });
 }
