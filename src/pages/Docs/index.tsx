@@ -8,7 +8,9 @@ import { useConfig } from '@/hooks';
 import { DocListView } from './components/DocListView';
 import { SeriesDetailView } from './components/SeriesDetailView';
 import { ThemeToggleButton } from './components/ThemeToggleButton';
+import { Footer } from '@/components/sections/Footer';
 import type { DocCategory, DocItem, DocSeries, Chapter, DocsConfig } from './types';
+import type { SiteData } from '@/types';
 
 // 懒加载需要 Markdown 处理的组件
 const DocDetailView = lazy(() => import('./components/DocDetailView').then(m => ({ default: m.DocDetailView })));
@@ -39,6 +41,7 @@ export default function DocsPage() {
   const navigate = useNavigate();
   
   const { data: config, loading: configLoading, error: configError } = useConfig<DocsConfig>('/data/docs.json');
+  const { data: siteData } = useConfig<SiteData>('/data/site-data.json');
   
   const [selectedCategory, setSelectedCategory] = useState<DocCategory | null>(null);
   const [selectedItem, setSelectedItem] = useState<DocItem | null>(null);
@@ -202,6 +205,7 @@ export default function DocsPage() {
               config={config}
               onSelectCategory={handleSelectCategory}
               iconMap={iconMap}
+              siteData={siteData}
             />
           </motion.div>
         )}
@@ -215,6 +219,7 @@ interface DocHomeViewProps {
   config: DocsConfig;
   onSelectCategory: (category: DocCategory) => void;
   iconMap: Record<string, React.ComponentType<LucideProps>>;
+  siteData?: SiteData | null;
 }
 
 // 发光徽章组件
@@ -411,7 +416,7 @@ const CodeDecoration = memo(({ className }: { className?: string }) => {
 
 CodeDecoration.displayName = 'CodeDecoration';
 
-function DocHomeView({ config, onSelectCategory, iconMap }: DocHomeViewProps) {
+function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeViewProps) {
   const navigate = useNavigate();
   
   return (
@@ -567,6 +572,8 @@ function DocHomeView({ config, onSelectCategory, iconMap }: DocHomeViewProps) {
           background: 'linear-gradient(to top, var(--bg-primary), transparent)',
         }}
       />
+      
+      {siteData && <Footer data={siteData.footer} />}
     </div>
   );
 }
