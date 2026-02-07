@@ -110,7 +110,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                 </button>
               ))}
               <button
-                onClick={() => navigate('/docs')}
+                onClick={() => window.location.href = '/docs'}
                 className="mc-nav-link flex items-center gap-1"
                 style={{
                   fontFamily: 'var(--font-primary)',
@@ -123,7 +123,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                 文档
               </button>
               <button
-                onClick={() => navigate('/friends')}
+                onClick={() => window.location.href = '/friends'}
                 className="mc-nav-link flex items-center gap-1"
                 style={{
                   fontFamily: 'var(--font-primary)',
@@ -235,7 +235,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: data.links.length * 0.05 }}
                   onClick={() => {
-                    navigate('/docs');
+                    window.location.href = '/docs';
                     setIsMobileMenuOpen(false);
                   }}
                   className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
@@ -253,7 +253,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: (data.links.length + 1) * 0.05 }}
                   onClick={() => {
-                    navigate('/friends');
+                    window.location.href = '/friends';
                     setIsMobileMenuOpen(false);
                   }}
                   className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
