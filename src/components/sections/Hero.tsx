@@ -554,13 +554,13 @@ GlowScrollIndicator.displayName = 'GlowScrollIndicator';
 const DemoContent = memo(({ demo, isDark }: { demo: { type: DemoType; isFullscreen: boolean; onFullscreenToggle: () => void }; isDark: boolean }) => {
   switch (demo.type) {
     case 'cesium':
-      return <CesiumGlobe isDark={isDark} />;
+      return <CesiumGlobe key="cesium" isDark={isDark} />;
     case 'chinamap':
-      return <ChinaMap3D isDark={isDark} />;
+      return <ChinaMap3D key="chinamap" isDark={isDark} />;
     case 'terminal':
-      return <WebTerminal isFullscreen={demo.isFullscreen} onFullscreenToggle={demo.onFullscreenToggle} />;
+      return <WebTerminal key="terminal" isFullscreen={demo.isFullscreen} onFullscreenToggle={demo.onFullscreenToggle} />;
     default:
-      return <CesiumGlobe isDark={isDark} />;
+      return <CesiumGlobe key="default" isDark={isDark} />;
   }
 });
 
