@@ -37,43 +37,42 @@ const PageFallback = () => (
   </div>
 );
 
-// 提取为稳定组件，避免重新渲染时创建新的引用
-function DocsPageWrapper() {
-  return (
-    <Suspense fallback={<PageFallback />}>
-      <DocsPage />
-    </Suspense>
-  );
-}
-
-function FriendsPageWrapper() {
-  return (
-    <Suspense fallback={<PageFallback />}>
-      <FriendsPage />
-    </Suspense>
-  );
-}
-
-function NotFoundPageWrapper() {
-  return (
-    <Suspense fallback={<PageFallback />}>
-      <NotFoundPage />
-    </Suspense>
-  );
-}
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <RedirectHandler />
       <Routes>
         <Route path="/" element={<App />} />
-        <Route path="/docs" element={<DocsPageWrapper />} />
-        <Route path="/docs/:categoryId" element={<DocsPageWrapper />} />
-        <Route path="/docs/:categoryId/:itemId" element={<DocsPageWrapper />} />
-        <Route path="/docs/:categoryId/:itemId/:chapterId" element={<DocsPageWrapper />} />
-        <Route path="/friends" element={<FriendsPageWrapper />} />
-        <Route path="*" element={<NotFoundPageWrapper />} />
+        <Route path="/docs" element={
+          <Suspense fallback={<PageFallback />}>
+            <DocsPage />
+          </Suspense>
+        } />
+        <Route path="/docs/:categoryId" element={
+          <Suspense fallback={<PageFallback />}>
+            <DocsPage />
+          </Suspense>
+        } />
+        <Route path="/docs/:categoryId/:itemId" element={
+          <Suspense fallback={<PageFallback />}>
+            <DocsPage />
+          </Suspense>
+        } />
+        <Route path="/docs/:categoryId/:itemId/:chapterId" element={
+          <Suspense fallback={<PageFallback />}>
+            <DocsPage />
+          </Suspense>
+        } />
+        <Route path="/friends" element={
+          <Suspense fallback={<PageFallback />}>
+            <FriendsPage />
+          </Suspense>
+        } />
+        <Route path="*" element={
+          <Suspense fallback={<PageFallback />}>
+            <NotFoundPage />
+          </Suspense>
+        } />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
