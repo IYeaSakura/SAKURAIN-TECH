@@ -209,6 +209,40 @@ export function DocDetailView({ doc, category, onBack }: DocDetailViewProps) {
                 <Suspense fallback={<div className="p-4 text-center" style={{ color: 'var(--text-muted)' }}>加载内容...</div>}>
                   <MarkdownRenderer content={content} />
                 </Suspense>
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="mt-12 rounded-2xl p-6"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    border: '2px solid var(--border-subtle)',
+                  }}
+                >
+                  <div className="text-center">
+                    <div className="mb-3" style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                      本文档采用
+                    </div>
+                    <a
+                      href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.zh"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block px-4 py-2.5 rounded-lg font-bold text-white transition-all duration-200 hover:scale-105"
+                      style={{
+                        background: 'var(--accent-primary)',
+                        boxShadow: '0 4px 20px var(--accent-glow)',
+                      }}
+                    >
+                      CC BY-NC-ND 4.0
+                    </a>
+                    <div className="mt-3 space-y-1" style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                      <div>署名-非商业性使用-禁止演绎 4.0 国际</div>
+                      <div>您可以自由分享本作品，但需注明作者和出处</div>
+                      <div>不得用于商业目的，且不得修改或演绎本作品</div>
+                    </div>
+                  </div>
+                </motion.div>
               </motion.article>
             )}
           </div>

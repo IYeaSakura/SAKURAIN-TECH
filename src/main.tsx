@@ -24,6 +24,7 @@ const DocsPage = lazy(() => import('./pages/Docs/index'));
 const FriendsPage = lazy(() => import('./pages/Friends/index'));
 const BlogPage = lazy(() => import('./pages/Blog/index'));
 const BlogPostPage = lazy(() => import('./pages/Blog/[slug]'));
+const NotesPage = lazy(() => import('./pages/Notes/index'));
 const NotFoundPage = lazy(() => import('./pages/NotFound/index'));
 
 // 预加载加载器
@@ -104,6 +105,11 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/blog/:slug" element={
           <Suspense fallback={<PageFallback />}>
             <BlogPostPage />
+          </Suspense>
+        } />
+        <Route path="/notes" element={
+          <Suspense fallback={<PageFallback />}>
+            <NotesPage />
           </Suspense>
         } />
         <Route path="*" element={

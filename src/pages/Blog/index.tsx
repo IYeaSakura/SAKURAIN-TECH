@@ -6,12 +6,13 @@ import { MagneticCursor, VelocityCursor, AmbientGlow, FloatingBubbles, Twinkling
 import { ThemeToggle } from '@/components/atoms';
 import { useTheme } from '@/hooks';
 import { BlogCard } from './components/BlogCard';
+import { BlogListItem } from './components/BlogListItem';
 import { getBlogIndex } from './utils';
 import { Heart } from 'lucide-react';
 import { BlogArchiveHeatmap } from '@/components/BlogArchiveHeatmap';
 import { BlogTagCloud } from '@/components/BlogTagCloud';
 import { useBlogArchive, useMultipleMonthArchives } from '@/hooks/useBlogArchive';
-import type { BlogIndex, BlogPost } from './types';
+import type { BlogIndex } from './types';
 
 interface TagData {
   name: string;
@@ -37,19 +38,17 @@ export default function BlogIndex() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showArchive, setShowArchive] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [showTagDropdown, setShowTagDropdown] = useState(false);
-  const [showAuthorDropdown, setShowAuthorDropdown] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [tagsData, setTagsData] = useState<TagsResponse | null>(null);
 
   const { data: archiveData, loading: archiveLoading } = useBlogArchive();
   const monthsToLoad = useMemo(() => {
     if (!archiveData?.months.length) return [];
-    return archiveData.months;
-  }, [archiveData]);
+    const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
+    const endIndex = startIndex + POSTS_PER_PAGE;
+    return archiveData.months.slice(startIndex, endIndex);
+  }, [archiveData, currentPage]);
 
   const { data: regularPosts, loading: regularPostsLoading } = useMultipleMonthArchives(monthsToLoad);
 
@@ -81,7 +80,6 @@ export default function BlogIndex() {
 
   const filteredRegularPosts = useMemo(() => {
     if (!regularPosts) return [];
-
     const query = searchQuery.toLowerCase();
     const hasQuery = query.trim().length > 0;
 
@@ -91,12 +89,9 @@ export default function BlogIndex() {
         post.description.toLowerCase().includes(query) ||
         post.tags.some(tag => tag.toLowerCase().includes(query));
 
-      const matchesTag = !selectedTag || post.tags.includes(selectedTag);
-      const matchesAuthor = !selectedAuthor || post.author === selectedAuthor;
-
-      return matchesQuery && matchesTag && matchesAuthor;
+      return matchesQuery;
     });
-  }, [regularPosts, searchQuery, selectedTag, selectedAuthor]);
+  }, [regularPosts, searchQuery]);
 
   const featuredPosts = useMemo(() => {
     if (!data) return [];
@@ -134,24 +129,6 @@ export default function BlogIndex() {
   const sortedMonths = useMemo(() => {
     return Object.keys(postsByMonth).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
   }, [postsByMonth]);
-
-  const allTags = useMemo(() => {
-    if (!data) return [];
-    const tagSet = new Set<string>();
-    data.posts.forEach((post: BlogPost) => {
-      post.tags.forEach((tag: string) => tagSet.add(tag));
-    });
-    return Array.from(tagSet).sort();
-  }, [data]);
-
-  const allAuthors = useMemo(() => {
-    if (!data) return [];
-    const authorSet = new Set<string>();
-    data.posts.forEach((post: BlogPost) => {
-      authorSet.add(post.author);
-    });
-    return Array.from(authorSet).sort();
-  }, [data]);
 
   const totalPages = useMemo(() => {
     if (!archiveData?.months.length) return 1;
@@ -285,97 +262,6 @@ export default function BlogIndex() {
                   <span className="text-sm font-medium hidden sm:block">归档</span>
                 </button>
 
-                {allTags.length > 0 && (
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowTagDropdown(!showTagDropdown)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
-                      style={{
-                        background: selectedTag ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                        border: '1px solid var(--border-subtle)',
-                        color: selectedTag ? 'white' : 'var(--text-primary)',
-                      }}
-                    >
-                      <List className="w-4 h-4" />
-                      <span className="text-sm font-medium hidden sm:block">标签</span>
-                    </button>
-
-                    {showTagDropdown && (
-                      <div className="absolute top-full left-0 mt-2 p-3 rounded-lg min-w-[200px] max-h-[300px] overflow-auto z-50"
-                        style={{
-                          background: 'var(--bg-card)',
-                          border: '1px solid var(--border-subtle)',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                        }}
-                      >
-                        <div className="flex flex-wrap gap-2">
-                          {allTags.map(tag => (
-                            <button
-                              key={tag}
-                              onClick={() => {
-                                setSelectedTag(tag === selectedTag ? null : tag);
-                                setShowTagDropdown(false);
-                              }}
-                              className="px-3 py-1.5 rounded-md text-sm transition-all duration-200"
-                              style={{
-                                background: tag === selectedTag ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                                color: tag === selectedTag ? 'white' : 'var(--text-primary)',
-                              }}
-                            >
-                              {tag}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {allAuthors.length > 0 && (
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowAuthorDropdown(!showAuthorDropdown)}
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
-                      style={{
-                        background: selectedAuthor ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                        border: '1px solid var(--border-subtle)',
-                        color: selectedAuthor ? 'white' : 'var(--text-primary)',
-                      }}
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      <span className="text-sm font-medium hidden sm:block">作者</span>
-                    </button>
-
-                    {showAuthorDropdown && (
-                      <div className="absolute top-full left-0 mt-2 p-3 rounded-lg min-w-[200px] max-h-[300px] overflow-auto z-50"
-                        style={{
-                          background: 'var(--bg-card)',
-                          border: '1px solid var(--border-subtle)',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                        }}
-                      >
-                        <div className="flex flex-wrap gap-2">
-                          {allAuthors.map(author => (
-                            <button
-                              key={author}
-                              onClick={() => {
-                                setSelectedAuthor(author === selectedAuthor ? null : author);
-                                setShowAuthorDropdown(false);
-                              }}
-                              className="px-3 py-1.5 rounded-md text-sm transition-all duration-200"
-                              style={{
-                                background: author === selectedAuthor ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                                color: author === selectedAuthor ? 'white' : 'var(--text-primary)',
-                              }}
-                            >
-                              {author}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
                   <input
@@ -482,9 +368,13 @@ export default function BlogIndex() {
               >
                 精选文章
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
                 {featuredPosts.map((post, index) => (
-                  <BlogCard key={post.slug} post={post} index={index} />
+                  viewMode === 'grid' ? (
+                    <BlogCard key={post.slug} post={post} index={index} />
+                  ) : (
+                    <BlogListItem key={post.slug} post={post} index={index} />
+                  )
                 ))}
               </div>
             </motion.section>
@@ -541,9 +431,13 @@ export default function BlogIndex() {
                               {posts.length} 篇
                             </span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
                             {posts.map((post, index) => (
-                              <BlogCard key={post.slug} post={post} index={index} />
+                              viewMode === 'grid' ? (
+                                <BlogCard key={post.slug} post={post} index={index} />
+                              ) : (
+                                <BlogListItem key={post.slug} post={post} index={index} />
+                              )
                             ))}
                           </div>
                         </div>
@@ -761,8 +655,8 @@ export default function BlogIndex() {
                     {tagsData ? (
                       <BlogTagCloud
                         tags={tagsData.tags}
-                        selectedTag={selectedTag}
-                        onSelectTag={setSelectedTag}
+                        selectedTag={null}
+                        onSelectTag={() => {}}
                       />
                     ) : (
                       <div className="flex items-center justify-center py-20">

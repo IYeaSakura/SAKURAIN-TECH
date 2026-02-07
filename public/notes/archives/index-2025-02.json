@@ -1,0 +1,18 @@
+[
+  {
+    "id": "hello-world",
+    "slug": "hello-world",
+    "title": "第一条说说",
+    "content": "欢迎来到我的说说页面！这里我会记录一些日常的想法、随笔和有趣的发现。\n\n这是一个全新的开始，期待在这里分享更多内容。",
+    "date": "2025-02-07T10:30:00",
+    "mood": "happy",
+    "year": 2025,
+    "month": "02",
+    "day": "07",
+    "hours": "10",
+    "minutes": "30",
+    "yearMonth": "2025-02",
+    "fullDate": "2025-02-07",
+    "fullTime": "10:30"
+  }
+]
