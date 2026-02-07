@@ -13,6 +13,7 @@ export interface ArchivePost {
 
 export interface ArchiveList {
   months: string[];
+  postsByDate?: Record<string, number>;
 }
 
 const monthCache = new Map<string, ArchivePost[]>();

@@ -42,6 +42,14 @@ function parseFrontmatter(content) {
   return data;
 }
 
+function formatDateKey(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function generateArchive() {
   if (!fs.existsSync(POSTS_DIR)) {
     console.error('Posts directory not found:', POSTS_DIR);
@@ -58,6 +66,7 @@ function generateArchive() {
 
   const files = fs.readdirSync(POSTS_DIR).filter(file => file.endsWith('.md'));
   const archive = {};
+  const postsByDate = {};
 
   for (const file of files) {
     const filePath = path.join(POSTS_DIR, file);
@@ -73,10 +82,16 @@ function generateArchive() {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const yearMonth = `${year}-${month}`;
+    const dateKey = formatDateKey(frontmatter.date);
 
     if (!archive[yearMonth]) {
       archive[yearMonth] = [];
     }
+
+    if (!postsByDate[dateKey]) {
+      postsByDate[dateKey] = 0;
+    }
+    postsByDate[dateKey]++;
 
     const slug = file.replace('.md', '');
 
@@ -109,7 +124,7 @@ function generateArchive() {
 
   const archiveList = Object.keys(archive).sort((a, b) => b.localeCompare(a));
   const archivePath = path.join(OUTPUT_DIR, 'archive.json');
-  fs.writeFileSync(archivePath, JSON.stringify({ months: archiveList }, null, 2));
+  fs.writeFileSync(archivePath, JSON.stringify({ months: archiveList, postsByDate }, null, 2));
   console.log(`Generated ${archivePath} with ${archiveList.length} months`);
 
   console.log('Archive generation completed!');

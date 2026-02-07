@@ -8,7 +8,7 @@ import {
   TwinklingStars, FlowingGradient, LightBeam,
   FloatingBubbles, AmbientGlow
 } from '@/components/effects';
-import { ThemeToggle } from '@/components/atoms';
+import { ThemeToggle, GlowBadge } from '@/components/atoms';
 
 // Theme type definition
 type Theme = 'light' | 'dark';
@@ -208,28 +208,26 @@ const FriendCard = memo(function FriendCard({
 
         {/* Featured Badge */}
         {friend.featured && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring' }}
-            className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold z-20"
-            style={{
-              background: `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 80%, var(--accent-secondary)))`,
-              color: 'white',
-              boxShadow: `0 2px 10px ${color}40`,
-            }}
-          >
-            <Star className="w-3 h-3" />
-            友链
-          </motion.div>
+          <div className="absolute top-2 right-2 z-20">
+            <GlowBadge text="友链" icon={<Star className="w-3 h-3" />} variant="secondary" size="sm" />
+          </div>
         )}
 
         {/* Status Indicator */}
         {friend.status && (
           <motion.div
             initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: 'spring' }}
+            animate={{ 
+              scale: [1, 1.2, 1],
+              opacity: [1, 0.7, 1]
+            }}
+            transition={{ 
+              delay: 0.3, 
+              type: 'spring',
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
             className="absolute top-2 left-2 z-20"
           >
             <Circle

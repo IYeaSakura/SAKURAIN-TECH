@@ -76,8 +76,8 @@ export async function onRequestPost(context) {
     };
 
     danmakus.push(newDanmaku);
-    if (danmakus.length > 200) {
-      // 如果超过200条，删除最早的弹幕
+    if (danmakus.length > 256) {
+      // 如果超过256条，删除最早的弹幕
       danmakus.shift();
     }
 

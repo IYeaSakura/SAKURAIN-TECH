@@ -18,7 +18,13 @@
       { "label": "技术栈", "href": "#tech-stack" },
       { "label": "联系", "href": "#contact" }
     ],
-    "cta": { "label": "开始项目", "href": "#contact" }
+    "cta": { "label": "开始项目", "href": "#contact" },
+    "extraLinks": [
+      { "label": "博客", "href": "/blog" },
+      { "label": "说说", "href": "/notes" },
+      { "label": "文档", "href": "/docs" },
+      { "label": "友链", "href": "/friends" }
+    ]
   },
   "hero": {
     "badge": "SAKURAIN 技术团队",
