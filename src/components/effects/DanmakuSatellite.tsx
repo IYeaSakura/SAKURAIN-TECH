@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, X, AlertCircle, Orbit, Eye, EyeOff, Satellite, Type, Globe, FileText, Maximize2 } from 'lucide-react';
+import { Send, X, AlertCircle, Orbit, Eye, EyeOff, Satellite, Type, Globe, FileText, Maximize2, Clock } from 'lucide-react';
 import * as Cesium from 'cesium';
 import ReactMarkdown from 'react-markdown';
 
@@ -119,6 +119,9 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   // 北斗卫星数据
   const [beidouSatellites, setBeidouSatellites] = useState<Danmaku[]>([]);
   const [showBeidou, setShowBeidou] = useState(false);
+  
+  // 弹幕列表展开/收起
+  const [isDanmakuListOpen, setIsDanmakuListOpen] = useState(false);
 
   const userId = useRef(`user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const entitiesRef = useRef<Map<string, Cesium.Entity>>(new Map());
@@ -668,6 +671,77 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
               <Globe className="w-3.5 h-3.5" />
               <span className="text-xs">北斗</span>
             </button>
+
+            {/* 弹幕列表开关 */}
+            <button
+              onClick={() => setIsDanmakuListOpen(prev => !prev)}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{
+                background: 'rgba(0, 0, 0, 0.5)',
+                border: isDanmakuListOpen ? '1px solid rgba(96, 165, 250, 0.5)' : '1px solid rgba(96, 165, 250, 0.2)',
+                color: isDanmakuListOpen ? '#60a5fa' : '#64748b',
+              }}
+              title="弹幕列表"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span className="text-xs">列表</span>
+            </button>
+          </div>
+        )}
+
+        {/* 弹幕列表 */}
+        {isDanmakuListOpen && (
+          <div
+            className="flex flex-col rounded-lg backdrop-blur-sm overflow-hidden"
+            style={{
+              background: 'rgba(0, 0, 0, 0.7)',
+              border: '1px solid rgba(96, 165, 250, 0.3)',
+              minWidth: '280px',
+              maxHeight: '400px',
+            }}
+          >
+            <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: 'rgba(96, 165, 250, 0.2)' }}>
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" style={{ color: '#60a5fa' }} />
+                <span className="text-sm font-medium" style={{ color: '#60a5fa' }}>弹幕列表</span>
+                <span className="text-xs px-2 py-0.5 rounded" style={{ background: 'rgba(96, 165, 250, 0.2)', color: '#94a3b8' }}>
+                  {danmakus.length}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsDanmakuListOpen(false)}
+                className="p-1 rounded hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+            
+            <div className="overflow-y-auto flex-1">
+              {danmakus.length === 0 ? (
+                <div className="flex items-center justify-center h-20 text-gray-500 text-sm">
+                  暂无弹幕
+                </div>
+              ) : (
+                danmakus
+                  .sort((a, b) => b.timestamp - a.timestamp)
+                  .map((danmaku) => (
+                    <button
+                      key={danmaku.id}
+                      onClick={() => showDanmakuDetail(danmaku)}
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-white/10 transition-colors border-b"
+                      style={{ borderColor: 'rgba(96, 165, 250, 0.1)' }}
+                    >
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: danmaku.color }} />
+                      <span className="flex-1 text-left text-xs truncate" style={{ color: '#e2e8f0' }}>
+                        {danmaku.text}
+                      </span>
+                      <span className="text-[10px] flex-shrink-0" style={{ color: '#64748b' }}>
+                        {new Date(danmaku.timestamp).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </button>
+                  ))
+              )}
+            </div>
           </div>
         )}
 

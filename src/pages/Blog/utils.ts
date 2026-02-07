@@ -31,7 +31,7 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
 }
 
 function parseMarkdownFrontmatter(text: string): { metadata: Partial<BlogPost>; content: string } {
-  const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
+  const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/;
   const match = text.match(frontmatterRegex);
   
   if (!match) {
@@ -42,7 +42,7 @@ function parseMarkdownFrontmatter(text: string): { metadata: Partial<BlogPost>; 
   const content = match[2];
   const metadata: Partial<BlogPost> = {};
   
-  const lines = frontmatterText.split('\n');
+  const lines = frontmatterText.split(/\r?\n/);
   for (const line of lines) {
     const colonIndex = line.indexOf(':');
     if (colonIndex === -1) continue;

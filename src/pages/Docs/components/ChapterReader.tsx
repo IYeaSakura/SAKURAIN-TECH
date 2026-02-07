@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ChevronLeft, ChevronRight, List, Bookmark } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { useDocument } from '../hooks';
 import { UnifiedToc } from './UnifiedToc';
 import { ThemeToggleButton } from './ThemeToggleButton';
@@ -26,7 +26,7 @@ function buildTocFromHeadings(headings: Array<{ level: number; text: string; id:
 
   for (const h of headings) {
     if (h.level === 1) continue;
-    
+
     const item: TocItem = { ...h, children: [] };
 
     while (stack.length > 0 && stack[stack.length - 1].level >= h.level) {
@@ -50,7 +50,7 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
   const [activeHeading, setActiveHeading] = useState<string>(chapter.id);
   const mainRef = useRef<HTMLElement>(null);
   const { content, loading, error, toc, flatHeadings, searchContent, scrollToLine, scrollToHeadingById } = useDocument(chapter.path);
-  
+
   const currentIndex = series.chapters.findIndex((c) => c.id === chapter.id);
   const prevChapter = currentIndex > 0 ? series.chapters[currentIndex - 1] : null;
   const nextChapter = currentIndex < series.chapters.length - 1 ? series.chapters[currentIndex + 1] : null;
@@ -61,7 +61,7 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
   // 监听标题可见性
   useEffect(() => {
     if (!flatHeadings.length) return;
-    
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -119,10 +119,10 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
       {/* TOC Sidebar - 固定高度，内部可滚动 */}
       {showToc && (
-        <div 
-          className="w-80 border-r hidden lg:flex flex-col" 
-          style={{ 
-            background: 'var(--bg-secondary)', 
+        <div
+          className="w-80 border-r hidden lg:flex flex-col"
+          style={{
+            background: 'var(--bg-secondary)',
             borderColor: 'var(--border-color)',
             height: '100vh',
             flexShrink: 0
@@ -135,7 +135,7 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
             </button>
             <ThemeToggleButton />
           </div>
-          
+
           {/* 目录内容 - 可滚动 */}
           <div className="flex-1 overflow-y-auto min-h-0">
             <UnifiedToc
@@ -194,16 +194,16 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
                   />
                 </Suspense>
                 <ThemeToggleButton />
-                <button 
-                  onClick={() => setShowToc(!showToc)} 
-                  className="hidden lg:flex p-2 rounded-lg text-sm items-center gap-1" 
+                <button
+                  onClick={() => setShowToc(!showToc)}
+                  className="hidden lg:flex p-2 rounded-lg text-sm items-center gap-1"
                   style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
                 >
                   <List className="w-4 h-4" />目录
                 </button>
-                <button 
-                  onClick={() => setShowToc(!showToc)} 
-                  className="lg:hidden p-2 rounded-lg text-sm" 
+                <button
+                  onClick={() => setShowToc(!showToc)}
+                  className="lg:hidden p-2 rounded-lg text-sm"
                   style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
                 >
                   目录
@@ -214,7 +214,7 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
         </motion.header>
 
         {/* Content - 可滚动 */}
-        <main 
+        <main
           ref={mainRef}
           className="flex-1 overflow-y-auto scroll-smooth"
         >
@@ -230,14 +230,6 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
               </div>
             ) : (
               <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 text-sm mb-3" style={{ color: 'var(--text-muted)' }}>
-                    <Bookmark className="w-4 h-4" />
-                    <span>第 {currentIndex + 1} / {series.chapters.length} 章</span>
-                  </div>
-                  <h1 className="text-3xl font-bold mb-3" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{chapter.title}</h1>
-                  <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>{chapter.description}</p>
-                </div>
                 <Suspense fallback={<div className="p-4 text-center" style={{ color: 'var(--text-muted)' }}>加载内容...</div>}>
                   <MarkdownRenderer content={content} />
                 </Suspense>
@@ -275,9 +267,9 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
       {showToc && (
         <div className="lg:hidden fixed inset-0 z-50" onClick={() => setShowToc(false)}>
           <div className="absolute inset-0 bg-black/50" />
-          <div 
-            className="absolute left-0 top-0 bottom-0 w-80 flex flex-col" 
-            style={{ background: 'var(--bg-secondary)' }} 
+          <div
+            className="absolute left-0 top-0 bottom-0 w-80 flex flex-col"
+            style={{ background: 'var(--bg-secondary)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* 移动端侧边栏头部 */}

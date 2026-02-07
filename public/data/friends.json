@@ -4,11 +4,11 @@
   "description": "这里展示了我们推荐的优质网站和技术社区，欢迎访问交流",
   "applyInfo": {
     "title": "申请友链",
-    "description": "如果您希望与我们交换友情链接，请通过以下方式联系我们",
+    "description": "如果您希望与我们交换友情链接，请承诺以下内容",
     "requirements": [
-      "网站内容健康、合法",
-      "网站稳定运行，无恶意代码",
-      "技术类、设计类、创意类网站优先"
+      "网站对国内用户有良好的访问体验",
+      "网站不存在任何形式的广告或推广内容",
+      "网站内容健康合法，稳定运行，无恶意代码"
     ],
     "contact": "Yae_SakuRain@outlook.com"
   },
@@ -60,6 +60,15 @@
       "url": "https://www.mxw2024.top/",
       "icon": "https://www.mxw2024.top/favicon.ico",
       "description": "一个简洁、美观、纯净、无广告的小站",
+      "category": "blogs",
+      "featured": true
+    },
+    {
+      "id": "Ayeez",
+      "name": "阿叶Ayeez的小站",
+      "url": "https://blog.Ayeez.cn/",
+      "icon": "https://blog.ayeez.cn/imgs/photo.jpg",
+      "description": "记录学习历程，记录美好生活",
       "category": "blogs",
       "featured": true
     },

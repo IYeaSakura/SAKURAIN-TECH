@@ -33,25 +33,40 @@ function PlantUMLModal({ imageUrl, onClose }: { imageUrl: string; onClose: () =>
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose, resetView]);
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     showToolbarWithTimeout();
     setScale(prev => Math.max(0.5, Math.min(3, prev + (e.deltaY > 0 ? -0.1 : 0.1))));
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(true);
     dragStart.current = { x: e.clientX - position.x, y: e.clientY - position.y };
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     showToolbarWithTimeout();
     if (isDragging) setPosition({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y });
   };
 
+  const handleMouseUp = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.9)' }} onClick={onClose} onMouseMove={handleMouseMove} onMouseUp={() => setIsDragging(false)}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.9)' }} onClick={onClose}>
       <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 ${showToolbar ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`} style={{ background: 'rgba(30,30,30,0.95)', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }} onClick={(e) => e.stopPropagation()}>
         <button onClick={() => { showToolbarWithTimeout(); setScale(p => Math.max(0.5, p - 0.2)); }} className="p-2 rounded-lg text-white hover:bg-white/20"><ZoomOut className="w-5 h-5" /></button>
         <span className="text-white text-sm min-w-[60px] text-center font-mono">{Math.round(scale * 100)}%</span>
@@ -62,7 +77,7 @@ function PlantUMLModal({ imageUrl, onClose }: { imageUrl: string; onClose: () =>
         <button onClick={() => { showToolbarWithTimeout(); onClose(); }} className="p-2 rounded-lg text-white hover:bg-white/20"><X className="w-5 h-5" /></button>
       </div>
       <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-sm transition-opacity duration-300 ${showToolbar ? 'opacity-100' : 'opacity-0'}`}>滚轮缩放 · 拖拽移动 · ESC 关闭</div>
-      <div className="w-full h-full flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing" onWheel={handleWheel} onMouseDown={handleMouseDown} onClick={(e) => e.stopPropagation()}>
+      <div className="w-full h-full flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing" onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onClick={(e) => e.stopPropagation()}>
         <img src={imageUrl} alt="PlantUML" className="max-w-none select-none" style={{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`, transition: isDragging ? 'none' : 'transform 0.1s ease-out' }} draggable={false} />
       </div>
     </div>

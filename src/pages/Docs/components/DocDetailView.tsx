@@ -206,8 +206,6 @@ export function DocDetailView({ doc, category, onBack }: DocDetailViewProps) {
               </div>
             ) : (
               <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}>{doc.title}</h1>
-                <p className="text-lg mb-8" style={{ color: 'var(--text-secondary)' }}>{doc.description}</p>
                 <Suspense fallback={<div className="p-4 text-center" style={{ color: 'var(--text-muted)' }}>加载内容...</div>}>
                   <MarkdownRenderer content={content} />
                 </Suspense>

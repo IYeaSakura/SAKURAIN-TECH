@@ -1,14 +1,10 @@
 {
   "enabled": true,
   "title": "欢迎来到 SAKURAIN TEAM",
-  "content": "本站是学生团队的技术演示网站，非商业用途，请不要联系我们咨询业务哦，哈哈哈。\n本站是Serverless架构，无后端，近期会加上博客功能哦~\n更多功能开发中，想要留言可以去看看右侧的地球Online哦~",
-  "updates": "- refactor(danmaku): 优化弹幕数据存储和显示逻辑\n- feat(弹幕卫星): 优化弹幕系统功能与UI\n- feat(danmaku): 添加Markdown内容支持及显示功能\n- feat(弹幕轨道): 添加升交点赤经(RAAN)参数支持",
-  "link": {
-    "text": "本站技术详解",
-    "href": "/docs/courses/site-tech/chapter01"
-  },
+  "content": "本站是学生团队的技术演示网站，非商业用途的哦~\n\n如果你是来找我们接项目的，那可能要让你失望了😅\n我们只是在这里展示一些技术验证和好玩的东西，不接任何商业业务！\n\n不过如果你对技术感兴趣，欢迎来看看我们的文章~",
+  "updates": "- refactor(danmaku): 优化弹幕数据存储和显示逻辑\n- feat(danmaku): 添加Markdown内容支持及显示功能\n- feat(弹幕轨道): 添加升交点赤经(RAAN)参数支持",
   "confirmButtonText": "不再显示",
   "closeButtonText": "关闭",
-  "showOnce": true,
+  "showOnce": false,
   "storageKey": "sakurain-welcome-shown"
 }
