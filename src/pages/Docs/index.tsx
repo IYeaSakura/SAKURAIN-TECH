@@ -39,10 +39,10 @@ export default function DocsPage() {
     chapterId?: string;
   }>();
   const navigate = useNavigate();
-  
+
   const { data: config, loading: configLoading, error: configError } = useConfig<DocsConfig>('/data/docs.json');
   const { data: siteData } = useConfig<SiteData>('/data/site-data.json');
-  
+
   const [selectedCategory, setSelectedCategory] = useState<DocCategory | null>(null);
   const [selectedItem, setSelectedItem] = useState<DocItem | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
@@ -167,7 +167,7 @@ export default function DocsPage() {
               />
             </Suspense>
           </motion.div>
-        ) 
+        )
         : selectedItem?.type === 'series' && selectedCategory ? (
           <motion.div key="series-detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
             <SeriesDetailView
@@ -232,7 +232,7 @@ const GlowBadge = memo(({ text }: { text: string }) => {
       className="inline-flex items-center gap-2 mb-6 sm:mb-8 relative"
     >
       {/* 外发光 */}
-      <div 
+      <div
         className="absolute -inset-2 rounded-xl animate-pulse-glow"
         style={{
           background: `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary))`,
@@ -250,7 +250,7 @@ const GlowBadge = memo(({ text }: { text: string }) => {
         }}
       >
         {/* 内部光效 */}
-        <div 
+        <div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{
             background: `linear-gradient(90deg, transparent, var(--accent-primary)20, transparent)`,
@@ -271,14 +271,14 @@ const GlowBadge = memo(({ text }: { text: string }) => {
 GlowBadge.displayName = 'GlowBadge';
 
 // 分类卡片组件
-const CategoryCard = memo(({ 
-  category, 
-  index, 
-  iconMap, 
-  onSelect 
-}: { 
-  category: DocCategory; 
-  index: number; 
+const CategoryCard = memo(({
+  category,
+  index,
+  iconMap,
+  onSelect
+}: {
+  category: DocCategory;
+  index: number;
   iconMap: Record<string, React.ComponentType<LucideProps>>;
   onSelect: (category: DocCategory) => void;
 }) => {
@@ -286,7 +286,7 @@ const CategoryCard = memo(({
   const Icon = iconMap[category.icon] || Folder;
   const seriesCount = category.items.filter((i: DocItem) => i.type === 'series').length;
   const docCount = category.items.filter((i: DocItem) => i.type === 'doc').length;
-  
+
   return (
     <motion.button
       key={category.id}
@@ -303,7 +303,7 @@ const CategoryCard = memo(({
       <div
         className="absolute -inset-[2px] rounded-xl transition-opacity duration-500"
         style={{
-          background: isHovered 
+          background: isHovered
             ? `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))`
             : 'transparent',
           backgroundSize: '300% 300%',
@@ -320,8 +320,8 @@ const CategoryCard = memo(({
           border: '3px solid',
           borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
           transform: isHovered ? 'translateY(-8px) scale(1.02)' : 'none',
-          boxShadow: isHovered 
-            ? `0 20px 40px var(--accent-glow), 0 0 30px var(--accent-primary)20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)` 
+          boxShadow: isHovered
+            ? `0 20px 40px var(--accent-glow), 0 0 30px var(--accent-primary)20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)`
             : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
         }}
       >
@@ -334,7 +334,7 @@ const CategoryCard = memo(({
           animate={{ opacity: isHovered ? 1 : 0 }}
           transition={{ duration: 0.3 }}
         />
-        
+
         {/* Shine effect - 斜向光泽 */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
@@ -347,38 +347,38 @@ const CategoryCard = memo(({
         />
 
         <div className="flex items-start justify-between mb-4 relative z-10">
-          <div 
+          <div
             className="p-3 rounded-lg transition-all duration-300"
-            style={{ 
+            style={{
               background: isHovered ? 'var(--accent-primary)' : 'var(--bg-primary)',
               boxShadow: isHovered ? '0 0 20px var(--accent-glow)' : 'none',
             }}
           >
-            <Icon 
-              className="w-8 h-8 transition-colors duration-300" 
-              style={{ color: isHovered ? 'white' : 'var(--accent-primary)' }} 
+            <Icon
+              className="w-8 h-8 transition-colors duration-300"
+              style={{ color: isHovered ? 'white' : 'var(--accent-primary)' }}
             />
           </div>
-          <ChevronRight 
-            className="w-5 h-5 transition-all transform duration-300" 
-            style={{ 
+          <ChevronRight
+            className="w-5 h-5 transition-all transform duration-300"
+            style={{
               color: 'var(--text-muted)',
               opacity: isHovered ? 1 : 0,
               transform: isHovered ? 'translateX(4px)' : 'translateX(0)',
-            }} 
+            }}
           />
         </div>
-        
-        <h3 
+
+        <h3
           className="font-primary text-xl font-bold mb-3 relative z-10 transition-all duration-300"
-          style={{ 
+          style={{
             color: 'var(--text-primary)',
             textShadow: isHovered ? '0 0 20px var(--accent-glow)' : 'none',
           }}
         >
           {category.name}
         </h3>
-        
+
         <div className="flex items-center gap-4 text-sm relative z-10" style={{ color: 'var(--text-muted)' }}>
           {seriesCount > 0 && (
             <span className="flex items-center gap-1.5">
@@ -403,7 +403,7 @@ CategoryCard.displayName = 'CategoryCard';
 // 浮动代码装饰
 const CodeDecoration = memo(({ className }: { className?: string }) => {
   return (
-    <div 
+    <div
       className={`absolute font-mono text-xs sm:text-sm opacity-10 pointer-events-none animate-float-slow ${className}`}
     >
       <div className="text-[var(--accent-primary)]">{'<Docs.init>'}</div>
@@ -418,7 +418,7 @@ CodeDecoration.displayName = 'CodeDecoration';
 
 function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeViewProps) {
   const navigate = useNavigate();
-  
+
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
       {/* 背景效果 */}
@@ -434,11 +434,11 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
             backgroundSize: '60px 60px',
           }}
         />
-        
+
         {/* 环境光效 */}
         <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.12} />
         <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.08} />
-        
+
         {/* 径向渐变遮罩 */}
         <div
           className="absolute inset-0"
@@ -500,18 +500,18 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
       {/* Hero */}
       <div className="relative pt-24 lg:pt-28 py-20 sm:py-28 px-4">
         <div className="max-w-6xl mx-auto text-center relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }} 
-            animate={{ opacity: 1, y: 0 }} 
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             {/* 发光徽章 */}
             <GlowBadge text="知识库" />
-            
+
             {/* 主标题 */}
-            <h1 
+            <h1
               className="font-primary text-4xl sm:text-5xl lg:text-6xl font-black mb-6"
-              style={{ 
+              style={{
                 color: 'var(--text-primary)',
                 letterSpacing: '-0.02em',
                 lineHeight: 1.1,
@@ -519,9 +519,9 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
             >
               {config.title}
             </h1>
-            
+
             {/* 描述 */}
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
@@ -536,14 +536,14 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
 
       {/* Categories */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-20 relative z-10">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
           className="flex items-center gap-3 mb-8"
         >
           <BookOpen className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-          <h2 
+          <h2
             className="text-xl font-bold font-primary"
             style={{ color: 'var(--text-primary)' }}
           >
@@ -551,10 +551,10 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
           </h2>
           <div className="flex-1 h-px" style={{ background: 'var(--border-subtle)' }} />
         </motion.div>
-        
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {config.categories.map((category: DocCategory, index: number) => (
-            <CategoryCard 
+            <CategoryCard
               key={category.id}
               category={category}
               index={index}
@@ -564,7 +564,7 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
           ))}
         </div>
       </div>
-      
+
       {/* 底部渐变 */}
       <div
         className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
@@ -572,7 +572,7 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
           background: 'linear-gradient(to top, var(--bg-primary), transparent)',
         }}
       />
-      
+
       {siteData && <Footer data={siteData.footer} />}
     </div>
   );

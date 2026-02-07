@@ -7,37 +7,38 @@ const __dirname = path.dirname(__filename);
 
 const POSTS_DIR = path.join(__dirname, '../public/blog/posts');
 const OUTPUT_DIR = path.join(__dirname, '../public/blog');
+const ARCHIVES_DIR = path.join(__dirname, '../public/blog/archives');
 
 function parseFrontmatter(content) {
   const frontmatterRegex = /^---\s*([\s\S]*?)\s*---/;
   const match = content.match(frontmatterRegex);
-  
+
   if (!match) return null;
-  
+
   const frontmatterText = match[1];
   const data = {};
-  
+
   const lines = frontmatterText.split('\n');
   for (const line of lines) {
     const colonIndex = line.indexOf(':');
     if (colonIndex > 0) {
       const key = line.slice(0, colonIndex).trim();
       let value = line.slice(colonIndex + 1).trim();
-      
+
       if (value.startsWith('"') && value.endsWith('"')) {
         value = value.slice(1, -1);
       } else if (value.startsWith("'") && value.endsWith("'")) {
         value = value.slice(1, -1);
       }
-      
+
       if (key === 'tags') {
         value = value.split(',').map(tag => tag.trim());
       }
-      
+
       data[key] = value;
     }
   }
-  
+
   return data;
 }
 
@@ -49,6 +50,10 @@ function generateArchive() {
 
   if (!fs.existsSync(OUTPUT_DIR)) {
     fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  }
+
+  if (!fs.existsSync(ARCHIVES_DIR)) {
+    fs.mkdirSync(ARCHIVES_DIR, { recursive: true });
   }
 
   const files = fs.readdirSync(POSTS_DIR).filter(file => file.endsWith('.md'));
@@ -87,18 +92,25 @@ function generateArchive() {
     });
   }
 
+  const allPosts = Object.values(archive).flat();
+  const sortedAllPosts = allPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+  const featuredPosts = sortedAllPosts.filter(post => post.featured);
+
   for (const [yearMonth, posts] of Object.entries(archive)) {
     const sortedPosts = posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-    const outputPath = path.join(OUTPUT_DIR, `index-${yearMonth}.json`);
+    const outputPath = path.join(ARCHIVES_DIR, `index-${yearMonth}.json`);
     fs.writeFileSync(outputPath, JSON.stringify(sortedPosts, null, 2));
     console.log(`Generated ${outputPath} with ${sortedPosts.length} posts`);
   }
 
-  const oldIndexPath = path.join(OUTPUT_DIR, 'index.json');
-  if (fs.existsSync(oldIndexPath)) {
-    fs.unlinkSync(oldIndexPath);
-    console.log(`Deleted ${oldIndexPath}`);
-  }
+  const indexPath = path.join(OUTPUT_DIR, 'index.json');
+  fs.writeFileSync(indexPath, JSON.stringify({ posts: featuredPosts }, null, 2));
+  console.log(`Generated ${indexPath} with ${featuredPosts.length} featured posts`);
+
+  const archiveList = Object.keys(archive).sort((a, b) => b.localeCompare(a));
+  const archivePath = path.join(OUTPUT_DIR, 'archive.json');
+  fs.writeFileSync(archivePath, JSON.stringify({ months: archiveList }, null, 2));
+  console.log(`Generated ${archivePath} with ${archiveList.length} months`);
 
   console.log('Archive generation completed!');
 }

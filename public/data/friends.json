@@ -52,7 +52,8 @@
       "icon": "https://www.nekt.qzz.io/head.png",
       "description": "世界本就浑浊，罪与爱同歌",
       "category": "blogs",
-      "featured": true
+      "featured": true,
+      "status": "online"
     },
     {
       "id": "mxw2024",
@@ -61,7 +62,8 @@
       "icon": "https://www.mxw2024.top/favicon.ico",
       "description": "一个简洁、美观、纯净、无广告的小站",
       "category": "blogs",
-      "featured": true
+      "featured": true,
+      "status": "online"
     },
     {
       "id": "Ayeez",
@@ -70,7 +72,8 @@
       "icon": "https://blog.ayeez.cn/imgs/photo.jpg",
       "description": "记录学习历程，记录美好生活",
       "category": "blogs",
-      "featured": true
+      "featured": true,
+      "status": "online"
     },
     {
       "id": "mcxiaochen",
@@ -79,7 +82,8 @@
       "icon": "https://blog.mcxiaochen.top/favicon.ico",
       "description": "05后，高中生，内容偏技术向，希望能对你有用QwQ",
       "category": "blogs",
-      "featured": true
+      "featured": true,
+      "status": "online"
     },
     {
       "id": "iletter",
@@ -88,7 +92,8 @@
       "icon": "https://www.ittoolman.top/images/avatar.png",
       "description": "没有什么可以留住，除了死亡。",
       "category": "blogs",
-      "featured": true
+      "featured": true,
+      "status": "online"
     },
     {
       "id": "mclans",
@@ -97,7 +102,8 @@
       "icon": "https://sakurain.net/image/logo.webp",
       "description": "Minecraft 服务器网站演示项目，展示服务器信息和玩家社区功能",
       "category": "demo",
-      "featured": false
+      "featured": false,
+      "status": "online"
     }
   ]
 }
