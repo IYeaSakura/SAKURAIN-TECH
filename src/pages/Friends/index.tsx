@@ -1,7 +1,7 @@
 import { useState, useEffect, memo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { ArrowLeft, Code, Palette, Wrench, BookOpen, Monitor, ExternalLink, Heart, Mail, Sparkles, Globe, Star } from 'lucide-react';
+import { ArrowLeft, Code, Palette, Wrench, BookOpen, Monitor, ExternalLink, Heart, Mail, Sparkles, Globe, Star, Circle } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import {
   MagneticCursor, VelocityCursor,
@@ -34,6 +34,7 @@ interface Friend {
   description: string;
   category: string;
   featured: boolean;
+  status?: 'online' | 'offline';
 }
 
 interface ApplyInfo {
@@ -220,6 +221,24 @@ const FriendCard = memo(function FriendCard({
           >
             <Star className="w-3 h-3" />
             友链
+          </motion.div>
+        )}
+
+        {/* Status Indicator */}
+        {friend.status && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.3, type: 'spring' }}
+            className="absolute top-2 left-2 z-20"
+          >
+            <Circle
+              className="w-3 h-3"
+              style={{
+                color: friend.status === 'online' ? '#22c55e' : '#ef4444',
+                filter: friend.status === 'online' ? 'drop-shadow(0 0 4px #22c55e80)' : 'drop-shadow(0 0 4px #ef444480)',
+              }}
+            />
           </motion.div>
         )}
 

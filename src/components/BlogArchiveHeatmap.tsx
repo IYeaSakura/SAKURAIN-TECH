@@ -1,51 +1,33 @@
 import { useState, useEffect, memo } from 'react';
 import { motion } from 'framer-motion';
-import type { ArchiveData } from '@/hooks/useBlogArchive';
+import type { ArchiveList } from '@/hooks/useBlogArchive';
 
 interface BlogArchiveHeatmapProps {
-  data: ArchiveData;
+  data: ArchiveList;
   onSelectMonth?: (yearMonth: string) => void;
   selectedMonth?: string | null;
 }
 
 const MONTHS = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
 
-function getMaxPostCount(data: ArchiveData): number {
-  const counts = Object.values(data).map(posts => posts.length);
-  return Math.max(...counts, 0);
-}
-
-function getCellColor(count: number, maxCount: number): string {
-  if (count === 0) return 'var(--bg-secondary)';
-  if (maxCount === 0) return 'var(--accent-primary)';
-  
-  const intensity = count / maxCount;
-  const colors = [
-    'rgba(96, 165, 250, 0.1)',
-    'rgba(96, 165, 250, 0.3)',
-    'rgba(96, 165, 250, 0.5)',
-    'rgba(96, 165, 250, 0.7)',
-    'rgba(96, 165, 250, 0.9)',
-  ];
-  
-  const index = Math.min(Math.floor(intensity * colors.length), colors.length - 1);
-  return colors[index];
-}
-
 export const BlogArchiveHeatmap = memo(function BlogArchiveHeatmap({ data, onSelectMonth, selectedMonth }: BlogArchiveHeatmapProps) {
   const [years, setYears] = useState<number[]>([]);
+  const [postsByMonth, setPostsByMonth] = useState<Record<string, number>>({});
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
 
   useEffect(() => {
     const yearSet = new Set<number>();
-    Object.keys(data).forEach(yearMonth => {
+    const monthCount: Record<string, number> = {};
+
+    data.months.forEach(yearMonth => {
       const year = parseInt(yearMonth.split('-')[0]);
       yearSet.add(year);
+      monthCount[yearMonth] = 1;
     });
-    setYears(Array.from(yearSet).sort((a, b) => b - a));
-  }, [data]);
 
-  const maxCount = getMaxPostCount(data);
+    setYears(Array.from(yearSet).sort((a, b) => b - a));
+    setPostsByMonth(monthCount);
+  }, [data]);
 
   return (
     <div className="w-full">
@@ -68,14 +50,12 @@ export const BlogArchiveHeatmap = memo(function BlogArchiveHeatmap({ data, onSel
                 {year}
               </div>
               <div className="flex-1 grid grid-cols-12 gap-2">
-                {MONTHS.map((month, index) => {
-                  const monthNum = String(index + 1).padStart(2, '0');
+                {MONTHS.map((month) => {
+                  const monthNum = String(MONTHS.indexOf(month) + 1).padStart(2, '0');
                   const yearMonth = `${year}-${monthNum}`;
-                  const posts = data[yearMonth] || [];
-                  const count = posts.length;
+                  const count = postsByMonth[yearMonth] || 0;
                   const isSelected = selectedMonth === yearMonth;
                   const isHovered = hoveredCell === yearMonth;
-                  void month;
 
                   return (
                     <motion.button
@@ -86,7 +66,7 @@ export const BlogArchiveHeatmap = memo(function BlogArchiveHeatmap({ data, onSel
                       disabled={count === 0}
                       className="aspect-square rounded-lg relative group"
                       style={{
-                        background: getCellColor(count, maxCount),
+                        background: count > 0 ? 'rgba(96, 165, 250, 0.5)' : 'var(--bg-secondary)',
                         border: isSelected ? '2px solid var(--accent-primary)' : 'none',
                         cursor: count > 0 ? 'pointer' : 'not-allowed',
                       }}
@@ -105,9 +85,9 @@ export const BlogArchiveHeatmap = memo(function BlogArchiveHeatmap({ data, onSel
                             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                           }}
                         >
-                          <div className="font-bold">{year}年{index + 1}月</div>
+                          <div className="font-bold">{year}年{month}</div>
                           <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                            {count} 篇文章
+                            点击查看文章
                           </div>
                         </motion.div>
                       )}
