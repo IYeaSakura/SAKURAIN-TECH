@@ -33,6 +33,8 @@ export async function onRequestPost(context) {
       });
     }
 
+    const textKv = DANMAKU_TEXT_KV;
+
     let danmakus = [];
     const data = await kv.get('danmakus');
     if (data) {
@@ -66,6 +68,14 @@ export async function onRequestPost(context) {
     }
 
     await kv.put('danmakus', JSON.stringify(danmakus));
+
+    // 如果有 markdown 文本，保存到 DANMAKU_TEXT_KV
+    if (body.markdownContent && textKv) {
+      const markdownText = String(body.markdownContent).trim();
+      if (markdownText) {
+        await textKv.put(`text:${newDanmaku.id}`, markdownText);
+      }
+    }
 
     return new Response(JSON.stringify({ success: true, danmaku: newDanmaku }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
