@@ -373,57 +373,49 @@ export function DocListView({ category, onBack, onSelectItem, iconMap }: DocList
       <CodeDecoration className="bottom-32 right-8 hidden lg:block" />
 
       {/* Header */}
-      <header 
-        className="sticky top-0 z-50 border-b backdrop-blur-md"
-        style={{ 
-          background: 'color-mix(in srgb, var(--bg-primary) 90%, transparent)', 
-          borderColor: 'var(--border-subtle)' 
-        }}
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="fixed top-0 left-0 right-0 z-50 mc-navbar"
       >
-        <div className="flex items-center justify-between px-4 sm:px-6 h-16 max-w-7xl mx-auto">
-          <button 
-            onClick={onBack} 
-            className="flex items-center gap-2 text-sm font-medium transition-all duration-300 hover:opacity-80 group"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            <div 
-              className="p-1.5 rounded-lg transition-all duration-300 group-hover:shadow-lg"
-              style={{ 
-                background: 'var(--bg-card)',
-                boxShadow: 'inset -2px -2px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 lg:h-20">
+            <motion.button
+              onClick={onBack}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-subtle)',
+                color: 'var(--text-primary)'
               }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <ArrowLeft className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">返回</span>
+            </motion.button>
+
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setSearchOpen(true)} 
+                className="p-2 rounded-lg transition-all duration-300"
+                style={{ 
+                  color: 'var(--text-secondary)',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-subtle)',
+                }}
+              >
+                <Search className="w-5 h-5" />
+              </button>
+              <ThemeToggleButton />
             </div>
-            <span className="hidden sm:inline font-primary">返回</span>
-          </button>
-          
-          <h1 
-            className="text-lg font-bold font-primary truncate max-w-xs"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            {category.name}
-          </h1>
-          
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setSearchOpen(true)} 
-              className="p-2 rounded-lg transition-all duration-300 hover:shadow-lg"
-              style={{ 
-                color: 'var(--text-secondary)',
-                background: 'var(--bg-card)',
-                boxShadow: 'inset -2px -2px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
-              }}
-            >
-              <Search className="w-5 h-5" />
-            </button>
-            <ThemeToggleButton />
           </div>
         </div>
-      </header>
+      </motion.header>
 
       {/* Hero */}
-      <div className="relative py-16 sm:py-20 px-4">
+      <div className="relative pt-24 lg:pt-28 py-16 sm:py-20 px-4">
         <div className="max-w-6xl mx-auto text-center relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 30 }} 
