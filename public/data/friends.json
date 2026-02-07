@@ -70,7 +70,7 @@
       "icon": "https://sakurain.net/image/logo.webp",
       "description": "Minecraft 服务器网站演示项目，展示服务器信息和玩家社区功能",
       "category": "demo",
-      "featured": true
+      "featured": false
     },
     {
       "id": "github",
