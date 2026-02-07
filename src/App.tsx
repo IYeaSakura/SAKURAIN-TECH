@@ -248,7 +248,7 @@ function App() {
             textOrientation: 'mixed',
           }}
         >
-          关于
+          欢迎
         </span>
       </motion.button>
     </div>

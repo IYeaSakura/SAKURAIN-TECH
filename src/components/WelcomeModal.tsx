@@ -1,36 +1,35 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router';
 import { BookOpen, Globe, X, Sparkles, FileText, Users } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { PlantUML } from '@/pages/Docs/components/PlantUML';
 
-const SyntaxHighlighter = lazy(() => 
+const SyntaxHighlighter = lazy(() =>
   import('react-syntax-highlighter').then(mod => ({ default: mod.Prism }))
 );
 const vscDarkPlusPromise = import('react-syntax-highlighter/dist/esm/styles/prism').then(mod => mod.vscDarkPlus);
 
 function CodeBlock({ className, children, ...props }: { className?: string; children?: React.ReactNode }) {
   const [style, setStyle] = useState<any>(null);
-  
+
   useEffect(() => {
     vscDarkPlusPromise.then(setStyle);
   }, []);
-  
+
   const match = /language-(\w+)/.exec(className || '');
   const isInline = !match && !className;
   const language = match ? match[1] : 'text';
   const code = String(children).replace(/\n$/, '');
-  
+
   if (language === 'plantuml' || code.includes('@startuml')) {
     return <PlantUML code={code} />;
   }
-  
+
   if (isInline) {
     return (
-      <code className="px-1.5 py-0.5 rounded text-xs" style={{ 
+      <code className="px-1.5 py-0.5 rounded text-xs" style={{
         backgroundColor: 'var(--bg-card)',
         color: 'var(--accent-primary)',
       }} {...props}>
@@ -38,10 +37,10 @@ function CodeBlock({ className, children, ...props }: { className?: string; chil
       </code>
     );
   }
-  
+
   if (!style) {
     return (
-      <pre className="p-3 rounded-lg overflow-x-auto mb-3 text-xs" style={{ 
+      <pre className="p-3 rounded-lg overflow-x-auto mb-3 text-xs" style={{
         backgroundColor: '#1e1e1e',
         color: '#d4d4d4',
         whiteSpace: 'pre-wrap',
@@ -51,10 +50,10 @@ function CodeBlock({ className, children, ...props }: { className?: string; chil
       </pre>
     );
   }
-  
+
   return (
     <Suspense fallback={
-      <pre className="p-3 rounded-lg overflow-x-auto mb-3 text-xs" style={{ 
+      <pre className="p-3 rounded-lg overflow-x-auto mb-3 text-xs" style={{
         backgroundColor: '#1e1e1e',
         color: '#d4d4d4',
       }}>
@@ -123,7 +122,6 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
   const [bellPosition, setBellPosition] = useState({ x: 14, y: window.innerHeight * 0.2 + 32 });
   const [markdownContent, setMarkdownContent] = useState('');
   const [isMarkdownLoading, setIsMarkdownLoading] = useState(false);
-  const navigate = useNavigate();
 
   const updateBellPosition = () => {
     const bell = document.getElementById('welcome-welcome-bell');
@@ -162,43 +160,21 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
       })
       .then((data: WelcomeModalConfig) => {
         setConfig(data);
-        
+
         if (!data.enabled) {
           setIsLoading(false);
           return;
         }
 
-        if (!forceOpen) {
-          if (data.showOnce) {
-            const hasShown = localStorage.getItem(data.storageKey);
-            if (!hasShown) {
-              setTimeout(updateBellPosition, 100);
-              setIsOpen(true);
-            }
-          } else {
-            setTimeout(updateBellPosition, 100);
-            setIsOpen(true);
-          }
-        } else {
-          setTimeout(updateBellPosition, 100);
-          setIsOpen(true);
-        }
-        
+        setTimeout(updateBellPosition, 100);
+        setIsOpen(true);
         setIsLoading(false);
       })
       .catch((error) => {
         console.error('[WelcomeModal] 配置加载失败:', error);
         setConfig(defaultConfig);
-        if (!forceOpen) {
-          const hasShown = localStorage.getItem(defaultConfig.storageKey);
-          if (!hasShown) {
-            setTimeout(updateBellPosition, 100);
-            setIsOpen(true);
-          }
-        } else {
-          setTimeout(updateBellPosition, 100);
-          setIsOpen(true);
-        }
+        setTimeout(updateBellPosition, 100);
+        setIsOpen(true);
         setIsLoading(false);
       });
   }, [forceOpen]);
@@ -212,8 +188,8 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
   };
 
   const handleBlogClick = () => {
-    navigate('/blog');
     setIsOpen(false);
+    window.location.href = '/blog';
   };
 
   const handleEarthClick = () => {
@@ -223,8 +199,8 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
   };
 
   const handleFriendsClick = () => {
-    navigate('/friends');
     setIsOpen(false);
+    window.location.href = '/friends';
   };
 
   const loadMarkdown = async () => {
@@ -277,31 +253,31 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
 
               <DialogPrimitive.Content asChild forceMount>
                 <motion.div
-                  initial={{ 
-                    opacity: 0, 
+                  initial={{
+                    opacity: 0,
                     scale: 0.3,
                     left: bellPosition.x,
                     top: bellPosition.y,
                     x: '-50%',
                     y: '-50%',
                   }}
-                  animate={{ 
-                    opacity: 1, 
+                  animate={{
+                    opacity: 1,
                     scale: 1,
                     left: centerX,
                     top: centerY,
                     x: '-50%',
                     y: '-50%',
                   }}
-                  exit={{ 
-                    opacity: 0, 
+                  exit={{
+                    opacity: 0,
                     scale: 0.1,
                     left: bellPosition.x,
                     top: bellPosition.y,
                     x: '-50%',
                     y: '-50%',
                   }}
-                  transition={{ 
+                  transition={{
                     duration: 0.3,
                     ease: [0.16, 1, 0.3, 1],
                   }}
@@ -337,7 +313,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
 
                       <div className="flex-1 p-6 sm:p-8 overflow-y-auto">
                         <div className="flex items-start justify-between mb-6">
-                          <h2 
+                          <h2
                             className="text-2xl font-bold font-pixel"
                             style={{ color: 'var(--text-primary)' }}
                           >
@@ -358,7 +334,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                         <div className="space-y-6">
                           {activeTab === 'welcome' && (
                             <>
-                              <div 
+                              <div
                                 className="text-base leading-relaxed"
                                 style={{ color: 'var(--text-secondary)' }}
                               >
@@ -372,7 +348,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
 
                               {config.updates && (
                                 <div className="pt-4 border-t border-[var(--accent-primary)]/20">
-                                  <h3 
+                                  <h3
                                     className="text-sm font-semibold mb-3"
                                     style={{ color: 'var(--accent-primary)' }}
                                   >
@@ -390,24 +366,24 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
 
                               <div className="pt-4 mt-4 border-t border-[var(--accent-primary)]/20">
                                 <div className="flex flex-wrap items-center justify-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-                                  <a 
-                                    href="https://beian.miit.gov.cn/" 
-                                    target="_blank" 
+                                  <a
+                                    href="https://beian.miit.gov.cn/"
+                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="hover:opacity-70 transition-opacity"
                                   >
                                     皖ICP备2025073165号-1
                                   </a>
                                   <span>|</span>
-                                  <a 
-                                    href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34130202000598" 
-                                    target="_blank" 
+                                  <a
+                                    href="https://www.beian.gov.cn/portal/registerSystemInfo?recordcode=34130202000598"
+                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="hover:opacity-70 transition-opacity flex items-center gap-1"
                                   >
-                                    <img 
-                                      src="/image/ghs.png" 
-                                      alt="公安备案图标" 
+                                    <img
+                                      src="/image/ghs.png"
+                                      alt="公安备案图标"
                                       className="w-3 h-3"
                                     />
                                     皖公网安备34130202000598号
@@ -419,7 +395,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
 
                           {activeTab === 'blog' && (
                             <div className="space-y-4">
-                              <p 
+                              <p
                                 className="text-base leading-relaxed"
                                 style={{ color: 'var(--text-secondary)' }}
                               >
@@ -430,7 +406,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                 backgroundColor: 'var(--bg-card)',
                                 border: '1px solid var(--accent-primary)/30',
                               }}>
-                                <h3 
+                                <h3
                                   className="text-sm font-semibold mb-2"
                                   style={{ color: 'var(--accent-primary)' }}
                                 >
@@ -459,7 +435,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                   <span>访问博客</span>
                                 </motion.button>
                                 <motion.button
-                                  onClick={() => { navigate('/docs'); setIsOpen(false); }}
+                                  onClick={() => { setIsOpen(false); window.location.href = '/docs'; }}
                                   className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300"
                                   style={{
                                     backgroundColor: 'var(--bg-card)',
@@ -478,18 +454,18 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
 
                           {activeTab === 'earth' && (
                             <div className="space-y-4">
-                              <p 
+                              <p
                                 className="text-base leading-relaxed"
                                 style={{ color: 'var(--text-secondary)' }}
                               >
                                 地球Online是一个互动的3D地球可视化项目，中国区域部分支持放大卫星图。
                               </p>
-                              
+
                               <div className="p-4 rounded-xl" style={{
                                 backgroundColor: 'var(--bg-card)',
                                 border: '1px solid var(--accent-primary)/30',
                               }}>
-                                <h3 
+                                <h3
                                   className="text-sm font-semibold mb-2"
                                   style={{ color: 'var(--accent-primary)' }}
                                 >
@@ -503,12 +479,12 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                 </ul>
                               </div>
 
-                              <div className="flex items-center gap-2 px-4 py-3 rounded-lg" style={{ 
+                              <div className="flex items-center gap-2 px-4 py-3 rounded-lg" style={{
                                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
                                 border: '1px solid rgba(239, 68, 68, 0.3)'
                               }}>
                                 <span className="w-2 h-2 rounded-full" style={{ background: '#ef4444' }} />
-                                <span className="text-sm" style={{ color: '#fca5a5' }}>⚠️ 建议使用桌面端访问，配置较低的电脑可能运行不流畅</span>
+                                <span className="text-sm" style={{ color: '#fca5a5' }}>建议使用桌面端访问，配置较低的电脑可能运行不流畅</span>
                               </div>
 
                               <motion.button
@@ -531,21 +507,21 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                             <div className="space-y-4">
                               {isMarkdownLoading ? (
                                 <div className="flex items-center justify-center py-8">
-                                  <div 
+                                  <div
                                     className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
                                     style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
                                   />
                                 </div>
                               ) : (
-                                <div 
+                                <div
                                   className="overflow-y-auto p-4 rounded-xl"
-                                  style={{ 
+                                  style={{
                                     color: 'var(--text-secondary)',
                                     backgroundColor: 'var(--bg-card)',
                                     border: '1px solid var(--accent-primary)/30',
                                   }}
                                 >
-                                  <ReactMarkdown 
+                                  <ReactMarkdown
                                     remarkPlugins={[remarkGfm]}
                                     components={{
                                       h1: ({ children }) => (
@@ -588,7 +564,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                         </table>
                                       ),
                                       th: ({ children }) => (
-                                        <th className="p-2 border-b font-medium" style={{ 
+                                        <th className="p-2 border-b font-medium" style={{
                                           borderColor: 'var(--border-subtle)',
                                           color: 'var(--text-primary)',
                                         }}>
@@ -619,18 +595,18 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
 
                           {activeTab === 'friends' && (
                             <div className="space-y-4">
-                              <p 
+                              <p
                                 className="text-base leading-relaxed"
                                 style={{ color: 'var(--text-secondary)' }}
                               >
                                 欢迎申请友链！我们很高兴与志同道合的朋友建立联系。
                               </p>
-                              
+
                               <div className="p-4 rounded-xl" style={{
                                 backgroundColor: 'var(--bg-card)',
                                 border: '1px solid var(--accent-primary)/30',
                               }}>
-                                <h3 
+                                <h3
                                   className="text-sm font-semibold mb-3"
                                   style={{ color: 'var(--accent-primary)' }}
                                 >

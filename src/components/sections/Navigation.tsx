@@ -52,17 +52,17 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
 
   const handleDocsClick = () => {
     preloadDocs();
-    navigate('/docs');
+    window.location.href = '/docs';
   };
 
   const handleFriendsClick = () => {
     preloadFriends();
-    navigate('/friends');
+    window.location.href = '/friends';
   };
 
   const handleBlogClick = () => {
     preloadBlog();
-    navigate('/blog');
+    window.location.href = '/blog';
   };
 
 
