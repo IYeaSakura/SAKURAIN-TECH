@@ -56,6 +56,8 @@ export async function onRequestPost(context) {
       inclination: body.inclination != null ? body.inclination : (Math.random() - 0.5) * Math.PI / 1.5,
       altitude: body.altitude != null ? body.altitude : (2000000 + Math.random() * 1000000), // 默认2000-3000km
       speed: body.speed != null ? body.speed : (2 + Math.random()),
+      // 升交点赤经 RAAN，用于确定轨道平面方向
+      raan: body.raan != null ? body.raan : Math.random() * Math.PI * 2,
     };
 
     danmakus.push(newDanmaku);
