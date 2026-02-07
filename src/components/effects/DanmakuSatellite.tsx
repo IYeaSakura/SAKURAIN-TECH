@@ -203,18 +203,22 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         debugLog('Fetched danmakus count:', data.length);
         // 为旧数据补充轨道参数和timestamp
         const processedData = data.map((d: Partial<Danmaku>) => {
-          const orbitParams = d.orbitType 
-            ? generateOrbitParams(d.orbitType)
-            : generateOrbitParams('medium');
+          // 如果服务器返回的数据已有完整的轨道参数，直接使用，不再生成新的
+          const hasOrbitParams = d.angle != null && d.inclination != null && d.altitude != null && d.speed != null;
+          const orbitParams = hasOrbitParams 
+            ? {}  // 使用服务器返回的参数，不生成新的
+            : (d.orbitType ? generateOrbitParams(d.orbitType) : generateOrbitParams('medium'));
           return {
             ...orbitParams,
             timestamp: Date.now(), // 如果没有timestamp，使用当前时间
             ...d,
-            // 确保必须有这些字段
+            // 确保必须有这些字段（如果服务器没有返回，则生成默认值）
             id: d.id || `danmaku-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             text: d.text || '',
             userId: d.userId || 'unknown',
             color: d.color || '#60a5fa',
+            // 如果服务器没有返回 raan，生成一个随机的
+            raan: d.raan != null ? d.raan : Math.random() * Math.PI * 2,
           } as Danmaku;
         });
         setDanmakus(processedData);
