@@ -1,9 +1,9 @@
 import { useState, memo } from 'react';
-import { useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, ArrowRight } from 'lucide-react';
 import type { BlogPost } from '../types';
 import { formatDate, getReadingTime } from '../utils';
+import { deploymentConfig } from '@/config/deployment-config';
 
 interface BlogCardProps {
   post: BlogPost;
@@ -11,13 +11,16 @@ interface BlogCardProps {
 }
 
 export const BlogCard = memo(function BlogCard({ post, index }: BlogCardProps) {
-  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const color = 'var(--accent-primary)';
 
   return (
     <motion.div
-      onClick={() => navigate(`/blog/${post.slug}`)}
+      onClick={() => {
+        if (deploymentConfig.useWindowLocation) {
+          window.location.href = `/blog/${post.slug}`;
+        }
+      }}
       initial={{ opacity: 0, y: 30, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{

@@ -1,6 +1,6 @@
 "use client"
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Github, 
   Mail, 
@@ -12,21 +12,13 @@ import {
   ArrowRight,
   Cpu,
   Layers,
-  Sparkles,
-  Menu,
-  Moon,
-  Sun
+  Sparkles
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { GitHubHeatmap } from '@/components/GitHubHeatmap';
-import { useTheme } from '@/hooks';
-import { useNavigate } from 'react-router';
 
 export default function AboutPage() {
-  const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -94,14 +86,6 @@ export default function AboutPage() {
     },
   ];
 
-  const navItems = [
-    { name: '首页', path: '/' },
-    { name: '博客', path: '/blog' },
-    { name: '说说', path: '/notes' },
-    { name: '友链', path: '/friends' },
-    { name: '关于', path: '/about' },
-  ];
-
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
       <motion.div
@@ -111,88 +95,7 @@ export default function AboutPage() {
         }}
       />
 
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b" style={{ borderColor: 'var(--border-subtle)' }}>
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <motion.button
-              onClick={() => navigate('/')}
-              className="text-2xl font-bold bg-gradient-to-r from-[var(--accent-primary)] via-[var(--accent-secondary)] to-[var(--accent-tertiary)] bg-clip-text text-transparent"
-              whileHover={{ scale: 1.05 }}
-            >
-              SAKURAIN
-            </motion.button>
-
-            <div className="hidden md:flex items-center gap-8">
-              {navItems.map((item) => (
-                <motion.button
-                  key={item.path}
-                  onClick={() => navigate(item.path)}
-                  className={`text-sm font-medium transition-colors ${
-                    item.path === '/about' ? 'text-[var(--accent-primary)]' : 'hover:text-[var(--accent-primary)]'
-                  }`}
-                  style={{ color: item.path === '/about' ? undefined : 'var(--text-secondary)' }}
-                  whileHover={{ y: -2 }}
-                >
-                  {item.name}
-                </motion.button>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-4">
-              <motion.button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg hover:bg-[var(--border-subtle)] transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </motion.button>
-
-              <motion.button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-[var(--border-subtle)] transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Menu className="w-5 h-5" />
-              </motion.button>
-            </div>
-          </div>
-        </div>
-
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden border-t"
-              style={{ borderColor: 'var(--border-subtle)' }}
-            >
-              <div className="container mx-auto px-4 py-4 space-y-2">
-                {navItems.map((item) => (
-                  <motion.button
-                    key={item.path}
-                    onClick={() => {
-                      navigate(item.path);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`block w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      item.path === '/about' ? 'bg-[var(--accent-primary)]20 text-[var(--accent-primary)]' : 'hover:bg-[var(--border-subtle)]'
-                    }`}
-                    style={{ color: item.path === '/about' ? undefined : 'var(--text-secondary)' }}
-                    whileHover={{ x: 4 }}
-                  >
-                    {item.name}
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
-
-      <div className="relative z-10 container mx-auto px-4 py-20">
+      <div className="relative z-10 container mx-auto px-4 pt-24 lg:pt-28 py-20">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}

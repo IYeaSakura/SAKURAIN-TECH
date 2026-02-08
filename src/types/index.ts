@@ -248,6 +248,7 @@ export interface CasesConfig {
 export interface NavLink {
   label: string;
   href: string;
+  icon?: string;
 }
 
 export interface SocialLink {

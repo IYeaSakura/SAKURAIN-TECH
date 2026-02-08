@@ -1,5 +1,4 @@
 import { useState, useEffect, memo, useCallback } from 'react';
-import { useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Home, Ghost, Search, ArrowRight, Sparkles, Heart, RefreshCw } from 'lucide-react';
 import { 
@@ -7,6 +6,7 @@ import {
   TwinklingStars, FlowingGradient, LightBeam
 } from '@/components/effects';
 import { ThemeToggle } from '@/components/atoms';
+import { deploymentConfig } from '@/config/deployment-config';
 
 type Theme = 'light' | 'dark';
 
@@ -18,8 +18,6 @@ const NavigationHeader = memo(function NavigationHeader({
   theme: Theme;
   onThemeToggle: () => void;
 }) {
-  const navigate = useNavigate();
-  
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
@@ -36,7 +34,11 @@ const NavigationHeader = memo(function NavigationHeader({
         <div className="flex items-center justify-between h-16">
           {/* Back Button */}
           <motion.button
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              if (deploymentConfig.useWindowLocation) {
+                window.history.back();
+              }
+            }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300"
             style={{
               background: 'var(--bg-secondary)',
@@ -190,8 +192,6 @@ const SuggestionList = memo(function SuggestionList() {
     { icon: Heart, label: '友情链接', path: '/friends' },
   ];
   
-  const navigate = useNavigate();
-  
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -216,7 +216,7 @@ const SuggestionList = memo(function SuggestionList() {
               delay: 0.9 + index * 0.1,
               type: 'spring',
             }}
-            onClick={() => navigate(suggestion.path)}
+            onClick={() => window.location.href = suggestion.path}
             className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300"
             style={{
               background: 'var(--bg-card)',
@@ -245,7 +245,6 @@ const SuggestionList = memo(function SuggestionList() {
 // Main 404 Page Component
 export default function NotFoundPage() {
   const [theme, setTheme] = useState<Theme>('dark');
-  const navigate = useNavigate();
   const THEME_STORAGE_KEY = 'sakurain-theme';
   
   // Load theme from localStorage
@@ -280,8 +279,8 @@ export default function NotFoundPage() {
   };
   
   const handleGoHome = useCallback(() => {
-    navigate('/');
-  }, [navigate]);
+    window.location.href = '/';
+  }, []);
   
   const handleRefresh = useCallback(() => {
     window.location.reload();

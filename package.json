@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/generate-security-config.js && node scripts/check-friends-connectivity.js && node scripts/generate-blog-tags.js && node scripts/generate-blog-archive.js && node scripts/generate-notes-archive.js && tsc -b && vite build",
+    "build": "node scripts/generate-deployment-config.js && node scripts/generate-security-config.js && node scripts/check-friends-connectivity.js && node scripts/generate-blog-tags.js && node scripts/generate-blog-archive.js && node scripts/generate-notes-archive.js && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

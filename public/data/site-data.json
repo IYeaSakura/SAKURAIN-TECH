@@ -14,16 +14,12 @@
   "navigation": {
     "logo": "SAKURAIN",
     "links": [
-      { "label": "服务", "href": "#services" },
-      { "label": "技术栈", "href": "#tech-stack" },
-      { "label": "联系", "href": "#contact" }
-    ],
-    "cta": { "label": "开始项目", "href": "#contact" },
-    "extraLinks": [
-      { "label": "博客", "href": "/blog" },
-      { "label": "说说", "href": "/notes" },
-      { "label": "文档", "href": "/docs" },
-      { "label": "友链", "href": "/friends" }
+      { "label": "首页", "href": "/", "icon": "Home" },
+      { "label": "博客", "href": "/blog", "icon": "BookOpen" },
+      { "label": "说说", "href": "/notes", "icon": "MessageCircle" },
+      { "label": "友链", "href": "/friends", "icon": "Heart" },
+      { "label": "文档", "href": "/docs", "icon": "FileText" },
+      { "label": "关于", "href": "/about", "icon": "User" }
     ]
   },
   "hero": {
