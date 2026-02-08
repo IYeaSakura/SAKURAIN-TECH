@@ -13,6 +13,8 @@ import {
 import { Navigation } from '@/components/sections/Navigation';
 import { Hero } from '@/components/sections/Hero';
 import { WelcomeModal } from '@/components/WelcomeModal';
+import { GlobalContextMenu } from '@/components/CustomContextMenu';
+import { DebugProtection } from '@/components/DebugProtection';
 import { useTheme } from '@/hooks';
 import type { SiteData } from '@/types';
 import { preloadDocs, preloadFriends } from '@/main';
@@ -137,6 +139,12 @@ function App() {
 
       {/* 安全保护 */}
       <SecurityProtection />
+
+      {/* 调试保护 */}
+      <DebugProtection />
+
+      {/* 全局右键菜单 */}
+      <GlobalContextMenu />
 
       {/* 全局特效 */}
       <ScrollProgress />

@@ -53,7 +53,7 @@ export const MagneticCursor = memo(() => {
       {/* 主光标 */}
       <motion.div
         ref={cursorRef}
-        className="fixed top-0 left-0 pointer-events-none z-[9999] mix-blend-difference hidden lg:block"
+        className="fixed top-0 left-0 pointer-events-none z-[100000] mix-blend-difference hidden lg:block"
         style={{
           x: cursorX,
           y: cursorY,
@@ -122,7 +122,7 @@ const CursorTrail = memo(() => {
   if (prefersReducedMotion) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[9998] hidden lg:block">
+    <div className="fixed inset-0 pointer-events-none z-[99999] hidden lg:block">
       {points.map((point, i) => (
         <motion.div
           key={point.id}
@@ -460,7 +460,7 @@ export const VelocityCursor = memo(() => {
 
   return (
     <motion.div
-      className="fixed pointer-events-none z-[9997] hidden lg:block"
+      className="fixed pointer-events-none z-[99998] hidden lg:block"
       style={{
         left: position.x,
         top: position.y,

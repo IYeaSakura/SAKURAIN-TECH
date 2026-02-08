@@ -387,7 +387,6 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
       setSelectedDanmaku(null);
       setMarkdownContent(null);
       setIsModalOpen(false);
-      setIsRotationPaused(false);
       return;
     }
 
@@ -395,49 +394,6 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
     // 直接从弹幕数据中获取 markdown，无需额外请求
     setMarkdownContent(danmaku.markdown || null);
     setIsModalOpen(false);
-
-    // 暂停视角滚动
-    setIsRotationPaused(true);
-
-    // 计算弹幕当前位置并聚焦
-    if (viewer) {
-      const now = Date.now();
-      const elapsed = (now - danmaku.timestamp) / 1000;
-      const radius = EARTH_RADIUS + danmaku.altitude;
-      const currentAngle = danmaku.angle + (danmaku.speed * elapsed);
-
-      const xOrbital = Math.cos(currentAngle) * radius;
-      const yOrbital = Math.sin(currentAngle) * radius;
-
-      const inclination = danmaku.inclination;
-      const raan = danmaku.raan || 0;
-
-      const yAfterInclination = yOrbital * Math.cos(inclination);
-      const zAfterInclination = yOrbital * Math.sin(inclination);
-
-      const cosRaan = Math.cos(raan);
-      const sinRaan = Math.sin(raan);
-      const x = xOrbital * cosRaan - yAfterInclination * sinRaan;
-      const y = xOrbital * sinRaan + yAfterInclination * cosRaan;
-      const z = zAfterInclination;
-
-      const position = new Cesium.Cartesian3(x, y, z);
-
-      // 计算相机目标位置（在弹幕位置上方一定距离）
-      const distance = Math.max(danmaku.altitude * 3, 10000000);
-      const cameraPosition = Cesium.Cartesian3.multiplyByScalar(position, distance / Cesium.Cartesian3.magnitude(position), new Cesium.Cartesian3());
-
-      // 飞行到新位置
-      viewer.camera.flyTo({
-        destination: cameraPosition,
-        orientation: {
-          heading: 0,
-          pitch: Cesium.Math.toRadians(-45),
-          roll: 0,
-        },
-        duration: 1.5,
-      });
-    }
   }, [selectedDanmaku, viewer, setIsRotationPaused]);
 
   // 处理卫星点击事件
@@ -856,14 +812,12 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
                               setSelectedDanmaku(null);
                               setMarkdownContent(null);
                               setIsModalOpen(false);
-                              setIsRotationPaused(false);
                               return;
                             }
 
                             setSelectedDanmaku(danmaku);
                             setMarkdownContent(danmaku.markdown || null);
                             setIsModalOpen(false);
-                            setIsRotationPaused(true);
 
                             if (viewer) {
                               const now = Date.now();

@@ -1,8 +1,12 @@
 {
-  "security": {
-    "disableCopy": false,
-    "disableF12": false,
-    "disableDevTools": false,
-    "disableDebug": false
+  "debugProtection": {
+    "enabled": true,
+    "disableF12": true,
+    "disableDevToolsShortcuts": true,
+    "disableViewSource": true,
+    "disableContextMenu": true,
+    "disableDrag": true,
+    "disableSelect": false,
+    "detectDevTools": true
   }
 }

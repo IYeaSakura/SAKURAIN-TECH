@@ -1172,6 +1172,42 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
       {/* 发光滚动指示器 */}
       <GlowScrollIndicator onClick={() => scrollToSection('#services')} />
 
+      {/* 底部提示 - 固定在浏览器底部 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 1 }}
+        className="fixed bottom-4 left-0 right-0 flex justify-center z-50"
+      >
+        <motion.div
+          className="relative px"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+        >
+          {/* 边缘荧光效果 */}
+          <div
+            className="absolute -inset-[2px] rounded-lg pointer-events-none"
+            style={{
+              background: 'linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))',
+              backgroundSize: '300% 300%',
+              animation: 'gradient-shift 3s ease infinite',
+              filter: 'blur(4px)',
+              opacity: 0.3,
+            }}
+          />
+          <p
+            className="text-xs font-medium relative z-10"
+            style={{
+              color: 'var(--text-muted)',
+              letterSpacing: '0.02em',
+            }}
+          >
+            本页面仅作效果演示，不提供商业服务
+          </p>
+        </motion.div>
+      </motion.div>
+
       {/* 底部渐变 */}
       <div
         className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
