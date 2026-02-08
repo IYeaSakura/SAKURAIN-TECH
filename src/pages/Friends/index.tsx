@@ -564,7 +564,7 @@ const ApplySection = memo(function ApplySection({
 
   const handleApplyClick = useCallback(() => {
     const subject = '申请友链 - SAKURAIN';
-    const body = `此邮件用于申请添加友链。\n\n以下是站点信息：\n\n{\n  "id": "sakurain",\n  "name": "SAKURAIN TEAM",\n  "url": "https://sakurain.net",\n  "icon": "https://sakurain.net/image/logo.webp",\n  "description": "用代码构建世界",\n  "category": "blogs",\n  "featured": true\n},\n\n字段说明：\n- id: 非必填，站点唯一标识符，用于存储索引，建议使用短域名或拼音缩写，只支持字母和数字。\n- name: 必填，站点名称。\n- url: 必填，站点链接。\n- icon: 必填，站点图标链接。\n- description: 必填，站点描述。\n- category: 非必填，站点分类，默认值为 "blogs"，可选值为 "blogs"（个人博客）、"tech"（技术社区）、"design"（设计资源）、"tools"（开发工具）。\n- featured: 非必填，是否作为推荐站点置顶显示，默认值为 false。\n\n已添加到友链列表中，并替换为自己的站点信息。\n发送本邮件即代表承诺网站内容健康、合法、无恶意代码。\n\n---\n此邮件由 SAKURAIN 网站友链申请自动生成`;
+    const body = `此邮件用于申请添加友链。\n\n以下是站点信息：\n\n{\n  "id": "sakurain",\n  "name": "SAKURAIN TEAM",\n  "url": "https://sakurain.net",\n  "icon": "https://sakurain.net/image/logo.webp",\n  "description": "用代码构建世界",\n  "category": "blogs",\n  "featured": true\n},\n\n字段说明：\n- id: 非必填，站点唯一标识符，用于存储索引，建议使用短域名或拼音缩写，只支持字母和数字。\n- name: 必填，站点名称。\n- url: 必填，站点链接。\n- icon: 必填，站点图标链接。\n- description: 必填，站点描述。\n- category: 非必填，站点分类，默认值为 "blogs"，可选值为 "blogs"（个人博客）、"tech"（技术社区）、"design"（设计资源）、"tools"（开发工具）。\n- featured: 非必填，是否作为推荐站点置顶显示，默认值为 true。\n\n已添加到友链列表中，并替换为自己的站点信息。\n发送本邮件即代表承诺网站内容健康、合法、无恶意代码。\n\n---\n此邮件由 SAKURAIN 网站友链申请自动生成`;
 
     const mailtoLink = `mailto:${applyInfo.contact}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailtoLink;
