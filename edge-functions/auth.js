@@ -75,7 +75,7 @@ export async function verifyAuthHeaders(headers, env) {
   }
 
   const message = `${timestamp}:${nonce}`;
-  const isValid = await verifySignature(message, signature, env.API_SECRET_KEY);
+  const isValid = await verifySignature(message, signature, env.VITE_API_SECRET_KEY);
 
   if (!isValid) {
     return {
