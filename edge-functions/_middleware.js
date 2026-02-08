@@ -7,7 +7,7 @@ export default async function onRequest(context) {
   const pathname = url.pathname;
 
   // 静态资源直接放行（按优先级排序）
-  const isStaticAsset = 
+  const isStaticAsset =
     pathname.startsWith('/assets/') ||
     pathname.startsWith('/image/') ||
     pathname.startsWith('/data/') ||
@@ -36,7 +36,7 @@ export default async function onRequest(context) {
   // 使用 200 状态码返回 index.html 内容
   const indexRequest = new Request(new URL('/index.html', url.origin), request);
   const response = await fetch(indexRequest);
-  
+
   // 创建新响应，保持 200 状态码
   return new Response(response.body, {
     status: 200,
