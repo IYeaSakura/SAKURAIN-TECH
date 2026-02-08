@@ -3,18 +3,12 @@ import { motion } from 'framer-motion';
 import { Bell } from 'lucide-react';
 import {
   ScrollProgress,
-  MagneticCursor,
-  VelocityCursor,
-  TwinklingStars,
-  FlowingGradient,
-  LightBeam,
   SecurityProtection,
+  LightBeam,
 } from '@/components/effects';
 import { Navigation } from '@/components/sections/Navigation';
 import { Hero } from '@/components/sections/Hero';
 import { WelcomeModal } from '@/components/WelcomeModal';
-import { GlobalContextMenu } from '@/components/CustomContextMenu';
-import { DebugProtection } from '@/components/DebugProtection';
 import { useTheme } from '@/hooks';
 import type { SiteData } from '@/types';
 import { preloadDocs, preloadFriends } from '@/main';
@@ -140,33 +134,8 @@ function App() {
       {/* 安全保护 */}
       <SecurityProtection />
 
-      {/* 调试保护 */}
-      <DebugProtection />
-
-      {/* 全局右键菜单 */}
-      <GlobalContextMenu />
-
       {/* 全局特效 */}
       <ScrollProgress />
-      <MagneticCursor />
-      <VelocityCursor />
-
-      {/* 背景装饰 */}
-      <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block">
-        <TwinklingStars count={35} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
-      </div>
-
-      {/* 流动渐变背景 */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <FlowingGradient
-          colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
-          speed={15}
-          opacity={0.05}
-        />
-      </div>
-
-      {/* 顶部光剑 */}
-      <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
 
       <Navigation
         data={siteData.navigation}

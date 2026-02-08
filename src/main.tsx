@@ -3,6 +3,15 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router';
 import './index.css';
 import App from './App.tsx';
+import { GlobalContextMenu } from '@/components/CustomContextMenu';
+import { DebugProtection } from '@/components/DebugProtection';
+import {
+  MagneticCursor,
+  VelocityCursor,
+  TwinklingStars,
+  FlowingGradient,
+  LightBeam,
+} from '@/components/effects';
 
 // 处理静态部署硬跳转重定向
 function RedirectHandler() {
@@ -67,63 +76,92 @@ const PageFallback = () => (
   </div>
 );
 
+function GlobalLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <GlobalContextMenu />
+      <DebugProtection />
+      <MagneticCursor />
+      <VelocityCursor />
+
+      <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block">
+        <TwinklingStars count={35} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
+      </div>
+
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <FlowingGradient
+          colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
+          speed={15}
+          opacity={0.05}
+        />
+      </div>
+
+      <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
+
+      {children}
+    </>
+  );
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <RedirectHandler />
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/docs" element={
-          <Suspense fallback={<PageFallback />}>
-            <DocsPage />
-          </Suspense>
-        } />
-        <Route path="/docs/:categoryId" element={
-          <Suspense fallback={<PageFallback />}>
-            <DocsPage />
-          </Suspense>
-        } />
-        <Route path="/docs/:categoryId/:itemId" element={
-          <Suspense fallback={<PageFallback />}>
-            <DocsPage />
-          </Suspense>
-        } />
-        <Route path="/docs/:categoryId/:itemId/:chapterId" element={
-          <Suspense fallback={<PageFallback />}>
-            <DocsPage />
-          </Suspense>
-        } />
-        <Route path="/friends" element={
-          <Suspense fallback={<PageFallback />}>
-            <FriendsPage />
-          </Suspense>
-        } />
-        <Route path="/blog" element={
-          <Suspense fallback={<PageFallback />}>
-            <BlogPage />
-          </Suspense>
-        } />
-        <Route path="/blog/:slug" element={
-          <Suspense fallback={<PageFallback />}>
-            <BlogPostPage />
-          </Suspense>
-        } />
-        <Route path="/notes" element={
-          <Suspense fallback={<PageFallback />}>
-            <NotesPage />
-          </Suspense>
-        } />
-        <Route path="/about" element={
-          <Suspense fallback={<PageFallback />}>
-            <AboutPage />
-          </Suspense>
-        } />
-        <Route path="*" element={
-          <Suspense fallback={<PageFallback />}>
-            <NotFoundPage />
-          </Suspense>
-        } />
-      </Routes>
+      <GlobalLayout>
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="/docs" element={
+            <Suspense fallback={<PageFallback />}>
+              <DocsPage />
+            </Suspense>
+          } />
+          <Route path="/docs/:categoryId" element={
+            <Suspense fallback={<PageFallback />}>
+              <DocsPage />
+            </Suspense>
+          } />
+          <Route path="/docs/:categoryId/:itemId" element={
+            <Suspense fallback={<PageFallback />}>
+              <DocsPage />
+            </Suspense>
+          } />
+          <Route path="/docs/:categoryId/:itemId/:chapterId" element={
+            <Suspense fallback={<PageFallback />}>
+              <DocsPage />
+            </Suspense>
+          } />
+          <Route path="/friends" element={
+            <Suspense fallback={<PageFallback />}>
+              <FriendsPage />
+            </Suspense>
+          } />
+          <Route path="/blog" element={
+            <Suspense fallback={<PageFallback />}>
+              <BlogPage />
+            </Suspense>
+          } />
+          <Route path="/blog/:slug" element={
+            <Suspense fallback={<PageFallback />}>
+              <BlogPostPage />
+            </Suspense>
+          } />
+          <Route path="/notes" element={
+            <Suspense fallback={<PageFallback />}>
+              <NotesPage />
+            </Suspense>
+          } />
+          <Route path="/about" element={
+            <Suspense fallback={<PageFallback />}>
+              <AboutPage />
+            </Suspense>
+          } />
+          <Route path="*" element={
+            <Suspense fallback={<PageFallback />}>
+              <NotFoundPage />
+            </Suspense>
+          } />
+        </Routes>
+      </GlobalLayout>
     </BrowserRouter>
   </StrictMode>,
 );
