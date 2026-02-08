@@ -3,10 +3,11 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useDocument } from '../hooks';
 import { UnifiedToc } from './UnifiedToc';
 import { ThemeToggleButton } from './ThemeToggleButton';
-// import { markdownComponents } from './MarkdownRenderer';
+import { DocSearch } from './DocSearch';
+import { CodeBlock } from './CodeBlock';
+import { PlantUML } from './PlantUML';
 import type { Chapter, DocSeries, DocCategory, TocItem } from '../types';
 
 // 错误边界组件
@@ -46,8 +47,7 @@ class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNod
   }
 }
 
-// Import DocSearch directly
-import { DocSearch } from './DocSearch';
+
 
 interface ChapterReaderProps {
   chapter: Chapter;
@@ -84,18 +84,124 @@ function buildTocFromHeadings(headings: Array<{ level: number; text: string; id:
   return toc;
 }
 
+// 简单的 markdown 组件
+const markdownComponents = {
+  h1: ({ children }: any) => <h1 className="text-3xl font-bold mt-12 mb-6 scroll-mt-28" style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }} data-heading="true">{children}</h1>,
+  h2: ({ children }: any) => <h2 className="text-2xl font-bold mt-10 mb-4 scroll-mt-28" style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }} data-heading="true">{children}</h2>,
+  h3: ({ children }: any) => <h3 className="text-xl font-semibold mt-8 mb-3 scroll-mt-28" style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }} data-heading="true">{children}</h3>,
+  h4: ({ children }: any) => <h4 className="text-lg font-semibold mt-6 mb-3 scroll-mt-28" style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }} data-heading="true">{children}</h4>,
+  p: ({ children }: any) => <p className="my-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{children}</p>,
+  ul: ({ children }: any) => <ul className="my-4 ml-6 list-disc" style={{ color: 'var(--text-secondary)' }}>{children}</ul>,
+  ol: ({ children }: any) => <ol className="my-4 ml-6 list-decimal" style={{ color: 'var(--text-secondary)' }}>{children}</ol>,
+  li: ({ children }: any) => <li className="my-1">{children}</li>,
+  a: ({ href, children }: any) => <a href={href} className="underline hover:no-underline transition-colors" style={{ color: 'var(--accent-primary)' }} target="_blank" rel="noopener noreferrer">{children}</a>,
+  code: ({ inline, className, children }: any) => {
+    const match = /language-(\w+)/.exec(className || '');
+    const language = match ? match[1] : '';
+    const codeString = String(children).replace(/\n$/, '');
+    if (language === 'plantuml' || codeString.includes('@startuml')) {
+      return <PlantUML code={codeString} />;
+    }
+    if (inline) return <code className="px-1.5 py-0.5 rounded text-sm font-mono" style={{ background: 'var(--bg-secondary)', color: 'var(--accent-primary)', border: '1px solid var(--border-color)' }}>{children}</code>;
+    if (language) return <CodeBlock language={language} value={codeString} />;
+    return <CodeBlock language="text" value={codeString} />;
+  },
+  table: ({ children }: any) => <div className="overflow-x-auto my-6 rounded-lg border" style={{ borderColor: 'var(--border-color)' }}><table className="min-w-full border-collapse" style={{ borderColor: 'var(--border-color)' }}>{children}</table></div>,
+  thead: ({ children }: any) => <thead style={{ background: 'var(--bg-secondary)' }}>{children}</thead>,
+  th: ({ children }: any) => <th className="border px-4 py-3 text-left font-semibold" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>{children}</th>,
+  td: ({ children }: any) => <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>{children}</td>,
+  blockquote: ({ children }: any) => <blockquote className="border-l-4 pl-4 my-6 py-3 pr-4 rounded-r" style={{ borderColor: 'var(--accent-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{children}</blockquote>,
+  hr: () => <hr className="my-8" style={{ borderColor: 'var(--border-color)' }} />,
+};
+
+// 解析标题
+function parseHeadings(content: string): Array<{ level: number; text: string; id: string }> {
+  const headings: Array<{ level: number; text: string; id: string }> = [];
+  const lines = content.split('\n');
+  for (const line of lines) {
+    const match = line.match(/^(#{2,4})\s+(.+)$/);
+    if (match) {
+      const text = match[2].trim();
+      const id = text.toLowerCase().replace(/[\s_]+/g, '-').replace(/[^\w\u4e00-\u9fa5-]/g, '').replace(/^-+|-+$/g, '').substring(0, 50) || 'heading';
+      headings.push({ level: match[1].length, text, id });
+    }
+  }
+  return headings;
+}
+
 export function ChapterReader({ chapter, series, category, onBack, onSelectChapter }: ChapterReaderProps) {
   const [showToc, setShowToc] = useState(true);
   const [activeHeading, setActiveHeading] = useState<string>(chapter.id);
   const mainRef = useRef<HTMLElement>(null);
-  const { content, loading, error, toc, flatHeadings, searchContent, scrollToLine, scrollToHeadingById } = useDocument(chapter.path);
+  
+  // 直接使用 fetch 加载内容，类似博客
+  const [content, setContent] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [flatHeadings, setFlatHeadings] = useState<Array<{ level: number; text: string; id: string }>>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    
+    fetch(chapter.path)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.text();
+      })
+      .then(text => {
+        if (!cancelled) {
+          setContent(text);
+          setFlatHeadings(parseHeadings(text));
+          setLoading(false);
+        }
+      })
+      .catch(err => {
+        if (!cancelled) {
+          setError(err.message);
+          setLoading(false);
+        }
+      });
+    
+    return () => { cancelled = true; };
+  }, [chapter.path]);
+  
+  // 简单的搜索功能
+  const searchContent = (query: string) => {
+    if (!query.trim() || !content) return [];
+    const lines = content.split('\n');
+    const results: any[] = [];
+    const lowerQuery = query.toLowerCase();
+    
+    for (let i = 0; i < lines.length && results.length < 20; i++) {
+      if (lines[i].toLowerCase().includes(lowerQuery)) {
+        results.push({
+          type: 'content',
+          text: lines[i].trim().substring(0, 80),
+          lineIndex: i
+        });
+      }
+    }
+    return results;
+  };
+  
+  // 滚动到指定行
+  const scrollToLine = (lineIndex: number) => {
+    const container = mainRef.current;
+    if (!container) return;
+    const paragraphs = container.querySelectorAll('p, li, h1, h2, h3, h4');
+    if (paragraphs[lineIndex]) {
+      paragraphs[lineIndex].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const currentIndex = series.chapters.findIndex((c) => c.id === chapter.id);
   const prevChapter = currentIndex > 0 ? series.chapters[currentIndex - 1] : null;
   const nextChapter = currentIndex < series.chapters.length - 1 ? series.chapters[currentIndex + 1] : null;
 
   // 使用 flatHeadings 确保有目录显示
-  const displayToc = toc.length > 0 ? toc : buildTocFromHeadings(flatHeadings);
+  const displayToc = buildTocFromHeadings(flatHeadings);
 
   // 监听标题可见性
   useEffect(() => {
@@ -133,12 +239,21 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
     setActiveHeading(id);
   };
 
+  // 滚动到指定 heading ID
+  const scrollToHeadingById = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setActiveHeading(id);
+    }
+  };
+
   // 处理搜索结果跳转 - 精确到行
   const handleSearchSelect = (result: { type: string; text: string; id?: string; lineIndex?: number }) => {
     if (result.lineIndex !== undefined && result.lineIndex >= 0) {
-      scrollToLine(result.lineIndex, 'main');
+      scrollToLine(result.lineIndex);
     } else if (result.id) {
-      scrollToHeading(result.id);
+      scrollToHeadingById(result.id);
     }
   };
 
@@ -188,9 +303,9 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
               onSelectChapter={(ch) => onSelectChapter(category, series, ch)}
               onSelectHeading={(id, lineIndex) => {
                 if (lineIndex !== undefined && lineIndex >= 0) {
-                  scrollToLine(lineIndex, 'main');
+                  scrollToLine(lineIndex);
                 } else {
-                  scrollToHeadingById(id, 'main');
+                  scrollToHeadingById(id);
                 }
               }}
             />
@@ -269,8 +384,8 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
                 <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg text-white" style={{ background: 'var(--accent-primary)' }}>重试</button>
               </div>
             ) : (
-              <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="prose prose-invert max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                   {content}
                 </ReactMarkdown>
               </motion.article>
