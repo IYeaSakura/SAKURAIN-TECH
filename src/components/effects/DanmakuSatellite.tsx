@@ -51,7 +51,7 @@ interface Danmaku {
 
 interface DanmakuSatelliteProps {
   viewer: Cesium.Viewer | null;
-  isDark: boolean;
+  setIsRotationPaused: (paused: boolean) => void;
 }
 
 class RateLimiter {
@@ -119,7 +119,7 @@ const formatDanmakuTime = (timestamp: number): string => {
   }
 };
 
-export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
+export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelliteProps) {
   const [danmakus, setDanmakus] = useState<Danmaku[]>([]);
   const [inputText, setInputText] = useState('');
   const [isInputVisible, setIsInputVisible] = useState(false);
@@ -162,15 +162,12 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   const isMountedRef = useRef(false);
   const hasLoadedDanmakusRef = useRef(false); // 标记是否已加载过弹幕数据
 
-  const colors = isDark ? [
-    '#60a5fa', '#fbbf24', '#4ec9b0', '#f472b6', '#a78bfa', '#34d399',
-    '#f87171', '#fb923c', '#a3e635', '#22d3ee', '#e879f9', '#818cf8',
-  ] : [
-    '#0E639C', '#6A9955', '#569CD6', '#CE9178', '#4EC9B0', '#D4A017',
-    '#dc2626', '#ea580c', '#65a30d', '#0891b2', '#c026d3', '#4f46e5',
-  ];
-
-  const getRandomColor = () => colors[Math.floor(Math.random() * colors.length)];
+  const getRandomColor = () => {
+    const hue = Math.random() * 360;
+    const saturation = 70 + Math.random() * 30;
+    const lightness = 50 + Math.random() * 30;
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  };
 
   // 根据开普勒定律计算角速度：ω ∝ r^(-3/2)
   // 返回每秒转过的角度（弧度）
@@ -390,6 +387,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       setSelectedDanmaku(null);
       setMarkdownContent(null);
       setIsModalOpen(false);
+      setIsRotationPaused(false);
       return;
     }
 
@@ -397,7 +395,50 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     // 直接从弹幕数据中获取 markdown，无需额外请求
     setMarkdownContent(danmaku.markdown || null);
     setIsModalOpen(false);
-  }, [selectedDanmaku]);
+
+    // 暂停视角滚动
+    setIsRotationPaused(true);
+
+    // 计算弹幕当前位置并聚焦
+    if (viewer) {
+      const now = Date.now();
+      const elapsed = (now - danmaku.timestamp) / 1000;
+      const radius = EARTH_RADIUS + danmaku.altitude;
+      const currentAngle = danmaku.angle + (danmaku.speed * elapsed);
+
+      const xOrbital = Math.cos(currentAngle) * radius;
+      const yOrbital = Math.sin(currentAngle) * radius;
+
+      const inclination = danmaku.inclination;
+      const raan = danmaku.raan || 0;
+
+      const yAfterInclination = yOrbital * Math.cos(inclination);
+      const zAfterInclination = yOrbital * Math.sin(inclination);
+
+      const cosRaan = Math.cos(raan);
+      const sinRaan = Math.sin(raan);
+      const x = xOrbital * cosRaan - yAfterInclination * sinRaan;
+      const y = xOrbital * sinRaan + yAfterInclination * cosRaan;
+      const z = zAfterInclination;
+
+      const position = new Cesium.Cartesian3(x, y, z);
+
+      // 计算相机目标位置（在弹幕位置上方一定距离）
+      const distance = Math.max(danmaku.altitude * 3, 10000000);
+      const cameraPosition = Cesium.Cartesian3.multiplyByScalar(position, distance / Cesium.Cartesian3.magnitude(position), new Cesium.Cartesian3());
+
+      // 飞行到新位置
+      viewer.camera.flyTo({
+        destination: cameraPosition,
+        orientation: {
+          heading: 0,
+          pitch: Cesium.Math.toRadians(-45),
+          roll: 0,
+        },
+        duration: 1.5,
+      });
+    }
+  }, [selectedDanmaku, viewer, setIsRotationPaused]);
 
   // 处理卫星点击事件
   useEffect(() => {
@@ -811,9 +852,54 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                       >
                         <button
                           onClick={() => {
+                            if (selectedDanmaku?.id === danmaku.id) {
+                              setSelectedDanmaku(null);
+                              setMarkdownContent(null);
+                              setIsModalOpen(false);
+                              setIsRotationPaused(false);
+                              return;
+                            }
+
                             setSelectedDanmaku(danmaku);
                             setMarkdownContent(danmaku.markdown || null);
                             setIsModalOpen(false);
+                            setIsRotationPaused(true);
+
+                            if (viewer) {
+                              const now = Date.now();
+                              const elapsed = (now - danmaku.timestamp) / 1000;
+                              const radius = EARTH_RADIUS + danmaku.altitude;
+                              const currentAngle = danmaku.angle + (danmaku.speed * elapsed);
+
+                              const xOrbital = Math.cos(currentAngle) * radius;
+                              const yOrbital = Math.sin(currentAngle) * radius;
+
+                              const inclination = danmaku.inclination;
+                              const raan = danmaku.raan || 0;
+
+                              const yAfterInclination = yOrbital * Math.cos(inclination);
+                              const zAfterInclination = yOrbital * Math.sin(inclination);
+
+                              const cosRaan = Math.cos(raan);
+                              const sinRaan = Math.sin(raan);
+                              const x = xOrbital * cosRaan - yAfterInclination * sinRaan;
+                              const y = xOrbital * sinRaan + yAfterInclination * cosRaan;
+                              const z = zAfterInclination;
+
+                              const position = new Cesium.Cartesian3(x, y, z);
+                              const distance = Math.max(danmaku.altitude * 3, 10000000);
+                              const cameraPosition = Cesium.Cartesian3.multiplyByScalar(position, distance / Cesium.Cartesian3.magnitude(position), new Cesium.Cartesian3());
+
+                              viewer.camera.flyTo({
+                                destination: cameraPosition,
+                                orientation: {
+                                  heading: 0,
+                                  pitch: Cesium.Math.toRadians(-45),
+                                  roll: 0,
+                                },
+                                duration: 1.5,
+                              });
+                            }
                           }}
                           className="flex items-center gap-2 flex-1 min-w-0"
                         >
@@ -874,7 +960,10 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                 </button>
                 {/* 关闭按钮 */}
                 <button
-                  onClick={() => setSelectedDanmaku(null)}
+                  onClick={() => {
+                    setSelectedDanmaku(null);
+                    setIsRotationPaused(false);
+                  }}
                   className="p-1 rounded hover:bg-white/10 transition-colors"
                 >
                   <X className="w-3 h-3 text-gray-400" />

@@ -30,17 +30,28 @@ export const BlogArchiveHeatmap = memo(function BlogArchiveHeatmap({ data, onSel
       return;
     }
 
+    const now = new Date();
+    const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
     const yearSet = new Set<number>();
     const dateCount: Record<string, number> = {};
 
     data.months.forEach(yearMonth => {
-      const [year] = yearMonth.split('-').map(Number);
-      yearSet.add(year);
+      const [year, month] = yearMonth.split('-').map(Number);
+      const monthDate = new Date(year, month - 1, 1);
+      
+      if (monthDate >= oneYearAgo && monthDate <= now) {
+        yearSet.add(year);
+      }
     });
 
     if (data.postsByDate) {
       Object.entries(data.postsByDate).forEach(([date, count]) => {
-        dateCount[date] = count;
+        const [year, month, day] = date.split('-').map(Number);
+        const dateObj = new Date(year, month - 1, day);
+        
+        if (dateObj >= oneYearAgo && dateObj <= now) {
+          dateCount[date] = count;
+        }
       });
     }
 
