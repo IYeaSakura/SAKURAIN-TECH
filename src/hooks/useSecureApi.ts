@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { get, post, ApiError } from '@/lib/api-client';
 
 interface HealthCheckData {
@@ -23,7 +23,8 @@ export function useHealthCheck() {
       setError(null);
 
       const response = await get<HealthCheckData>('/api/health', {
-);
+        useAuth: false,
+      });
 
       setData(response.data);
     } catch (err) {
