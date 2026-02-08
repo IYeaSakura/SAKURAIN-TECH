@@ -778,7 +778,7 @@ export default function AboutPage() {
                 <Gauge className="w-8 h-8 text-emerald-400 mb-3" />
                 <h4 className="font-bold mb-2">性能优化</h4>
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  虚拟滚动、图片懒加载、组件懒加载、CDN 加速，首屏加载时间 &lt; 1.5s。
+                  虚拟滚动、图片懒加载、组件懒加载、CDN 加速，首屏加载时间 &lt; 5s。
                 </p>
               </motion.div>
             </GlassCard>

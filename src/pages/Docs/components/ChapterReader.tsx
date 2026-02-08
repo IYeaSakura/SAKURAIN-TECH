@@ -1,10 +1,47 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense, Component, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { useDocument } from '../hooks';
 import { UnifiedToc } from './UnifiedToc';
 import { ThemeToggleButton } from './ThemeToggleButton';
 import type { Chapter, DocSeries, DocCategory, TocItem } from '../types';
+
+// 错误边界组件
+class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean; error?: Error }> {
+  constructor(props: { children: ReactNode; fallback?: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  
+  componentDidCatch(error: Error, info: any) {
+    console.error('ChapterReader Error:', error, info);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || (
+        <div className="flex flex-col items-center justify-center min-h-screen p-4" style={{ background: 'var(--bg-primary)' }}>
+          <p className="mb-4 text-lg" style={{ color: '#ef4444' }}>文档渲染出错</p>
+          <p className="mb-4 text-sm text-center max-w-md" style={{ color: 'var(--text-secondary)' }}>
+            {this.state.error?.message || '未知错误'}
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 rounded-lg text-white"
+            style={{ background: 'var(--accent-primary)' }}
+          >
+            刷新页面
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Lazy load heavy components to reduce initial bundle size
 const DocSearch = lazy(() => import('./DocSearch').then(m => ({ default: m.DocSearch })));
@@ -116,6 +153,7 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
   };
 
   return (
+    <ErrorBoundary>
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
       {/* TOC Sidebar - 固定高度，内部可滚动 */}
       {showToc && (
@@ -297,5 +335,6 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
         </div>
       )}
     </div>
+    </ErrorBoundary>
   );
 }
