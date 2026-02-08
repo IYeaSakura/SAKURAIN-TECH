@@ -214,32 +214,54 @@ export function DocDetailView({ doc, category, onBack }: DocDetailViewProps) {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.3 }}
-                  className="mt-12 rounded-2xl p-6"
+                  className="mt-12 rounded-xl p-5 flex items-center gap-4"
                   style={{
-                    background: 'var(--bg-secondary)',
-                    border: '2px solid var(--border-subtle)',
+                    background: 'linear-gradient(135deg, var(--bg-secondary), var(--bg-primary))',
+                    border: '1px solid var(--border-subtle)',
                   }}
                 >
-                  <div className="text-center">
-                    <div className="mb-3" style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                      本文档采用
-                    </div>
-                    <a
-                      href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.zh"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block px-4 py-2.5 rounded-lg font-bold text-white transition-all duration-200 hover:scale-105"
-                      style={{
-                        background: 'var(--accent-primary)',
-                        boxShadow: '0 4px 20px var(--accent-glow)',
-                      }}
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: 'var(--accent-primary)',
+                      boxShadow: '0 2px 10px var(--accent-glow)',
+                    }}
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-white"
                     >
-                      CC BY-NC-ND 4.0
-                    </a>
-                    <div className="mt-3 space-y-1" style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                      <div>署名-非商业性使用-禁止演绎 4.0 国际</div>
-                      <div>您可以自由分享本作品，但需注明作者和出处</div>
-                      <div>不得用于商业目的，且不得修改或演绎本作品</div>
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M12 6v6l4 2" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                        本作品采用
+                      </span>
+                      <a
+                        href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.zh"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-bold text-sm transition-all duration-200 hover:underline"
+                        style={{ color: 'var(--accent-primary)' }}
+                      >
+                        CC BY-NC-ND 4.0
+                      </a>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                        许可协议
+                      </span>
+                    </div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', lineHeight: '1.4' }}>
+                      署名-非商业性使用-禁止演绎
                     </div>
                   </div>
                 </motion.div>

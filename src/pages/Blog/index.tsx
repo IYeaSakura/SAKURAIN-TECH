@@ -89,7 +89,7 @@ export default function BlogIndex() {
         post.description.toLowerCase().includes(query) ||
         post.tags.some(tag => tag.toLowerCase().includes(query));
 
-      return matchesQuery && !post.featured;
+      return matchesQuery;
     });
   }, [regularPosts, searchQuery]);
 
