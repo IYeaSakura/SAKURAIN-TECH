@@ -939,6 +939,7 @@ const GlobeShowcase = memo(() => {
           onDoubleClick={isFullscreen ? undefined : enterFullscreen}
         >
           <DemoContent
+            key={currentDemo}
             demo={{
               type: currentDemo,
               isFullscreen,
