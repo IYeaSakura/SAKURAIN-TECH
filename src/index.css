@@ -204,3 +204,27 @@ body {
   transform: translate3d(0, 0, 0);
   will-change: transform;
 }
+
+/* ============================================
+   iOS SAFE AREA SUPPORT
+   ============================================ */
+
+/* iOS 安全区域内边距支持 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .h-safe-area-inset-bottom {
+    height: env(safe-area-inset-bottom);
+  }
+  
+  .pb-safe-area {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 回退值 */
+.h-safe-area-inset-bottom {
+  height: 0px;
+}
+
+.pb-safe-area {
+  padding-bottom: 0px;
+}

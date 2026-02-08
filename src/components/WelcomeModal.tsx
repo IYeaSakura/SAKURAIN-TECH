@@ -281,7 +281,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                     duration: 0.3,
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="fixed z-50 w-[700px] h-[500px] rounded-2xl border shadow-2xl outline-none overflow-hidden"
+                  className="fixed z-50 w-[calc(100vw-2rem)] h-[calc(100vh-4rem)] sm:w-[700px] sm:h-[500px] rounded-2xl border shadow-2xl outline-none overflow-hidden"
                   style={{
                     backgroundColor: 'var(--bg-secondary)',
                     borderColor: 'rgba(var(--accent-primary-rgb), 0.3)',
@@ -291,12 +291,12 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                 >
                   <div onClick={(e) => e.stopPropagation()} className="flex flex-col h-full">
                     <div className="flex flex-col sm:flex-row h-full min-h-[400px]">
-                      <div className="flex flex-row sm:flex-col gap-2 p-3 sm:w-20 sm:border-r border-b sm:border-b-0 border-[var(--accent-primary)]/20">
+                      <div className="flex flex-row sm:flex-col gap-2 p-3 sm:w-20 sm:border-r border-b sm:border-b-0 border-[var(--accent-primary)]/20 overflow-x-auto sm:overflow-visible">
                         {tabs.map((tab) => (
                           <motion.button
                             key={tab.id}
                             onClick={() => handleTabClick(tab.id)}
-                            className="flex flex-row sm:flex-col items-center justify-center gap-2 px-3 py-2 sm:px-4 sm:py-3 rounded-xl transition-all duration-200"
+                            className="flex flex-row sm:flex-col items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 sm:py-3 rounded-xl transition-all duration-200 flex-shrink-0"
                             style={{
                               backgroundColor: activeTab === tab.id ? 'var(--accent-primary)/20' : 'transparent',
                               border: activeTab === tab.id ? '1px solid var(--accent-primary)' : '1px solid transparent',
@@ -306,15 +306,15 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                             whileTap={{ scale: 0.95 }}
                           >
                             {tab.icon}
-                            <span className="text-xs font-medium">{tab.label}</span>
+                            <span className="text-[10px] sm:text-xs font-medium">{tab.label}</span>
                           </motion.button>
                         ))}
                       </div>
 
-                      <div className="flex-1 p-6 sm:p-8 overflow-y-auto">
-                        <div className="flex items-start justify-between mb-6">
+                      <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                        <div className="flex items-start justify-between mb-4 sm:mb-6">
                           <h2
-                            className="text-2xl font-bold font-pixel"
+                            className="text-xl sm:text-2xl font-bold font-pixel"
                             style={{ color: 'var(--text-primary)' }}
                           >
                             {tabs.find(t => t.id === activeTab)?.label}
@@ -327,7 +327,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                               color: 'var(--text-secondary)',
                             }}
                           >
-                            <X className="w-5 h-5" />
+                            <X className="w-4 h-4 sm:w-5 sm:h-5" />
                           </button>
                         </div>
 
@@ -335,7 +335,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                           {activeTab === 'welcome' && (
                             <>
                               <div
-                                className="text-base leading-relaxed"
+                                className="text-sm sm:text-base leading-relaxed"
                                 style={{ color: 'var(--text-secondary)' }}
                               >
                                 {config.content.split('\n').map((line, index) => (
@@ -347,16 +347,16 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                               </div>
 
                               {config.updates && (
-                                <div className="pt-4 border-t border-[var(--accent-primary)]/20">
+                                <div className="pt-3 sm:pt-4 border-t border-[var(--accent-primary)]/20">
                                   <h3
-                                    className="text-sm font-semibold mb-3"
+                                    className="text-xs sm:text-sm font-semibold mb-2 sm:mb-3"
                                     style={{ color: 'var(--accent-primary)' }}
                                   >
                                     最新更新
                                   </h3>
-                                  <ul className="space-y-2">
+                                  <ul className="space-y-1.5 sm:space-y-2">
                                     {config.updates.split('\n').map((line, index) => (
-                                      <li key={index} className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                      <li key={index} className="text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                                         {line.trim().startsWith('- ') ? line.trim().substring(2) : line.trim()}
                                       </li>
                                     ))}
@@ -364,8 +364,8 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                 </div>
                               )}
 
-                              <div className="pt-4 mt-4 border-t border-[var(--accent-primary)]/20">
-                                <div className="flex flex-wrap items-center justify-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+                              <div className="pt-3 sm:pt-4 mt-3 sm:mt-4 border-t border-[var(--accent-primary)]/20">
+                                <div className="flex flex-wrap items-center justify-center gap-2 text-[10px] sm:text-xs" style={{ color: 'var(--text-muted)' }}>
                                   <a
                                     href="https://beian.miit.gov.cn/"
                                     target="_blank"
@@ -384,7 +384,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                     <img
                                       src="/image/ghs.png"
                                       alt="公安备案图标"
-                                      className="w-3 h-3"
+                                      className="w-2.5 h-2.5 sm:w-3 sm:h-3"
                                     />
                                     皖公网安备34130202000598号
                                   </a>
@@ -394,25 +394,25 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                           )}
 
                           {activeTab === 'blog' && (
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                               <p
-                                className="text-base leading-relaxed"
+                                className="text-sm sm:text-base leading-relaxed"
                                 style={{ color: 'var(--text-secondary)' }}
                               >
                                 博客功能刚刚启动，我们会慢慢添加更多技术文章。这里记录了我们在技术探索过程中的心得体会、学习笔记和项目经验。
                               </p>
 
-                              <div className="p-4 rounded-xl" style={{
+                              <div className="p-3 sm:p-4 rounded-xl" style={{
                                 backgroundColor: 'var(--bg-card)',
                                 border: '1px solid var(--accent-primary)/30',
                               }}>
                                 <h3
-                                  className="text-sm font-semibold mb-2"
+                                  className="text-xs sm:text-sm font-semibold mb-2"
                                   style={{ color: 'var(--accent-primary)' }}
                                 >
                                   你可以在这里找到：
                                 </h3>
-                                <ul className="space-y-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                <ul className="space-y-1 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                                   <li>• 技术教程和学习笔记</li>
                                   <li>• 项目开发经验分享</li>
                                   <li>• 工具使用心得</li>
@@ -420,10 +420,10 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                 </ul>
                               </div>
 
-                              <div className="flex gap-2">
+                              <div className="flex flex-col sm:flex-row gap-2">
                                 <motion.button
                                   onClick={handleBlogClick}
-                                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300"
+                                  className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium transition-all duration-300"
                                   style={{
                                     backgroundColor: 'var(--accent-primary)',
                                     color: 'white',
@@ -431,12 +431,12 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.98 }}
                                 >
-                                  <BookOpen className="w-5 h-5" />
+                                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
                                   <span>访问博客</span>
                                 </motion.button>
                                 <motion.button
                                   onClick={() => { setIsOpen(false); window.location.href = '/docs'; }}
-                                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300"
+                                  className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium transition-all duration-300"
                                   style={{
                                     backgroundColor: 'var(--bg-card)',
                                     border: '1px solid var(--accent-primary)',
@@ -445,7 +445,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.98 }}
                                 >
-                                  <FileText className="w-5 h-5" />
+                                  <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                                   <span>文档页</span>
                                 </motion.button>
                               </div>
@@ -453,25 +453,25 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                           )}
 
                           {activeTab === 'earth' && (
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                               <p
-                                className="text-base leading-relaxed"
+                                className="text-sm sm:text-base leading-relaxed"
                                 style={{ color: 'var(--text-secondary)' }}
                               >
                                 地球Online是本人开发的一个可交互的3D地球可视化项目，中国区域部分支持放大查看卫星图，支持发送弹幕进入卫星轨道并附带Markdown文本哦~
                               </p>
 
-                              <div className="p-4 rounded-xl" style={{
+                              <div className="p-3 sm:p-4 rounded-xl" style={{
                                 backgroundColor: 'var(--bg-card)',
                                 border: '1px solid var(--accent-primary)/30',
                               }}>
                                 <h3
-                                  className="text-sm font-semibold mb-2"
+                                  className="text-xs sm:text-sm font-semibold mb-2"
                                   style={{ color: 'var(--accent-primary)' }}
                                 >
                                   功能特点：
                                 </h3>
-                                <ul className="space-y-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                <ul className="space-y-1 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                                   <li>• 3D地球可视化</li>
                                   <li>• 实时弹幕卫星系统</li>
                                   <li>• 交互式探索体验</li>
@@ -479,17 +479,17 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                 </ul>
                               </div>
 
-                              <div className="flex items-center gap-2 px-4 py-3 rounded-lg" style={{
+                              <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg" style={{
                                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
                                 border: '1px solid rgba(239, 68, 68, 0.3)'
                               }}>
-                                <span className="w-2 h-2 rounded-full" style={{ background: '#ef4444' }} />
-                                <span className="text-sm" style={{ color: '#fca5a5' }}>暂不支持移动端，配置较低的电脑可能运行不流畅</span>
+                                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" style={{ background: '#ef4444' }} />
+                                <span className="text-xs sm:text-sm" style={{ color: '#fca5a5' }}>暂不支持移动端，配置较低的电脑可能运行不流畅</span>
                               </div>
 
                               <motion.button
                                 onClick={handleEarthClick}
-                                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300"
+                                className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium transition-all duration-300"
                                 style={{
                                   backgroundColor: 'var(--accent-primary)',
                                   color: 'white',
@@ -497,18 +497,18 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                               >
-                                <Globe className="w-5 h-5" />
+                                <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
                                 <span>打开地球Online</span>
                               </motion.button>
                             </div>
                           )}
 
                           {activeTab === 'docs' && (
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                               {isMarkdownLoading ? (
-                                <div className="flex items-center justify-center py-8">
+                                <div className="flex items-center justify-center py-6 sm:py-8">
                                   <div
-                                    className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
+                                    className="w-6 h-6 sm:w-8 sm:h-8 border-2 border-t-transparent rounded-full animate-spin"
                                     style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
                                   />
                                 </div>
@@ -599,25 +599,25 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                           )}
 
                           {activeTab === 'friends' && (
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                               <p
-                                className="text-base leading-relaxed"
+                                className="text-sm sm:text-base leading-relaxed"
                                 style={{ color: 'var(--text-secondary)' }}
                               >
                                 欢迎申请友链！我们很高兴与志同道合的朋友建立联系。
                               </p>
 
-                              <div className="p-4 rounded-xl" style={{
+                              <div className="p-3 sm:p-4 rounded-xl" style={{
                                 backgroundColor: 'var(--bg-card)',
                                 border: '1px solid var(--accent-primary)/30',
                               }}>
                                 <h3
-                                  className="text-sm font-semibold mb-3"
+                                  className="text-xs sm:text-sm font-semibold mb-2 sm:mb-3"
                                   style={{ color: 'var(--accent-primary)' }}
                                 >
                                   本站信息：
                                 </h3>
-                                <div className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm" style={{ color: 'var(--text-secondary)' }}>
                                   <div>
                                     <span className="font-medium" style={{ color: 'var(--text-primary)' }}>网站名称：</span>
                                     <span className="ml-2">SAKURAIN TEAM</span>
@@ -639,7 +639,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
 
                               <motion.button
                                 onClick={handleFriendsClick}
-                                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300"
+                                className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium transition-all duration-300"
                                 style={{
                                   backgroundColor: 'var(--accent-primary)',
                                   color: 'white',
@@ -647,7 +647,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                               >
-                                <Users className="w-5 h-5" />
+                                <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                                 <span>进入友链页</span>
                               </motion.button>
                             </div>
