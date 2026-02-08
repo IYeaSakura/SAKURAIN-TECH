@@ -43,6 +43,18 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
     };
   }, [isMobileMenuOpen]);
 
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (isMobileMenuOpen && e.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileMenuOpen]);
+
   const handleNavClick = (href: string) => {
     if (deploymentConfig.useWindowLocation) {
       window.location.href = href;
@@ -120,6 +132,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               onClick={() => window.location.href = '/'}
               className="flex items-center gap-2 sm:gap-3 flex-shrink-0"
               whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               <img
                 src="/image/logo.webp"
@@ -143,7 +156,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
             </motion.button>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-8">
+            <div className="hidden lg:flex items-center gap-6 xl:gap-8">
               {data.links.map((link) => {
                 const Icon = getIcon(link.icon);
                 const handleClick = () => {
@@ -177,7 +190,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               <button 
                 onClick={onThemeToggle} 
                 disabled={isThemeTransitioning}
-                className="relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110"
+                className="relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95"
                 style={{ 
                   background: 'var(--bg-secondary)', 
                   border: '1px solid var(--border-color)', 
@@ -210,7 +223,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               <button 
                 onClick={onThemeToggle} 
                 disabled={isThemeTransitioning}
-                className="relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110"
+                className="relative p-2 rounded-lg sm:p-2.5 sm:rounded-xl transition-all duration-300 hover:scale-110 active:scale-95"
                 style={{ 
                   background: 'var(--bg-secondary)', 
                   border: '1px solid var(--border-color)', 
@@ -225,27 +238,21 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                     exit={{ rotate: 90, opacity: 0 }} 
                     transition={{ duration: 0.2 }}
                   >
-                    {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                    {theme === 'light' ? <Moon className="w-4 h-4 sm:w-5 sm:h-5" /> : <Sun className="w-4 h-4 sm:w-5 sm:h-5" />}
                   </motion.div>
                 </AnimatePresence>
-                <span 
-                  className="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-2" 
-                  style={{ 
-                    background: theme === 'light' ? '#f59e0b' : '#6366f1', 
-                    borderColor: 'var(--bg-primary)' 
-                  }} 
-                />
               </button>
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 transition-colors rounded-lg flex-shrink-0"
+                className="p-2 sm:p-2.5 transition-all rounded-lg sm:rounded-xl flex-shrink-0 hover:scale-110 active:scale-95"
                 style={{ 
                   color: 'var(--text-secondary)',
                   background: isMobileMenuOpen ? 'var(--bg-secondary)' : 'transparent',
                 }}
                 aria-label={isMobileMenuOpen ? '关闭菜单' : '打开菜单'}
+                aria-expanded={isMobileMenuOpen}
               >
-                {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                {isMobileMenuOpen ? <X size={20} className="sm:w-[22px] sm:h-[22px]" /> : <Menu size={20} className="sm:w-[22px] sm:h-[22px]" />}
               </button>
             </div>
           </div>
@@ -257,7 +264,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
         {isMobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            animate={isMobileMenuOpen ? { opacity: 1 } : { opacity: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="fixed inset-x-0 z-40 lg:hidden overflow-hidden"
@@ -267,9 +274,16 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
             }}
           >
             {/* Backdrop */}
-            <div
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setIsMobileMenuOpen(false)}
+              role="button"
+              tabIndex={0}
+              aria-label="关闭菜单"
             />
 
             {/* Menu Panel */}
@@ -278,7 +292,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.98 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="absolute top-2 left-3 right-3 mc-panel p-4 sm:p-5 overflow-y-auto"
+              className="absolute top-2 left-3 right-3 sm:left-4 sm:right-4 mc-panel p-4 sm:p-5 overflow-y-auto"
               style={{
                 borderRadius: '12px',
                 maxHeight: 'calc(100vh - 5rem)',
@@ -311,14 +325,14 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
                       onClick={handleClick}
-                      className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
+                      className="mc-nav-link flex items-center gap-2 text-left py-3 sm:py-3.5 px-3 sm:px-4 rounded-lg sm:rounded-xl transition-all w-full hover:scale-[1.02] active:scale-[0.98]"
                       style={{ 
                         fontFamily: 'var(--font-primary)',
                         fontSize: 'var(--text-base)',
                         fontWeight: 600,
                       }}
                     >
-                      {Icon && <Icon className="w-4 h-4" />}
+                      {Icon && <Icon className="w-4 h-4 sm:w-5 sm:h-5" />}
                       {link.label}
                     </motion.button>
                   );
