@@ -510,44 +510,99 @@ const NoteCard = ({ note, index, align }: {
 }) => {
   const currentMoodConfig = moodConfig[note.mood as Mood] || moodConfig.neutral;
   const MoodIcon = currentMoodConfig.icon;
+  const [isHovered, setIsHovered] = useState(false);
+  const color = currentMoodConfig.color;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ margin: '-50px' }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="relative mb-4 last:mb-0"
+      transition={{
+        duration: 0.6,
+        delay: index * 0.1,
+        type: 'spring',
+        stiffness: 100,
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative mb-4 last:mb-0 group cursor-pointer"
     >
-      <div className="relative p-5 rounded-2xl overflow-hidden"
+      <motion.div
+        className="absolute -inset-[2px] rounded-2xl transition-opacity duration-500"
+        style={{
+          background: isHovered
+            ? `linear-gradient(45deg, ${color}, var(--accent-secondary), var(--accent-tertiary), ${color})`
+            : 'transparent',
+          backgroundSize: '300% 300%',
+          animation: isHovered ? 'gradient-shift 3s ease infinite' : 'none',
+          opacity: isHovered ? 1 : 0,
+          filter: 'blur(4px)',
+          zIndex: -1,
+        }}
+      />
+      <div className="relative p-5 rounded-2xl overflow-hidden transition-all duration-300"
         style={{
           background: 'var(--bg-card)',
-          border: '2px solid var(--border-subtle)',
-          boxShadow: '0 4px 20px -5px rgba(0,0,0,0.2)',
+          border: '2px solid',
+          borderColor: isHovered ? color : 'var(--border-subtle)',
+          transform: isHovered ? 'translateY(-4px) scale(1.01)' : 'none',
+          boxShadow: isHovered
+            ? `0 8px 24px ${color}40, 0 0 20px ${color}20, inset -2px -2px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)`
+            : 'inset -2px -2px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
         }}
       >
-        <div className="absolute inset-0 pointer-events-none"
+        <motion.div
+          className="absolute inset-0 pointer-events-none rounded-2xl"
           style={{
-            background: `radial-gradient(circle at ${align === 'right' ? '100%' : '0%'} 0%, ${currentMoodConfig.color}20, transparent 70%)`,
+            background: `radial-gradient(circle at ${align === 'right' ? '100%' : '0%'} 0%, ${color}20, transparent 70%)`,
           }}
+          animate={{ opacity: isHovered ? 1 : 0.5 }}
+          transition={{ duration: 0.3 }}
+        />
+
+        <motion.div
+          className="absolute inset-0 pointer-events-none rounded-2xl"
+          style={{
+            background: `linear-gradient(105deg, transparent 40%, ${color}15 45%, ${color}30 50%, ${color}15 55%, transparent 60%)`,
+            transform: 'translateX(-100%)',
+          }}
+          animate={isHovered ? { x: '200%' } : { x: '-100%' }}
+          transition={{ duration: 0.6 }}
         />
 
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <MoodIcon className="w-4 h-4" style={{ color: currentMoodConfig.color }} />
-              <span className="text-xs font-medium" style={{ color: currentMoodConfig.color }}>
+            <motion.div
+              animate={{
+                scale: isHovered ? 1.1 : 1,
+                rotate: isHovered ? 5 : 0,
+              }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              className="flex items-center gap-2"
+            >
+              <MoodIcon className="w-4 h-4" style={{ color: color }} />
+              <span className="text-xs font-medium" style={{ color: color }}>
                 {currentMoodConfig.label}
               </span>
-            </div>
+            </motion.div>
             <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
               {note.fullTime}
             </div>
           </div>
 
-          <h3 className="font-primary text-lg font-bold mb-2 text-[var(--text-primary)]">
+          <motion.h3
+            animate={{
+              scale: isHovered ? 1.02 : 1,
+            }}
+            transition={{ duration: 0.2 }}
+            className="font-primary text-lg font-bold mb-2 text-[var(--text-primary)]"
+            style={{
+              textShadow: isHovered ? `0 0 20px ${color}40` : 'none',
+            }}
+          >
             {note.title}
-          </h3>
+          </motion.h3>
 
           <p className="font-primary text-sm mb-3 text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
             {note.content}
