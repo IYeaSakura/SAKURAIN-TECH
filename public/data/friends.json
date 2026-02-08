@@ -125,6 +125,26 @@
       "featured": true,
       "unidirectional": true,
       "status": "online"
+    },
+    {
+      "id": "ybyq",
+      "name": "Xuan's blog",
+      "url": "https://blog.ybyq.wang/",
+      "icon": "https://blog.ybyq.wang/usr/themes/handsome/assets/img/avatar.png",
+      "description": "分享技术教程和学习笔记",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true
+    },
+    {
+      "id": "woolyun",
+      "name": "天海博客",
+      "url": "https://woolyun.com/",
+      "icon": "https://woolyun.com/wp-content/uploads/2025/05/yyl-e1746698677584.jpg",
+      "description": "建站经验记录，实用工具推荐，免费资源分享。",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true
     }
   ]
 }
