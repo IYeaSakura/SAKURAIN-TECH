@@ -106,10 +106,10 @@ const getUserId = (): string => {
 const formatDanmakuTime = (timestamp: number): string => {
   const date = new Date(timestamp);
   const now = new Date();
-  
+
   const isSameDay = date.toDateString() === now.toDateString();
   const isSameYear = date.getFullYear() === now.getFullYear();
-  
+
   if (isSameDay) {
     return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
   } else if (isSameYear) {
@@ -127,11 +127,11 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [remainingQuota, setRemainingQuota] = useState({ perMinute: RATE_LIMIT.maxPerMinute, perHour: RATE_LIMIT.maxPerHour });
   const [selectedOrbit, setSelectedOrbit] = useState<OrbitType>('medium');
-  
+
   // Markdown 文本输入
   const [markdownText, setMarkdownText] = useState('');
   const [showMarkdownInput, setShowMarkdownInput] = useState(false);
-  
+
   // Markdown 内容显示
   const [selectedDanmaku, setSelectedDanmaku] = useState<Danmaku | null>(null);
   const [markdownContent, setMarkdownContent] = useState<string | null>(null);
@@ -143,14 +143,14 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
   const [showOrbitLine, setShowOrbitLine] = useState(true);
   // 总开关
   const [showAll, setShowAll] = useState(true);
-  
+
   // 北斗卫星数据
   const [beidouSatellites, setBeidouSatellites] = useState<Danmaku[]>([]);
   const [showBeidou, setShowBeidou] = useState(false);
-  
+
   // 弹幕列表展开/收起
   const [isDanmakuListOpen, setIsDanmakuListOpen] = useState(false);
-  
+
   // 弹幕列表筛选 - 只显示自己发送的弹幕
   const [filterOwnDanmakus, setFilterOwnDanmakus] = useState(false);
 
@@ -193,32 +193,32 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     // 如果没有指定类型，随机选择（三种轨道概率一致 1/3）
     const type = orbitType || getRandomOrbitType();
     const range = ORBIT_RANGES[type];
-    
+
     // 初始角度：0-360度均匀分布
     const angle = Math.random() * Math.PI * 2;
-    
+
     // 轨道倾角：-90°到+90°均匀分布（从赤道到极地）
     const inclination = (Math.random() - 0.5) * Math.PI;
-    
+
     // 升交点赤经 (RAAN)：0-360度均匀分布，确定轨道平面在空间中的方向
     const raan = Math.random() * Math.PI * 2;
-    
+
     // 高度：在轨道范围内均匀分布
     const altitude = range.min + Math.random() * (range.max - range.min);
-    
+
     // 角速度：根据高度计算（低轨高速，高轨低速）
     const angularVelocity = calculateAngularVelocity(altitude);
-    
+
     // 方向：正向/反向概率均等（50%）
     const speed = angularVelocity * (Math.random() > 0.5 ? 1 : -1);
-    
+
     return { angle, inclination, altitude, speed, orbitType: type, raan };
   }, []);
 
   // 加载北斗卫星数据（本地JSON）
   const loadBeidouSatellites = useCallback(async () => {
     if (beidouSatellites.length > 0) return; // 已加载过
-    
+
     try {
       debugLog('Loading Beidou satellites...');
       const response = await fetch('/data/beidou-satellites.json');
@@ -238,7 +238,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       debugLog('Using cached danmakus from memory, count:', danmakus.length);
       return;
     }
-    
+
     if (isFetchingRef.current) return;
 
     const url = `${API_BASE_URL}/list`;
@@ -248,9 +248,8 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     try {
       const response = await fetch(url, {
         method: 'GET',
-        headers: { 
+        headers: {
           'Accept': 'application/json',
-          ...await generateAuthHeaders(),
         },
       });
       if (response.ok) {
@@ -260,7 +259,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         const processedData = data.map((d: Partial<Danmaku>) => {
           // 如果服务器返回的数据已有完整的轨道参数，直接使用，不再生成新的
           const hasOrbitParams = d.angle != null && d.inclination != null && d.altitude != null && d.speed != null;
-          const orbitParams = hasOrbitParams 
+          const orbitParams = hasOrbitParams
             ? {}  // 使用服务器返回的参数，不生成新的
             : (d.orbitType ? generateOrbitParams(d.orbitType) : generateOrbitParams('medium'));
           return {
@@ -312,8 +311,8 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     try {
       const response = await fetch(`${API_BASE_URL}/add`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
+        headers: {
+          'Content-Type': 'application/json',
           'Accept': 'application/json',
           ...await generateAuthHeaders(),
         },
@@ -355,8 +354,8 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     try {
       const response = await fetch(`${API_BASE_URL}/delete`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
+        headers: {
+          'Content-Type': 'application/json',
           'Accept': 'application/json',
           ...await generateAuthHeaders(),
         },
@@ -393,7 +392,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       setIsModalOpen(false);
       return;
     }
-    
+
     setSelectedDanmaku(danmaku);
     // 直接从弹幕数据中获取 markdown，无需额外请求
     setMarkdownContent(danmaku.markdown || null);
@@ -405,10 +404,10 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     if (!viewer) return;
 
     const handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
-    
+
     handler.setInputAction((click: Cesium.ScreenSpaceEventHandler.PositionedEvent) => {
       const pickedObject = viewer.scene.pick(click.position);
-      
+
       if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
         const entity = pickedObject.id;
         // 查找对应的弹幕数据
@@ -417,7 +416,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
           const entityFromRef = entitiesRef.current.get(d.id);
           return entityFromRef && entityFromRef.id === entity.id;
         });
-        
+
         if (danmaku) {
           showDanmakuDetail(danmaku);
         }
@@ -461,7 +460,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     if (!viewer) return;
 
     // 合并用户弹幕和北斗卫星数据（如果启用）
-    const allSatellites = showBeidou 
+    const allSatellites = showBeidou
       ? [...danmakus, ...beidouSatellites]
       : danmakus;
 
@@ -470,26 +469,26 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
       const radius = EARTH_RADIUS + danmaku.altitude;
       // speed 已经是 rad/s，直接乘以时间（秒）得到转过的角度
       const currentAngle = danmaku.angle + (danmaku.speed * elapsedSeconds);
-      
+
       // 在轨道平面内的坐标
       const xOrbital = Math.cos(currentAngle) * radius;
       const yOrbital = Math.sin(currentAngle) * radius;
-      
+
       const inclination = danmaku.inclination;
       const raan = danmaku.raan || 0; // 升交点赤经，默认为0
-      
+
       // 应用倾角旋转（绕x轴）和升交点赤经旋转（绕z轴）
       // 步骤1: 应用倾角（绕x轴旋转）
       const yAfterInclination = yOrbital * Math.cos(inclination);
       const zAfterInclination = yOrbital * Math.sin(inclination);
-      
+
       // 步骤2: 应用升交点赤经 RAAN（绕z轴旋转）
       const cosRaan = Math.cos(raan);
       const sinRaan = Math.sin(raan);
       const x = xOrbital * cosRaan - yAfterInclination * sinRaan;
       const y = xOrbital * sinRaan + yAfterInclination * cosRaan;
       const z = zAfterInclination;
-      
+
       return new Cesium.Cartesian3(x, y, z);
     };
 
@@ -541,16 +540,16 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
         const theta = (i / 64) * Math.PI * 2 + angleOffset;
         const xOrbital = Math.cos(theta) * radius;
         const yOrbital = Math.sin(theta) * radius;
-        
+
         // 应用倾角（绕x轴）
         const yAfterInclination = yOrbital * Math.cos(inclination);
         const zAfterInclination = yOrbital * Math.sin(inclination);
-        
+
         // 应用升交点赤经 RAAN（绕z轴）
         const x = xOrbital * cosRaan - yAfterInclination * sinRaan;
         const y = xOrbital * sinRaan + yAfterInclination * cosRaan;
         const z = zAfterInclination;
-        
+
         positions.push(new Cesium.Cartesian3(x, y, z));
       }
 
@@ -785,13 +784,13 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                 </button>
               </div>
             </div>
-            
+
             <div className="overflow-y-auto flex-1">
               {(() => {
-                const filteredDanmakus = filterOwnDanmakus 
+                const filteredDanmakus = filterOwnDanmakus
                   ? danmakus.filter(d => d.userId === userId.current)
                   : danmakus;
-                
+
                 if (filteredDanmakus.length === 0) {
                   return (
                     <div className="flex items-center justify-center h-20 text-gray-500 text-sm">
@@ -799,7 +798,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                     </div>
                   );
                 }
-                
+
                 return filteredDanmakus
                   .sort((a, b) => b.timestamp - a.timestamp)
                   .map((danmaku) => {
@@ -882,7 +881,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                 </button>
               </div>
             </div>
-            
+
             {/* 内容区域 */}
             <div className="flex-1 overflow-auto p-2 text-gray-200 text-xs leading-relaxed">
               {/* 卫星参数信息 */}
@@ -899,7 +898,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                   <span className="text-gray-300">{(selectedDanmaku.speed * 1000).toFixed(2)} rad/s</span>
                 </div>
               </div>
-              
+
               {/* Markdown 内容 - 截断显示 */}
               {markdownContent ? (
                 <div>
@@ -967,7 +966,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                   <X className="w-4 h-4 text-gray-400" />
                 </button>
               </div>
-              
+
               {/* 完整卫星参数 */}
               <div className="mb-3 p-2 rounded" style={{ background: 'rgba(96, 165, 250, 0.1)' }}>
                 <div className="text-xs text-gray-400 mb-1.5">轨道参数</div>
@@ -998,7 +997,7 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
                   </div>
                 </div>
               </div>
-              
+
               <div className="text-gray-200 text-sm leading-relaxed">
                 {markdownContent ? (
                   <ReactMarkdown

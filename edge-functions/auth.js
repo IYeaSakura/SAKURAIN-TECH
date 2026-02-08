@@ -64,7 +64,7 @@ export async function verifyAuthHeaders(headers, env) {
   }
 
   const nonceKey = `nonce:${nonce}`;
-  const usedNonce = await env.KV_SECRET.get(nonceKey);
+  const usedNonce = await KV_SECRET.get(nonceKey);
 
   if (usedNonce) {
     return {
@@ -86,7 +86,7 @@ export async function verifyAuthHeaders(headers, env) {
     };
   }
 
-  await env.KV_SECRET.put(nonceKey, '1', {
+  await KV_SECRET.put(nonceKey, '1', {
     expirationTtl: NONCE_TTL,
   });
 

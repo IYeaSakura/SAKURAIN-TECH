@@ -2,11 +2,14 @@ import { addCorsHeaders } from '../../auth.js';
 
 export async function onRequestGet(context) {
   try {
-    const kv = context.env.DANMAKU_KV;
+    const kv = DANMAKU_KV;
     
     if (!kv) {
       return addCorsHeaders(
-        new Response(JSON.stringify({ error: 'KV not bound' }), {
+        new Response(JSON.stringify({ 
+          error: 'KV not bound',
+          hasDANMAKU_KV: typeof DANMAKU_KV !== 'undefined',
+        }), {
           status: 500,
           headers: { 'Content-Type': 'application/json' },
         })
