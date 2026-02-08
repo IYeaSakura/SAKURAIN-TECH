@@ -200,8 +200,8 @@ const achievementSlides = [
 const projectStats = [
   { label: "项目模块", value: "120+", icon: Layers, color: "#60a5fa" },
   { label: "代码行数", value: "70K+", icon: Code2, color: "#34d399" },
-  { label: "技术栈", value: 15, icon: Cpu, color: "#f472b6" },
-  { label: "开源依赖", value: 93, icon: Github, color: "#fbbf24" },
+  { label: "技术栈", value: "15+", icon: Cpu, color: "#f472b6" },
+  { label: "开源依赖", value: "90+", icon: Github, color: "#fbbf24" },
 ];
 
 // 词云图组件
@@ -625,15 +625,9 @@ export default function AboutPage() {
                 transition={{ delay: 0.3 }}
                 className="text-6xl lg:text-7xl font-bold mb-5 text-right"
               >
-                <span
-                  className="bg-clip-text text-transparent animate-gradient-flow"
-                  style={{ 
-                    backgroundImage: 'linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4, #3b82f6)',
-                    backgroundSize: '300% 100%',
-                  }}
-                >
+                <GradientText>
                   Yuyang
-                </span>
+                </GradientText>
               </motion.h1>
 
               <motion.p
@@ -1103,7 +1097,7 @@ export default function AboutPage() {
                   {/* 奖杯图标装饰 */}
                   <div className="mt-6 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
                     <Trophy className="w-5 h-5" style={{ color: achievementSlides[currentSlide].color }} />
-                    <span className="text-sm">国家级奖项</span>
+                    <span className="text-sm">国家/省级奖项</span>
                   </div>
                 </div>
               </motion.div>

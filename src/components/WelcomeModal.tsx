@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Globe, X, Sparkles, FileText, Users } from 'lucide-react';
+import { BookOpen, Globe, X, Sparkles, FileText, Users, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { PlantUML } from '@/pages/Docs/components/PlantUML';
@@ -192,6 +192,11 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
     window.location.href = '/blog';
   };
 
+  const handleAboutClick = () => {
+    setIsOpen(false);
+    window.location.href = '/about';
+  };
+
   const handleEarthClick = () => {
     const event = new CustomEvent('open-earth-online');
     window.dispatchEvent(event);
@@ -334,19 +339,34 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                         <div className="space-y-6">
                           {activeTab === 'welcome' && (
                             <>
-                              <div
-                                className="text-sm sm:text-base leading-relaxed"
-                                style={{ color: 'var(--text-secondary)' }}
-                              >
-                                {config.content.split('\n').map((line, index) => (
-                                  <React.Fragment key={index}>
-                                    {line}
-                                    {index < config.content.split('\n').length - 1 && <br />}
-                                  </React.Fragment>
-                                ))}
-                              </div>
+                                <div
+                                  className="text-sm sm:text-base leading-relaxed"
+                                  style={{ color: 'var(--text-secondary)' }}
+                                >
+                                  {config.content.split('\n').map((line, index) => (
+                                    <React.Fragment key={index}>
+                                      {line}
+                                      {index < config.content.split('\n').length - 1 && <br />}
+                                    </React.Fragment>
+                                  ))}
+                                </div>
 
-                              {config.updates && (
+                                <motion.button
+                                  onClick={handleAboutClick}
+                                  className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium transition-all duration-300"
+                                  style={{
+                                    backgroundColor: 'var(--bg-card)',
+                                    border: '1px solid var(--accent-primary)',
+                                    color: 'var(--accent-primary)',
+                                  }}
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                >
+                                  <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                                  <span>关于我</span>
+                                </motion.button>
+
+                                {config.updates && (
                                 <div className="pt-3 sm:pt-4 border-t border-[var(--accent-primary)]/20">
                                   <h3
                                     className="text-xs sm:text-sm font-semibold mb-2 sm:mb-3"
