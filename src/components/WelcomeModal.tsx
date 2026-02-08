@@ -458,7 +458,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                 className="text-base leading-relaxed"
                                 style={{ color: 'var(--text-secondary)' }}
                               >
-                                地球Online是一个互动的3D地球可视化项目，中国区域部分支持放大卫星图。
+                                地球Online是本人开发的一个可交互的3D地球可视化项目，中国区域部分支持放大查看卫星图，支持发送弹幕进入卫星轨道并附带Markdown文本哦~
                               </p>
 
                               <div className="p-4 rounded-xl" style={{
