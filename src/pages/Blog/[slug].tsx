@@ -169,7 +169,7 @@ export default function BlogPost() {
               
               <div className="relative z-10 p-8">
                 <h1 
-                  className="font-pixel text-3xl sm:text-4xl lg:text-5xl font-black mb-4"
+                  className="text-3xl sm:text-4xl lg:text-5xl font-black mb-4"
                   style={{ 
                     color: 'var(--text-primary)',
                     letterSpacing: '-0.02em',
