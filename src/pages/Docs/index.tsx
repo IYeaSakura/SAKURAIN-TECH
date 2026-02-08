@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, lazy, Suspense, memo } from 'react';
-import { useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Sparkles, Layers } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
@@ -46,6 +46,7 @@ export default function DocsPage() {
     itemId?: string;
     chapterId?: string;
   }>();
+  const navigate = useNavigate();
 
   const { data: config, loading: configLoading, error: configError } = useConfig<DocsConfig>('/data/docs.json');
   const { data: siteData } = useConfig<SiteData>('/data/site-data.json');
@@ -62,10 +63,12 @@ export default function DocsPage() {
       return;
     }
 
-    const category = config.categories.find((c: DocCategory) => c.id === categoryId);
+    const category = config.categories.find((c) => c.id === categoryId);
     if (!category) {
       if (deploymentConfig.useWindowLocation) {
         window.location.href = '/docs';
+      } else {
+        navigate('/docs');
       }
       return;
     }
@@ -77,10 +80,12 @@ export default function DocsPage() {
       return;
     }
 
-    const item = category.items.find((i: DocItem) => i.id === itemId);
+    const item = category.items.find((i) => i.id === itemId);
     if (!item) {
       if (deploymentConfig.useWindowLocation) {
         window.location.href = '/docs';
+      } else {
+        navigate('/docs');
       }
       return;
     }
@@ -88,13 +93,15 @@ export default function DocsPage() {
 
     if (item.type === 'series') {
       if (chapterId) {
-        const chapter = item.chapters.find((c: Chapter) => c.id === chapterId);
+        const chapter = item.chapters.find((c) => c.id === chapterId);
         if (chapter) {
           setSelectedChapter(chapter);
         } else {
-            if (deploymentConfig.useWindowLocation) {
-              window.location.href = `/docs/${categoryId}/${itemId}`;
-            }
+          if (deploymentConfig.useWindowLocation) {
+            window.location.href = `/docs/${categoryId}/${itemId}`;
+          } else {
+            navigate(`/docs/${categoryId}/${itemId}`);
+          }
         }
       } else {
         setSelectedChapter(null);
@@ -102,7 +109,7 @@ export default function DocsPage() {
     } else {
       setSelectedChapter(null);
     }
-  }, [config, categoryId, itemId, chapterId]);
+  }, [config, categoryId, itemId, chapterId, navigate]);
 
   const allChapters = useMemo(() => {
     if (!config) return [];
@@ -122,18 +129,24 @@ export default function DocsPage() {
   const handleSelectCategory = (category: DocCategory) => {
     if (deploymentConfig.useWindowLocation) {
       window.location.href = `/docs/${category.id}`;
+    } else {
+      navigate(`/docs/${category.id}`);
     }
   };
 
   const handleSelectItem = (category: DocCategory, item: DocItem) => {
     if (deploymentConfig.useWindowLocation) {
       window.location.href = `/docs/${category.id}/${item.id}`;
+    } else {
+      navigate(`/docs/${category.id}/${item.id}`);
     }
   };
 
   const handleSelectChapter = (category: DocCategory, series: DocSeries, chapter: Chapter) => {
     if (deploymentConfig.useWindowLocation) {
       window.location.href = `/docs/${category.id}/${series.id}/${chapter.id}`;
+    } else {
+      navigate(`/docs/${category.id}/${series.id}/${chapter.id}`);
     }
   };
 
@@ -141,14 +154,20 @@ export default function DocsPage() {
     if (selectedChapter && selectedItem?.type === 'series') {
       if (deploymentConfig.useWindowLocation) {
         window.location.href = `/docs/${selectedCategory?.id}/${selectedItem.id}`;
+      } else {
+        navigate(`/docs/${selectedCategory?.id}/${selectedItem.id}`);
       }
     } else if (selectedItem) {
       if (deploymentConfig.useWindowLocation) {
         window.location.href = `/docs/${selectedCategory?.id}`;
+      } else {
+        navigate(`/docs/${selectedCategory?.id}`);
       }
     } else {
       if (deploymentConfig.useWindowLocation) {
         window.location.href = '/docs';
+      } else {
+        navigate('/docs');
       }
     }
   };
@@ -156,6 +175,8 @@ export default function DocsPage() {
   const handleBackToHome = () => {
     if (deploymentConfig.useWindowLocation) {
       window.location.href = '/docs';
+    } else {
+      navigate('/docs');
     }
   };
 

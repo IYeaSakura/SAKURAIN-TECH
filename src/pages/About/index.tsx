@@ -641,7 +641,7 @@ export default function AboutPage() {
 
               {/* 双栏介绍 */}
               <div className="grid sm:grid-cols-2 gap-5">
-                <InfoCard 
+                <InfoCard
                   icon={BookOpen}
                   title="关于我"
                   color="#60a5fa"
@@ -652,7 +652,7 @@ export default function AboutPage() {
                   中国人工智能学会机器博弈专委会成员，发表过多智能体演化博弈领域的 SCI 三区论文，获得过计算机博弈大赛全国冠亚军。
                 </InfoCard>
 
-                <InfoCard 
+                <InfoCard
                   icon={Code2}
                   title="技术之路"
                   color="#34d399"
@@ -660,7 +660,7 @@ export default function AboutPage() {
                 >
                   从中学时开发 LNMP 架构到大学深入学习 React、FastAPI、PyTorch 等框架，并积极参与科研项目。
                   <br /><br />
-                  先后在沈阳人工智能研究院、合肥联想实习过，目前在中国移动通讯集团工业互联网创新研究院实习。
+                  先后在沈阳人工智能计算中心、合肥联想实习过，目前在中国移动通讯集团工业互联网创新研究院实习。
                   坚信：代码构建未来，技术赋能社会。
                 </InfoCard>
               </div>
@@ -1308,7 +1308,7 @@ function GreetingBadge() {
         setClickCount((c) => c + 1);
         setIndex((prev) => (prev + 1) % greetings.length);
       }}
-      whileHover={{ 
+      whileHover={{
         scale: 1.1,
       }}
       whileTap={{ scale: 0.95 }}
@@ -1335,7 +1335,7 @@ function GreetingBadge() {
         animate={{
           scale: isHovered ? [1, 1.05, 1] : 1,
         }}
-        transition={{ 
+        transition={{
           duration: 1.5, repeat: Infinity
         }}
       />
@@ -1348,7 +1348,7 @@ function GreetingBadge() {
           border: `2px solid ${current.color}60`,
         }}
         animate={{
-          boxShadow: isHovered 
+          boxShadow: isHovered
             ? `0 0 30px ${current.color}50, 0 0 60px ${current.color}30, inset 0 0 20px ${current.color}20`
             : `0 0 15px ${current.color}30, inset 0 0 10px ${current.color}10`,
         }}
@@ -1403,7 +1403,7 @@ function GreetingBadge() {
             key={current.emoji}
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: [0, -10, 10, 0] }}
-            transition={{ 
+            transition={{
               scale: { type: "spring", stiffness: 400 },
               rotate: { duration: 0.5, delay: 0.1 }
             }}
@@ -1456,7 +1456,7 @@ function InfoCard({ icon: Icon, title, color, delay, children }: InfoCardProps) 
         background: 'rgba(255, 255, 255, 0.03)',
         border: `1px solid ${isHovered ? color + '40' : 'rgba(255, 255, 255, 0.08)'}`,
       }}
-      whileHover={{ 
+      whileHover={{
         y: -8,
         transition: { type: "spring", stiffness: 300, damping: 20 }
       }}
@@ -1495,7 +1495,7 @@ function InfoCard({ icon: Icon, title, color, delay, children }: InfoCardProps) 
 
       {/* 内容 */}
       <div className="relative z-10">
-        <motion.div 
+        <motion.div
           className="flex items-center gap-2 mb-4"
           animate={isHovered ? { x: 4 } : { x: 0 }}
           transition={{ type: "spring", stiffness: 400 }}
@@ -1506,7 +1506,7 @@ function InfoCard({ icon: Icon, title, color, delay, children }: InfoCardProps) 
           >
             <Icon className="w-5 h-5" style={{ color }} />
           </motion.div>
-          <motion.span 
+          <motion.span
             className="font-medium text-lg"
             style={{ color: isHovered ? color : 'inherit' }}
             transition={{ duration: 0.3 }}

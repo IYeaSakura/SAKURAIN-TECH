@@ -46,6 +46,16 @@
   ],
   "friends": [
     {
+      "id": "mclans",
+      "name": "Mc服务器演示站",
+      "url": "https://mclans.sakurain.net",
+      "icon": "https://sakurain.net/image/logo.webp",
+      "description": "Minecraft 服务器网站演示项目，展示服务器信息和玩家社区功能",
+      "category": "demo",
+      "featured": false,
+      "status": "online"
+    },
+    {
       "id": "nektropy",
       "name": "熵",
       "url": "https://www.nekt.qzz.io/",
@@ -76,16 +86,6 @@
       "status": "offline"
     },
     {
-      "id": "Ayeez",
-      "name": "阿叶Ayeez的小站",
-      "url": "https://blog.Ayeez.cn/",
-      "icon": "https://blog.ayeez.cn/imgs/photo.jpg",
-      "description": "记录学习历程，记录美好生活",
-      "category": "blogs",
-      "featured": true,
-      "status": "online"
-    },
-    {
       "id": "mcxiaochen",
       "name": "辰渊尘の个人博客",
       "url": "https://blog.mcxiaochen.top/",
@@ -106,13 +106,24 @@
       "status": "online"
     },
     {
-      "id": "mclans",
-      "name": "Mc服务器演示站",
-      "url": "https://mclans.sakurain.net",
-      "icon": "https://sakurain.net/image/logo.webp",
-      "description": "Minecraft 服务器网站演示项目，展示服务器信息和玩家社区功能",
-      "category": "demo",
-      "featured": false,
+      "id": "sumi233",
+      "name": "酥米的小站",
+      "url": "https://www.sumi233.top/",
+      "icon": "https://cdn.sumi233.top/gh/huang233893/blog-image-bed@main/top/huang233893/imgs/blog/usersumi.png",
+      "description": "终有一日，寻梦中人",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true
+    },
+    {
+      "id": "Ayeez",
+      "name": "阿叶Ayeez的小站",
+      "url": "https://blog.Ayeez.cn/",
+      "icon": "https://blog.ayeez.cn/imgs/photo.jpg",
+      "description": "记录学习历程，记录美好生活",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true,
       "status": "online"
     }
   ]
