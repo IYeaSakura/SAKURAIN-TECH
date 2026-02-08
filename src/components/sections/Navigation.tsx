@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, BookOpen, Heart, Pen, MessageCircle } from 'lucide-react';
+import { Menu, X, BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { cn } from '@/lib/utils';
-import { ThemeToggle } from '@/components/atoms';
 import type { SiteData } from '@/types';
 import { preloadDocs, preloadFriends, preloadBlog } from '@/main';
+import { deploymentConfig } from '@/config/deployment-config';
+import type { LucideIcon } from 'lucide-react';
 
 // Theme type definition
 type Theme = 'light' | 'dark';
@@ -42,31 +43,60 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
     };
   }, [isMobileMenuOpen]);
 
-  const scrollToSection = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+  const handleNavClick = (href: string) => {
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = href;
+    } else {
+      navigate(href);
     }
     setIsMobileMenuOpen(false);
   };
 
   const handleDocsClick = () => {
     preloadDocs();
-    window.location.href = '/docs';
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = '/docs';
+    } else {
+      navigate('/docs');
+    }
   };
 
   const handleFriendsClick = () => {
     preloadFriends();
-    window.location.href = '/friends';
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = '/friends';
+    } else {
+      navigate('/friends');
+    }
   };
 
   const handleBlogClick = () => {
     preloadBlog();
-    window.location.href = '/blog';
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = '/blog';
+    } else {
+      navigate('/blog');
+    }
   };
 
   const handleNotesClick = () => {
-    window.location.href = '/notes';
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = '/notes';
+    } else {
+      navigate('/notes');
+    }
+  };
+
+  const getIcon = (iconName?: string): LucideIcon | null => {
+    switch (iconName) {
+      case 'Home': return Home;
+      case 'BookOpen': return BookOpen;
+      case 'MessageCircle': return MessageCircle;
+      case 'Heart': return Heart;
+      case 'FileText': return FileText;
+      case 'User': return User;
+      default: return null;
+    }
   };
 
 
@@ -87,7 +117,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
           <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
             {/* Logo - 添加 max-w 防止溢出 */}
             <motion.button
-              onClick={() => navigate('/')}
+              onClick={() => window.location.href = '/'}
               className="flex items-center gap-2 sm:gap-3 flex-shrink-0"
               whileHover={{ scale: 1.02 }}
             >
@@ -114,102 +144,98 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-8">
-              {data.links.map((link) => (
-                <button
-                  key={link.href}
-                  onClick={() => scrollToSection(link.href)}
-                  className="mc-nav-link"
-                  style={{
-                    fontFamily: 'var(--font-primary)',
-                    fontSize: 'var(--text-base)',
-                    fontWeight: 600,
-                    letterSpacing: '0.05em',
-                  }}
-                >
-                  {link.label}
-                </button>
-              ))}
-              <button
-                onClick={handleDocsClick}
-                className="mc-nav-link flex items-center gap-1"
-                style={{
-                  fontFamily: 'var(--font-primary)',
-                  fontSize: 'var(--text-base)',
-                  fontWeight: 600,
-                  letterSpacing: '0.05em',
-                }}
-              >
-                <BookOpen className="w-4 h-4" />
-                文档
-              </button>
-              <button
-                onClick={handleBlogClick}
-                className="mc-nav-link flex items-center gap-1"
-                style={{
-                  fontFamily: 'var(--font-primary)',
-                  fontSize: 'var(--text-base)',
-                  fontWeight: 600,
-                  letterSpacing: '0.05em',
-                }}
-              >
-                <Pen className="w-4 h-4" />
-                博客
-              </button>
-              <button
-                onClick={handleNotesClick}
-                className="mc-nav-link flex items-center gap-1"
-                style={{
-                  fontFamily: 'var(--font-primary)',
-                  fontSize: 'var(--text-base)',
-                  fontWeight: 600,
-                  letterSpacing: '0.05em',
-                }}
-              >
-                <MessageCircle className="w-4 h-4" />
-                说说
-              </button>
-              <button
-                onClick={handleFriendsClick}
-                className="mc-nav-link flex items-center gap-1"
-                style={{
-                  fontFamily: 'var(--font-primary)',
-                  fontSize: 'var(--text-base)',
-                  fontWeight: 600,
-                  letterSpacing: '0.05em',
-                }}
-              >
-                <Heart className="w-4 h-4" />
-                友链
-              </button>
+              {data.links.map((link) => {
+                const Icon = getIcon(link.icon);
+                const handleClick = () => {
+                  if (link.href === '/docs') handleDocsClick();
+                  else if (link.href === '/blog') handleBlogClick();
+                  else if (link.href === '/notes') handleNotesClick();
+                  else if (link.href === '/friends') handleFriendsClick();
+                  else handleNavClick(link.href);
+                };
+                return (
+                  <button
+                    key={link.href}
+                    onClick={handleClick}
+                    className="mc-nav-link flex items-center gap-1"
+                    style={{
+                      fontFamily: 'var(--font-primary)',
+                      fontSize: 'var(--text-base)',
+                      fontWeight: 600,
+                      letterSpacing: '0.05em',
+                    }}
+                  >
+                    {Icon && <Icon className="w-4 h-4" />}
+                    {link.label}
+                  </button>
+                );
+              })}
             </div>
 
-            {/* CTA Button & Theme Toggle */}
-            <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
-              <ThemeToggle
-                theme={theme}
-                onToggle={onThemeToggle}
-                isTransitioning={isThemeTransitioning}
-              />
-              <button
-                onClick={() => scrollToSection(data.cta.href)}
-                className="mc-btn mc-btn-gold text-sm"
-                style={{
-                  fontFamily: 'var(--font-primary)',
-                  fontWeight: 700,
-                  letterSpacing: '0.05em',
+            {/* Theme Toggle */}
+            <div className="hidden md:flex items-center gap-4 flex-shrink-0">
+              <button 
+                onClick={onThemeToggle} 
+                disabled={isThemeTransitioning}
+                className="relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110"
+                style={{ 
+                  background: 'var(--bg-secondary)', 
+                  border: '1px solid var(--border-color)', 
+                  color: 'var(--text-secondary)' 
                 }}
               >
-                {data.cta.label}
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div 
+                    key={theme} 
+                    initial={{ rotate: -90, opacity: 0 }} 
+                    animate={{ rotate: 0, opacity: 1 }} 
+                    exit={{ rotate: 90, opacity: 0 }} 
+                    transition={{ duration: 0.2 }}
+                  >
+                    {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                  </motion.div>
+                </AnimatePresence>
+                <span 
+                  className="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-2" 
+                  style={{ 
+                    background: theme === 'light' ? '#f59e0b' : '#6366f1', 
+                    borderColor: 'var(--bg-primary)' 
+                  }} 
+                />
               </button>
             </div>
 
             {/* Mobile Menu Button */}
-            <div className="flex items-center gap-1 sm:gap-2 lg:hidden flex-shrink-0">
-              <ThemeToggle
-                theme={theme}
-                onToggle={onThemeToggle}
-                isTransitioning={isThemeTransitioning}
-              />
+            <div className="flex items-center gap-1 sm:gap-2 md:hidden flex-shrink-0">
+              <button 
+                onClick={onThemeToggle} 
+                disabled={isThemeTransitioning}
+                className="relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110"
+                style={{ 
+                  background: 'var(--bg-secondary)', 
+                  border: '1px solid var(--border-color)', 
+                  color: 'var(--text-secondary)' 
+                }}
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div 
+                    key={theme} 
+                    initial={{ rotate: -90, opacity: 0 }} 
+                    animate={{ rotate: 0, opacity: 1 }} 
+                    exit={{ rotate: 90, opacity: 0 }} 
+                    transition={{ duration: 0.2 }}
+                  >
+                    {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                  </motion.div>
+                </AnimatePresence>
+                <span 
+                  className="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-2" 
+                  style={{ 
+                    background: theme === 'light' ? '#f59e0b' : '#6366f1', 
+                    borderColor: 'var(--bg-primary)' 
+                  }} 
+                />
+              </button>
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="p-2 transition-colors rounded-lg flex-shrink-0"
@@ -259,100 +285,52 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               }}
             >
               <div className="flex flex-col gap-2">
-                {data.links.map((link, index) => (
-                  <motion.button
-                    key={link.href}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={() => scrollToSection(link.href)}
-                    className="mc-nav-link text-left py-3 px-3 rounded-lg transition-colors w-full"
-                    style={{ 
-                      fontFamily: 'var(--font-primary)',
-                      fontSize: 'var(--text-base)',
-                      fontWeight: 600,
-                    }}
-                  >
-                    {link.label}
-                  </motion.button>
-                ))}
-                <motion.button
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: data.links.length * 0.05 }}
-                  onClick={() => {
-                    handleDocsClick();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
-                  style={{ 
-                    fontFamily: 'var(--font-primary)',
-                    fontSize: 'var(--text-base)',
-                    fontWeight: 600,
-                  }}
-                >
-                  <BookOpen className="w-4 h-4" />
-                  文档
-                </motion.button>
-                <motion.button
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (data.links.length + 1) * 0.05 }}
-                  onClick={() => {
-                    handleBlogClick();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
-                  style={{ 
-                    fontFamily: 'var(--font-primary)',
-                    fontSize: 'var(--text-base)',
-                    fontWeight: 600,
-                  }}
-                >
-                  <Pen className="w-4 h-4" />
-                  博客
-                </motion.button>
-                <motion.button
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (data.links.length + 2) * 0.05 }}
-                  onClick={() => {
-                    handleNotesClick();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
-                  style={{ 
-                    fontFamily: 'var(--font-primary)',
-                    fontSize: 'var(--text-base)',
-                    fontWeight: 600,
-                  }}
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  说说
-                </motion.button>
-                <motion.button
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: (data.links.length + 3) * 0.05 }}
-                  onClick={() => {
-                    handleFriendsClick();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
-                  style={{ 
-                    fontFamily: 'var(--font-primary)',
-                    fontSize: 'var(--text-base)',
-                    fontWeight: 600,
-                  }}
-                >
-                  <Heart className="w-4 h-4" />
-                  友链
-                </motion.button>
+                {data.links.map((link, index) => {
+                  const Icon = getIcon(link.icon);
+                  const handleClick = () => {
+                    if (link.href === '/docs') {
+                      handleDocsClick();
+                      setIsMobileMenuOpen(false);
+                    } else if (link.href === '/blog') {
+                      handleBlogClick();
+                      setIsMobileMenuOpen(false);
+                    } else if (link.href === '/notes') {
+                      handleNotesClick();
+                      setIsMobileMenuOpen(false);
+                    } else if (link.href === '/friends') {
+                      handleFriendsClick();
+                      setIsMobileMenuOpen(false);
+                    } else {
+                      handleNavClick(link.href);
+                    }
+                  };
+                  return (
+                    <motion.button
+                      key={link.href}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={handleClick}
+                      className="mc-nav-link flex items-center gap-2 text-left py-3 px-3 rounded-lg transition-colors w-full"
+                      style={{ 
+                        fontFamily: 'var(--font-primary)',
+                        fontSize: 'var(--text-base)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {Icon && <Icon className="w-4 h-4" />}
+                      {link.label}
+                    </motion.button>
+                  );
+                })}
                 <motion.button
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.25 }}
-                  onClick={() => scrollToSection(data.cta.href)}
+                  onClick={() => {
+                    handleNavClick(data.cta.href);
+                    setIsMobileMenuOpen(false);
+                  }}
                   className="mc-btn mc-btn-gold mt-3 w-full"
                   style={{
                     fontFamily: 'var(--font-primary)',
@@ -371,3 +349,4 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
     </>
   );
 }
+

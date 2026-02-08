@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Search, Grid, List, Sparkles, X, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
+import { Search, Grid, List, Sparkles, X, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import { MagneticCursor, VelocityCursor, AmbientGlow, FloatingBubbles, TwinklingStars, FlowingGradient, LightBeam } from '@/components/effects';
-import { ThemeToggle } from '@/components/atoms';
-import { useTheme } from '@/hooks';
+
 import { BlogCard } from './components/BlogCard';
 import { BlogListItem } from './components/BlogListItem';
 import { getBlogIndex } from './utils';
@@ -30,8 +28,6 @@ type ViewMode = 'grid' | 'list';
 const POSTS_PER_PAGE = 9;
 
 export default function BlogIndex() {
-  const navigate = useNavigate();
-  const { theme, isTransitioning, toggleTheme } = useTheme();
   const [data, setData] = useState<BlogIndex | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -202,47 +198,40 @@ export default function BlogIndex() {
           <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
         </div>
 
-        <motion.header
-          initial={{ y: -100 }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="fixed top-0 left-0 right-0 z-50 mc-navbar"
-        >
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16 lg:h-20">
-              <motion.button
-                onClick={() => navigate('/')}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-primary)'
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium">返回首页</span>
-              </motion.button>
-
-              <div className="flex items-center gap-3">
-                <img
-                  src="/image/logo.webp"
-                  alt="SAKURAIN"
-                  className="w-8 h-8 object-contain"
+        <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-32 lg:pt-36 pb-12">
+          {/* 顶部工具栏 - 固定在统一导航栏下方 */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="fixed top-16 lg:top-20 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8 py-3"
+            style={{ 
+              background: 'linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) 80%, transparent 100%)'
+            }}
+          >
+            <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+              {/* 搜索框 */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  placeholder="搜索文章..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 rounded-xl text-sm transition-all duration-200"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                  }}
                 />
-                <span
-                  className="font-pixel text-xl hidden sm:block"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  SAKURAIN
-                </span>
               </div>
 
               <div className="flex items-center gap-2">
+                {/* 统计按钮 */}
                 <button
                   onClick={() => setShowStats(!showStats)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200"
                   style={{
                     background: showStats ? 'var(--accent-primary)' : 'var(--bg-secondary)',
                     border: '1px solid var(--border-subtle)',
@@ -253,25 +242,11 @@ export default function BlogIndex() {
                   <span className="text-sm font-medium hidden sm:block">统计</span>
                 </button>
 
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
-                  <input
-                    type="text"
-                    placeholder="搜索文章..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 rounded-lg text-sm w-40 sm:w-64 transition-all duration-200"
-                    style={{
-                      background: 'var(--bg-secondary)',
-                      border: '1px solid var(--border-subtle)',
-                      color: 'var(--text-primary)',
-                    }}
-                  />
-                </div>
-                <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+                {/* 视图切换 */}
+                <div className="flex items-center gap-1 p-1 rounded-xl" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded transition-all duration-200 ${viewMode === 'grid' ? 'text-white' : ''}`}
+                    className="p-2 rounded-lg transition-all duration-200"
                     style={{
                       background: viewMode === 'grid' ? 'var(--accent-primary)' : 'transparent',
                       color: viewMode === 'grid' ? 'white' : 'var(--text-secondary)',
@@ -281,7 +256,7 @@ export default function BlogIndex() {
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 rounded transition-all duration-200 ${viewMode === 'list' ? 'text-white' : ''}`}
+                    className="p-2 rounded-lg transition-all duration-200"
                     style={{
                       background: viewMode === 'list' ? 'var(--accent-primary)' : 'transparent',
                       color: viewMode === 'list' ? 'white' : 'var(--text-secondary)',
@@ -290,13 +265,9 @@ export default function BlogIndex() {
                     <List className="w-4 h-4" />
                   </button>
                 </div>
-                <ThemeToggle theme={theme} onToggle={toggleTheme} isTransitioning={isTransitioning} />
               </div>
             </div>
-          </div>
-        </motion.header>
-
-        <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-24 lg:pt-28 pb-12">
+          </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

@@ -1,0 +1,4 @@
+{
+  "mode": "edgeone",
+  "description": "Deployment mode configuration: 'local' for development with navigate, 'edgeone' for Tencent Cloud EdgeOne deployment with window.location.href"
+}

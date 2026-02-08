@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo, lazy, Suspense, memo } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams } from 'react-router';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Home, Sparkles } from 'lucide-react';
+import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Sparkles } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import { MagneticCursor, VelocityCursor, AmbientGlow, FloatingBubbles, TwinklingStars, FlowingGradient, LightBeam } from '@/components/effects';
 import { useConfig } from '@/hooks';
+import { deploymentConfig } from '@/config/deployment-config';
 import { DocListView } from './components/DocListView';
 import { SeriesDetailView } from './components/SeriesDetailView';
-import { ThemeToggleButton } from './components/ThemeToggleButton';
 import { Heart } from 'lucide-react';
 import type { DocCategory, DocItem, DocSeries, Chapter, DocsConfig } from './types';
 import type { SiteData } from '@/types';
@@ -38,7 +38,6 @@ export default function DocsPage() {
     itemId?: string;
     chapterId?: string;
   }>();
-  const navigate = useNavigate();
 
   const { data: config, loading: configLoading, error: configError } = useConfig<DocsConfig>('/data/docs.json');
   const { data: siteData } = useConfig<SiteData>('/data/site-data.json');
@@ -57,7 +56,9 @@ export default function DocsPage() {
 
     const category = config.categories.find((c: DocCategory) => c.id === categoryId);
     if (!category) {
-      navigate('/docs');
+      if (deploymentConfig.useWindowLocation) {
+        window.location.href = '/docs';
+      }
       return;
     }
     setSelectedCategory(category);
@@ -70,7 +71,9 @@ export default function DocsPage() {
 
     const item = category.items.find((i: DocItem) => i.id === itemId);
     if (!item) {
-      navigate('/docs');
+      if (deploymentConfig.useWindowLocation) {
+        window.location.href = '/docs';
+      }
       return;
     }
     setSelectedItem(item);
@@ -81,7 +84,9 @@ export default function DocsPage() {
         if (chapter) {
           setSelectedChapter(chapter);
         } else {
-          navigate(`/docs/${categoryId}/${itemId}`);
+            if (deploymentConfig.useWindowLocation) {
+              window.location.href = `/docs/${categoryId}/${itemId}`;
+            }
         }
       } else {
         setSelectedChapter(null);
@@ -89,7 +94,7 @@ export default function DocsPage() {
     } else {
       setSelectedChapter(null);
     }
-  }, [config, categoryId, itemId, chapterId, navigate]);
+  }, [config, categoryId, itemId, chapterId]);
 
   const allChapters = useMemo(() => {
     if (!config) return [];
@@ -107,29 +112,43 @@ export default function DocsPage() {
   }, [config]);
 
   const handleSelectCategory = (category: DocCategory) => {
-    navigate(`/docs/${category.id}`);
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = `/docs/${category.id}`;
+    }
   };
 
   const handleSelectItem = (category: DocCategory, item: DocItem) => {
-    navigate(`/docs/${category.id}/${item.id}`);
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = `/docs/${category.id}/${item.id}`;
+    }
   };
 
   const handleSelectChapter = (category: DocCategory, series: DocSeries, chapter: Chapter) => {
-    navigate(`/docs/${category.id}/${series.id}/${chapter.id}`);
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = `/docs/${category.id}/${series.id}/${chapter.id}`;
+    }
   };
 
   const handleBack = () => {
     if (selectedChapter && selectedItem?.type === 'series') {
-      navigate(`/docs/${selectedCategory?.id}/${selectedItem.id}`);
+      if (deploymentConfig.useWindowLocation) {
+        window.location.href = `/docs/${selectedCategory?.id}/${selectedItem.id}`;
+      }
     } else if (selectedItem) {
-      navigate(`/docs/${selectedCategory?.id}`);
+      if (deploymentConfig.useWindowLocation) {
+        window.location.href = `/docs/${selectedCategory?.id}`;
+      }
     } else {
-      navigate('/docs');
+      if (deploymentConfig.useWindowLocation) {
+        window.location.href = '/docs';
+      }
     }
   };
 
   const handleBackToHome = () => {
-    navigate('/docs');
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = '/docs';
+    }
   };
 
   if (configLoading) return (
@@ -417,8 +436,6 @@ const CodeDecoration = memo(({ className }: { className?: string }) => {
 CodeDecoration.displayName = 'CodeDecoration';
 
 function DocHomeView({ config, onSelectCategory, iconMap }: DocHomeViewProps) {
-  const navigate = useNavigate();
-
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
       {/* 背景效果 */}
@@ -461,51 +478,6 @@ function DocHomeView({ config, onSelectCategory, iconMap }: DocHomeViewProps) {
       {/* 浮动代码装饰 */}
       <CodeDecoration className="top-32 left-8 hidden lg:block" />
       <CodeDecoration className="bottom-32 right-8 hidden lg:block" />
-
-      {/* Header */}
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="fixed top-0 left-0 right-0 z-50 mc-navbar"
-      >
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 lg:h-20">
-            <motion.button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
-              style={{
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-primary)'
-              }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Home className="w-5 h-5" />
-              <span className="font-medium">返回首页</span>
-            </motion.button>
-
-            <div className="flex items-center gap-3">
-              <img
-                src="/image/logo.webp"
-                alt="SAKURAIN"
-                className="w-8 h-8 object-contain"
-              />
-              <span
-                className="font-pixel text-xl hidden sm:block"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                SAKURAIN
-              </span>
-            </div>
-
-            <div className="flex items-center">
-              <ThemeToggleButton />
-            </div>
-          </div>
-        </div>
-      </motion.header>
 
       {/* Hero */}
       <div className="relative pt-24 lg:pt-28 py-20 sm:py-28 px-4">

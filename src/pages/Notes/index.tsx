@@ -1,10 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, MessageCircle, Smile, Meh, Frown } from 'lucide-react';
+import { Heart, MessageCircle, Smile, Meh, Frown } from 'lucide-react';
 import { MagneticCursor, VelocityCursor, AmbientGlow, FloatingBubbles, TwinklingStars, FlowingGradient, LightBeam } from '@/components/effects';
-import { ThemeToggle } from '@/components/atoms';
-import { useTheme } from '@/hooks';
 
 interface Note {
   id: string;
@@ -38,8 +35,6 @@ const moodConfig: Record<Mood, { icon: typeof Heart; color: string; label: strin
 };
 
 export default function NotesPage() {
-  const navigate = useNavigate();
-  const { theme, isTransitioning, toggleTheme } = useTheme();
   const [archiveData, setArchiveData] = useState<ArchiveData | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
@@ -203,36 +198,6 @@ export default function NotesPage() {
           {/* 顶部光剑 */}
           <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
         </div>
-
-        <motion.header
-          initial={{ y: -100 }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="fixed top-0 left-0 right-0 z-50 mc-navbar"
-        >
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16 lg:h-20">
-              <motion.button
-                onClick={() => navigate('/')}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-primary)'
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium">返回首页</span>
-              </motion.button>
-
-              <div className="flex items-center gap-3">
-                <ThemeToggle theme={theme} isTransitioning={isTransitioning} onToggle={toggleTheme} />
-              </div>
-            </div>
-          </div>
-        </motion.header>
 
         <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-28 pb-12">
           <motion.div

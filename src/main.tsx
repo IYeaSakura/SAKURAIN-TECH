@@ -1,10 +1,13 @@
-import { StrictMode, Suspense, lazy, useEffect } from 'react';
+import { StrictMode, Suspense, lazy, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router';
 import './index.css';
 import App from './App.tsx';
 import { GlobalContextMenu } from '@/components/CustomContextMenu';
 import { DebugProtection } from '@/components/DebugProtection';
+import { Navigation } from '@/components/sections/Navigation';
+import { useTheme } from '@/hooks';
+import type { SiteData } from '@/types';
 import {
   MagneticCursor,
   VelocityCursor,
@@ -76,6 +79,42 @@ const PageFallback = () => (
   </div>
 );
 
+// 带导航的布局组件 - 只在指定列表页显示导航
+function PageLayout({ children }: { children: React.ReactNode }) {
+  const [siteData, setSiteData] = useState<SiteData | null>(null);
+  const { theme, isTransitioning, toggleTheme } = useTheme();
+  const location = useLocation();
+  
+  useEffect(() => {
+    fetch('/data/site-data.json')
+      .then(res => res.json())
+      .then(data => setSiteData(data))
+      .catch(err => console.error('Failed to load site data:', err));
+  }, []);
+  
+  // 只在以下路径显示导航：首页、博客列表、文档列表、友链、关于、说说
+  const showNavPaths = ['/', '/blog', '/docs', '/friends', '/about', '/notes'];
+  const shouldShowNav = showNavPaths.includes(location.pathname);
+  
+  if (!shouldShowNav) {
+    return <>{children}</>;
+  }
+  
+  return (
+    <>
+      {siteData && (
+        <Navigation
+          data={siteData.navigation}
+          theme={theme}
+          onThemeToggle={toggleTheme}
+          isThemeTransitioning={isTransitioning}
+        />
+      )}
+      {children}
+    </>
+  );
+}
+
 function GlobalLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
@@ -108,7 +147,8 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <RedirectHandler />
       <GlobalLayout>
-        <Routes>
+        <PageLayout>
+          <Routes>
           <Route path="/" element={<App />} />
           <Route path="/docs" element={
             <Suspense fallback={<PageFallback />}>
@@ -161,6 +201,7 @@ createRoot(document.getElementById('root')!).render(
             </Suspense>
           } />
         </Routes>
+        </PageLayout>
       </GlobalLayout>
     </BrowserRouter>
   </StrictMode>,

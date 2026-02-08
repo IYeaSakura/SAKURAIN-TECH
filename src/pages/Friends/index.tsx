@@ -1,17 +1,15 @@
 import { useState, useEffect, memo, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { ArrowLeft, Code, Palette, Wrench, BookOpen, Monitor, ExternalLink, Heart, Mail, Sparkles, Globe, Star, Circle } from 'lucide-react';
+import { Code, Palette, Wrench, BookOpen, Monitor, ExternalLink, Heart, Mail, Sparkles, Globe, Star, Circle } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import {
   MagneticCursor, VelocityCursor,
   TwinklingStars, FlowingGradient, LightBeam,
   FloatingBubbles, AmbientGlow
 } from '@/components/effects';
-import { ThemeToggle, GlowBadge } from '@/components/atoms';
+import { GlowBadge } from '@/components/atoms';
 
-// Theme type definition
-type Theme = 'light' | 'dark';
+
 
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<LucideProps>> = {
@@ -788,77 +786,13 @@ const RedirectModal = memo(function RedirectModal({
   );
 });
 
-// Navigation Header Component
-const NavigationHeader = memo(function NavigationHeader({
-  theme,
-  onThemeToggle
-}: {
-  theme: Theme;
-  onThemeToggle: (event: React.MouseEvent<HTMLElement>) => void;
-}) {
-  const navigate = useNavigate();
-
-  return (
-    <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="fixed top-0 left-0 right-0 z-50 mc-navbar"
-    >
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Back Button */}
-          <motion.button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
-            style={{
-              background: 'var(--bg-secondary)',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-primary)'
-            }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">返回首页</span>
-          </motion.button>
-
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <img
-              src="/image/logo.webp"
-              alt="SAKURAIN"
-              className="w-8 h-8 object-contain"
-            />
-            <span
-              className="font-pixel text-xl hidden sm:block"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              SAKURAIN
-            </span>
-          </div>
-
-          {/* Theme Toggle */}
-          <ThemeToggle
-            theme={theme}
-            onToggle={onThemeToggle}
-            isTransitioning={false}
-          />
-        </div>
-      </div>
-    </motion.header>
-  );
-});
-
 // Main Friends Page Component
 export default function FriendsPage() {
   const [data, setData] = useState<FriendsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [theme, setTheme] = useState<Theme>('dark');
   const [redirectModalOpen, setRedirectModalOpen] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
-  const THEME_STORAGE_KEY = 'sakurain-theme';
 
   const handleFriendClick = useCallback((friend: Friend) => {
     setSelectedFriend(friend);
@@ -877,37 +811,6 @@ export default function FriendsPage() {
     setRedirectModalOpen(false);
     setSelectedFriend(null);
   }, []);
-
-  // Load theme from localStorage
-  useEffect(() => {
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }
-  }, []);
-
-  // Listen for theme changes from other pages
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === THEME_STORAGE_KEY && e.newValue) {
-        const newTheme = e.newValue as Theme;
-        setTheme(newTheme);
-        document.documentElement.setAttribute('data-theme', newTheme);
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  // Toggle theme
-  const toggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
-  };
 
   // Load friends data
   useEffect(() => {
@@ -1011,14 +914,8 @@ export default function FriendsPage() {
       {/* Light beams */}
       <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
 
-      {/* Navigation */}
-      <NavigationHeader
-        theme={theme}
-        onThemeToggle={toggleTheme}
-      />
-
       {/* Main Content */}
-      <main className="relative z-10 pt-32 pb-20">
+      <main className="relative z-10 pt-24 lg:pt-28 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Title */}
           <SectionTitle

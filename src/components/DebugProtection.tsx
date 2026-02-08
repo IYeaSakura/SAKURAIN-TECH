@@ -121,8 +121,6 @@ export function DebugProtection() {
     };
 
     let debuggerIntervalId: number | null = null;
-    let performanceIntervalId: number | null = null;
-    let visibilityChangeHandler: (() => void) | null = null;
 
     if (config.detectDevTools) {
       const disablePage = () => {
@@ -175,136 +173,6 @@ export function DebugProtection() {
       };
 
       debuggerIntervalId = window.setInterval(triggerDebugger, 2000);
-
-      const detectElementInspection = () => {
-        const element = document.createElement('div');
-        Object.defineProperty(element, 'id', {
-          get: function() {
-            disablePage();
-          }
-        });
-        console.log(element);
-      };
-
-      detectElementInspection();
-
-      const detectConsoleTiming = () => {
-        console.log = function() {
-          disablePage();
-        };
-        
-        console.dir = function() {
-          disablePage();
-        };
-        
-        console.table = function() {
-          disablePage();
-        };
-      };
-
-      detectConsoleTiming();
-
-      let performanceViolationCount = 0;
-      
-      const detectPerformanceDeviation = () => {
-        const t0 = Date.now();
-        const t1 = performance.now();
-        
-        setTimeout(() => {
-          const t2 = Date.now();
-          const t3 = performance.now();
-          
-          const timeDiff = t2 - t0;
-          const perfDiff = t3 - t1;
-          
-          if (timeDiff > 200 || perfDiff > 200) {
-            performanceViolationCount++;
-            if (performanceViolationCount >= 2) {
-              disablePage();
-            }
-          } else {
-            performanceViolationCount = Math.max(0, performanceViolationCount - 1);
-          }
-        }, 0);
-      };
-
-      performanceIntervalId = window.setInterval(detectPerformanceDeviation, 2000);
-
-      const detectToSourceURL = () => {
-        const devtools = /./;
-        
-        let regexViolationCount = 0;
-        
-        const check = () => {
-          const start = Date.now();
-          devtools.toString();
-          const end = Date.now();
-          
-          const executionTime = end - start;
-          
-          if (executionTime > 200) {
-            regexViolationCount++;
-            if (regexViolationCount >= 2) {
-              disablePage();
-            }
-          } else {
-            regexViolationCount = Math.max(0, regexViolationCount - 1);
-          }
-        };
-        
-        setInterval(check, 2000);
-      };
-
-      detectToSourceURL();
-
-      const detectDevToolsByFunction = () => {
-        const devtools = new RegExp('^');
-        const limit = 50;
-        let counter = 0;
-        
-        const check = () => {
-          counter++;
-          if (counter > limit) {
-            return;
-          }
-          
-          const start = Date.now();
-          devtools.toString();
-          const end = Date.now();
-          
-          if (end - start > 100) {
-            disablePage();
-          }
-          
-          setTimeout(check, 1000);
-        };
-        
-        check();
-      };
-
-      detectDevToolsByFunction();
-
-      const detectByClearInterval = () => {
-        const originalClearInterval = window.clearInterval;
-        let intervalId = window.setInterval(() => {}, 1000);
-        
-        window.clearInterval = function(id: number | undefined) {
-          if (id === intervalId) {
-            disablePage();
-          }
-          return originalClearInterval.call(window, id);
-        };
-      };
-
-      detectByClearInterval();
-
-      visibilityChangeHandler = () => {
-        if (document.hidden) {
-          performanceViolationCount = 0;
-        }
-      };
-      
-      document.addEventListener('visibilitychange', visibilityChangeHandler);
     }
 
     return () => {
@@ -315,12 +183,6 @@ export function DebugProtection() {
       window.open = originalOpen;
       if (debuggerIntervalId !== null) {
         window.clearInterval(debuggerIntervalId);
-      }
-      if (performanceIntervalId !== null) {
-        window.clearInterval(performanceIntervalId);
-      }
-      if (visibilityChangeHandler !== null) {
-        document.removeEventListener('visibilitychange', visibilityChangeHandler);
       }
     };
   }, [config]);
