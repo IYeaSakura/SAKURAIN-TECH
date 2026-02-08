@@ -1,0 +1,17 @@
+[
+  {
+    "slug": "api-security-edgeone",
+    "title": "在腾讯云 EO 上实现 API 安全验证系统",
+    "description": "记录在腾讯云边缘函数上实现 HMAC-SHA256 认证系统的完整过程，包括遇到的坑和解决方案。",
+    "date": "2026-02-08",
+    "author": "SAKURAIN",
+    "tags": [
+      "腾讯云",
+      "边缘计算",
+      "API安全",
+      "边缘函数"
+    ],
+    "cover": "/image/logo.webp",
+    "featured": false
+  }
+]

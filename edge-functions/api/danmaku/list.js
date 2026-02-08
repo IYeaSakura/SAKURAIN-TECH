@@ -3,10 +3,10 @@ import { addCorsHeaders } from '../../auth.js';
 export async function onRequestGet(context) {
   try {
     const kv = DANMAKU_KV;
-    
+
     if (!kv) {
       return addCorsHeaders(
-        new Response(JSON.stringify({ 
+        new Response(JSON.stringify({
           error: 'KV not bound',
           hasDANMAKU_KV: typeof DANMAKU_KV !== 'undefined',
         }), {
