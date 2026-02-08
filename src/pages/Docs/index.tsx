@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Home, Sparkles } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
-import { MagneticCursor, VelocityCursor, AmbientGlow, FloatingBubbles, TwinklingStars } from '@/components/effects';
+import { MagneticCursor, VelocityCursor, AmbientGlow, FloatingBubbles, TwinklingStars, FlowingGradient, LightBeam } from '@/components/effects';
 import { useConfig } from '@/hooks';
 import { DocListView } from './components/DocListView';
 import { SeriesDetailView } from './components/SeriesDetailView';
@@ -446,6 +446,16 @@ function DocHomeView({ config, onSelectCategory, iconMap }: DocHomeViewProps) {
             background: `radial-gradient(ellipse at center, transparent 0%, var(--bg-primary) 70%)`,
           }}
         />
+
+        {/* 流动渐变背景 */}
+        <FlowingGradient
+          colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
+          speed={15}
+          opacity={0.05}
+        />
+
+        {/* 顶部光剑 */}
+        <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
       </div>
 
       {/* 浮动代码装饰 */}
