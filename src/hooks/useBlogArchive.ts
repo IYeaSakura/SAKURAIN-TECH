@@ -123,7 +123,7 @@ export function useMultipleMonthArchives(months: string[]) {
         }
         
         for (const month of months) {
-          if (monthCache.has(month)) {
+          if (monthCache.has(month) && !monthsToFetch.includes(month)) {
             allPosts.push(...monthCache.get(month)!);
           }
         }

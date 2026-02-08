@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, X, AlertCircle, Orbit, Eye, EyeOff, Satellite, Type, Globe, FileText, Maximize2, Clock } from 'lucide-react';
 import * as Cesium from 'cesium';
 import ReactMarkdown from 'react-markdown';
+import { generateAuthHeaders } from '@/lib/api-auth';
 
 // API 基础路径
 const API_BASE_URL = '/api/danmaku';
@@ -247,7 +248,10 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     try {
       const response = await fetch(url, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' },
+        headers: { 
+          'Accept': 'application/json',
+          ...await generateAuthHeaders(),
+        },
       });
       if (response.ok) {
         const data = await response.json();
@@ -308,7 +312,11 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     try {
       const response = await fetch(`${API_BASE_URL}/add`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Accept': 'application/json',
+          ...await generateAuthHeaders(),
+        },
         body: JSON.stringify({
           ...newDanmaku,
           markdown: markdownText.trim(),
@@ -347,7 +355,11 @@ export function DanmakuSatellite({ viewer, isDark }: DanmakuSatelliteProps) {
     try {
       const response = await fetch(`${API_BASE_URL}/delete`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Accept': 'application/json',
+          ...await generateAuthHeaders(),
+        },
         body: JSON.stringify({ id }),
       });
 
