@@ -209,7 +209,7 @@ const FriendCard = memo(function FriendCard({
         {/* Featured Badge */}
         {friend.featured && (
           <div className="absolute top-2 right-2 z-20">
-            <GlowBadge text="友链" icon={<Star className="w-3 h-3" />} variant="secondary" size="sm" />
+            <GlowBadge text="友链" icon={<Heart className="w-3 h-3" />} variant="secondary" size="sm" />
           </div>
         )}
 
@@ -217,14 +217,17 @@ const FriendCard = memo(function FriendCard({
         {friend.status && (
           <motion.div
             initial={{ scale: 0 }}
-            animate={{ 
+            animate={friend.status === 'online' ? {
+              scale: [1, 1.3, 1],
+              opacity: [1, 0.6, 1],
+            } : {
               scale: [1, 1.2, 1],
-              opacity: [1, 0.7, 1]
+              opacity: [1, 0.5, 1],
             }}
             transition={{ 
               delay: 0.3, 
               type: 'spring',
-              duration: 2,
+              duration: 1.5,
               repeat: Infinity,
               ease: 'easeInOut'
             }}
@@ -234,7 +237,9 @@ const FriendCard = memo(function FriendCard({
               className="w-3 h-3"
               style={{
                 color: friend.status === 'online' ? '#22c55e' : '#ef4444',
-                filter: friend.status === 'online' ? 'drop-shadow(0 0 4px #22c55e80)' : 'drop-shadow(0 0 4px #ef444480)',
+                filter: friend.status === 'online' 
+                  ? 'drop-shadow(0 0 8px #22c55e60), drop-shadow(0 0 12px #22c55e30)' 
+                  : 'drop-shadow(0 0 8px #ef444460), drop-shadow(0 0 12px #ef444430)',
               }}
             />
           </motion.div>
