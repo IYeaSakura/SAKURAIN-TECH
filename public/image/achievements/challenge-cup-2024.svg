@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <!-- Background -->
+  <rect width="400" height="300" rx="16" fill="#0f172a"/>
+  
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="bronze" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdba74"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+    <linearGradient id="bronze-bg" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#fdba74" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#fdba74" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background glow -->
+  <circle cx="200" cy="150" r="120" fill="url(#bronze-bg)"/>
+  
+  <!-- Medal ribbon -->
+  <path d="M170 80 L200 140 L230 80 L215 80 L200 110 L185 80 Z" fill="#dc2626"/>
+  <path d="M170 80 L185 80 L200 110 L215 80 L230 80" fill="#ef4444"/>
+  
+  <!-- Medal circle -->
+  <circle cx="200" cy="165" r="45" fill="url(#bronze)" stroke="#c2410c" stroke-width="3"/>
+  <circle cx="200" cy="165" r="38" fill="none" stroke="#fed7aa" stroke-width="1" stroke-opacity="0.5"/>
+  
+  <!-- Medal star -->
+  <path d="M200 140 L205 155 L220 155 L208 165 L213 180 L200 170 L187 180 L192 165 L180 155 L195 155 Z" fill="#ffedd5" stroke="#c2410c" stroke-width="1"/>
+  
+  <!-- Challenge cup text on medal -->
+  <text x="200" y="192" text-anchor="middle" font-family="system-ui, sans-serif" font-size="8" font-weight="600" fill="#7c2d12">挑战杯</text>
+  
+  <!-- Decorative elements -->
+  <circle cx="140" cy="120" r="4" fill="#fdba74" opacity="0.5"/>
+  <circle cx="260" cy="120" r="4" fill="#fdba74" opacity="0.5"/>
+  <circle cx="130" cy="180" r="3" fill="#fdba74" opacity="0.3"/>
+  <circle cx="270" cy="180" r="3" fill="#fdba74" opacity="0.3"/>
+  
+  <!-- Text -->
+  <text x="200" y="235" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#fdba74">辽宁省铜奖</text>
+  <text x="200" y="255" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8">2024 挑战杯创业计划竞赛</text>
+</svg>

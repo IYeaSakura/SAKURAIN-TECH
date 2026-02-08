@@ -2,6 +2,9 @@
    FONT IMPORTS - Must be first
    ============================================ */
 
+/* Zpix - Chinese Pixel Bitmap Font (最像素字体) */
+@import url('https://unpkg.com/@chinese-fonts/zpix/dist/舟方日央型秀-A/result.css');
+
 /* Noto Sans SC - Modern Chinese Font */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800;900&display=swap');
 
@@ -10,6 +13,9 @@
 
 /* VT323 - Minecraft Style Pixel Font */
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+/* Press Start 2P - Retro Pixel Font */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 @import url('./minecraft-theme.css');
 
@@ -77,7 +83,8 @@
   /* Font Families */
   --font-primary: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
-  --font-pixel: 'VT323', monospace;
+  /* Zpix (最像素) - Chinese Bitmap Pixel Font, VT323 - English Pixel Font */
+  --font-pixel: 'Zpix', '舟方日央型秀-A', 'VT323', 'Press Start 2P', monospace;
   
   /* Font Weights */
   --font-light: 300;
@@ -212,14 +219,7 @@ h2 {
   font-weight: var(--font-bold);
 }
 
-/* 深色模式下为标题添加阴影效果 */
-[data-theme="dark"] h1 {
-  text-shadow: 3px 3px 0 color-mix(in srgb, var(--bg-secondary) 50%, black);
-}
 
-[data-theme="dark"] h2 {
-  text-shadow: 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 40%, black);
-}
 
 h3 {
   font-size: var(--text-3xl);
