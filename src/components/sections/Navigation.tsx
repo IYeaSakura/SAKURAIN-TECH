@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User } from 'lucide-react';
+import { BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router';
 import { cn } from '@/lib/utils';
 import type { SiteData } from '@/types';
@@ -29,7 +29,7 @@ const dockItems = [
 
 export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }: NavigationProps) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -41,35 +41,12 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isMobileMenuOpen]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (isMobileMenuOpen && e.key === 'Escape') {
-        setIsMobileMenuOpen(false);
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isMobileMenuOpen]);
-
   const handleNavClick = (href: string) => {
     if (deploymentConfig.useWindowLocation) {
       window.location.href = href;
     } else {
       navigate(href);
     }
-    setIsMobileMenuOpen(false);
   };
 
   const handleDocsClick = () => {
@@ -140,6 +117,16 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
     } else {
       handleNavClick(href);
     }
+  };
+
+  // 计算相邻项目的缩放效果（macOS Dock 风格）
+  const getItemScale = (index: number) => {
+    if (hoveredIndex === null) return 1;
+    const distance = Math.abs(index - hoveredIndex);
+    if (distance === 0) return 1.3;
+    if (distance === 1) return 1.15;
+    if (distance === 2) return 1.05;
+    return 1;
   };
 
   return (
@@ -247,7 +234,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               </button>
             </div>
 
-            {/* 移动端顶部按钮（主题切换） */}
+            {/* 移动端顶部按钮（仅主题切换，移除菜单按钮） */}
             <div className="flex items-center gap-1 sm:gap-2 md:hidden flex-shrink-0">
               <button 
                 onClick={onThemeToggle} 
@@ -271,231 +258,126 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                   </motion.div>
                 </AnimatePresence>
               </button>
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 sm:p-2.5 transition-all rounded-lg sm:rounded-xl flex-shrink-0 hover:scale-110 active:scale-95"
-                style={{ 
-                  color: 'var(--text-secondary)',
-                  background: isMobileMenuOpen ? 'var(--bg-secondary)' : 'transparent',
-                }}
-                aria-label={isMobileMenuOpen ? '关闭菜单' : '打开菜单'}
-                aria-expanded={isMobileMenuOpen}
-              >
-                {isMobileMenuOpen ? <X size={20} className="sm:w-[22px] sm:h-[22px]" /> : <Menu size={20} className="sm:w-[22px] sm:h-[22px]" />}
-              </button>
             </div>
           </div>
         </div>
       </motion.nav>
 
-      {/* 移动端底部 Dock 导航栏 */}
+      {/* 移动端底部 Dock 导航栏 - macOS 风格 */}
       <motion.div
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50"
+        transition={{ duration: 0.6, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
+        className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+        onMouseLeave={() => setHoveredIndex(null)}
       >
-        {/* 顶部渐变过渡 */}
-        <div 
-          className="h-8 pointer-events-none"
-          style={{
-            background: 'linear-gradient(to top, var(--bg-card), transparent)',
-          }}
-        />
-        
-        {/* Dock 容器 */}
+        {/* Dock 容器 - 悬浮胶囊设计 */}
         <div
-          className="px-3 pb-4 pt-1"
+          className="flex items-center gap-1 px-3 py-3 rounded-3xl"
           style={{
-            background: 'var(--bg-card)',
-            borderTop: '1px solid var(--border-color)',
+            background: 'rgba(var(--bg-card-rgb, 15, 23, 42), 0.75)',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
           }}
         >
-          <div className="flex items-center justify-around">
-            {dockItems.map((item, index) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              
-              return (
-                <motion.button
-                  key={item.href}
-                  onClick={() => handleDockClick(item.href)}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + index * 0.05 }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="relative flex flex-col items-center gap-1 py-2 px-2 rounded-xl transition-all duration-300"
+          {dockItems.map((item, index) => {
+            const Icon = item.icon;
+            const active = isActive(item.href);
+            const scale = getItemScale(index);
+            
+            return (
+              <motion.button
+                key={item.href}
+                onClick={() => handleDockClick(item.href)}
+                onMouseEnter={() => setHoveredIndex(index)}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: scale,
+                }}
+                transition={{ 
+                  type: 'spring',
+                  stiffness: 300,
+                  damping: 20,
+                  delay: index * 0.05 
+                }}
+                className="relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-colors duration-200"
+                style={{
+                  background: active 
+                    ? 'rgba(var(--accent-primary-rgb, 59, 130, 246), 0.2)' 
+                    : 'transparent',
+                }}
+              >
+                {/* 图标 */}
+                <Icon 
+                  className="w-5 h-5 sm:w-6 sm:h-6 transition-all duration-200"
                   style={{
-                    background: active ? 'var(--accent-primary)' : 'transparent',
+                    color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                    filter: active ? 'drop-shadow(0 0 8px var(--accent-primary))' : 'none',
                   }}
-                >
-                  {/* 图标容器 */}
+                />
+                
+                {/* 激活指示器 - 发光圆点 */}
+                {active && (
                   <motion.div
-                    animate={{
-                      scale: active ? 1.1 : 1,
-                    }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                    className="relative"
-                  >
-                    <Icon 
-                      className="w-5 h-5 sm:w-6 sm:h-6 transition-colors duration-300"
-                      style={{
-                        color: active ? 'white' : 'var(--text-secondary)',
-                      }}
-                    />
-                    
-                    {/* 未激活时的微光效果 */}
-                    {!active && (
-                      <motion.div
-                        className="absolute inset-0 rounded-full blur-md"
-                        style={{
-                          background: 'var(--accent-primary)',
-                          opacity: 0,
-                        }}
-                        whileHover={{ opacity: 0.3 }}
-                        transition={{ duration: 0.2 }}
-                      />
-                    )}
-                  </motion.div>
-                  
-                  {/* 标签文字 */}
-                  <span
-                    className="text-[10px] sm:text-xs font-medium transition-colors duration-300"
+                    layoutId="active-indicator"
+                    className="absolute -bottom-1 w-1 h-1 rounded-full"
                     style={{
-                      color: active ? 'white' : 'var(--text-secondary)',
-                      fontFamily: 'var(--font-primary)',
+                      background: 'var(--accent-primary)',
+                      boxShadow: '0 0 6px var(--accent-primary), 0 0 12px var(--accent-primary)',
                     }}
-                  >
-                    {item.label}
-                  </span>
-                  
-                  {/* 活跃指示器（小圆点） */}
-                  {active && (
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  />
+                )}
+
+                {/* Tooltip - 悬浮时显示标签 */}
+                <AnimatePresence>
+                  {hoveredIndex === index && (
                     <motion.div
-                      layoutId="dock-indicator"
-                      className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full"
+                      initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg whitespace-nowrap pointer-events-none"
                       style={{
-                        background: 'var(--accent-primary)',
-                        boxShadow: '0 0 8px var(--accent-primary)',
-                      }}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                    />
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-        
-        {/* iOS 安全区域填充 */}
-        <div 
-          className="h-safe-area-inset-bottom"
-          style={{ background: 'var(--bg-card)' }}
-        />
-      </motion.div>
-
-      {/* 移动端全屏菜单（保留作为额外选项） */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={isMobileMenuOpen ? { opacity: 1 } : { opacity: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-x-0 z-[60] lg:hidden overflow-hidden"
-            style={{ 
-              top: '3.5rem',
-              bottom: '5.5rem', // 为底部 Dock 留出空间
-            }}
-          >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm z-0"
-              onClick={() => setIsMobileMenuOpen(false)}
-              role="button"
-              tabIndex={0}
-              aria-label="关闭菜单"
-            />
-
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.98 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="absolute top-2 left-3 right-3 sm:left-4 sm:right-4 mc-panel p-4 sm:p-5 overflow-y-auto z-10"
-              style={{
-                borderRadius: '12px',
-                maxHeight: 'calc(100vh - 8rem)',
-              }}
-            >
-              <div className="flex flex-col gap-2">
-                {data.links.map((link, index) => {
-                  const Icon = getIcon(link.icon);
-                  const handleClick = () => {
-                    if (link.href === '/docs') {
-                      handleDocsClick();
-                      setIsMobileMenuOpen(false);
-                    } else if (link.href === '/blog') {
-                      handleBlogClick();
-                      setIsMobileMenuOpen(false);
-                    } else if (link.href === '/notes') {
-                      handleNotesClick();
-                      setIsMobileMenuOpen(false);
-                    } else if (link.href === '/friends') {
-                      handleFriendsClick();
-                      setIsMobileMenuOpen(false);
-                    } else {
-                      handleNavClick(link.href);
-                    }
-                  };
-                  return (
-                    <motion.button
-                      key={link.href}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      onClick={handleClick}
-                      className="mc-nav-link flex items-center gap-2 text-left py-3 sm:py-3.5 px-3 sm:px-4 rounded-lg sm:rounded-xl transition-all w-full hover:scale-[1.02] active:scale-[0.98]"
-                      style={{ 
-                        fontFamily: 'var(--font-primary)',
-                        fontSize: 'var(--text-base)',
-                        fontWeight: 600,
+                        background: 'rgba(0, 0, 0, 0.8)',
+                        backdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                       }}
                     >
-                      {Icon && <Icon className="w-4 h-4 sm:w-5 sm:h-5" />}
-                      {link.label}
-                    </motion.button>
-                  );
-                })}
-                <motion.button
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 }}
-                  onClick={() => {
-                    handleNavClick(data.cta.href);
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="mc-btn mc-btn-gold mt-3 w-full"
-                  style={{
-                    fontFamily: 'var(--font-primary)',
-                    fontWeight: 700,
-                    letterSpacing: '0.05em',
-                    padding: '12px 24px',
-                  }}
-                >
-                  {data.cta.label}
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                      <span 
+                        className="text-[11px] font-medium"
+                        style={{ 
+                          color: active ? 'var(--accent-primary)' : '#e2e8f0',
+                          fontFamily: 'var(--font-primary)',
+                        }}
+                      >
+                        {item.label}
+                      </span>
+                      {/* Tooltip 箭头 */}
+                      <div 
+                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45"
+                        style={{
+                          background: 'rgba(0, 0, 0, 0.8)',
+                          borderRight: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                        }}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            );
+          })}
+        </div>
+      </motion.div>
+
+      {/* 移动端底部安全区域填充 */}
+      <div className="md:hidden h-24" />
     </>
   );
 }

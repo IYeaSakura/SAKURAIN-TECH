@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <!-- Background -->
+  <rect width="400" height="300" rx="16" fill="#0f172a"/>
+  
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="silver" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e5e7eb"/>
+      <stop offset="100%" stop-color="#9ca3af"/>
+    </linearGradient>
+    <linearGradient id="silver-bg" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#e5e7eb" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#e5e7eb" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background glow -->
+  <circle cx="200" cy="150" r="120" fill="url(#silver-bg)"/>
+  
+  <!-- Trophy base -->
+  <ellipse cx="200" cy="230" rx="60" ry="15" fill="#1e293b" stroke="#9ca3af" stroke-width="2"/>
+  <rect x="170" y="200" width="60" height="35" rx="4" fill="#1e293b" stroke="#9ca3af" stroke-width="2"/>
+  
+  <!-- Trophy cup -->
+  <path d="M140 100 Q140 180 200 180 Q260 180 260 100" fill="url(#silver)" stroke="#6b7280" stroke-width="3"/>
+  <ellipse cx="200" cy="100" rx="60" ry="15" fill="#f3f4f6" stroke="#9ca3af" stroke-width="2"/>
+  
+  <!-- Trophy handles -->
+  <path d="M140 110 Q120 110 120 140 Q120 170 145 160" fill="none" stroke="#9ca3af" stroke-width="4" stroke-linecap="round"/>
+  <path d="M260 110 Q280 110 280 140 Q280 170 255 160" fill="none" stroke="#9ca3af" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Number 2 badge -->
+  <circle cx="280" cy="70" r="25" fill="#1e293b" stroke="#9ca3af" stroke-width="2"/>
+  <text x="280" y="78" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#e5e7eb">2</text>
+  
+  <!-- Text -->
+  <text x="200" y="255" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" font-weight="600" fill="#e5e7eb">全国亚军</text>
+  <text x="200" y="275" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8">2025 计算机博弈大赛</text>
+</svg>
