@@ -13,44 +13,79 @@ interface BlogListItemProps {
 export const BlogListItem = memo(function BlogListItem({ post, index }: BlogListItemProps) {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
+  const color = 'var(--accent-primary)';
 
   return (
     <motion.div
       onClick={() => navigate(`/blog/${post.slug}`)}
-      initial={{ opacity: 0, x: -30 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.05 }}
+      initial={{ opacity: 0, x: -30, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      transition={{
+        duration: 0.6,
+        delay: index * 0.05,
+        type: 'spring',
+        stiffness: 100,
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="group relative block cursor-pointer"
     >
+      <motion.div
+        className="absolute -inset-[2px] rounded-xl transition-opacity duration-500"
+        style={{
+          background: isHovered
+            ? `linear-gradient(45deg, ${color}, var(--accent-secondary), var(--accent-tertiary), ${color})`
+            : 'transparent',
+          backgroundSize: '300% 300%',
+          animation: isHovered ? 'gradient-shift 3s ease infinite' : 'none',
+          opacity: isHovered ? 1 : 0,
+          filter: 'blur(4px)',
+          zIndex: -1,
+        }}
+      />
       <div
         className="relative p-6 rounded-xl overflow-hidden transition-all duration-300"
         style={{
           background: 'var(--bg-card)',
           border: '2px solid',
-          borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
-          transform: isHovered ? 'translateX(8px)' : 'none',
+          borderColor: isHovered ? color : 'var(--border-subtle)',
+          transform: isHovered ? 'translateX(8px) scale(1.01)' : 'none',
           boxShadow: isHovered
-            ? `0 8px 24px var(--accent-glow), 0 0 20px var(--accent-primary)20`
+            ? `0 8px 24px var(--accent-glow), 0 0 20px ${color}20, inset -2px -2px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)`
             : 'inset -2px -2px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
         }}
       >
         <motion.div
           className="absolute inset-0 pointer-events-none rounded-xl"
           style={{
-            background: `radial-gradient(circle at 0% 50%, var(--accent-primary)15, transparent 60%)`,
+            background: `radial-gradient(circle at 0% 50%, ${color}15, transparent 60%)`,
           }}
           animate={{ opacity: isHovered ? 1 : 0 }}
           transition={{ duration: 0.3 }}
         />
 
+        <motion.div
+          className="absolute inset-0 pointer-events-none rounded-xl"
+          style={{
+            background: `linear-gradient(105deg, transparent 40%, ${color}15 45%, ${color}30 50%, ${color}15 55%, transparent 60%)`,
+            transform: 'translateX(-100%)',
+          }}
+          animate={isHovered ? { x: '200%' } : { x: '-100%' }}
+          transition={{ duration: 0.6 }}
+        />
+
         <div className="flex items-start gap-4 relative z-10">
-          <div
+          <motion.div
+            animate={{
+              scale: isHovered ? 1.1 : 1,
+              rotate: isHovered ? 5 : 0,
+            }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="flex-shrink-0 w-20 h-20 rounded-xl flex items-center justify-center overflow-hidden"
             style={{
               background: 'var(--bg-secondary)',
               border: '1px solid var(--border-subtle)',
+              boxShadow: `0 0 20px ${color}20`,
             }}
           >
             <img
@@ -58,19 +93,23 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
               alt={post.title}
               className="w-12 h-12 object-contain"
             />
-          </div>
+          </motion.div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-2">
-              <h3
-                className="font-bold text-lg truncate transition-all duration-200"
+              <motion.h3
+                animate={{
+                  scale: isHovered ? 1.05 : 1,
+                }}
+                transition={{ duration: 0.2 }}
+                className="font-bold text-lg truncate"
                 style={{
                   color: 'var(--text-primary)',
                   textShadow: isHovered ? '0 0 20px var(--accent-glow)' : 'none',
                 }}
               >
                 {post.title}
-              </h3>
+              </motion.h3>
               <motion.div
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : 10 }}
@@ -104,8 +143,11 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
             {post.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
                 {post.tags.slice(0, 3).map((tag) => (
-                  <span
+                  <motion.span
                     key={tag}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: 'spring', stiffness: 400 }}
                     className="text-xs px-2 py-1 rounded-full"
                     style={{
                       background: 'var(--bg-secondary)',
@@ -114,7 +156,7 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
                     }}
                   >
                     {tag}
-                  </span>
+                  </motion.span>
                 ))}
               </div>
             )}
