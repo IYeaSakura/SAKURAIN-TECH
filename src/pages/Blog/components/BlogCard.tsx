@@ -1,8 +1,7 @@
 import { useState, memo } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, ArrowRight, Star } from 'lucide-react';
-import { GlowBadge } from '@/components/atoms';
+import { Calendar, Clock, ArrowRight } from 'lucide-react';
 import type { BlogPost } from '../types';
 import { formatDate, getReadingTime } from '../utils';
 
@@ -38,12 +37,6 @@ export const BlogCard = memo(function BlogCard({ post, index }: BlogCardProps) {
             : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
         }}
       >
-        {post.featured && (
-          <div className="absolute top-3 right-3 z-20">
-            <GlowBadge text="精选" icon={<Star className="w-3 h-3" />} variant="primary" size="sm" />
-          </div>
-        )}
-
         <motion.div
           className="absolute inset-0 pointer-events-none rounded-xl"
           style={{

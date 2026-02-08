@@ -1,7 +1,7 @@
 import { useState, memo } from 'react';
 import { useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, ArrowRight, Star } from 'lucide-react';
+import { Calendar, Clock, ArrowRight } from 'lucide-react';
 import type { BlogPost } from '../types';
 import { formatDate, getReadingTime } from '../utils';
 
@@ -36,23 +36,6 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
             : 'inset -2px -2px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
         }}
       >
-        {post.featured && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring' }}
-            className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold z-20"
-            style={{
-              background: 'linear-gradient(135deg, var(--accent-primary), color-mix(in srgb, var( --accent-primary) 80%, var(--accent-secondary)))',
-              color: 'white',
-              boxShadow: '0 2px 10px var(--accent-primary)40',
-            }}
-          >
-            <Star className="w-3 h-3" />
-            精选
-          </motion.div>
-        )}
-
         <motion.div
           className="absolute inset-0 pointer-events-none rounded-xl"
           style={{
