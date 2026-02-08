@@ -128,25 +128,24 @@ export default function ApiTest() {
             </button>
 
             {response && (
-             ) => (
-                <div
-                  className="mt-4 p-4 rounded-lg"
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-subtle)',
-                  }}
-                >
-                  <p style={{ color: 'var(--text-secondary)' }}>
-                    消息: <span style={{ color: 'var(--accent-primary)' }}>{response.message}</span>
-                  </p>
-                  <p style={{ color: 'var(--text-secondary)' }}>
-                    接收数据: <span style={{ color: 'var(--accent-primary)' }}>{JSON.stringify(response.receivedData)}</span>
-                  </p>
-                  <p style={{ color: 'var(--text-secondary)' }}>
-                    时间戳: <span style={{ color: 'var(--accent-primary)' }}>{response.timestamp}</span>
-                  </p>
-                </div>
-              )}
+              <div
+                className="mt-4 p-4 rounded-lg"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-subtle)',
+                }}
+              >
+                <p style={{ color: 'var(--text-secondary)' }}>
+                  消息: <span style={{ color: 'var(--accent-primary)' }}>{response.message}</span>
+                </p>
+                <p style={{ color: 'var(--text-secondary)' }}>
+                  接收数据: <span style={{ color: 'var(--accent-primary)' }}>{JSON.stringify(response.receivedData)}</span>
+                </p>
+                <p style={{ color: 'var(--text-secondary)' }}>
+                  时间戳: <span style={{ color: 'var(--accent-primary)' }}>{response.timestamp}</span>
+                </p>
+              </div>
+            )}
 
             {sendError && (
               <div
