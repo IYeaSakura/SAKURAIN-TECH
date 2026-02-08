@@ -36,8 +36,6 @@ export default function BlogIndex() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showArchive, setShowArchive] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [showStats, setShowStats] = useState(false);
   const [tagsData, setTagsData] = useState<TagsResponse | null>(null);
@@ -253,19 +251,6 @@ export default function BlogIndex() {
                 >
                   <BarChart3 className="w-4 h-4" />
                   <span className="text-sm font-medium hidden sm:block">统计</span>
-                </button>
-
-                <button
-                  onClick={() => setShowArchive(!showArchive)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
-                  style={{
-                    background: showArchive ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                    border: '1px solid var(--border-subtle)',
-                    color: showArchive ? 'white' : 'var(--text-primary)',
-                  }}
-                >
-                  <Grid className="w-4 h-4" />
-                  <span className="text-sm font-medium hidden sm:block">归档</span>
                 </button>
 
                 <div className="relative">
@@ -640,10 +625,6 @@ export default function BlogIndex() {
                     ) : (
                       <BlogArchiveHeatmap
                         data={archiveData}
-                        onSelectMonth={(month) => {
-                          setSelectedMonth(month);
-                        }}
-                        selectedMonth={selectedMonth}
                       />
                     )}
                   </div>
@@ -674,55 +655,6 @@ export default function BlogIndex() {
                     )}
                   </div>
                 </div>
-              </motion.div>
-            </motion.div>
-          )}
-
-          {showArchive && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              style={{ background: 'rgba(0, 0, 0, 0.8)' }}
-              onClick={() => setShowArchive(false)}
-            >
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-4xl max-h-[80vh] overflow-auto rounded-2xl p-6 relative"
-                style={{
-                  background: 'var(--bg-card)',
-                  border: '2px solid var(--border-subtle)',
-                }}
-              >
-                <button
-                  onClick={() => setShowArchive(false)}
-                  className="absolute top-4 right-4 p-2 rounded-lg transition-all duration-200 hover:scale-105"
-                  style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                {archiveLoading ? (
-                  <div className="flex items-center justify-center py-20">
-                    <div
-                      className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
-                      style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
-                    />
-                  </div>
-                ) : (
-                  <BlogArchiveHeatmap
-                    data={archiveData}
-                    onSelectMonth={(month) => {
-                      setSelectedMonth(month);
-                      setShowArchive(false);
-                    }}
-                    selectedMonth={selectedMonth}
-                  />
-                )}
               </motion.div>
             </motion.div>
           )}

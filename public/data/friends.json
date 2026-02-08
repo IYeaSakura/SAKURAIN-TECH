@@ -65,14 +65,15 @@
       "featured": true,
       "status": "online"
     },
-        {
+    {
       "id": "mxw2024blog",
       "name": "孟轩科技's blog",
       "url": "https://blog.mxw2024.top/",
       "icon": "https://blog.mxw2024.top/assets/images/favicon.ico",
       "description": "一个简洁、美观、纯净、无广告的小站",
       "category": "blogs",
-      "featured": true
+      "featured": true,
+      "status": "online"
     },
     {
       "id": "Ayeez",

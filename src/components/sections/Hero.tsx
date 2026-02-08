@@ -551,20 +551,18 @@ const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
 GlowScrollIndicator.displayName = 'GlowScrollIndicator';
 
 // 演示内容渲染
-const DemoContent = memo(({ demo, isDark }: { demo: { type: DemoType; isFullscreen: boolean; onFullscreenToggle: () => void }; isDark: boolean }) => {
+const DemoContent = ({ demo, isDark }: { demo: { type: DemoType; isFullscreen: boolean; onFullscreenToggle: () => void }; isDark: boolean }) => {
   switch (demo.type) {
     case 'cesium':
-      return <CesiumGlobe key="cesium" isDark={isDark} />;
+      return <CesiumGlobe isDark={isDark} />;
     case 'chinamap':
-      return <ChinaMap3D key="chinamap" isDark={isDark} />;
+      return <ChinaMap3D isDark={isDark} />;
     case 'terminal':
-      return <WebTerminal key="terminal" isFullscreen={demo.isFullscreen} onFullscreenToggle={demo.onFullscreenToggle} />;
+      return <WebTerminal isFullscreen={demo.isFullscreen} onFullscreenToggle={demo.onFullscreenToggle} />;
     default:
-      return <CesiumGlobe key="default" isDark={isDark} />;
+      return <CesiumGlobe isDark={isDark} />;
   }
-});
-
-DemoContent.displayName = 'DemoContent';
+};
 
 // 获取演示配置
 const getDemoConfig = (demo: DemoType): DemoConfig => {
