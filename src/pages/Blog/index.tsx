@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Search, Grid, List, Sparkles, X, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
-import { MagneticCursor, VelocityCursor, AmbientGlow, FloatingBubbles, TwinklingStars } from '@/components/effects';
+import { MagneticCursor, VelocityCursor, AmbientGlow, FloatingBubbles, TwinklingStars, FlowingGradient, LightBeam } from '@/components/effects';
 import { ThemeToggle } from '@/components/atoms';
 import { useTheme } from '@/hooks';
 import { BlogCard } from './components/BlogCard';
@@ -196,6 +196,12 @@ export default function BlogIndex() {
               background: 'radial-gradient(ellipse at center, transparent 0%, var(--bg-primary) 70%)',
             }}
           />
+          <FlowingGradient
+            colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
+            speed={15}
+            opacity={0.05}
+          />
+          <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
         </div>
 
         <motion.header

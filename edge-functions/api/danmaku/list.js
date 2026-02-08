@@ -1,7 +1,14 @@
 import { addCorsHeaders } from '../../auth.js';
+import { checkRateLimit, createRateLimitResponse } from '../../rate-limit.js';
 
 export async function onRequestGet(context) {
   try {
+    const rateLimitResult = await checkRateLimit(context.request);
+
+    if (!rateLimitResult.allowed) {
+      return addCorsHeaders(createRateLimitResponse(rateLimitResult));
+    }
+
     const kv = DANMAKU_KV;
 
     if (!kv) {
