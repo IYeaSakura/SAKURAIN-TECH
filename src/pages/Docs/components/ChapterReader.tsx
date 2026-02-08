@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { useDocument } from '../hooks';
 import { UnifiedToc } from './UnifiedToc';
 import { ThemeToggleButton } from './ThemeToggleButton';
-import { markdownComponents } from './MarkdownRenderer';
+// import { markdownComponents } from './MarkdownRenderer';
 import type { Chapter, DocSeries, DocCategory, TocItem } from '../types';
 
 // 错误边界组件
@@ -269,8 +269,8 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
                 <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg text-white" style={{ background: 'var(--accent-primary)' }}>重试</button>
               </div>
             ) : (
-              <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+              <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="prose prose-invert max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {content}
                 </ReactMarkdown>
               </motion.article>

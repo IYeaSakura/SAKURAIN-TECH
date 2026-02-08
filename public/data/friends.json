@@ -168,7 +168,8 @@
       "description": "做自己喜欢的事",
       "category": "blogs",
       "featured": true,
-      "unidirectional": true
+      "unidirectional": true,
+      "status": "online"
     }
   ]
 }
