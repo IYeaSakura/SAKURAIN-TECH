@@ -39,7 +39,7 @@ export async function onRequestPost(context) {
       );
     }
 
-    const kv = context.env.DANMAKU_KV;
+    const kv = DANMAKU_KV;
     if (!kv) {
       return addCorsHeaders(
         new Response(JSON.stringify({ error: 'KV not bound' }), {
