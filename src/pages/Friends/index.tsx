@@ -29,6 +29,7 @@ interface Friend {
   category: string;
   featured: boolean;
   status?: 'online' | 'offline';
+  unidirectional?: boolean;
 }
 
 interface FriendCategory {
@@ -280,7 +281,7 @@ const PixelCard = memo(function PixelCard({
               {/* Status indicator - inline with name */}
               {friend.status && (
                 <div 
-                  className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium"
+                  className="flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-medium"
                   style={{
                     background: friend.status === 'online' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
                     border: `1px solid ${friend.status === 'online' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
@@ -291,13 +292,28 @@ const PixelCard = memo(function PixelCard({
                   <motion.div
                     animate={friend.status === 'online' ? { scale: [1, 1.3, 1], opacity: [1, 0.6, 1] } : {}}
                     transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                    className="w-1.5 h-1.5"
+                    className="w-1 h-1"
                     style={{
                       background: friend.status === 'online' ? '#22c55e' : '#ef4444',
                       boxShadow: friend.status === 'online' ? '0 0 4px #22c55e' : 'none',
                     }}
                   />
                   {friend.status === 'online' ? '在线' : '离线'}
+                </div>
+              )}
+
+              {/* Unidirectional indicator */}
+              {friend.unidirectional && (
+                <div 
+                  className="flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-medium"
+                  style={{
+                    background: 'rgba(234, 179, 8, 0.15)',
+                    border: '1px solid rgba(234, 179, 8, 0.4)',
+                    color: '#eab308',
+                    clipPath: clipPathRounded(2),
+                  }}
+                >
+                  单向
                 </div>
               )}
             </div>
