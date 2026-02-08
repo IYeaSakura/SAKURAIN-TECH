@@ -1,9 +1,12 @@
-import { useState, useEffect, useRef, lazy, Suspense, Component, type ReactNode } from 'react';
+import { useState, useEffect, useRef, Component, Suspense, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ChevronLeft, ChevronRight, List } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useDocument } from '../hooks';
 import { UnifiedToc } from './UnifiedToc';
 import { ThemeToggleButton } from './ThemeToggleButton';
+import { markdownComponents } from './MarkdownRenderer';
 import type { Chapter, DocSeries, DocCategory, TocItem } from '../types';
 
 // 错误边界组件
@@ -43,9 +46,8 @@ class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNod
   }
 }
 
-// Lazy load heavy components to reduce initial bundle size
-const DocSearch = lazy(() => import('./DocSearch').then(m => ({ default: m.DocSearch })));
-const MarkdownRenderer = lazy(() => import('./MarkdownRenderer').then(m => ({ default: m.MarkdownRenderer })));
+// Import DocSearch directly
+import { DocSearch } from './DocSearch';
 
 interface ChapterReaderProps {
   chapter: Chapter;
@@ -268,9 +270,9 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
               </div>
             ) : (
               <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <Suspense fallback={<div className="p-4 text-center" style={{ color: 'var(--text-muted)' }}>加载内容...</div>}>
-                  <MarkdownRenderer content={content} />
-                </Suspense>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                  {content}
+                </ReactMarkdown>
               </motion.article>
             )}
 
