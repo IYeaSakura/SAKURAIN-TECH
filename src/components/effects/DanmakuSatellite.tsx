@@ -818,42 +818,6 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
                             setSelectedDanmaku(danmaku);
                             setMarkdownContent(danmaku.markdown || null);
                             setIsModalOpen(false);
-
-                            if (viewer) {
-                              const now = Date.now();
-                              const elapsed = (now - danmaku.timestamp) / 1000;
-                              const radius = EARTH_RADIUS + danmaku.altitude;
-                              const currentAngle = danmaku.angle + (danmaku.speed * elapsed);
-
-                              const xOrbital = Math.cos(currentAngle) * radius;
-                              const yOrbital = Math.sin(currentAngle) * radius;
-
-                              const inclination = danmaku.inclination;
-                              const raan = danmaku.raan || 0;
-
-                              const yAfterInclination = yOrbital * Math.cos(inclination);
-                              const zAfterInclination = yOrbital * Math.sin(inclination);
-
-                              const cosRaan = Math.cos(raan);
-                              const sinRaan = Math.sin(raan);
-                              const x = xOrbital * cosRaan - yAfterInclination * sinRaan;
-                              const y = xOrbital * sinRaan + yAfterInclination * cosRaan;
-                              const z = zAfterInclination;
-
-                              const position = new Cesium.Cartesian3(x, y, z);
-                              const distance = Math.max(danmaku.altitude * 3, 10000000);
-                              const cameraPosition = Cesium.Cartesian3.multiplyByScalar(position, distance / Cesium.Cartesian3.magnitude(position), new Cesium.Cartesian3());
-
-                              viewer.camera.flyTo({
-                                destination: cameraPosition,
-                                orientation: {
-                                  heading: 0,
-                                  pitch: Cesium.Math.toRadians(-45),
-                                  roll: 0,
-                                },
-                                duration: 1.5,
-                              });
-                            }
                           }}
                           className="flex items-center gap-2 flex-1 min-w-0"
                         >

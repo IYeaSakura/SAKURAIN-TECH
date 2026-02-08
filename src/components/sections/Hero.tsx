@@ -550,18 +550,51 @@ const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
 
 GlowScrollIndicator.displayName = 'GlowScrollIndicator';
 
-// 演示内容渲染
+// 演示内容渲染 - 同时渲染所有组件，通过 opacity 控制显隐，避免重新挂载导致黑屏
 const DemoContent = ({ demo, isDark }: { demo: { type: DemoType; isFullscreen: boolean; onFullscreenToggle: () => void }; isDark: boolean }) => {
-  switch (demo.type) {
-    case 'cesium':
-      return <CesiumGlobe isDark={isDark} />;
-    case 'chinamap':
-      return <ChinaMap3D isDark={isDark} />;
-    case 'terminal':
-      return <WebTerminal isFullscreen={demo.isFullscreen} onFullscreenToggle={demo.onFullscreenToggle} />;
-    default:
-      return <CesiumGlobe isDark={isDark} />;
-  }
+  const isCesium = demo.type === 'cesium';
+  const isChinaMap = demo.type === 'chinamap';
+  const isTerminal = demo.type === 'terminal';
+
+  return (
+    <div className="relative w-full h-full">
+      {/* Cesium 地球 - 使用 CSS 过渡实现淡入淡出 */}
+      <div
+        className="absolute inset-0 transition-opacity duration-500 ease-in-out"
+        style={{
+          opacity: isCesium ? 1 : 0,
+          pointerEvents: isCesium ? 'auto' : 'none',
+          zIndex: isCesium ? 1 : 0,
+        }}
+      >
+        <CesiumGlobe isDark={isDark} />
+      </div>
+
+      {/* Three.js 中国地图 */}
+      <div
+        className="absolute inset-0 transition-opacity duration-500 ease-in-out"
+        style={{
+          opacity: isChinaMap ? 1 : 0,
+          pointerEvents: isChinaMap ? 'auto' : 'none',
+          zIndex: isChinaMap ? 1 : 0,
+        }}
+      >
+        <ChinaMap3D isDark={isDark} />
+      </div>
+
+      {/* Web 终端 */}
+      <div
+        className="absolute inset-0 transition-opacity duration-500 ease-in-out"
+        style={{
+          opacity: isTerminal ? 1 : 0,
+          pointerEvents: isTerminal ? 'auto' : 'none',
+          zIndex: isTerminal ? 1 : 0,
+        }}
+      >
+        <WebTerminal isFullscreen={demo.isFullscreen} onFullscreenToggle={demo.onFullscreenToggle} />
+      </div>
+    </div>
+  );
 };
 
 // 获取演示配置
@@ -939,7 +972,6 @@ const GlobeShowcase = memo(() => {
           onDoubleClick={isFullscreen ? undefined : enterFullscreen}
         >
           <DemoContent
-            key={currentDemo}
             demo={{
               type: currentDemo,
               isFullscreen,

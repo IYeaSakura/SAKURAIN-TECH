@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { cn } from '@/lib/utils';
 import type { SiteData } from '@/types';
 import { preloadDocs, preloadFriends, preloadBlog } from '@/main';
 import { deploymentConfig } from '@/config/deployment-config';
 import type { LucideIcon } from 'lucide-react';
 
-// Theme type definition
 type Theme = 'light' | 'dark';
 
 interface NavigationProps {
@@ -18,10 +17,21 @@ interface NavigationProps {
   isThemeTransitioning?: boolean;
 }
 
+// 移动端 Dock 导航项配置
+const dockItems = [
+  { label: '首页', href: '/', icon: Home },
+  { label: '文档', href: '/docs', icon: BookOpen },
+  { label: '博客', href: '/blog', icon: FileText },
+  { label: '笔记', href: '/notes', icon: MessageCircle },
+  { label: '友链', href: '/friends', icon: Heart },
+  { label: '关于', href: '/about', icon: User },
+];
+
 export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }: NavigationProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,7 +41,6 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 禁止背景滚动当移动端菜单打开时
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
@@ -43,7 +52,6 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
     };
   }, [isMobileMenuOpen]);
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isMobileMenuOpen && e.key === 'Escape') {
@@ -111,10 +119,32 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
     }
   };
 
+  // 判断是否为当前激活路径
+  const isActive = (href: string) => {
+    if (href === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(href);
+  };
 
+  // 处理 Dock 导航点击
+  const handleDockClick = (href: string) => {
+    if (href === '/docs') {
+      handleDocsClick();
+    } else if (href === '/blog') {
+      handleBlogClick();
+    } else if (href === '/notes') {
+      handleNotesClick();
+    } else if (href === '/friends') {
+      handleFriendsClick();
+    } else {
+      handleNavClick(href);
+    }
+  };
 
   return (
     <>
+      {/* 桌面端顶部导航 */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
@@ -127,7 +157,6 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
       >
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
-            {/* Logo - 添加 max-w 防止溢出 */}
             <motion.button
               onClick={() => window.location.href = '/'}
               className="flex items-center gap-2 sm:gap-3 flex-shrink-0"
@@ -155,7 +184,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               </span>
             </motion.button>
 
-            {/* Desktop Navigation */}
+            {/* 桌面端导航链接 */}
             <div className="hidden lg:flex items-center gap-6 xl:gap-8">
               {data.links.map((link) => {
                 const Icon = getIcon(link.icon);
@@ -185,7 +214,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               })}
             </div>
 
-            {/* Theme Toggle */}
+            {/* 桌面端主题切换按钮 */}
             <div className="hidden md:flex items-center gap-4 flex-shrink-0">
               <button 
                 onClick={onThemeToggle} 
@@ -218,7 +247,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
               </button>
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* 移动端顶部按钮（主题切换） */}
             <div className="flex items-center gap-1 sm:gap-2 md:hidden flex-shrink-0">
               <button 
                 onClick={onThemeToggle} 
@@ -259,7 +288,116 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
         </div>
       </motion.nav>
 
-      {/* Mobile Menu */}
+      {/* 移动端底部 Dock 导航栏 */}
+      <motion.div
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50"
+      >
+        {/* 顶部渐变过渡 */}
+        <div 
+          className="h-8 pointer-events-none"
+          style={{
+            background: 'linear-gradient(to top, var(--bg-card), transparent)',
+          }}
+        />
+        
+        {/* Dock 容器 */}
+        <div
+          className="px-3 pb-4 pt-1"
+          style={{
+            background: 'var(--bg-card)',
+            borderTop: '1px solid var(--border-color)',
+          }}
+        >
+          <div className="flex items-center justify-around">
+            {dockItems.map((item, index) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              
+              return (
+                <motion.button
+                  key={item.href}
+                  onClick={() => handleDockClick(item.href)}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + index * 0.05 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="relative flex flex-col items-center gap-1 py-2 px-2 rounded-xl transition-all duration-300"
+                  style={{
+                    background: active ? 'var(--accent-primary)' : 'transparent',
+                  }}
+                >
+                  {/* 图标容器 */}
+                  <motion.div
+                    animate={{
+                      scale: active ? 1.1 : 1,
+                    }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                    className="relative"
+                  >
+                    <Icon 
+                      className="w-5 h-5 sm:w-6 sm:h-6 transition-colors duration-300"
+                      style={{
+                        color: active ? 'white' : 'var(--text-secondary)',
+                      }}
+                    />
+                    
+                    {/* 未激活时的微光效果 */}
+                    {!active && (
+                      <motion.div
+                        className="absolute inset-0 rounded-full blur-md"
+                        style={{
+                          background: 'var(--accent-primary)',
+                          opacity: 0,
+                        }}
+                        whileHover={{ opacity: 0.3 }}
+                        transition={{ duration: 0.2 }}
+                      />
+                    )}
+                  </motion.div>
+                  
+                  {/* 标签文字 */}
+                  <span
+                    className="text-[10px] sm:text-xs font-medium transition-colors duration-300"
+                    style={{
+                      color: active ? 'white' : 'var(--text-secondary)',
+                      fontFamily: 'var(--font-primary)',
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                  
+                  {/* 活跃指示器（小圆点） */}
+                  {active && (
+                    <motion.div
+                      layoutId="dock-indicator"
+                      className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full"
+                      style={{
+                        background: 'var(--accent-primary)',
+                        boxShadow: '0 0 8px var(--accent-primary)',
+                      }}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+        
+        {/* iOS 安全区域填充 */}
+        <div 
+          className="h-safe-area-inset-bottom"
+          style={{ background: 'var(--bg-card)' }}
+        />
+      </motion.div>
+
+      {/* 移动端全屏菜单（保留作为额外选项） */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -267,35 +405,33 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
             animate={isMobileMenuOpen ? { opacity: 1 } : { opacity: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-x-0 z-40 lg:hidden overflow-hidden"
+            className="fixed inset-x-0 z-[60] lg:hidden overflow-hidden"
             style={{ 
               top: '3.5rem',
-              bottom: 0,
+              bottom: '5.5rem', // 为底部 Dock 留出空间
             }}
           >
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm z-0"
               onClick={() => setIsMobileMenuOpen(false)}
               role="button"
               tabIndex={0}
               aria-label="关闭菜单"
             />
 
-            {/* Menu Panel */}
             <motion.div
               initial={{ opacity: 0, y: -10, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.98 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="absolute top-2 left-3 right-3 sm:left-4 sm:right-4 mc-panel p-4 sm:p-5 overflow-y-auto"
+              className="absolute top-2 left-3 right-3 sm:left-4 sm:right-4 mc-panel p-4 sm:p-5 overflow-y-auto z-10"
               style={{
                 borderRadius: '12px',
-                maxHeight: 'calc(100vh - 5rem)',
+                maxHeight: 'calc(100vh - 8rem)',
               }}
             >
               <div className="flex flex-col gap-2">
@@ -363,4 +499,3 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
     </>
   );
 }
-
