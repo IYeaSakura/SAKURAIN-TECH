@@ -55,6 +55,14 @@ export default function DocsPage() {
   const [selectedItem, setSelectedItem] = useState<DocItem | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
 
+  console.log('[DocsPage] Route params:', { categoryId, itemId, chapterId });
+  console.log('[DocsPage] Selected state:', { 
+    selectedCategory: selectedCategory?.id, 
+    selectedItem: selectedItem?.id,
+    selectedItemType: selectedItem?.type,
+    selectedChapter: selectedChapter?.id
+  });
+
   useEffect(() => {
     if (!config || !categoryId) {
       setSelectedCategory(null);
@@ -218,59 +226,80 @@ export default function DocsPage() {
       <MagneticCursor /><VelocityCursor />
       <AnimatePresence mode="wait">
         {selectedChapter && selectedItem?.type === 'series' && selectedCategory ? (
-          <motion.div key="chapter-reader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="h-screen flex flex-col">
-            <Suspense fallback={<DocsLoadingFallback />}>
-              <ChapterReader
-                chapter={selectedChapter}
-                series={selectedItem}
-                category={selectedCategory}
-                allChapters={allChapters}
-                onBack={handleBack}
-                onSelectChapter={handleSelectChapter}
-              />
-            </Suspense>
-          </motion.div>
+          (() => {
+            console.log('[DocsPage] Rendering chapter-reader');
+            return (
+              <motion.div key="chapter-reader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="h-screen flex flex-col">
+                <Suspense fallback={<DocsLoadingFallback />}>
+                  <ChapterReader
+                    chapter={selectedChapter}
+                    series={selectedItem}
+                    category={selectedCategory}
+                    allChapters={allChapters}
+                    onBack={handleBack}
+                    onSelectChapter={handleSelectChapter}
+                  />
+                </Suspense>
+              </motion.div>
+            );
+          })()
         )
         : selectedItem?.type === 'series' && selectedCategory ? (
-          <motion.div key="series-detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <SeriesDetailView
-              series={selectedItem}
-              category={selectedCategory}
-              onBack={handleBack}
-              onSelectChapter={handleSelectChapter}
-            />
-          </motion.div>
+          (() => {
+            console.log('[DocsPage] Rendering series-detail');
+            return (
+              <motion.div key="series-detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <SeriesDetailView
+                  series={selectedItem}
+                  category={selectedCategory}
+                  onBack={handleBack}
+                  onSelectChapter={handleSelectChapter}
+                />
+              </motion.div>
+            );
+          })()
         )
         : selectedItem?.type === 'doc' && selectedCategory ? (
-          <motion.div key="doc-detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="h-screen flex flex-col">
-            <Suspense fallback={<DocsLoadingFallback />}>
+          (() => {
+            console.log('[DocsPage] Rendering doc-detail');
+            return (
               <DocDetailView
                 doc={selectedItem}
                 category={selectedCategory}
                 onBack={handleBack}
               />
-            </Suspense>
-          </motion.div>
+            );
+          })()
         )
         : selectedCategory ? (
-          <motion.div key="category-list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <DocListView
-              category={selectedCategory}
-              onBack={handleBackToHome}
-              onSelectItem={handleSelectItem}
-              iconMap={iconMap}
-            />
-          </motion.div>
+          (() => {
+            console.log('[DocsPage] Rendering category-list');
+            return (
+              <motion.div key="category-list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <DocListView
+                  category={selectedCategory}
+                  onBack={handleBackToHome}
+                  onSelectItem={handleSelectItem}
+                  iconMap={iconMap}
+                />
+              </motion.div>
+            );
+          })()
         )
         : (
-          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-            <DocHomeView
-              config={config}
-              onSelectCategory={handleSelectCategory}
-              iconMap={iconMap}
-              siteData={siteData}
-            />
-          </motion.div>
+          (() => {
+            console.log('[DocsPage] Rendering home');
+            return (
+              <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                <DocHomeView
+                  config={config}
+                  onSelectCategory={handleSelectCategory}
+                  iconMap={iconMap}
+                  siteData={siteData}
+                />
+              </motion.div>
+            );
+          })()
         )}
       </AnimatePresence>
     </>
