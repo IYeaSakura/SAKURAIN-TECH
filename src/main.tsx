@@ -172,11 +172,13 @@ function GlobalLayout({ children }: { children: React.ReactNode }) {
       <GlobalContextMenu />
       <DebugProtection />
       
+      {/* 全局鼠标指针效果 - 所有页面都显示 */}
+      <MagneticCursor />
+      <VelocityCursor />
+
+      {/* 首页专属背景特效 */}
       {isHomePage && (
         <>
-          <MagneticCursor />
-          <VelocityCursor />
-
           <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block">
             <TwinklingStars count={35} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
           </div>
