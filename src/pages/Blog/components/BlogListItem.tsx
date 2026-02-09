@@ -1,6 +1,7 @@
 import { useState, memo } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router';
 import type { BlogPost } from '../types';
 import { formatDate, getReadingTime } from '../utils';
 import { deploymentConfig } from '@/config/deployment-config';
@@ -12,15 +13,20 @@ interface BlogListItemProps {
 
 export const BlogListItem = memo(function BlogListItem({ post, index }: BlogListItemProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
   const color = 'var(--accent-primary)';
+
+  const handleClick = () => {
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = `/blog/${post.slug}`;
+    } else {
+      navigate(`/blog/${post.slug}`);
+    }
+  };
 
   return (
     <motion.div
-      onClick={() => {
-        if (deploymentConfig.useWindowLocation) {
-          window.location.href = `/blog/${post.slug}`;
-        }
-      }}
+      onClick={handleClick}
       initial={{ opacity: 0, x: -30, scale: 0.95 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       transition={{

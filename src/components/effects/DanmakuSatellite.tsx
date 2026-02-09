@@ -565,7 +565,9 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
     };
 
     // 检查 viewer 是否有效，防止路由切换时访问已销毁的 viewer
-    if (viewer && !viewer.isDestroyed && !viewer.isDestroyed() && viewer.entities) {
+    const isViewerValid = viewer && !viewer.isDestroyed?.();
+    
+    if (isViewerValid && viewer.entities) {
       allSatellites.forEach(danmaku => {
         if (!entitiesRef.current.has(danmaku.id)) {
           try {
@@ -587,8 +589,8 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
     }
 
     const currentIds = new Set(allSatellites.map(d => d.id));
-    // 检查 viewer 是否有效，防止路由切换时访问已销毁的 viewer
-    if (viewer && !viewer.isDestroyed && !viewer.isDestroyed() && viewer.entities) {
+    
+    if (isViewerValid && viewer.entities) {
       entitiesRef.current.forEach((entity, id) => {
         if (!currentIds.has(id)) {
           viewer.entities.remove(entity);
@@ -601,7 +603,7 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
           orbitEntitiesRef.current.delete(id);
         }
       });
-    } else {
+    } else if (!isViewerValid) {
       // viewer 已销毁，清空本地引用
       entitiesRef.current.clear();
       orbitEntitiesRef.current.clear();
@@ -618,15 +620,20 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
 
     return () => {
       // 检查 viewer 是否存在且未被销毁，防止路由切换时出现 Cannot read properties of undefined 错误
-      if (viewer && !viewer.isDestroyed && !viewer.isDestroyed()) {
+      const isViewerValid = viewer && !viewer.isDestroyed?.();
+      if (isViewerValid && viewer.entities) {
         entitiesRef.current.forEach((entity) => {
-          if (entity && viewer.entities) {
+          try {
             viewer.entities.remove(entity);
+          } catch (e) {
+            // 忽略实体移除错误
           }
         });
         orbitEntitiesRef.current.forEach((entity) => {
-          if (entity && viewer.entities) {
+          try {
             viewer.entities.remove(entity);
+          } catch (e) {
+            // 忽略实体移除错误
           }
         });
       }

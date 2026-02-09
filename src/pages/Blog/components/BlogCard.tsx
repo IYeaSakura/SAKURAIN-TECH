@@ -1,6 +1,7 @@
 import { useState, memo } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router';
 import type { BlogPost } from '../types';
 import { formatDate, getReadingTime } from '../utils';
 import { deploymentConfig } from '@/config/deployment-config';
@@ -12,15 +13,20 @@ interface BlogCardProps {
 
 export const BlogCard = memo(function BlogCard({ post, index }: BlogCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
   const color = 'var(--accent-primary)';
+
+  const handleClick = () => {
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = `/blog/${post.slug}`;
+    } else {
+      navigate(`/blog/${post.slug}`);
+    }
+  };
 
   return (
     <motion.div
-      onClick={() => {
-        if (deploymentConfig.useWindowLocation) {
-          window.location.href = `/blog/${post.slug}`;
-        }
-      }}
+      onClick={handleClick}
       initial={{ opacity: 0, y: 30, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{
