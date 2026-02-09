@@ -12,6 +12,7 @@ The build process runs the following scripts in order:
 4. `generate-blog-tags.js` - Generate blog tags
 5. `generate-blog-archive.js` - Generate blog archive
 6. `generate-notes-archive.js` - Generate notes archive
+7. `generate-feeds.js` - Generate RSS/Atom/JSON Feed
 
 ## Scripts
 

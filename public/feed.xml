@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>SAKURAIN | 博弈算法与数据工程专家</title>
+    <link>https://sakurain.tech</link>
+    <description>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。</description>
+    <language>zh-CN</language>
+    <lastBuildDate>Sun, 08 Feb 2026 00:00:00 GMT</lastBuildDate>
+    <copyright>© 2026 SAKURAIN 技术工作室</copyright>
+    <generator>SAKURAIN Feed Generator</generator>
+    <atom:link href="https://sakurain.tech/feed.xml" rel="self" type="application/rss+xml"/>
+    <atom:link href="https://sakurain.tech/atom.xml" rel="alternate" type="application/atom+xml"/>
+    
+    <item>
+      <title>在腾讯云 EO 上实现 API 安全验证系统</title>
+      <link>https://sakurain.tech/blog/api-security-edgeone</link>
+      <guid isPermaLink="true">https://sakurain.tech/blog/api-security-edgeone</guid>
+      <pubDate>Sun, 08 Feb 2026 00:00:00 GMT</pubDate>
+      <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
+      <description>记录在腾讯云边缘函数上实现 HMAC-SHA256 认证系统的完整过程，包括遇到的坑和解决方案。</description>
+      <category>腾讯云</category><category>边缘计算</category><category>API安全</category><category>边缘函数</category>
+    </item>
+
+    <item>
+      <title>欢迎来到 SAKURAIN 博客</title>
+      <link>https://sakurain.tech/blog/hello-world</link>
+      <guid isPermaLink="true">https://sakurain.tech/blog/hello-world</guid>
+      <pubDate>Fri, 07 Feb 2025 00:00:00 GMT</pubDate>
+      <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
+      <description>这是我的第一篇博客文章，介绍这个博客系统的设计理念和技术栈。</description>
+      <category>博客</category><category>介绍</category>
+    </item>
+
+    <item>
+      <title>React + TypeScript + Vite 快速上手指南</title>
+      <link>https://sakurain.tech/blog/getting-started</link>
+      <guid isPermaLink="true">https://sakurain.tech/blog/getting-started</guid>
+      <pubDate>Thu, 06 Feb 2025 00:00:00 GMT</pubDate>
+      <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
+      <description>从零开始搭建一个现代化的 React 开发环境，包含最佳实践和常用配置。</description>
+      <category>React</category><category>TypeScript</category><category>Vite</category><category>教程</category>
+    </item>
+  </channel>
+</rss>
