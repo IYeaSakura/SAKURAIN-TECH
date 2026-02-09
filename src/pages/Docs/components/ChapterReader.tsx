@@ -1,14 +1,15 @@
-import { useState, useEffect, useRef, Component, Suspense, type ReactNode } from 'react';
+import { useState, useEffect, useRef, Component, Suspense, lazy, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { UnifiedToc } from './UnifiedToc';
 import { ThemeToggleButton } from './ThemeToggleButton';
-import { DocSearch } from './DocSearch';
 import { CodeBlock } from './CodeBlock';
 import { PlantUML } from './PlantUML';
 import type { Chapter, DocSeries, DocCategory, TocItem } from '../types';
+
+const DocSearch = lazy(() => import('./DocSearch').then(m => ({ default: m.DocSearch })));
 
 // 错误边界组件
 class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean; error?: Error }> {

@@ -164,26 +164,34 @@ function PageLayout({ children }: { children: React.ReactNode }) {
 }
 
 function GlobalLayout({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
+
   return (
     <>
       <GlobalContextMenu />
       <DebugProtection />
-      <MagneticCursor />
-      <VelocityCursor />
+      
+      {isHomePage && (
+        <>
+          <MagneticCursor />
+          <VelocityCursor />
 
-      <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block">
-        <TwinklingStars count={35} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
-      </div>
+          <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block">
+            <TwinklingStars count={35} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
+          </div>
 
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <FlowingGradient
-          colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
-          speed={15}
-          opacity={0.05}
-        />
-      </div>
+          <div className="fixed inset-0 pointer-events-none z-0">
+            <FlowingGradient
+              colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
+              speed={15}
+              opacity={0.05}
+            />
+          </div>
 
-      <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
+          <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
+        </>
+      )}
 
       {children}
     </>
