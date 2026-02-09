@@ -33,13 +33,55 @@ function RedirectHandler() {
 }
 
 // 路由懒加载（代码分割）
-const DocsPage = lazy(() => import('./pages/Docs/index'));
-const FriendsPage = lazy(() => import('./pages/Friends/index'));
-const BlogPage = lazy(() => import('./pages/Blog/index'));
-const BlogPostPage = lazy(() => import('./pages/Blog/[slug]'));
-const NotesPage = lazy(() => import('./pages/Notes/index'));
-const AboutPage = lazy(() => import('./pages/About/index'));
-const NotFoundPage = lazy(() => import('./pages/NotFound/index'));
+const DocsPage = lazy(() => {
+  console.log('[LazyLoad] Loading DocsPage...');
+  return import('./pages/Docs/index').then(module => {
+    console.log('[LazyLoad] DocsPage loaded');
+    return module;
+  });
+});
+const FriendsPage = lazy(() => {
+  console.log('[LazyLoad] Loading FriendsPage...');
+  return import('./pages/Friends/index').then(module => {
+    console.log('[LazyLoad] FriendsPage loaded');
+    return module;
+  });
+});
+const BlogPage = lazy(() => {
+  console.log('[LazyLoad] Loading BlogPage...');
+  return import('./pages/Blog/index').then(module => {
+    console.log('[LazyLoad] BlogPage loaded');
+    return module;
+  });
+});
+const BlogPostPage = lazy(() => {
+  console.log('[LazyLoad] Loading BlogPostPage...');
+  return import('./pages/Blog/[slug]').then(module => {
+    console.log('[LazyLoad] BlogPostPage loaded');
+    return module;
+  });
+});
+const NotesPage = lazy(() => {
+  console.log('[LazyLoad] Loading NotesPage...');
+  return import('./pages/Notes/index').then(module => {
+    console.log('[LazyLoad] NotesPage loaded');
+    return module;
+  });
+});
+const AboutPage = lazy(() => {
+  console.log('[LazyLoad] Loading AboutPage...');
+  return import('./pages/About/index').then(module => {
+    console.log('[LazyLoad] AboutPage loaded');
+    return module;
+  });
+});
+const NotFoundPage = lazy(() => {
+  console.log('[LazyLoad] Loading NotFoundPage...');
+  return import('./pages/NotFound/index').then(module => {
+    console.log('[LazyLoad] NotFoundPage loaded');
+    return module;
+  });
+});
 
 // 预加载函数
 let docsLoader: Promise<any> | null = null;
@@ -68,17 +110,20 @@ export function preloadBlog() {
 }
 
 // 页面加载 Skeleton 组件
-const PageSkeleton = () => (
-  <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-    <div className="flex flex-col items-center gap-4">
-      <div
-        className="w-12 h-12 border-2 border-t-transparent rounded-full animate-spin"
-        style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
-      />
-      <p style={{ color: 'var(--text-muted)' }}>加载中...</p>
+const PageSkeleton = () => {
+  console.log('[PageSkeleton] Rendering loading skeleton');
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+      <div className="flex flex-col items-center gap-4">
+        <div
+          className="w-12 h-12 border-2 border-t-transparent rounded-full animate-spin"
+          style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
+        />
+        <p style={{ color: 'var(--text-muted)' }}>加载中...</p>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 
 
