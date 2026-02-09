@@ -1,4 +1,4 @@
-import { StrictMode, Suspense, lazy, useEffect, useState } from 'react';
+import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router';
 import './index.css';
@@ -32,53 +32,29 @@ function RedirectHandler() {
   return null;
 }
 
-// 懒加载页面
-const DocsPage = lazy(() => import('./pages/Docs/index'));
-const FriendsPage = lazy(() => import('./pages/Friends/index'));
-const BlogPage = lazy(() => import('./pages/Blog/index'));
-const BlogPostPage = lazy(() => import('./pages/Blog/[slug]'));
-const NotesPage = lazy(() => import('./pages/Notes/index'));
-const AboutPage = lazy(() => import('./pages/About/index'));
-const NotFoundPage = lazy(() => import('./pages/NotFound/index'));
+// 直接导入页面组件（不使用懒加载）
+import DocsPage from './pages/Docs/index';
+import FriendsPage from './pages/Friends/index';
+import BlogPage from './pages/Blog/index';
+import BlogPostPage from './pages/Blog/[slug]';
+import NotesPage from './pages/Notes/index';
+import AboutPage from './pages/About/index';
+import NotFoundPage from './pages/NotFound/index';
 
-// 预加载加载器
-let docsLoader: Promise<any> | null = null;
-let friendsLoader: Promise<any> | null = null;
-let blogLoader: Promise<any> | null = null;
-
+// 预加载函数（保留以兼容现有代码）
 export function preloadDocs() {
-  if (!docsLoader) {
-    docsLoader = import('./pages/Docs/index');
-  }
-  return docsLoader;
+  return Promise.resolve();
 }
 
 export function preloadFriends() {
-  if (!friendsLoader) {
-    friendsLoader = import('./pages/Friends/index');
-  }
-  return friendsLoader;
+  return Promise.resolve();
 }
 
 export function preloadBlog() {
-  if (!blogLoader) {
-    blogLoader = import('./pages/Blog/index');
-  }
-  return blogLoader;
+  return Promise.resolve();
 }
 
-// 简单的加载占位组件
-const PageFallback = () => (
-  <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-    <div className="flex flex-col items-center gap-4">
-      <div
-        className="w-12 h-12 border-2 border-t-transparent rounded-full animate-spin"
-        style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
-      />
-      <p style={{ color: 'var(--text-muted)' }}>加载中...</p>
-    </div>
-  </div>
-);
+
 
 // 带导航的布局组件 - 只在指定列表页显示导航
 function PageLayout({ children }: { children: React.ReactNode }) {
@@ -151,56 +127,16 @@ createRoot(document.getElementById('root')!).render(
         <PageLayout>
           <Routes>
           <Route path="/" element={<App />} />
-          <Route path="/docs" element={
-            <Suspense fallback={<PageFallback />}>
-              <DocsPage />
-            </Suspense>
-          } />
-          <Route path="/docs/:categoryId" element={
-            <Suspense fallback={<PageFallback />}>
-              <DocsPage />
-            </Suspense>
-          } />
-          <Route path="/docs/:categoryId/:itemId" element={
-            <Suspense fallback={<PageFallback />}>
-              <DocsPage />
-            </Suspense>
-          } />
-          <Route path="/docs/:categoryId/:itemId/:chapterId" element={
-            <Suspense fallback={<PageFallback />}>
-              <DocsPage />
-            </Suspense>
-          } />
-          <Route path="/friends" element={
-            <Suspense fallback={<PageFallback />}>
-              <FriendsPage />
-            </Suspense>
-          } />
-          <Route path="/blog" element={
-            <Suspense fallback={<PageFallback />}>
-              <BlogPage />
-            </Suspense>
-          } />
-          <Route path="/blog/:slug" element={
-            <Suspense fallback={<PageFallback />}>
-              <BlogPostPage />
-            </Suspense>
-          } />
-          <Route path="/notes" element={
-            <Suspense fallback={<PageFallback />}>
-              <NotesPage />
-            </Suspense>
-          } />
-          <Route path="/about" element={
-            <Suspense fallback={<PageFallback />}>
-              <AboutPage />
-            </Suspense>
-          } />
-          <Route path="*" element={
-            <Suspense fallback={<PageFallback />}>
-              <NotFoundPage />
-            </Suspense>
-          } />
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/docs/:categoryId" element={<DocsPage />} />
+          <Route path="/docs/:categoryId/:itemId" element={<DocsPage />} />
+          <Route path="/docs/:categoryId/:itemId/:chapterId" element={<DocsPage />} />
+          <Route path="/friends" element={<FriendsPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/blog/:slug" element={<BlogPostPage />} />
+          <Route path="/notes" element={<NotesPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </PageLayout>
       </GlobalLayout>
