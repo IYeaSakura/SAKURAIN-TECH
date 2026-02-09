@@ -38,6 +38,8 @@ export default function DocsPage() {
   const [selectedItem, setSelectedItem] = useState<DocItem | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
 
+  console.log('[DocsPage] Render - configLoading:', configLoading, 'configError:', configError, 'config:', !!config, 'categoryId:', categoryId);
+
   useEffect(() => {
     if (!config || !categoryId) {
       setSelectedCategory(null);

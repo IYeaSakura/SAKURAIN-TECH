@@ -113,13 +113,13 @@ export function preloadBlog() {
 const PageSkeleton = () => {
   console.log('[PageSkeleton] Rendering loading skeleton');
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
       <div className="flex flex-col items-center gap-4">
         <div
           className="w-12 h-12 border-2 border-t-transparent rounded-full animate-spin"
-          style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
+          style={{ borderColor: '#3b82f6', borderTopColor: 'transparent' }}
         />
-        <p style={{ color: 'var(--text-muted)' }}>加载中...</p>
+        <p style={{ color: '#9ca3af' }}>加载中...</p>
       </div>
     </div>
   );
