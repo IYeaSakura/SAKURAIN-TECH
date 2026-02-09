@@ -564,30 +564,48 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
       return entity;
     };
 
-    allSatellites.forEach(danmaku => {
-      if (!entitiesRef.current.has(danmaku.id)) {
-        const entity = createSatelliteEntity(danmaku);
-        if (entity) entitiesRef.current.set(danmaku.id, entity);
-      }
-      if (!orbitEntitiesRef.current.has(danmaku.id)) {
-        const orbitEntity = createOrbitLine(danmaku);
-        if (orbitEntity) orbitEntitiesRef.current.set(danmaku.id, orbitEntity);
-      }
-    });
+    // 检查 viewer 是否有效，防止路由切换时访问已销毁的 viewer
+    if (viewer && !viewer.isDestroyed && !viewer.isDestroyed() && viewer.entities) {
+      allSatellites.forEach(danmaku => {
+        if (!entitiesRef.current.has(danmaku.id)) {
+          try {
+            const entity = createSatelliteEntity(danmaku);
+            if (entity) entitiesRef.current.set(danmaku.id, entity);
+          } catch (e) {
+            // 忽略 viewer 销毁过程中的错误
+          }
+        }
+        if (!orbitEntitiesRef.current.has(danmaku.id)) {
+          try {
+            const orbitEntity = createOrbitLine(danmaku);
+            if (orbitEntity) orbitEntitiesRef.current.set(danmaku.id, orbitEntity);
+          } catch (e) {
+            // 忽略 viewer 销毁过程中的错误
+          }
+        }
+      });
+    }
 
     const currentIds = new Set(allSatellites.map(d => d.id));
-    entitiesRef.current.forEach((entity, id) => {
-      if (!currentIds.has(id)) {
-        viewer.entities.remove(entity);
-        entitiesRef.current.delete(id);
-      }
-    });
-    orbitEntitiesRef.current.forEach((entity, id) => {
-      if (!currentIds.has(id)) {
-        viewer.entities.remove(entity);
-        orbitEntitiesRef.current.delete(id);
-      }
-    });
+    // 检查 viewer 是否有效，防止路由切换时访问已销毁的 viewer
+    if (viewer && !viewer.isDestroyed && !viewer.isDestroyed() && viewer.entities) {
+      entitiesRef.current.forEach((entity, id) => {
+        if (!currentIds.has(id)) {
+          viewer.entities.remove(entity);
+          entitiesRef.current.delete(id);
+        }
+      });
+      orbitEntitiesRef.current.forEach((entity, id) => {
+        if (!currentIds.has(id)) {
+          viewer.entities.remove(entity);
+          orbitEntitiesRef.current.delete(id);
+        }
+      });
+    } else {
+      // viewer 已销毁，清空本地引用
+      entitiesRef.current.clear();
+      orbitEntitiesRef.current.clear();
+    }
 
     // 更新可见性
     entitiesRef.current.forEach((entity) => {
@@ -599,9 +617,20 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
     });
 
     return () => {
-      entitiesRef.current.forEach((entity) => viewer.entities.remove(entity));
+      // 检查 viewer 是否存在且未被销毁，防止路由切换时出现 Cannot read properties of undefined 错误
+      if (viewer && !viewer.isDestroyed && !viewer.isDestroyed()) {
+        entitiesRef.current.forEach((entity) => {
+          if (entity && viewer.entities) {
+            viewer.entities.remove(entity);
+          }
+        });
+        orbitEntitiesRef.current.forEach((entity) => {
+          if (entity && viewer.entities) {
+            viewer.entities.remove(entity);
+          }
+        });
+      }
       entitiesRef.current.clear();
-      orbitEntitiesRef.current.forEach((entity) => viewer.entities.remove(entity));
       orbitEntitiesRef.current.clear();
     };
   }, [viewer, danmakus, beidouSatellites, showBeidou, showText, showSatellite, showOrbitLine, showAll]);
