@@ -105,6 +105,16 @@ html.lenis, html.lenis body {
   overflow: hidden;
 }
 
+/* 防止页面切换时滚动条消失导致跳动 */
+html {
+  overflow-y: scroll;
+}
+
+/* Lenis 初始化前的占位，防止滚动条闪烁 */
+html:not(.lenis) {
+  scrollbar-gutter: stable;
+}
+
 .lenis.lenis-scrolling iframe {
   pointer-events: none;
 }

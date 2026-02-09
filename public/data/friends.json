@@ -189,7 +189,8 @@
       "description": "人山人海人来人往，自尊自爱自由自在",
       "category": "blogs",
       "featured": true,
-      "unidirectional": true
+      "unidirectional": true,
+      "status": "offline"
     }
   ]
 }

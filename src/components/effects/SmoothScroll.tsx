@@ -14,6 +14,9 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // 确保 html 元素有 lenis 类，防止 CSS 选择器失效
+    document.documentElement.classList.add('lenis');
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -38,6 +41,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
 
     return () => {
       lenis.destroy();
+      document.documentElement.classList.remove('lenis');
     };
   }, []);
 
