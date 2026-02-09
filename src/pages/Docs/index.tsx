@@ -57,16 +57,25 @@ export default function DocsPage() {
   const [selectedItem, setSelectedItem] = useState<DocItem | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
 
-  console.log('[DocsPage] Route params:', { categoryId, itemId, chapterId });
-  console.log('[DocsPage] Selected state:', { 
+  console.log('[DocsPage] Route params:', JSON.stringify({ categoryId, itemId, chapterId }));
+  console.log('[DocsPage] Selected state:', JSON.stringify({ 
     selectedCategory: selectedCategory?.id, 
     selectedItem: selectedItem?.id,
     selectedItemType: selectedItem?.type,
     selectedChapter: selectedChapter?.id
-  });
+  }));
 
   useEffect(() => {
+    console.log('[DocsPage] useEffect called with:', { 
+      hasConfig: !!config, 
+      categoryId, 
+      itemId, 
+      chapterId,
+      categoriesCount: config?.categories?.length 
+    });
+
     if (!config || !categoryId) {
+      console.log('[DocsPage] No config or categoryId, clearing selections');
       setSelectedCategory(null);
       setSelectedItem(null);
       setSelectedChapter(null);
@@ -74,7 +83,10 @@ export default function DocsPage() {
     }
 
     const category = config.categories.find((c) => c.id === categoryId);
+    console.log('[DocsPage] Found category:', category?.id);
+    
     if (!category) {
+      console.log('[DocsPage] Category not found, redirecting to /docs');
       if (deploymentConfig.useWindowLocation) {
         window.location.href = '/docs';
       } else {
@@ -85,13 +97,17 @@ export default function DocsPage() {
     setSelectedCategory(category);
 
     if (!itemId) {
+      console.log('[DocsPage] No itemId, clearing item and chapter');
       setSelectedItem(null);
       setSelectedChapter(null);
       return;
     }
 
     const item = category.items.find((i) => i.id === itemId);
+    console.log('[DocsPage] Found item:', item?.id, 'type:', item?.type);
+    
     if (!item) {
+      console.log('[DocsPage] Item not found, redirecting to /docs');
       if (deploymentConfig.useWindowLocation) {
         window.location.href = '/docs';
       } else {
@@ -104,9 +120,12 @@ export default function DocsPage() {
     if (item.type === 'series') {
       if (chapterId) {
         const chapter = item.chapters.find((c) => c.id === chapterId);
+        console.log('[DocsPage] Found chapter:', chapter?.id);
+        
         if (chapter) {
           setSelectedChapter(chapter);
         } else {
+          console.log('[DocsPage] Chapter not found, redirecting to series page');
           if (deploymentConfig.useWindowLocation) {
             window.location.href = `/docs/${categoryId}/${itemId}`;
           } else {
@@ -114,9 +133,11 @@ export default function DocsPage() {
           }
         }
       } else {
+        console.log('[DocsPage] No chapterId, clearing chapter');
         setSelectedChapter(null);
       }
     } else {
+      console.log('[DocsPage] Item is not a series, clearing chapter');
       setSelectedChapter(null);
     }
   }, [config, categoryId, itemId, chapterId, navigate]);
