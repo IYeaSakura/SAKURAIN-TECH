@@ -15,7 +15,9 @@ import type { SiteData } from '@/types';
 
 // 懒加载需要 Markdown 处理的组件
 const DocDetailView = lazy(() => import('./components/DocDetailView').then(m => ({ default: m.DocDetailView })));
-const ChapterReader = lazy(() => import('./components/ChapterReader').then(m => ({ default: m.ChapterReader })));
+// 临时直接导入 ChapterReader 以便调试
+import { ChapterReader as ChapterReaderComponent } from './components/ChapterReader';
+const ChapterReader = ChapterReaderComponent;
 
 // 文档加载占位组件
 function DocsLoadingFallback() {
