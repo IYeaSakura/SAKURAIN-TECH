@@ -253,7 +253,12 @@ export default function DocsPage() {
             console.log('[DocsPage] Rendering chapter-reader');
             return (
               <motion.div key="chapter-reader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="h-screen flex flex-col">
-                <Suspense fallback={<DocsLoadingFallback />}>
+                <Suspense fallback={
+                  (() => {
+                    console.log('[DocsDocs] ChapterReader Suspense fallback shown');
+                    return <DocsLoadingFallback />;
+                  })()
+                }>
                   <ChapterReader
                     chapter={selectedChapter}
                     series={selectedItem}
