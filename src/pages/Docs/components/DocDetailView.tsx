@@ -206,9 +206,15 @@ export function DocDetailView({ doc, category, onBack }: DocDetailViewProps) {
               </div>
             ) : (
               <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <Suspense fallback={<div className="p-4 text-center" style={{ color: 'var(--text-muted)' }}>加载内容...</div>}>
-                  <MarkdownRenderer content={content} />
-                </Suspense>
+                {content && content.trim() ? (
+                  <Suspense fallback={<div className="p-4 text-center" style={{ color: 'var(--text-muted)' }}>加载内容...</div>}>
+                    <MarkdownRenderer content={content} />
+                  </Suspense>
+                ) : (
+                  <div className="text-center py-20" style={{ color: 'var(--text-muted)' }}>
+                    暂无内容
+                  </div>
+                )}
                 
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
