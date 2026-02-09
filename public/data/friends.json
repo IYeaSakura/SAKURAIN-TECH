@@ -169,6 +169,17 @@
       "featured": true,
       "unidirectional": true,
       "status": "online"
+    },
+    {
+      "id": "9sb",
+      "name": "记录生活，精彩一刻",
+      "url": "https://9sb.net",
+      "icon": "https://9sb.net/logo.svg",
+      "description": "资源 共享 生活 学习",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true,
+      "status": "online"
     }
   ]
 }

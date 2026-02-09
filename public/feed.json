@@ -1,0 +1,62 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": "SAKURAIN | 博弈算法与数据工程专家",
+  "description": "SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。",
+  "home_page_url": "https://sakurain.tech",
+  "feed_url": "https://sakurain.tech/feed.json",
+  "language": "zh-CN",
+  "authors": [
+    {
+      "name": "SAKURAIN",
+      "url": "https://sakurain.tech"
+    }
+  ],
+  "items": [
+    {
+      "id": "https://sakurain.tech/blog/api-security-edgeone",
+      "url": "https://sakurain.tech/blog/api-security-edgeone",
+      "title": "在腾讯云 EO 上实现 API 安全验证系统",
+      "content_text": "记录在腾讯云边缘函数上实现 HMAC-SHA256 认证系统的完整过程，包括遇到的坑和解决方案。",
+      "date_published": "2026-02-08T00:00:00.000Z",
+      "author": {
+        "name": "SAKURAIN"
+      },
+      "tags": [
+        "腾讯云",
+        "边缘计算",
+        "API安全",
+        "边缘函数"
+      ]
+    },
+    {
+      "id": "https://sakurain.tech/blog/hello-world",
+      "url": "https://sakurain.tech/blog/hello-world",
+      "title": "欢迎来到 SAKURAIN 博客",
+      "content_text": "这是我的第一篇博客文章，介绍这个博客系统的设计理念和技术栈。",
+      "date_published": "2025-02-07T00:00:00.000Z",
+      "author": {
+        "name": "SAKURAIN"
+      },
+      "tags": [
+        "博客",
+        "介绍"
+      ]
+    },
+    {
+      "id": "https://sakurain.tech/blog/getting-started",
+      "url": "https://sakurain.tech/blog/getting-started",
+      "title": "React + TypeScript + Vite 快速上手指南",
+      "content_text": "从零开始搭建一个现代化的 React 开发环境，包含最佳实践和常用配置。",
+      "date_published": "2025-02-06T00:00:00.000Z",
+      "author": {
+        "name": "SAKURAIN"
+      },
+      "tags": [
+        "React",
+        "TypeScript",
+        "Vite",
+        "教程"
+      ]
+    }
+  ]
+}
