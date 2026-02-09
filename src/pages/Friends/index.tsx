@@ -263,25 +263,54 @@ const PixelCard = memo(function PixelCard({
           </motion.div>
 
           {/* Content */}
-          <div className="flex-1 min-w-0">
-            {/* Name row with status */}
-            <div className="flex items-center gap-2 mb-2">
-              <motion.h3
-                animate={{ scale: isHovered ? 1.02 : 1 }}
-                transition={{ duration: 0.2 }}
-                className="font-bold text-lg truncate"
-                style={{ 
-                  color: 'var(--text-primary)',
-                  textShadow: isHovered ? '0 0 10px var(--accent-glow)' : 'none',
-                }}
-              >
-                {friend.name}
-              </motion.h3>
+          <div className="flex-1 min-w-0 overflow-visible">
+            {/* Name row with status - 使用 flex-wrap 允许换行，标签固定不换行 */}
+            <div className="flex items-start gap-2 mb-2 flex-wrap">
+              {/* 标题容器 - 设置最大宽度，悬浮时显示完整名称 */}
+              <div className="relative group/title flex-1 min-w-0">
+                <motion.h3
+                  animate={{ scale: isHovered ? 1.02 : 1 }}
+                  transition={{ duration: 0.2 }}
+                  className="font-bold text-lg truncate"
+                  style={{ 
+                    color: 'var(--text-primary)',
+                    textShadow: isHovered ? '0 0 10px var(--accent-glow)' : 'none',
+                    maxWidth: '100%',
+                  }}
+                >
+                  {friend.name}
+                </motion.h3>
+                
+                {/* 悬浮提示 - 显示完整名称 */}
+                <div 
+                  className="absolute left-0 -top-1 -translate-y-full opacity-0 group-hover/title:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap"
+                  style={{
+                    background: 'rgba(15, 23, 42, 0.95)',
+                    border: '1px solid rgba(59, 130, 246, 0.5)',
+                    padding: '4px 12px',
+                    borderRadius: '4px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                  }}
+                >
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {friend.name}
+                  </span>
+                  {/* 小三角箭头 */}
+                  <div 
+                    className="absolute left-4 top-full w-0 h-0"
+                    style={{
+                      borderLeft: '5px solid transparent',
+                      borderRight: '5px solid transparent',
+                      borderTop: '5px solid rgba(59, 130, 246, 0.5)',
+                    }}
+                  />
+                </div>
+              </div>
               
-              {/* Status indicator - inline with name */}
+              {/* Status indicator - 固定宽度，不被挤压 */}
               {friend.status && (
                 <div 
-                  className="flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-medium"
+                  className="flex-shrink-0 flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-medium whitespace-nowrap"
                   style={{
                     background: friend.status === 'online' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
                     border: `1px solid ${friend.status === 'online' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
@@ -302,10 +331,10 @@ const PixelCard = memo(function PixelCard({
                 </div>
               )}
 
-              {/* Unidirectional indicator */}
+              {/* Unidirectional indicator - 固定宽度 */}
               {friend.unidirectional && (
                 <div 
-                  className="flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-medium"
+                  className="flex-shrink-0 flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-medium whitespace-nowrap"
                   style={{
                     background: 'rgba(234, 179, 8, 0.15)',
                     border: '1px solid rgba(234, 179, 8, 0.4)',

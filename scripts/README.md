@@ -281,6 +281,72 @@ mood: "happy"
 
 ---
 
+### 7. generate-feeds.js
+
+**Purpose**: Generate RSS 2.0, Atom, and JSON Feed for blog subscription.
+
+**Usage**: Automatically runs during build process.
+
+**Input**: Reads blog posts from `public/blog/archives/index-YYYY-MM.json`
+
+**Site Data**: Reads site information from `public/data/site-data.json`
+
+**Generated Outputs**:
+1. `public/feed.xml` - RSS 2.0 feed
+2. `public/atom.xml` - Atom feed
+3. `public/feed.json` - JSON Feed
+
+**Feed URLs**:
+- RSS 2.0: `https://sakurain.tech/feed.xml`
+- Atom: `https://sakurain.tech/atom.xml`
+- JSON Feed: `https://sakurain.tech/feed.json`
+
+**Feed Auto-discovery**: The following `<link>` tags are automatically added to `index.html`:
+
+```html
+<link rel="alternate" type="application/rss+xml" title="SAKURAIN 博客 (RSS 2.0)" href="/feed.xml" />
+<link rel="alternate" type="application/atom+xml" title="SAKURAIN 博客 (Atom)" href="/atom.xml" />
+<link rel="alternate" type="application/feed+json" title="SAKURAIN 博客 (JSON Feed)" href="/feed.json" />
+```
+
+**RSS 2.0 Structure**:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>SAKURAIN 博客</title>
+    <link>https://sakurain.tech</link>
+    <description>...</description>
+    <item>
+      <title>Post Title</title>
+      <link>https://sakurain.tech/blog/slug</link>
+      <pubDate>...</pubDate>
+      <category>Tag</category>
+    </item>
+  </channel>
+</rss>
+```
+
+**JSON Feed Structure**:
+
+```json
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": "SAKURAIN 博客",
+  "items": [
+    {
+      "id": "https://sakurain.tech/blog/slug",
+      "title": "Post Title",
+      "date_published": "2026-02-08T00:00:00.000Z",
+      "tags": ["React", "TypeScript"]
+    }
+  ]
+}
+```
+
+---
+
 ## Manual Execution
 
 You can run any script individually using Node.js:
@@ -303,6 +369,9 @@ node scripts/generate-blog-archive.js
 
 # Generate notes archive
 node scripts/generate-notes-archive.js
+
+# Generate blog feeds (RSS/Atom/JSON)
+node scripts/generate-feeds.js
 ```
 
 ---
@@ -351,7 +420,7 @@ All scripts are automatically executed during the build process defined in `pack
 ```json
 {
   "scripts": {
-    "build": "node scripts/generate-deployment-config.js && node scripts/generate-security-config.js && node scripts/check-friends-connectivity.js && node scripts/generate-blog-tags.js && node scripts/generate-blog-archive.js && node scripts/generate-notes-archive.js && tsc -b && && vite build"
+    "build": "node scripts/generate-deployment-config.js && node scripts/generate-security-config.js && node scripts/check-friends-connectivity.js && node scripts/generate-blog-tags.js && node scripts/generate-blog-archive.js && node scripts/generate-notes-archive.js && node scripts/generate-feeds.js && tsc -b && vite build"
   }
 }
 ```
