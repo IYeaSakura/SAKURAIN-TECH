@@ -180,6 +180,16 @@
       "featured": true,
       "unidirectional": true,
       "status": "online"
+    },
+    {
+      "id": "ziyibbs",
+      "name": "紫血小站",
+      "url": "https://blog.ziyibbs.com",
+      "icon": "https://blog.ziyibbs.com/favicon/logo.png",
+      "description": "人山人海人来人往，自尊自爱自由自在",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true
     }
   ]
 }

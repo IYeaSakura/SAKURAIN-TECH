@@ -1,8 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/feed",
-      "destination": "/feed.xml"
+      "source": "/favicon.ico",
+      "destination": "/image/logo.webp"
+    },
+    {
+      "source": "/favicon",
+      "destination": "/image/logo.webp"
     },
     {
       "source": "/feed/atom",
@@ -11,6 +15,10 @@
     {
       "source": "/feed/json",
       "destination": "/feed.json"
+    },
+    {
+      "source": "/feed",
+      "destination": "/feed.xml"
     },
     {
       "source": "/docs",
