@@ -653,11 +653,11 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                   </div>
                                   <div>
                                     <span className="font-medium" style={{ color: 'var(--text-primary)' }}>网站链接：</span>
-                                    <span className="ml-2">https://sakurain.net/</span>
+                                    <span className="ml-2">https://sakurain.net</span>
                                   </div>
                                   <div>
                                     <span className="font-medium" style={{ color: 'var(--text-primary)' }}>头像链接：</span>
-                                    <span className="ml-2">https://sakurain.net/image/logo.webp</span>
+                                    <span className="ml-2">https://sakurain.net/favicon</span>
                                   </div>
                                   <div>
                                     <span className="font-medium" style={{ color: 'var(--text-primary)' }}>网站描述：</span>

@@ -252,7 +252,7 @@ const PixelCard = memo(function PixelCard({
             ) : (
               <Globe className="w-10 h-10" style={{ color: 'var(--accent-primary)' }} />
             )}
-            
+
             {/* Icon glow */}
             <motion.div
               className="absolute inset-0 pointer-events-none"
@@ -272,7 +272,7 @@ const PixelCard = memo(function PixelCard({
                   animate={{ scale: isHovered ? 1.02 : 1 }}
                   transition={{ duration: 0.2 }}
                   className="font-bold text-lg truncate"
-                  style={{ 
+                  style={{
                     color: 'var(--text-primary)',
                     textShadow: isHovered ? '0 0 10px var(--accent-glow)' : 'none',
                     maxWidth: '100%',
@@ -280,9 +280,9 @@ const PixelCard = memo(function PixelCard({
                 >
                   {friend.name}
                 </motion.h3>
-                
+
                 {/* 悬浮提示 - 显示完整名称 */}
-                <div 
+                <div
                   className="absolute left-0 -top-1 -translate-y-full opacity-0 group-hover/title:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap"
                   style={{
                     background: 'rgba(15, 23, 42, 0.95)',
@@ -296,7 +296,7 @@ const PixelCard = memo(function PixelCard({
                     {friend.name}
                   </span>
                   {/* 小三角箭头 */}
-                  <div 
+                  <div
                     className="absolute left-4 top-full w-0 h-0"
                     style={{
                       borderLeft: '5px solid transparent',
@@ -306,10 +306,10 @@ const PixelCard = memo(function PixelCard({
                   />
                 </div>
               </div>
-              
+
               {/* Status indicator - 固定宽度，不被挤压 */}
               {friend.status && (
-                <div 
+                <div
                   className="flex-shrink-0 flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-medium whitespace-nowrap"
                   style={{
                     background: friend.status === 'online' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
@@ -333,7 +333,7 @@ const PixelCard = memo(function PixelCard({
 
               {/* Unidirectional indicator - 固定宽度 */}
               {friend.unidirectional && (
-                <div 
+                <div
                   className="flex-shrink-0 flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-medium whitespace-nowrap"
                   style={{
                     background: 'rgba(234, 179, 8, 0.15)',
@@ -346,14 +346,14 @@ const PixelCard = memo(function PixelCard({
                 </div>
               )}
             </div>
-            
+
             <p className="text-sm line-clamp-2" style={{ color: 'var(--text-muted)' }}>
               {friend.description}
             </p>
-            
+
             {/* Featured badge */}
             {friend.featured && (
-              <div 
+              <div
                 className="inline-flex items-center gap-1 mt-3 px-2 py-1 text-[10px] font-bold uppercase tracking-wider"
                 style={{
                   background: 'rgba(59, 130, 246, 0.15)',
@@ -367,7 +367,7 @@ const PixelCard = memo(function PixelCard({
               </div>
             )}
           </div>
-          
+
           {/* External link icon */}
           <motion.div
             initial={{ opacity: 0, x: -10 }}
@@ -441,7 +441,7 @@ const CategorySection = memo(function CategorySection({
             viewport={{ margin: '-50px' }}
             transition={{ delay: index * 0.1 + 0.2 }}
           >
-            <h2 
+            <h2
               className="font-sans font-bold text-2xl"
               style={{
                 background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
@@ -489,7 +489,7 @@ const HeroSection = memo(function HeroSection({
     <section className="relative pt-20 pb-16 overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
-        <div 
+        <div
           className="absolute top-20 right-20 w-64 h-64 opacity-20"
           style={{ background: 'radial-gradient(circle, var(--accent-glow), transparent 70%)' }}
         />
@@ -518,7 +518,7 @@ const HeroSection = memo(function HeroSection({
               <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>友情链接</span>
             </motion.div>
 
-            <h1 
+            <h1
               className="font-sans font-bold text-4xl md:text-5xl lg:text-6xl mb-6"
               style={{
                 background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
@@ -566,7 +566,7 @@ const HeroSection = memo(function HeroSection({
                   whileHover={{ opacity: 0.5 }}
                   transition={{ duration: 0.3 }}
                 />
-                
+
                 <stat.icon className="w-6 h-6 mx-auto mb-3" style={{ color: 'var(--accent-primary)' }} />
                 <div className="font-sans font-bold text-3xl mb-1" style={{ color: 'var(--text-primary)' }}>
                   {stat.value}
@@ -583,11 +583,185 @@ const HeroSection = memo(function HeroSection({
   );
 });
 
+// Mailto Modal Component
+const MailtoModal = memo(function MailtoModal({
+  isOpen,
+  onClose,
+  contact,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  contact: string;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setCopied(false);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(contact);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('复制失败:', err);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0"
+        style={{ background: 'rgba(0, 0, 0, 0.7)' }}
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        className="relative w-full max-w-md p-6"
+        style={{
+          background: 'rgba(15, 23, 42, 0.95)',
+          border: '2px solid rgba(255, 255, 255, 0.1)',
+          clipPath: clipPathRounded(12),
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        }}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className="flex items-center justify-center w-12 h-12"
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '2px solid rgba(255, 255, 255, 0.1)',
+              clipPath: clipPathRounded(4),
+            }}
+          >
+            <Mail className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
+              申请友链
+            </h3>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+              已尝试唤起邮箱程序
+            </p>
+          </div>
+        </div>
+
+        <div
+          className="mb-4 p-4"
+          style={{
+            background: 'rgba(251, 146, 60, 0.1)',
+            border: '1px solid rgba(251, 146, 60, 0.3)',
+            clipPath: clipPathRounded(4),
+          }}
+        >
+          <div className="flex items-start gap-2">
+            <span className="text-lg" style={{ color: '#fbbf24' }}>⚠️</span>
+            <div>
+              <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                提示
+              </p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                如果邮箱程序未自动启动，请手动发送邮件至下方邮箱地址
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 友链格式信息 */}
+        <div
+          className="mb-4 p-4"
+          style={{
+            background: 'rgba(59, 130, 246, 0.05)',
+            border: '1px solid rgba(59, 130, 246, 0.2)',
+            clipPath: clipPathRounded(4),
+          }}
+        >
+          <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
+            友链格式（请按此格式发送）
+          </p>
+          <div className="space-y-1.5 text-sm" style={{ color: 'var(--text-primary)' }}>
+            <p><span style={{ color: 'var(--text-muted)' }}>网站名称：</span>SAKURAIN TEAM</p>
+            <p><span style={{ color: 'var(--text-muted)' }}>网站链接：</span>https://sakurain.net/</p>
+            <p><span style={{ color: 'var(--text-muted)' }}>头像链接：</span>https://sakurain.net/favicon</p>
+            <p><span style={{ color: 'var(--text-muted)' }}>网站描述：</span>用代码构建未来</p>
+          </div>
+        </div>
+
+        <div
+          className="mb-4 p-4"
+          style={{
+            background: 'rgba(255, 255, 255, 0.03)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            clipPath: clipPathRounded(4),
+          }}
+        >
+          <p className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>
+            收件邮箱
+          </p>
+          <div className="flex items-center gap-2">
+            <code
+              className="flex-1 px-3 py-2 text-sm font-mono rounded"
+              style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                color: 'var(--accent-primary)',
+              }}
+            >
+              {contact}
+            </code>
+            <motion.button
+              onClick={handleCopyEmail}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="px-3 py-2 text-sm font-medium transition-all whitespace-nowrap"
+              style={{
+                background: copied ? 'rgba(34, 197, 94, 0.2)' : 'var(--accent-primary)',
+                color: copied ? '#22c55e' : 'white',
+                clipPath: clipPathRounded(4),
+              }}
+            >
+              {copied ? '已复制' : '复制'}
+            </motion.button>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <motion.button
+            onClick={onClose}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1 px-4 py-2 font-medium transition-all"
+            style={{
+              background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))',
+              color: 'white',
+              clipPath: clipPathRounded(4),
+            }}
+          >
+            知道了
+          </motion.button>
+        </div>
+      </motion.div>
+    </div>
+  );
+});
+
 // Apply Section Component
 const ApplySection = memo(function ApplySection({
-  applyInfo
+  applyInfo,
+  onApplyClick
 }: {
   applyInfo: ApplyInfo;
+  onApplyClick: () => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -597,7 +771,10 @@ const ApplySection = memo(function ApplySection({
 
     const mailtoLink = `mailto:${applyInfo.contact}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailtoLink;
-  }, [applyInfo.contact]);
+
+    // 通知父组件显示弹窗
+    onApplyClick();
+  }, [applyInfo.contact, onApplyClick]);
 
   return (
     <motion.section
@@ -649,7 +826,7 @@ const ApplySection = memo(function ApplySection({
                 />
                 <Sparkles className="w-6 h-6 relative z-10" style={{ color: 'var(--accent-primary)' }} />
               </motion.div>
-              <h2 
+              <h2
                 className="font-sans font-bold text-2xl"
                 style={{
                   background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
@@ -808,7 +985,7 @@ const RedirectModal = memo(function RedirectModal({
         }}
       >
         <div className="flex items-center gap-3 mb-4">
-          <div 
+          <div
             className="flex items-center justify-center w-12 h-12"
             style={{
               background: 'rgba(255, 255, 255, 0.03)',
@@ -828,7 +1005,7 @@ const RedirectModal = memo(function RedirectModal({
           </div>
         </div>
 
-        <div 
+        <div
           className="mb-4 p-4"
           style={{
             background: 'rgba(255, 255, 255, 0.03)',
@@ -844,7 +1021,7 @@ const RedirectModal = memo(function RedirectModal({
           </p>
         </div>
 
-        <div 
+        <div
           className="mb-4 p-3"
           style={{
             background: 'rgba(251, 146, 60, 0.1)',
@@ -870,9 +1047,9 @@ const RedirectModal = memo(function RedirectModal({
             <span style={{ color: 'var(--text-muted)' }}>自动跳转</span>
             <span style={{ color: 'var(--text-primary)' }}>{timeLeft} 秒</span>
           </div>
-          <div 
+          <div
             className="h-2 overflow-hidden"
-            style={{ 
+            style={{
               background: 'rgba(255, 255, 255, 0.1)',
               clipPath: clipPathRounded(2),
             }}
@@ -928,6 +1105,7 @@ export default function FriendsPage() {
   const [error, setError] = useState<string | null>(null);
   const [redirectModalOpen, setRedirectModalOpen] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+  const [mailtoModalOpen, setMailtoModalOpen] = useState(false);
 
   const handleFriendClick = useCallback((friend: Friend) => {
     setSelectedFriend(friend);
@@ -945,6 +1123,14 @@ export default function FriendsPage() {
   const handleCancelRedirect = useCallback(() => {
     setRedirectModalOpen(false);
     setSelectedFriend(null);
+  }, []);
+
+  const handleApplyClick = useCallback(() => {
+    setMailtoModalOpen(true);
+  }, []);
+
+  const handleCloseMailtoModal = useCallback(() => {
+    setMailtoModalOpen(false);
   }, []);
 
   // Load friends data and footer data
@@ -967,23 +1153,28 @@ export default function FriendsPage() {
       });
   }, []);
 
-  // Group friends by category
+  // 只显示 demo 分类（featured 是布尔字段，不是分类，已在上方单独显示）
+  const VISIBLE_CATEGORIES = ['demo'];
+
+  // Group friends by category (只包含可见分类)
   const friendsByCategory = useMemo(() => {
     if (!data) return [];
-    return data.categories.map(category => ({
-      category,
-      friends: data.friends.filter(friend => friend.category === category.id)
-    }));
+    return data.categories
+      .filter(category => VISIBLE_CATEGORIES.includes(category.id))
+      .map(category => ({
+        category,
+        friends: data.friends.filter(friend => friend.category === category.id)
+      }));
   }, [data]);
 
-  // Calculate stats - 只统计 featured=true 的友链
+  // Calculate stats - 统计 featured 友链 + demo 分类友链
   const stats = useMemo(() => {
     if (!data) return { friends: 0, categories: 0, online: 0 };
-    const featuredFriends = data.friends.filter(f => f.featured);
+    const visibleFriends = data.friends.filter(f => f.featured || VISIBLE_CATEGORIES.includes(f.category));
     return {
-      friends: featuredFriends.length,
-      categories: data.categories.length,
-      online: featuredFriends.filter(f => f.status === 'online').length
+      friends: visibleFriends.length,
+      categories: 2, // 友链推荐 + 演示完整
+      online: visibleFriends.filter(f => f.status === 'online').length
     };
   }, [data]);
 
@@ -993,8 +1184,8 @@ export default function FriendsPage() {
         <div className="flex flex-col items-center gap-4">
           <div
             className="w-12 h-12 border-2 border-t-transparent animate-spin"
-            style={{ 
-              borderColor: 'var(--accent-primary)', 
+            style={{
+              borderColor: 'var(--accent-primary)',
               borderTopColor: 'transparent',
               clipPath: clipPathRounded(2),
             }}
@@ -1015,7 +1206,7 @@ export default function FriendsPage() {
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 text-white transition-all hover:scale-105"
-            style={{ 
+            style={{
               background: 'var(--accent-primary)',
               clipPath: clipPathRounded(4),
             }}
@@ -1049,14 +1240,14 @@ export default function FriendsPage() {
       {/* Main Content */}
       <main className="relative z-10">
         {/* Hero Section */}
-        <HeroSection 
+        <HeroSection
           title={data.title}
           description={data.description}
           stats={stats}
         />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-          {/* Featured Friends */}
+          {/* Featured Friends - 显示 featured=true 的友链 */}
           {data.friends.some(f => f.featured) && (
             <motion.section
               initial={{ opacity: 0, y: 50 }}
@@ -1091,7 +1282,7 @@ export default function FriendsPage() {
                   />
                   <Star className="w-6 h-6 relative z-10" style={{ color: 'var(--accent-primary)' }} />
                 </motion.div>
-                <h2 
+                <h2
                   className="font-sans font-bold text-2xl"
                   style={{
                     background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
@@ -1131,7 +1322,7 @@ export default function FriendsPage() {
           ))}
 
           {/* Apply Section */}
-          <ApplySection applyInfo={data.applyInfo} />
+          <ApplySection applyInfo={data.applyInfo} onApplyClick={handleApplyClick} />
         </div>
       </main>
 
@@ -1147,6 +1338,15 @@ export default function FriendsPage() {
         onConfirm={handleConfirmRedirect}
         onCancel={handleCancelRedirect}
       />
+
+      {/* Mailto Modal - 页面根级别渲染，避免被遮罩 */}
+      {data && (
+        <MailtoModal
+          isOpen={mailtoModalOpen}
+          onClose={handleCloseMailtoModal}
+          contact={data.applyInfo.contact}
+        />
+      )}
     </div>
   );
 }
