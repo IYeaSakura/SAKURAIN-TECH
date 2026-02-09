@@ -7,6 +7,21 @@
       "handle": "filesystem"
     },
     {
+      "source": "/feed",
+      "destination": "/feed.xml",
+      "statusCode": 200
+    },
+    {
+      "source": "/feed/atom",
+      "destination": "/atom.xml",
+      "statusCode": 200
+    },
+    {
+      "source": "/feed/json",
+      "destination": "/feed.json",
+      "statusCode": 200
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html",
       "statusCode": 200

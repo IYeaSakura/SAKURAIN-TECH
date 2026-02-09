@@ -1,6 +1,18 @@
 {
   "rewrites": [
     {
+      "source": "/feed",
+      "destination": "/feed.xml"
+    },
+    {
+      "source": "/feed/atom",
+      "destination": "/atom.xml"
+    },
+    {
+      "source": "/feed/json",
+      "destination": "/feed.json"
+    },
+    {
       "source": "/docs",
       "destination": "/index.html"
     },
