@@ -45,6 +45,14 @@ function buildTocFromHeadings(headings: Array<{ level: number; text: string; id:
 
 export function DocDetailView({ doc, category, onBack }: DocDetailViewProps) {
   const { content, loading, error, toc, flatHeadings, searchContent, scrollToLine, scrollToHeadingById, lines } = useDocument(doc.path);
+
+  console.log('[DocDetailView] State:', { 
+    docPath: doc.path, 
+    loading, 
+    error, 
+    contentLength: content?.length,
+    hasContent: !!content && content.trim().length > 0
+  });
   const [showToc, setShowToc] = useState(true);
   const [activeHeading, setActiveHeading] = useState<string>('');
   const mainRef = useRef<HTMLElement>(null);

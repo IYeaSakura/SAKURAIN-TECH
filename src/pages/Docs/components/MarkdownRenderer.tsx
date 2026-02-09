@@ -169,12 +169,20 @@ interface MarkdownRendererProps {
 export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
   const sections = useMemo(() => splitContentByHeadings(content), [content]);
 
+  console.log('[MarkdownRenderer] Rendering:', {
+    contentLength: content?.length,
+    sectionsCount: sections?.length,
+    firstSection: sections[0]
+  });
+
   // Small file: render directly
   if (content.length < 10000 || sections.length < 5) {
+    console.log('[MarkdownRenderer] Using direct render');
     return <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{content}</ReactMarkdown>;
   }
 
   // Large file: render headings immediately, content lazily
+  console.log('[MarkdownRenderer] Using chunked render');
   return (
     <>
       {sections.map((section, index) => (
