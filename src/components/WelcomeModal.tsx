@@ -5,6 +5,7 @@ import { BookOpen, Globe, X, Sparkles, FileText, Users, User } from 'lucide-reac
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { PlantUML } from '@/pages/Docs/components/PlantUML';
+import { deploymentConfig } from '@/config/deployment-config';
 
 const SyntaxHighlighter = lazy(() =>
   import('react-syntax-highlighter').then(mod => ({ default: mod.Prism }))
@@ -189,12 +190,20 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
 
   const handleBlogClick = () => {
     setIsOpen(false);
-    window.location.href = '/blog';
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = '/blog';
+    } else {
+      window.location.href = '/blog';
+    }
   };
 
   const handleAboutClick = () => {
     setIsOpen(false);
-    window.location.href = '/about';
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = '/about';
+    } else {
+      window.location.href = '/about';
+    }
   };
 
   const handleEarthClick = () => {

@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useState } from 'react';
+import { StrictMode, useEffect, useState, lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router';
 import './index.css';
@@ -32,27 +32,53 @@ function RedirectHandler() {
   return null;
 }
 
-// 直接导入页面组件（不使用懒加载）
-import DocsPage from './pages/Docs/index';
-import FriendsPage from './pages/Friends/index';
-import BlogPage from './pages/Blog/index';
-import BlogPostPage from './pages/Blog/[slug]';
-import NotesPage from './pages/Notes/index';
-import AboutPage from './pages/About/index';
-import NotFoundPage from './pages/NotFound/index';
+// 路由懒加载（代码分割）
+const DocsPage = lazy(() => import('./pages/Docs/index'));
+const FriendsPage = lazy(() => import('./pages/Friends/index'));
+const BlogPage = lazy(() => import('./pages/Blog/index'));
+const BlogPostPage = lazy(() => import('./pages/Blog/[slug]'));
+const NotesPage = lazy(() => import('./pages/Notes/index'));
+const AboutPage = lazy(() => import('./pages/About/index'));
+const NotFoundPage = lazy(() => import('./pages/NotFound/index'));
 
-// 预加载函数（保留以兼容现有代码）
+// 预加载函数
+let docsLoader: Promise<any> | null = null;
+let friendsLoader: Promise<any> | null = null;
+let blogLoader: Promise<any> | null = null;
+
 export function preloadDocs() {
-  return Promise.resolve();
+  if (!docsLoader) {
+    docsLoader = import('./pages/Docs/index');
+  }
+  return docsLoader;
 }
 
 export function preloadFriends() {
-  return Promise.resolve();
+  if (!friendsLoader) {
+    friendsLoader = import('./pages/Friends/index');
+  }
+  return friendsLoader;
 }
 
 export function preloadBlog() {
-  return Promise.resolve();
+  if (!blogLoader) {
+    blogLoader = import('./pages/Blog/index');
+  }
+  return blogLoader;
 }
+
+// 页面加载 Skeleton 组件
+const PageSkeleton = () => (
+  <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+    <div className="flex flex-col items-center gap-4">
+      <div
+        className="w-12 h-12 border-2 border-t-transparent rounded-full animate-spin"
+        style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
+      />
+      <p style={{ color: 'var(--text-muted)' }}>加载中...</p>
+    </div>
+  </div>
+);
 
 
 
@@ -127,16 +153,56 @@ createRoot(document.getElementById('root')!).render(
         <PageLayout>
           <Routes>
           <Route path="/" element={<App />} />
-          <Route path="/docs" element={<DocsPage />} />
-          <Route path="/docs/:categoryId" element={<DocsPage />} />
-          <Route path="/docs/:categoryId/:itemId" element={<DocsPage />} />
-          <Route path="/docs/:categoryId/:itemId/:chapterId" element={<DocsPage />} />
-          <Route path="/friends" element={<FriendsPage />} />
-          <Route path="/blog" element={<BlogPage />} />
-          <Route path="/blog/:slug" element={<BlogPostPage />} />
-          <Route path="/notes" element={<NotesPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="/docs" element={
+            <Suspense fallback={<PageSkeleton />}>
+              <DocsPage />
+            </Suspense>
+          } />
+          <Route path="/docs/:categoryId" element={
+            <Suspense fallback={<PageSkeleton />}>
+              <DocsPage />
+            </Suspense>
+          } />
+          <Route path="/docs/:categoryId/:itemId" element={
+            <Suspense fallback={<PageSkeleton />}>
+              <DocsPage />
+            </Suspense>
+          } />
+          <Route path="/docs/:categoryId/:itemId/:chapterId" element={
+            <Suspense fallback={<PageSkeleton />}>
+              <DocsPage />
+            </Suspense>
+          } />
+          <Route path="/friends" element={
+            <Suspense fallback={<PageSkeleton />}>
+              <FriendsPage />
+            </Suspense>
+          } />
+          <Route path="/blog" element={
+            <Suspense fallback={<PageSkeleton />}>
+              <BlogPage />
+            </Suspense>
+          } />
+          <Route path="/blog/:slug" element={
+            <Suspense fallback={<PageSkeleton />}>
+              <BlogPostPage />
+            </Suspense>
+          } />
+          <Route path="/notes" element={
+            <Suspense fallback={<PageSkeleton />}>
+              <NotesPage />
+            </Suspense>
+          } />
+          <Route path="/about" element={
+            <Suspense fallback={<PageSkeleton />}>
+              <AboutPage />
+            </Suspense>
+          } />
+          <Route path="*" element={
+            <Suspense fallback={<PageSkeleton />}>
+              <NotFoundPage />
+            </Suspense>
+          } />
         </Routes>
         </PageLayout>
       </GlobalLayout>
