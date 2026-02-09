@@ -27,10 +27,10 @@ HeadingAnchorElement.displayName = 'HeadingAnchorElement';
 // Content-only components (no headings, to avoid duplicates)
 const contentOnlyComponents = {
   p: ({ children }: any) => <p className="my-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{children}</p>,
-  ul: ({ children }: any) => <ul className="my-4 ml-6 list-disc" style={{ color: 'var(--text-secondary)' }}>{children}</ul>,
-  ol: ({ children }: any) => <ol className="my-4 ml-6 list-decimal" style={{ color: 'var(--text-secondary)' }}>{children}</ol>,
-  li: ({ children }: any) => <li className="my-1">{children}</li>,
-  a: ({ href, children }: any) => <a href={href} className="underline hover:no-underline transition-colors" style={{ color: 'var(--accent-primary)' }} target="_blank" rel="noopener noreferrer">{children}</a>,
+  ul: ({ children }: { children?: any }) => <ul className="my-4 ml-6 list-disc" style={{ color: 'var(--text-secondary)' }}>{children}</ul>,
+  ol: ({ children }: { children?: any }) => <ol className="my-4 ml-6 list-decimal" style={{ color: 'var(--text-secondary)' }}>{children}</ol>,
+  li: ({ children }: { children?: any }) => <li className="my-1">{children}</li>,
+  a: ({ href, children }: { href?: string; children?: any }) => <a href={href} className="underline hover:no-underline transition" style={{ color: 'var(--accent-primary)' }} target="_blank" rel="noopener noreferrer">{children}</a>,
   code: ({ inline, className, children }: any) => {
     const match = /language-(\w+)/.exec(className || '');
     const language = match ? match[1] : '';
@@ -42,10 +42,10 @@ const contentOnlyComponents = {
     if (language) return <CodeBlock language={language} value={codeString} />;
     return <CodeBlock language="text" value={codeString} />;
   },
-  table: ({ children }: any) => <div className="overflow-x-auto my-6 rounded-lg border" style={{ borderColor: 'var(--border-color)' }}><table className="min-w-full border-collapse" style={{ borderColor: 'var(--border-color)' }}>{children}</table></div>,
-  thead: ({ children }: any) => <thead style={{ background: 'var(--bg-secondary)' }}>{children}</thead>,
-  th: ({ children }: any) => <th className="border px-4 py-3 text-left font-semibold" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>{children}</th>,
-  td: ({ children }: any) => {
+  table: ({ children }: { children?: any }) => <div className="overflow-x-auto my-6 rounded-lg border" style={{ borderColor: 'var(--border-color)' }}><table className="min-w-full border" style={{ borderColor: 'var(--border-color)' }}>{children}</table></div>,
+  thead: ({ children }: { children?: any }) => <thead style={{ background: 'var(--bg-secondary)' }}>{children}</thead>,
+  th: ({ children }: { children?: any }) => <th className="border px-4 py-3 text-left font-semibold" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>{children}</th>,
+  td: ({ children }: { children?: any }) => {
     const processCellChildren = (child: any): any => {
       if (typeof child === 'string') return child;
       if (Array.isArray(child)) {
@@ -60,7 +60,7 @@ const contentOnlyComponents = {
     };
     return <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>{processCellChildren(children)}</td>;
   },
-  blockquote: ({ children }: any) => <blockquote className="border-l-4 pl-4 my-6 py-3 pr-4 rounded-r" style={{ borderColor: 'var(--accent-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{children}</blockquote>,
+  blockquote: ({ children }: { children?: any }) => <blockquote className="border-l-4 pl-4 my-6 py-3 pr-4 rounded-r" style={{ borderColor: 'var(--accent-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{children}</blockquote>,
   hr: () => <hr className="my-8" style={{ borderColor: 'var(--border-color)' }} />,
 };
 
@@ -147,17 +147,17 @@ const markdownComponents = {
   h2: MarkdownH2,
   h3: MarkdownH3,
   h4: MarkdownH4,
-  p: ({ children }: any) => <p className="my-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{children}</p>,
-  ul: ({ children }: any) => <ul className="my-4 ml-6 list-disc" style={{ color: 'var(--text-secondary)' }}>{children}</ul>,
-  ol: ({ children }: any) => <ol className="my-4 ml-6 list-decimal" style={{ color: 'var(--text-secondary)' }}>{children}</ol>,
-  li: ({ children }: any) => <li className="my-1">{children}</li>,
-  a: ({ href, children }: any) => <a href={href} className="underline hover:no-underline transition-colors" style={{ color: 'var(--accent-primary)' }} target="_blank" rel="noopener noreferrer">{children}</a>,
+  p: ({ children }: { children?: any }) => <p className="my-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{children}</p>,
+  ul: ({ children }: { children?: any }) => <ul className="my-4 ml-6 list-disc" style={{ color: 'var(--text-secondary)' }}>{children}</ul>,
+  ol: ({ children }: { children?: any }) => <ol className="my-4 ml-6 list-decimal" style={{ color: 'var(--text-secondary)' }}>{children}</ol>,
+  li: ({ children }: { children?: any }) => <li className="my-1">{children}</li>,
+  a: ({ href, children }: { href?: string; children?: any }) => <a href={href} className="underline hover" style={{ color: 'var(--accent-primary)' }} target="_blank" rel="noopener noreferrer">{children}</a>,
   code: MarkdownCode,
-  table: ({ children }: any) => <div className="overflow-x-auto my-6 rounded-lg border" style={{ borderColor: 'var(--border-color)' }}><table className="min-w-full border-collapse" style={{ borderColor: 'var(--border-color)' }}>{children}</table></div>,
-  thead: ({ children }: any) => <thead style={{ background: 'var(--bg-secondary)' }}>{children}</thead>,
-  th: ({ children }: any) => <th className="border px-4 py-3 text-left font-semibold" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>{children}</th>,
-  td: ({ children }: any) => <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>{processCellChildren(children)}</td>,
-  blockquote: ({ children }: any) => <blockquote className="border-l-4 pl-4 my-6 py-3 pr-4 rounded-r" style={{ borderColor: 'var(--accent-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{children}</blockquote>,
+  table: ({ children }: { children?: any }) => <div className="overflow-x-auto my-6 rounded-lg border" style={{ borderColor: 'var(--border-color)' }}><table className="min-w-full border" style={{ borderColor: 'var(--border-color)' }}>{children}</table></div>,
+  thead: ({ children }: { children?: any }) => <thead style={{ background: 'var(--bg-secondary)' }}>{children}</thead>,
+  th: ({ children }: { children?: any }) => <th className="border px-4 py-3 text-left font-semibold" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>{children}</th>,
+  td: ({ children }: { children?: any }) => <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>{processCellChildren(children)}</td>,
+  blockquote: ({ children }: { children?: any }) => <blockquote className="border-l-4 pl-4 my-6 py-3 pr-4 rounded-r" style={{ borderColor: 'var(--accent-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{children}</blockquote>,
   hr: () => <hr className="my-8" style={{ borderColor: 'var(--border-color)' }} />,
 };
 
