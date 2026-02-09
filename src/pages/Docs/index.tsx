@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, Suspense, memo } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Sparkles, Layers } from 'lucide-react';
@@ -18,25 +18,6 @@ import { DocDetailView as DocDetailViewComponent } from './components/DocDetailV
 import { ChapterReader as ChapterReaderComponent } from './components/ChapterReader';
 const DocDetailView = DocDetailViewComponent;
 const ChapterReader = ChapterReaderComponent;
-
-// 文档加载占位组件
-function DocsLoadingFallback() {
-  return (
-    <div className="h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-      <div className="flex items-center gap-3">
-        <div 
-          className="w-6 h-6 border-2 border-t-transparent animate-spin" 
-          style={{ 
-            borderColor: 'var(--accent-primary)',
-            borderTopColor: 'transparent',
-            clipPath: clipPathRounded(4),
-          }} 
-        />
-        <span style={{ color: 'var(--text-secondary)' }}>加载文档...</span>
-      </div>
-    </div>
-  );
-}
 
 const iconMap: Record<string, React.ComponentType<LucideProps>> = {
   Rocket, Briefcase, Code, Search, BookOpen, GraduationCap
@@ -209,16 +190,14 @@ export default function DocsPage() {
       <AnimatePresence mode="wait">
         {selectedChapter && selectedItem?.type === 'series' && selectedCategory ? (
           <motion.div key="chapter-reader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="h-screen flex flex-col">
-            <Suspense fallback={<DocsLoadingFallback />}>
-              <ChapterReader
-                chapter={selectedChapter}
-                series={selectedItem}
-                category={selectedCategory}
-                allChapters={allChapters}
-                onBack={handleBack}
-                onSelectChapter={handleSelectChapter}
-              />
-            </Suspense>
+            <ChapterReader
+              chapter={selectedChapter}
+              series={selectedItem}
+              category={selectedCategory}
+              allChapters={allChapters}
+              onBack={handleBack}
+              onSelectChapter={handleSelectChapter}
+            />
           </motion.div>
         )
         : selectedItem?.type === 'series' && selectedCategory ? (

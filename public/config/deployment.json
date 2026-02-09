@@ -1,4 +1,4 @@
 {
-  "mode": "local",
-  "description": "Deployment mode configuration: 'local' for development with navigate, 'edgeone' for Tencent Cloud EdgeOne deployment with window.location.href"
+  "mode": "navigate",
+  "description": "Deployment mode configuration: 'navigate' for SPA navigation with React Router, 'location' for full page reload with window.location.href"
 }
