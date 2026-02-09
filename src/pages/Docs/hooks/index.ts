@@ -21,17 +21,13 @@ export function useDocument(path: string) {
     let cancelled = false;
 
     async function load() {
-      console.log('[useDocument] Starting load for path:', path);
       setLoading(true);
       setError(null);
       
       try {
-        console.log('[useDocument] Fetching:', path);
         const response = await fetch(path);
-        console.log('[useDocument] Response status:', response.status);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const text = await response.text();
-        console.log('[useDocument] Content loaded, length:', text.length);
         
         if (!cancelled) {
           setContent(text);
@@ -41,7 +37,6 @@ export function useDocument(path: string) {
           setFlatHeadings(headings);
         }
       } catch (err) {
-        console.error('[useDocument] Error:', err);
         if (!cancelled) {
           setError(err instanceof Error ? err.message : '加载失败');
         }

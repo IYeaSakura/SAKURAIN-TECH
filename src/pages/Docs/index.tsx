@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense, memo } from 'react';
+import { useState, useEffect, useMemo, Suspense, memo } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Sparkles, Layers } from 'lucide-react';
@@ -13,10 +13,10 @@ import { clipPathRounded } from '@/utils/styles';
 import type { DocCategory, DocItem, DocSeries, Chapter, DocsConfig } from './types';
 import type { SiteData } from '@/types';
 
-// 懒加载需要 Markdown 处理的组件
-const DocDetailView = lazy(() => import('./components/DocDetailView').then(m => ({ default: m.DocDetailView })));
-// 临时直接导入 ChapterReader 以便调试
+// 直接导入组件（不使用懒加载）
+import { DocDetailView as DocDetailViewComponent } from './components/DocDetailView';
 import { ChapterReader as ChapterReaderComponent } from './components/ChapterReader';
+const DocDetailView = DocDetailViewComponent;
 const ChapterReader = ChapterReaderComponent;
 
 // 文档加载占位组件
@@ -43,8 +43,6 @@ const iconMap: Record<string, React.ComponentType<LucideProps>> = {
 };
 
 export default function DocsPage() {
-  console.log('[DocsPage] Component mounted');
-  
   const { categoryId, itemId, chapterId } = useParams<{
     categoryId?: string;
     itemId?: string;
@@ -59,25 +57,8 @@ export default function DocsPage() {
   const [selectedItem, setSelectedItem] = useState<DocItem | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
 
-  console.log('[DocsPage] Route params:', JSON.stringify({ categoryId, itemId, chapterId }));
-  console.log('[DocsPage] Selected state:', JSON.stringify({ 
-    selectedCategory: selectedCategory?.id, 
-    selectedItem: selectedItem?.id,
-    selectedItemType: selectedItem?.type,
-    selectedChapter: selectedChapter?.id
-  }));
-
   useEffect(() => {
-    console.log('[DocsPage] useEffect called with:', { 
-      hasConfig: !!config, 
-      categoryId, 
-      itemId, 
-      chapterId,
-      categoriesCount: config?.categories?.length 
-    });
-
     if (!config || !categoryId) {
-      console.log('[DocsPage] No config or categoryId, clearing selections');
       setSelectedCategory(null);
       setSelectedItem(null);
       setSelectedChapter(null);
@@ -85,36 +66,21 @@ export default function DocsPage() {
     }
 
     const category = config.categories.find((c) => c.id === categoryId);
-    console.log('[DocsPage] Found category:', category?.id);
-    
     if (!category) {
-      console.log('[DocsPage] Category not found, redirecting to /docs');
-      if (deploymentConfig.useWindowLocation) {
-        window.location.href = '/docs';
-      } else {
-        navigate('/docs');
-      }
+      navigate('/docs');
       return;
     }
     setSelectedCategory(category);
 
     if (!itemId) {
-      console.log('[DocsPage] No itemId, clearing item and chapter');
       setSelectedItem(null);
       setSelectedChapter(null);
       return;
     }
 
     const item = category.items.find((i) => i.id === itemId);
-    console.log('[DocsPage] Found item:', item?.id, 'type:', item?.type);
-    
     if (!item) {
-      console.log('[DocsPage] Item not found, redirecting to /docs');
-      if (deploymentConfig.useWindowLocation) {
-        window.location.href = '/docs';
-      } else {
-        navigate('/docs');
-      }
+      navigate('/docs');
       return;
     }
     setSelectedItem(item);
@@ -122,24 +88,15 @@ export default function DocsPage() {
     if (item.type === 'series') {
       if (chapterId) {
         const chapter = item.chapters.find((c) => c.id === chapterId);
-        console.log('[DocsPage] Found chapter:', chapter?.id);
-        
         if (chapter) {
           setSelectedChapter(chapter);
         } else {
-          console.log('[DocsPage] Chapter not found, redirecting to series page');
-          if (deploymentConfig.useWindowLocation) {
-            window.location.href = `/docs/${categoryId}/${itemId}`;
-          } else {
-            navigate(`/docs/${categoryId}/${itemId}`);
-          }
+          navigate(`/docs/${categoryId}/${itemId}`);
         }
       } else {
-        console.log('[DocsPage] No chapterId, clearing chapter');
         setSelectedChapter(null);
       }
     } else {
-      console.log('[DocsPage] Item is not a series, clearing chapter');
       setSelectedChapter(null);
     }
   }, [config, categoryId, itemId, chapterId, navigate]);
@@ -251,85 +208,55 @@ export default function DocsPage() {
       <MagneticCursor /><VelocityCursor />
       <AnimatePresence mode="wait">
         {selectedChapter && selectedItem?.type === 'series' && selectedCategory ? (
-          (() => {
-            console.log('[DocsPage] Rendering chapter-reader');
-            return (
-              <motion.div key="chapter-reader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="h-screen flex flex-col">
-                <Suspense fallback={
-                  (() => {
-                    console.log('[DocsDocs] ChapterReader Suspense fallback shown');
-                    return <DocsLoadingFallback />;
-                  })()
-                }>
-                  <ChapterReader
-                    chapter={selectedChapter}
-                    series={selectedItem}
-                    category={selectedCategory}
-                    allChapters={allChapters}
-                    onBack={handleBack}
-                    onSelectChapter={handleSelectChapter}
-                  />
-                </Suspense>
-              </motion.div>
-            );
-          })()
+          <motion.div key="chapter-reader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="h-screen flex flex-col">
+            <Suspense fallback={<DocsLoadingFallback />}>
+              <ChapterReader
+                chapter={selectedChapter}
+                series={selectedItem}
+                category={selectedCategory}
+                allChapters={allChapters}
+                onBack={handleBack}
+                onSelectChapter={handleSelectChapter}
+              />
+            </Suspense>
+          </motion.div>
         )
         : selectedItem?.type === 'series' && selectedCategory ? (
-          (() => {
-            console.log('[DocsPage] Rendering series-detail');
-            return (
-              <motion.div key="series-detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <SeriesDetailView
-                  series={selectedItem}
-                  category={selectedCategory}
-                  onBack={handleBack}
-                  onSelectChapter={handleSelectChapter}
-                />
-              </motion.div>
-            );
-          })()
+          <motion.div key="series-detail" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <SeriesDetailView
+              series={selectedItem}
+              category={selectedCategory}
+              onBack={handleBack}
+              onSelectChapter={handleSelectChapter}
+            />
+          </motion.div>
         )
         : selectedItem?.type === 'doc' && selectedCategory ? (
-          (() => {
-            console.log('[DocsPage] Rendering doc-detail');
-            return (
-              <DocDetailView
-                doc={selectedItem}
-                category={selectedCategory}
-                onBack={handleBack}
-              />
-            );
-          })()
+          <DocDetailView
+            doc={selectedItem}
+            category={selectedCategory}
+            onBack={handleBack}
+          />
         )
         : selectedCategory ? (
-          (() => {
-            console.log('[DocsPage] Rendering category-list');
-            return (
-              <motion.div key="category-list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <DocListView
-                  category={selectedCategory}
-                  onBack={handleBackToHome}
-                  onSelectItem={handleSelectItem}
-                  iconMap={iconMap}
-                />
-              </motion.div>
-            );
-          })()
+          <motion.div key="category-list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <DocListView
+              category={selectedCategory}
+              onBack={handleBackToHome}
+              onSelectItem={handleSelectItem}
+              iconMap={iconMap}
+            />
+          </motion.div>
         )
         : (
-          (() => {
-            console.log('[DocsPage] Rendering home');
-            return (
-              <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-                <DocHomeView
-                  config={config}
-                  onSelectCategory={handleSelectCategory}
-                  iconMap={iconMap}
-                  siteData={siteData}
-                />
-              </motion.div>
-            );
-          })()
+          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+            <DocHomeView
+              config={config}
+              onSelectCategory={handleSelectCategory}
+              iconMap={iconMap}
+              siteData={siteData}
+            />
+          </motion.div>
         )}
       </AnimatePresence>
     </>
