@@ -130,8 +130,6 @@ function parseHeadings(content: string): Array<{ level: number; text: string; id
 }
 
 export function ChapterReader({ chapter, series, category, onBack, onSelectChapter }: ChapterReaderProps) {
-  console.log('[ChapterReader] Component mounted with chapter:', chapter.id, 'path:', chapter.path);
-  
   const [showToc, setShowToc] = useState(true);
   const [activeHeading, setActiveHeading] = useState<string>(chapter.id);
   const mainRef = useRef<HTMLElement>(null);
@@ -143,19 +141,16 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
   const [flatHeadings, setFlatHeadings] = useState<Array<{ level: number; text: string; id: string }>>([]);
 
   useEffect(() => {
-    console.log('[ChapterReader] useEffect called, fetching:', chapter.path);
     let cancelled = false;
     setLoading(true);
     setError(null);
     
     fetch(chapter.path)
       .then(res => {
-        console.log('[ChapterReader] Fetch response status:', res.status);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.text();
       })
       .then(text => {
-        console.log('[ChapterReader] Content loaded, length:', text.length);
         if (!cancelled) {
           setContent(text);
           setFlatHeadings(parseHeadings(text));
@@ -163,7 +158,6 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
         }
       })
       .catch(err => {
-        console.error('[ChapterReader] Error:', err);
         if (!cancelled) {
           setError(err.message);
           setLoading(false);

@@ -84,7 +84,6 @@ export default defineConfig({
   },
   // 实验性功能
   esbuild: {
-    // 临时禁用 console 移除以便调试文档页面问题
-    // drop: ['console', 'debugger'],
+    drop: ['console', 'debugger'],
   },
 });
