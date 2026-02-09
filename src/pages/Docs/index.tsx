@@ -41,6 +41,8 @@ const iconMap: Record<string, React.ComponentType<LucideProps>> = {
 };
 
 export default function DocsPage() {
+  console.log('[DocsPage] Component mounted');
+  
   const { categoryId, itemId, chapterId } = useParams<{
     categoryId?: string;
     itemId?: string;
