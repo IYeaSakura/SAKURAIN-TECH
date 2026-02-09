@@ -124,7 +124,6 @@
       "description": "记录学习历程，记录美好生活",
       "category": "blogs",
       "featured": true,
-      "unidirectional": true,
       "status": "online"
     },
     {
