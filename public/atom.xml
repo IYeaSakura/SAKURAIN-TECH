@@ -4,13 +4,32 @@
   <subtitle>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。</subtitle>
   <link href="https://sakurain.tech/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://sakurain.tech" rel="alternate" type="text/html"/>
-  <updated>2026-02-08T00:00:00.000Z</updated>
+  <updated>2026-02-10T00:00:00.000Z</updated>
   <id>https://sakurain.tech/</id>
   <author>
     <name>SAKURAIN</name>
     <email>Yae_SakuRain@outlook.com</email>
   </author>
   <rights>© 2026 SAKURAIN 技术工作室</rights>
+  <entry>
+    <title>高维离散决策空间中的几何数据增强：对称性挖掘与计算拓扑优化</title>
+    <link href="https://sakurain.tech/blog/008-geometric-data-augmentation"/>
+    <id>https://sakurain.tech/blog/008-geometric-data-augmentation</id>
+    <published>2026-02-10T00:00:00.000Z</published>
+    <updated>2026-02-10T00:00:00.000Z</updated>
+    <author>
+      <name>SAKURAIN</name>
+      <email>Yae_SakuRain@outlook.com</email>
+    </author>
+    <summary>基于大规模自博弈数据管线中的工程实践，探讨如何在高维离散动作空间中安全地利用状态空间的对称性，构建计算高效且策略一致的数据增强系统。</summary>
+    <category term="强化学习"/>
+    <category term="数据流水线"/>
+    <category term="训练管线"/>
+    <category term="内存优化"/>
+    <category term="分布式系统"/>
+    <category term="搜索算法"/>
+  </entry>
+
   <entry>
     <title>在腾讯云 EO 上实现 API 安全验证系统</title>
     <link href="https://sakurain.tech/blog/api-security-edgeone"/>
@@ -29,34 +48,104 @@
   </entry>
 
   <entry>
-    <title>欢迎来到 SAKURAIN 博客</title>
-    <link href="https://sakurain.tech/blog/hello-world"/>
-    <id>https://sakurain.tech/blog/hello-world</id>
-    <published>2025-02-07T00:00:00.000Z</published>
-    <updated>2025-02-07T00:00:00.000Z</updated>
+    <title>面向实时约束的蒙特卡洛树搜索系统：时间预算控制与内存拓扑优化</title>
+    <link href="https://sakurain.tech/blog/mcts-realtime-constraints"/>
+    <id>https://sakurain.tech/blog/mcts-realtime-constraints</id>
+    <published>2025-11-14T00:00:00.000Z</published>
+    <updated>2025-11-14T00:00:00.000Z</updated>
     <author>
       <name>SAKURAIN</name>
       <email>Yae_SakuRain@outlook.com</email>
     </author>
-    <summary>这是我的第一篇博客文章，介绍这个博客系统的设计理念和技术栈。</summary>
-    <category term="博客"/>
-    <category term="介绍"/>
+    <summary>探讨如何在毫秒级时间预算内实现MCTS的确定性资源控制，并构建具备可观测性的分布式搜索拓扑。</summary>
+    <category term="蒙特卡洛树搜索"/>
+    <category term="实时系统"/>
+    <category term="内存优化"/>
+    <category term="搜索算法"/>
   </entry>
 
   <entry>
-    <title>React + TypeScript + Vite 快速上手指南</title>
-    <link href="https://sakurain.tech/blog/getting-started"/>
-    <id>https://sakurain.tech/blog/getting-started</id>
-    <published>2025-02-06T00:00:00.000Z</published>
-    <updated>2025-02-06T00:00:00.000Z</updated>
+    <title>深度策略网络训练管线的容错机制与优化动力学</title>
+    <link href="https://sakurain.tech/blog/training-pipeline-fault-tolerance"/>
+    <id>https://sakurain.tech/blog/training-pipeline-fault-tolerance</id>
+    <published>2025-10-31T00:00:00.000Z</published>
+    <updated>2025-10-31T00:00:00.000Z</updated>
     <author>
       <name>SAKURAIN</name>
       <email>Yae_SakuRain@outlook.com</email>
     </author>
-    <summary>从零开始搭建一个现代化的 React 开发环境，包含最佳实践和常用配置。</summary>
-    <category term="React"/>
-    <category term="TypeScript"/>
-    <category term="Vite"/>
-    <category term="教程"/>
+    <summary>探讨如何构建具备容错能力与状态一致性的训练管线，重点阐述装饰器模式在断点保护中的应用、复合损失函数的梯度动力学，以及异常分类与分级恢复策略。</summary>
+    <category term="深度学习"/>
+    <category term="训练管线"/>
+    <category term="容错机制"/>
+    <category term="优化算法"/>
+  </entry>
+
+  <entry>
+    <title>复杂机器学习系统的配置治理：从硬编码到配置即代码</title>
+    <link href="https://sakurain.tech/blog/configuration-governance"/>
+    <id>https://sakurain.tech/blog/configuration-governance</id>
+    <published>2025-09-22T00:00:00.000Z</published>
+    <updated>2025-09-22T00:00:00.000Z</updated>
+    <author>
+      <name>SAKURAIN</name>
+      <email>Yae_SakuRain@outlook.com</email>
+    </author>
+    <summary>探讨如何通过配置中心化管理与模块化启动器架构，实现代码与环境的解耦，并建立可审计、可回滚的配置生命周期。</summary>
+    <category term="配置管理"/>
+    <category term="软件工程"/>
+    <category term="系统架构"/>
+    <category term="依赖注入"/>
+  </entry>
+
+  <entry>
+    <title>策略网络迭代的对抗验证协议：消除离线指标幻觉的A／B测试框架</title>
+    <link href="https://sakurain.tech/blog/adversarial-validation-protocol"/>
+    <id>https://sakurain.tech/blog/adversarial-validation-protocol</id>
+    <published>2025-08-22T00:00:00.000Z</published>
+    <updated>2025-08-22T00:00:00.000Z</updated>
+    <author>
+      <name>SAKURAIN</name>
+      <email>Yae_SakuRain@outlook.com</email>
+    </author>
+    <summary>探讨如何构建严谨的对抗验证协议，通过头对头比较消除评估偏差，并建立具有统计显著性的模型排序机制。</summary>
+    <category term="强化学习"/>
+    <category term="策略验证"/>
+    <category term="A/B测试"/>
+    <category term="统计分析"/>
+  </entry>
+
+  <entry>
+    <title>双任务神经网络架构在实时决策系统中的数值稳定性与计算权衡</title>
+    <link href="https://sakurain.tech/blog/dual-task-neural-network"/>
+    <id>https://sakurain.tech/blog/dual-task-neural-network</id>
+    <published>2025-08-15T00:00:00.000Z</published>
+    <updated>2025-08-15T00:00:00.000Z</updated>
+    <author>
+      <name>SAKURAIN</name>
+      <email>Yae_SakuRain@outlook.com</email>
+    </author>
+    <summary>探讨双头架构在数值稳定性、计算效率与硬件适配方面的关键设计决策，包括共享残差底座、对数空间计算和梯度行为管理。</summary>
+    <category term="深度学习"/>
+    <category term="神经网络"/>
+    <category term="多任务学习"/>
+    <category term="数值稳定性"/>
+  </entry>
+
+  <entry>
+    <title>大规模自博弈数据生成系统的分布式架构与存储优化</title>
+    <link href="https://sakurain.tech/blog/selfplay-data-pipeline"/>
+    <id>https://sakurain.tech/blog/selfplay-data-pipeline</id>
+    <published>2025-07-18T00:00:00.000Z</published>
+    <updated>2025-07-18T00:00:00.000Z</updated>
+    <author>
+      <name>SAKURAIN</name>
+      <email>Yae_SakuRain@outlook.com</email>
+    </author>
+    <summary>探讨自博弈数据流水线的分布式架构设计，重点阐述多进程任务调度、模型版本的热加载机制，以及面向高维稀疏特征的存储优化策略。</summary>
+    <category term="强化学习"/>
+    <category term="自博弈"/>
+    <category term="分布式系统"/>
+    <category term="数据流水线"/>
   </entry>
 </feed>

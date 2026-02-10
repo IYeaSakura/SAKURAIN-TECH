@@ -158,17 +158,6 @@
       "status": "online"
     },
     {
-      "id": "sumi233",
-      "name": "酥米的小站",
-      "url": "https://www.sumi233.top/",
-      "icon": "https://cdn.sumi233.top/gh/huang233893/blog-image-bed@main/top/huang233893/imgs/blog/usersumi.png",
-      "description": "终有一日，寻梦中人",
-      "category": "blogs",
-      "featured": true,
-      "unidirectional": true,
-      "status": "online"
-    },
-    {
       "id": "woolyun",
       "name": "天海博客",
       "url": "https://woolyun.com/",
@@ -191,5 +180,5 @@
       "status": "online"
     }
   ],
-  "lastUpdated": "2026-02-10T05:33:04.177Z"
+  "lastUpdated": "2026-02-10T09:52:19.354Z"
 }

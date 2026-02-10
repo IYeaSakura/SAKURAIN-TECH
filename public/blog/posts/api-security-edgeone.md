@@ -37,9 +37,9 @@ featured: false
 
 HMAC-SHA256的计算必须遵循RFC 2104规范，即：
 
-```
-HMAC(K, m) = H((K' ⊕ opad) || H((K' ⊕ ipad) || m))
-```
+$$
+\text{HMAC}(K, m) = H((K' \oplus \text{opad}) \parallel H((K' \oplus \text{ipad}) \parallel m))
+$$
 
 其中`K'`是密钥的规范化形式（若密钥长度超过哈希块大小64字节，需先对密钥做SHA256）。直接使用`SHA256(key + message)`存在**长度扩展攻击**风险：攻击者可在不知道密钥的情况下，向消息尾部追加数据并计算新的有效哈希。
 

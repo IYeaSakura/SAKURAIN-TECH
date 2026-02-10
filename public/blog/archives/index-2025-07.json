@@ -1,0 +1,17 @@
+[
+  {
+    "slug": "selfplay-data-pipeline",
+    "title": "大规模自博弈数据生成系统的分布式架构与存储优化",
+    "description": "探讨自博弈数据流水线的分布式架构设计，重点阐述多进程任务调度、模型版本的热加载机制，以及面向高维稀疏特征的存储优化策略。",
+    "date": "2025-07-18",
+    "author": "SAKURAIN",
+    "tags": [
+      "强化学习",
+      "自博弈",
+      "分布式系统",
+      "数据流水线"
+    ],
+    "cover": "/image/logo.webp",
+    "featured": false
+  }
+]

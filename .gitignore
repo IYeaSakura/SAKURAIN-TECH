@@ -3,3 +3,5 @@ dist
 .VSCodeCounter
 .vscode
 .env
+public/blog/posts/origin
+prompt.md

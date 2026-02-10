@@ -1,0 +1,17 @@
+[
+  {
+    "slug": "mcts-realtime-constraints",
+    "title": "面向实时约束的蒙特卡洛树搜索系统：时间预算控制与内存拓扑优化",
+    "description": "探讨如何在毫秒级时间预算内实现MCTS的确定性资源控制，并构建具备可观测性的分布式搜索拓扑。",
+    "date": "2025-11-14",
+    "author": "SAKURAIN",
+    "tags": [
+      "蒙特卡洛树搜索",
+      "实时系统",
+      "内存优化",
+      "搜索算法"
+    ],
+    "cover": "/image/logo.webp",
+    "featured": false
+  }
+]

@@ -7,7 +7,7 @@ import {
   WebTerminal,
 } from '@/components/effects';
 import { GradientText } from '@/components/effects/TextEffects';
-import { PageLoader } from '@/components/ui/page-loader';
+import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
 import { useTheme } from '@/hooks';
 import { usePrefersReducedMotion, useThrottledScroll, useIsMobile } from '@/lib/performance';
 import type { SiteData } from '@/types';
@@ -565,7 +565,7 @@ const DemoContent = ({ demo, isDark, isLoaded, onLoad }: { demo: { type: DemoTyp
             zIndex: isCesium ? 1 : 0,
           }}
         >
-          <Suspense fallback={<PageLoader />}>
+          <Suspense fallback={<LoadingPlaceholder />}>
             <CesiumGlobe isDark={isDark} />
           </Suspense>
         </div>
@@ -581,7 +581,7 @@ const DemoContent = ({ demo, isDark, isLoaded, onLoad }: { demo: { type: DemoTyp
             zIndex: isChinaMap ? 1 : 0,
           }}
         >
-          <Suspense fallback={<PageLoader />}>
+          <Suspense fallback={<LoadingPlaceholder />}>
             <ChinaMap3D isDark={isDark} />
           </Suspense>
         </div>
