@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Heart, MessageCircle, Smile, Meh, Frown, Calendar, BarChart3, Sparkles } from 'lucide-react';
 import { AmbientGlow, GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
+import { useMobile } from '@/hooks';
 import { clipPathRounded } from '@/utils/styles';
 import type { SiteData } from '@/types';
 
@@ -40,6 +41,7 @@ const moodConfig: Record<Mood, { icon: typeof Heart; color: string; label: strin
 export default function NotesPage() {
   const [archiveData, setArchiveData] = useState<ArchiveData | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
+  const isMobile = useMobile();
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
@@ -576,8 +578,8 @@ export default function NotesPage() {
       {/* 使用共享 Footer 组件 */}
       {footerData && <Footer data={footerData} />}
 
-      {/* 底部光剑 */}
-      <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />
+      {/* 底部光剑 - 仅桌面端显示 */}
+      {!isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
     </div>
   );
 }

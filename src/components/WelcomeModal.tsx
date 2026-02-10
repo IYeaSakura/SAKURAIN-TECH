@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Globe, X, Sparkles, FileText, Users, User } from 'lucide-react';
+import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { PlantUML } from '@/pages/Docs/components/PlantUML';
 import { deploymentConfig } from '@/config/deployment-config';
+import { useMobile } from '@/hooks';
 
 const SyntaxHighlighter = lazy(() =>
   import('react-syntax-highlighter').then(mod => ({ default: mod.Prism }))
@@ -118,6 +120,7 @@ const tabs: Tab[] = [
 
 export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
   const navigate = useNavigate();
+  const isMobile = useMobile();
   const [config, setConfig] = useState<WelcomeModalConfig>(defaultConfig);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -209,6 +212,10 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
   };
 
   const handleEarthClick = () => {
+    if (isMobile) {
+      toast.error('地球Online暂不支持移动端，请在电脑端访问');
+      return;
+    }
     const event = new CustomEvent('open-earth-online');
     window.dispatchEvent(event);
     setIsOpen(false);
@@ -301,7 +308,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                     duration: 0.3,
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="fixed z-50 w-[calc(100vw-2rem)] h-[calc(100vh-4rem)] sm:w-[700px] sm:h-[500px] rounded-2xl border shadow-2xl outline-none overflow-hidden"
+                  className="fixed z-50 w-[calc(100vw-1rem)] h-[calc(100vh-6rem)] max-h-[600px] sm:w-[700px] sm:h-[500px] rounded-2xl border shadow-2xl outline-none overflow-hidden"
                   style={{
                     backgroundColor: 'var(--bg-secondary)',
                     borderColor: 'rgba(var(--accent-primary-rgb), 0.3)',
@@ -310,13 +317,13 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                   }}
                 >
                   <div onClick={(e) => e.stopPropagation()} className="flex flex-col h-full">
-                    <div className="flex flex-col sm:flex-row h-full min-h-[400px]">
-                      <div className="flex flex-row sm:flex-col gap-2 p-3 sm:w-20 sm:border-r border-b sm:border-b-0 border-[var(--accent-primary)]/20 overflow-x-auto sm:overflow-visible">
+                    <div className="flex flex-col sm:flex-row h-full min-h-[300px] sm:min-h-[400px]">
+                      <div className="flex flex-row sm:flex-col gap-1.5 sm:gap-2 p-2 sm:p-3 sm:w-20 sm:border-r border-b sm:border-b-0 border-[var(--accent-primary)]/20 overflow-x-auto sm:overflow-visible">
                         {tabs.map((tab) => (
                           <motion.button
                             key={tab.id}
                             onClick={() => handleTabClick(tab.id)}
-                            className="flex flex-row sm:flex-col items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 sm:py-3 rounded-xl transition-all duration-200 flex-shrink-0"
+                            className="flex flex-row sm:flex-col items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-200 flex-shrink-0"
                             style={{
                               backgroundColor: activeTab === tab.id ? 'var(--accent-primary)/20' : 'transparent',
                               border: activeTab === tab.id ? '1px solid var(--accent-primary)' : '1px solid transparent',
@@ -331,7 +338,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                         ))}
                       </div>
 
-                      <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                      <div className="flex-1 p-3 sm:p-6 lg:p-8 overflow-y-auto">
                         <div className="flex items-start justify-between mb-4 sm:mb-6">
                           <h2
                             className="text-xl sm:text-2xl font-bold font-pixel"

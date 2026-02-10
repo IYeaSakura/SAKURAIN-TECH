@@ -7,7 +7,7 @@ import App from './App.tsx';
 import { GlobalContextMenu } from '@/components/CustomContextMenu';
 import { DebugProtection } from '@/components/DebugProtection';
 import { Navigation } from '@/components/sections/Navigation';
-import { useTheme } from '@/hooks';
+import { useTheme, useMobile } from '@/hooks';
 import type { SiteData } from '@/types';
 import {
   MagneticCursor,
@@ -148,20 +148,25 @@ function PageLayout({ children }: { children: React.ReactNode }) {
 function GlobalLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
+  const isMobile = useMobile();
 
   return (
     <>
       <GlobalContextMenu />
       <DebugProtection />
 
-      {/* 全局鼠标指针效果 - 所有页面都显示 */}
-      <MagneticCursor />
-      <VelocityCursor />
-
-      {/* 首页专属背景特效 */}
-      {isHomePage && (
+      {/* 全局鼠标指针效果 - 仅桌面端显示 */}
+      {!isMobile && (
         <>
-          <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block">
+          <MagneticCursor />
+          <VelocityCursor />
+        </>
+      )}
+
+      {/* 首页专属背景特效 - 移动端降级，不显示复杂特效 */}
+      {isHomePage && !isMobile && (
+        <>
+          <div className="fixed inset-0 pointer-events-none z-0">
             <TwinklingStars count={35} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
           </div>
 

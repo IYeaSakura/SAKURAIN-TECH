@@ -33,6 +33,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { GitHubHeatmap } from '@/components/GitHubHeatmap';
 import { Footer } from '@/components/sections/Footer';
 import { TwinklingStars, GradientText, LightBeam } from '@/components/effects';
+import { useMobile } from '@/hooks';
 import type { SiteData } from '@/types';
 
 // 技术栈词云数据 - 随机颜色版本
@@ -418,14 +419,25 @@ function GlassCard({
   );
 }
 
-// 星光背景容器
+// 星光背景容器 - 移动端特效降级
 function StarryBackground() {
+  const isMobile = useMobile();
+  
+  // 移动端不显示复杂特效，仅保留纯色背景
+  if (isMobile) {
+    return (
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0" style={{ background: 'var(--bg-primary)' }} />
+      </div>
+    );
+  }
+  
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
       {/* 深色背景层 */}
       <div className="absolute inset-0" style={{ background: 'var(--bg-primary)' }} />
 
-      {/* 星光效果 */}
+      {/* 星光效果 - 仅桌面端显示 */}
       <TwinklingStars count={50} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" shootingStars={true} />
 
       {/* 环境光效 */}
@@ -1230,8 +1242,8 @@ export default function AboutPage() {
       {/* Footer - 使用首页相同的组件 */}
       {footerData && <Footer data={footerData} />}
 
-      {/* 底部光剑 */}
-      <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />
+      {/* 底部光剑 - 仅桌面端显示 */}
+      {!useMobile() && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
     </div>
   );
 }

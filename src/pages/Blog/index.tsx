@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Grid, List, X, ChevronLeft, ChevronRight, BarChart3, BookOpen, Calendar, Tag } from 'lucide-react';
 import { AmbientGlow, GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
+import { useMobile } from '@/hooks';
 import { clipPathRounded } from '@/utils/styles';
 import type { SiteData } from '@/types';
 
@@ -32,6 +33,7 @@ const POSTS_PER_PAGE = 9;
 export default function BlogIndex() {
   const [data, setData] = useState<BlogIndex | null>(null);
   const [loading, setLoading] = useState(true);
+  const isMobile = useMobile();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -640,8 +642,8 @@ export default function BlogIndex() {
         {/* Footer */}
         {footerData && <Footer data={footerData} />}
 
-        {/* 底部光剑 */}
-        <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />
+        {/* 底部光剑 - 仅桌面端显示 */}
+        {!isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
       </div>
     </>
   );
