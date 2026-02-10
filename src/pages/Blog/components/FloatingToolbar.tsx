@@ -8,16 +8,21 @@ import {
   Minimize,
   Share2,
   Printer,
+  FileDown,
   ArrowUp
 } from 'lucide-react';
 import { useTheme } from '@/hooks';
+import html2pdf from 'html2pdf.js';
+import { marked } from 'marked';
 
 interface FloatingToolbarProps {
   onExit: () => void;
+  content?: string;
+  title?: string;
   className?: string;
 }
 
-export function FloatingToolbar({ onExit, className = '' }: FloatingToolbarProps) {
+export function FloatingToolbar({ onExit, content, title, className = '' }: FloatingToolbarProps) {
   const { theme, isTransitioning, toggleTheme } = useTheme();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -71,6 +76,110 @@ export function FloatingToolbar({ onExit, className = '' }: FloatingToolbarProps
     window.print();
   }, []);
 
+  const handleExportPDF = useCallback(async () => {
+    if (!content || !title) {
+      alert('无法导出PDF：缺少文章内容');
+      return;
+    }
+
+    try {
+      const htmlContent = await marked(content);
+      
+      const element = document.createElement('div');
+      element.innerHTML = htmlContent;
+      element.style.padding = '40px';
+      element.style.fontFamily = 'Microsoft YaHei, SimHei, PingFang SC, STHeiti, sans-serif';
+      element.style.fontSize = '16px';
+      element.style.lineHeight = '1.6';
+      element.style.color = '#333';
+      element.style.backgroundColor = '#fff';
+      
+      const style = document.createElement('style');
+      style.textContent = `
+        h1, h2, h3, h4, h5, h6 {
+          font-weight: bold;
+          margin-top: 1.5em;
+          margin-bottom: 0.5em;
+          color: #000;
+        }
+        h1 { font-size: 28px; }
+        h2 { font-size: 24px; }
+        h3 { font-size: 20px; }
+        h4 { font-size: 18px; }
+        h5 { font-size: 16px; }
+        h6 { font-size: 14px; }
+        p { margin: 0.8em 0; }
+        ul, ol { margin: 0.8em 0; padding-left: 2em; }
+        li { margin: 0.3em 0; }
+        code {
+          background: #f4f4f4;
+          padding: 2px 6px;
+          border-radius: 4px;
+          font-family: Courier New, monospace;
+          font-size: 14px;
+        }
+        pre {
+          background: #f4f4f4;
+          padding: 1em;
+          border-radius: 8px;
+          overflow-x: auto;
+          margin: 1em 0;
+        }
+        pre code {
+          background: transparent;
+          padding: 0;
+        }
+        blockquote {
+          border-left: 4px solid #ddd;
+          padding-left: 1em;
+          margin: 1em 0;
+          color: #666;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 1em 0;
+        }
+        th, td {
+          border: 1px solid #ddd;
+          padding: 8px;
+          text-align: left;
+        }
+        th {
+          background: #f5f5f5;
+          font-weight: bold;
+        }
+        a {
+          color: #0066cc;
+          text-decoration: underline;
+        }
+        img {
+          max-width: 100%;
+          height: auto;
+        }
+        hr {
+          border: none;
+          border-top: 1px solid #ddd;
+          margin: 1.5em 0;
+        }
+      `;
+      element.appendChild(style);
+
+      const opt = {
+        margin: 10,
+        filename: `${title}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as const },
+      };
+
+      html2pdf().set(opt).from(element).save();
+    } catch (error: unknown) {
+      console.error('PDF导出错误:', error);
+      alert('PDF导出失败，请重试');
+    }
+  }, [content, title]);
+
   const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
@@ -103,6 +212,13 @@ export function FloatingToolbar({ onExit, className = '' }: FloatingToolbarProps
       icon: Printer,
       label: '打印',
       onClick: handlePrint,
+      show: true,
+    },
+    {
+      id: 'exportPdf',
+      icon: FileDown,
+      label: '导出PDF',
+      onClick: handleExportPDF,
       show: true,
     },
     {
@@ -205,7 +321,7 @@ export function FloatingToolbar({ onExit, className = '' }: FloatingToolbarProps
           }}
         >
           {tools.map((tool) => (
-            tool.show && tool.id !== 'print' && (
+            tool.show && tool.id !== 'print' && tool.id !== 'exportPdf' && (
               <button
                 key={tool.id}
                 onClick={tool.onClick}

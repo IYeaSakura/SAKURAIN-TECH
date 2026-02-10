@@ -246,8 +246,8 @@ export default function BlogIndex() {
         <div className="flex flex-col items-center gap-4">
           <div
             className="w-12 h-12 border-2 border-t-transparent animate-spin"
-            style={{ 
-              borderColor: 'var(--accent-primary)', 
+            style={{
+              borderColor: 'var(--accent-primary)',
               borderTopColor: 'transparent',
               clipPath: clipPathRounded(6),
             }}
@@ -266,7 +266,7 @@ export default function BlogIndex() {
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 mt-4 text-white transition-all hover:scale-105"
-            style={{ 
+            style={{
               background: 'var(--accent-primary)',
               clipPath: clipPathRounded(4),
             }}
@@ -286,9 +286,9 @@ export default function BlogIndex() {
           <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
           <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
           <AmbientGlow color="var(--accent-primary)" opacity={0.08} position="center" size={600} />
-          
+
           {/* 网格背景 */}
-          <div 
+          <div
             className="absolute inset-0 opacity-[0.02]"
             style={{
               backgroundImage: `linear-gradient(rgba(255,255,255, 0.1) 1px, transparent 1px),
@@ -305,7 +305,7 @@ export default function BlogIndex() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="fixed top-16 lg:top-20 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8 py-3"
-            style={{ 
+            style={{
               background: 'linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) 80%, transparent 100%)'
             }}
           >
@@ -345,10 +345,10 @@ export default function BlogIndex() {
                 </button>
 
                 {/* 视图切换 */}
-                <div 
-                  className="flex items-center gap-1 p-1" 
-                  style={{ 
-                    background: 'var(--bg-secondary)', 
+                <div
+                  className="flex items-center gap-1 p-1"
+                  style={{
+                    background: 'var(--bg-secondary)',
                     border: '1px solid var(--border-subtle)',
                     clipPath: clipPathRounded(4),
                   }}
@@ -422,7 +422,7 @@ export default function BlogIndex() {
                 >
                   探索博客
                 </h1>
-                
+
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -441,25 +441,25 @@ export default function BlogIndex() {
                 transition={{ duration: 0.8, delay: 0.2, type: 'spring', stiffness: 100 }}
                 className="grid grid-cols-3 gap-4"
               >
-                <StatCard 
-                  icon={Calendar} 
-                  value={sortedYears.length} 
-                  label="年份归档" 
-                  color="var(--accent-primary)" 
+                <StatCard
+                  icon={Calendar}
+                  value={sortedYears.length}
+                  label="年份归档"
+                  color="var(--accent-primary)"
                   delay={0}
                 />
-                <StatCard 
-                  icon={Tag} 
-                  value={tagsData?.tags.length || 0} 
-                  label="标签" 
-                  color="var(--accent-secondary)" 
+                <StatCard
+                  icon={Tag}
+                  value={tagsData?.tags.length || 0}
+                  label="标签"
+                  color="var(--accent-secondary)"
                   delay={1}
                 />
-                <StatCard 
-                  icon={BookOpen} 
-                  value={regularPosts?.length || 0} 
-                  label="文章总数" 
-                  color="#22c55e" 
+                <StatCard
+                  icon={BookOpen}
+                  value={regularPosts?.length || 0}
+                  label="文章总数"
+                  color="#22c55e"
                   delay={2}
                 />
               </motion.div>
@@ -588,8 +588,8 @@ export default function BlogIndex() {
                 <div className="flex items-center justify-center py-20">
                   <div
                     className="w-12 h-12 border-2 border-t-transparent animate-spin"
-                    style={{ 
-                      borderColor: 'var(--accent-primary)', 
+                    style={{
+                      borderColor: 'var(--accent-primary)',
                       borderTopColor: 'transparent',
                       clipPath: clipPathRounded(6),
                     }}
@@ -602,7 +602,7 @@ export default function BlogIndex() {
                       const posts = postsByYear[year];
 
                       return (
-                        <motion.div 
+                        <motion.div
                           key={year}
                           initial={{ opacity: 0, y: 20 }}
                           whileInView={{ opacity: 1, y: 0 }}
@@ -751,8 +751,8 @@ export default function BlogIndex() {
                 <button
                   onClick={() => setShowStats(false)}
                   className="absolute top-4 right-4 p-2 transition-all duration-200 hover:scale-105"
-                  style={{ 
-                    background: 'var(--bg-secondary)', 
+                  style={{
+                    background: 'var(--bg-secondary)',
                     color: 'var(--text-primary)',
                     clipPath: clipPathRounded(4),
                   }}
