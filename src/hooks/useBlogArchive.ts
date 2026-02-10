@@ -56,6 +56,8 @@ export function useMonthArchive(yearMonth: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     if (!yearMonth) {
       setData(null);
       setLoading(false);
@@ -68,8 +70,10 @@ export function useMonthArchive(yearMonth: string) {
         setError(null);
 
         if (monthCache.has(yearMonth)) {
-          setData(monthCache.get(yearMonth)!);
-          setLoading(false);
+          if (isMounted) {
+            setData(monthCache.get(yearMonth)!);
+            setLoading(false);
+          }
           return;
         }
 
@@ -80,16 +84,26 @@ export function useMonthArchive(yearMonth: string) {
 
         const monthData = await response.json();
         monthCache.set(yearMonth, monthData);
-        setData(monthData);
+        if (isMounted) {
+          setData(monthData);
+        }
       } catch (err) {
         console.error(`Failed to load blog archive for ${yearMonth}:`, err);
-        setError(`加载 ${yearMonth} 归档数据失败`);
+        if (isMounted) {
+          setError(`加载 ${yearMonth} 归档数据失败`);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
 
     fetchMonthArchive();
+
+    return () => {
+      isMounted = false;
+    };
   }, [yearMonth]);
 
   return { data, loading, error };
@@ -101,6 +115,8 @@ export function useMultipleMonthArchives(months: string[]) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     async function fetchMultipleArchives() {
       try {
         setLoading(true);
@@ -128,13 +144,19 @@ export function useMultipleMonthArchives(months: string[]) {
           }
         }
         
-        setData(allPosts);
+        if (isMounted) {
+          setData(allPosts);
+        }
       } catch (err) {
         console.error('Failed to load multiple blog archives:', err);
-        setError('加载归档数据失败');
-      } finally {
-        setLoading(false);
-      }
+        if (isMounted) {
+          setError('加载归档数据失败');
+        }
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+          }
+        }
     }
 
     if (months.length > 0) {
@@ -143,7 +165,11 @@ export function useMultipleMonthArchives(months: string[]) {
       setData([]);
       setLoading(false);
     }
-  }, [months]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [months.join(',')]);
 
   return { data, loading, error };
 }
