@@ -52,6 +52,7 @@ interface FriendsData {
   friends: Friend[];
   categories: FriendCategory[];
   applyInfo: ApplyInfo;
+  lastUpdated?: string;
 }
 
 // Icon mapping
@@ -479,11 +480,13 @@ const CategorySection = memo(function CategorySection({
 const HeroSection = memo(function HeroSection({
   title,
   description,
-  stats
+  stats,
+  lastUpdated
 }: {
   title: string;
   description: string;
   stats: { friends: number; categories: number; online: number };
+  lastUpdated?: string;
 }) {
   return (
     <section className="relative pt-20 pb-16 overflow-hidden">
@@ -531,6 +534,29 @@ const HeroSection = memo(function HeroSection({
             <p className="text-lg md:text-xl leading-relaxed max-w-xl" style={{ color: 'var(--text-muted)' }}>
               {description}
             </p>
+            {lastUpdated && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+                className="mt-4 inline-flex items-center gap-2 px-3 py-1.5"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  clipPath: clipPathRounded(3),
+                }}
+              >
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  最后更新: {new Date(lastUpdated).toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+              </motion.div>
+            )}
           </motion.div>
 
           {/* Right: Stats */}
@@ -1244,6 +1270,7 @@ export default function FriendsPage() {
           title={data.title}
           description={data.description}
           stats={stats}
+          lastUpdated={data.lastUpdated}
         />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
