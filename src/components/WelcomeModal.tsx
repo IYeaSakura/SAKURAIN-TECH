@@ -308,7 +308,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                     duration: 0.3,
                     ease: [0.16, 1, 0.3, 1],
                   }}
-                  className="fixed z-50 w-[calc(100vw-1rem)] h-[calc(100vh-6rem)] max-h-[600px] sm:w-[700px] sm:h-[500px] rounded-2xl border shadow-2xl outline-none overflow-hidden"
+                  className="fixed z-50 w-[calc(100vw-2rem)] h-[calc(100vh-12rem)] max-h-[500px] sm:w-[700px] sm:h-[500px] rounded-2xl border shadow-2xl outline-none overflow-hidden"
                   style={{
                     backgroundColor: 'var(--bg-secondary)',
                     borderColor: 'rgba(var(--accent-primary-rgb), 0.3)',

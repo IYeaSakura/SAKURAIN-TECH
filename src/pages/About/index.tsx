@@ -18,7 +18,6 @@ import {
   Globe,
   Layers,
   Sparkles,
-  ArrowUp,
   Calendar,
   Target,
   Workflow,
@@ -500,11 +499,6 @@ export default function AboutPage() {
   const prevSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev - 1 + achievementSlides.length) % achievementSlides.length);
   }, []);
-
-  // 滚动到顶部
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
@@ -1227,17 +1221,6 @@ export default function AboutPage() {
           </motion.div>
         </div>
       </section>
-
-      {/* 回到顶部按钮 */}
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        whileHover={{ scale: 1.1 }}
-        onClick={scrollToTop}
-        className="fixed right-6 bottom-6 z-50 w-12 h-12 rounded-xl flex items-center justify-center bg-gray-900/80 border border-gray-700 hover:bg-gray-800 transition-colors"
-      >
-        <ArrowUp className="w-5 h-5" />
-      </motion.button>
 
       {/* Footer - 使用首页相同的组件 */}
       {footerData && <Footer data={footerData} />}

@@ -20,16 +20,15 @@ interface NavigationProps {
 // 移动端 Dock 导航项配置
 const dockItems = [
   { label: '首页', href: '/', icon: Home },
-  { label: '文档', href: '/docs', icon: BookOpen },
   { label: '博客', href: '/blog', icon: FileText },
-  { label: '笔记', href: '/notes', icon: MessageCircle },
+  { label: '说说', href: '/notes', icon: MessageCircle },
+  { label: '文档', href: '/docs', icon: BookOpen },
   { label: '友链', href: '/friends', icon: Heart },
-  { label: '关于', href: '/about', icon: User },
+  { label: '关于', href: '/about', icon: User, isCustom: true },
 ];
 
 export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }: NavigationProps) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -253,99 +252,113 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
         </div>
       </motion.nav>
 
-      {/* 移动端底部 Dock 导航栏 - 贴底居中设计 */}
+      {/* 移动端底部 Dock 导航栏 - iOS 风格 */}
       <motion.div
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2, ease: [0.23, 1, 0.32, 1] }}
+        transition={{ duration: 0.4, delay: 0.1 }}
         className="md:hidden fixed bottom-0 left-0 right-0 z-50"
-        onMouseLeave={() => setHoveredIndex(null)}
       >
-        {/* Dock 容器 - 贴底设计 */}
+        {/* Dock 容器 - iOS 风格 */}
         <div
-          className="flex items-center justify-center gap-0.5 px-2 py-2 pb-[env(safe-area-inset-bottom,8px)]"
+          className="flex items-center justify-center gap-1 px-2 py-1.5 pb-[env(safe-area-inset-bottom,8px)]"
           style={{
-            background: 'rgba(var(--bg-secondary-rgb, 10, 10, 15), 0.95)',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            borderTop: '1px solid rgba(var(--accent-primary-rgb, 99, 102, 241), 0.15)',
-            boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
+            background: theme === 'dark' 
+              ? 'rgba(30, 30, 30, 0.9)' 
+              : 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderTop: theme === 'dark'
+              ? '1px solid rgba(255, 255, 255, 0.1)'
+              : '1px solid rgba(0, 0, 0, 0.1)',
+            boxShadow: theme === 'dark'
+              ? '0 -4px 20px rgba(0, 0, 0, 0.4)'
+              : '0 -4px 20px rgba(0, 0, 0, 0.15)',
           }}
         >
-          {dockItems.map((item, index) => {
+          {dockItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
+            const isCustomIcon = (item as any).isCustom;
             
             return (
-              <motion.button
+              <button
                 key={item.href}
                 onClick={() => handleDockClick(item.href)}
-                onMouseEnter={() => setHoveredIndex(index)}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ 
-                  opacity: 1, 
-                  y: 0,
-                }}
-                transition={{ 
-                  type: 'spring',
-                  stiffness: 400,
-                  damping: 25,
-                  delay: index * 0.03 
-                }}
-                className="relative flex flex-col items-center justify-center flex-1 max-w-[72px] py-2 px-1 rounded-xl transition-all duration-200 active:scale-95"
+                className="relative flex flex-col items-center justify-center flex-1 max-w-[72px] py-2 px-1 rounded-2xl transition-all duration-150 active:scale-95"
                 style={{
-                  background: active 
-                    ? 'rgba(var(--accent-primary-rgb, 99, 102, 241), 0.15)' 
-                    : 'transparent',
+                  background: 'transparent',
                 }}
               >
                 {/* 图标容器 */}
                 <div 
-                  className="relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200"
+                  className="relative flex items-center justify-center w-10 h-10 rounded-2xl transition-all duration-150"
                   style={{
-                    background: active 
-                      ? 'rgba(var(--accent-primary-rgb, 99, 102, 241), 0.2)' 
-                      : hoveredIndex === index 
-                        ? 'rgba(var(--accent-primary-rgb, 99, 102, 241), 0.08)'
-                        : 'transparent',
+                    background: 'transparent',
                   }}
                 >
-                  <Icon 
-                    className="w-5 h-5 transition-all duration-200"
-                    style={{
-                      color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                      filter: active ? 'drop-shadow(0 0 6px var(--accent-primary))' : 'none',
-                    }}
-                  />
-                  
-                  {/* 激活指示器 - 顶部发光条 */}
-                  {active && (
-                    <motion.div
-                      layoutId="active-indicator"
-                      className="absolute -top-2 left-1/2 -translate-x-1/2 h-1 rounded-full"
+                  {isCustomIcon ? (
+                    <svg 
+                      width="20" 
+                      height="20" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-5 h-5 transition-all duration-150"
+                    >
+                      <path 
+                        d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" 
+                        strokeWidth="2"
+                        style={{
+                          stroke: active 
+                            ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C') 
+                            : 'var(--text-secondary)',
+                        }}
+                      />
+                      <circle 
+                        cx="12" 
+                        cy="7" 
+                        r="4" 
+                        strokeWidth="2"
+                        style={{
+                          stroke: active 
+                            ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C') 
+                            : 'var(--text-secondary)',
+                        }}
+                      />
+                    </svg>
+                  ) : (
+                    <Icon 
+                      className="w-5 h-5 transition-all duration-150"
                       style={{
-                        width: '16px',
-                        background: 'var(--accent-primary)',
-                        boxShadow: '0 0 8px var(--accent-primary), 0 0 16px var(--accent-primary)',
+                        color: active 
+                          ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C') 
+                          : 'var(--text-secondary)',
+                        stroke: active 
+                          ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C') 
+                          : 'var(--text-secondary)',
                       }}
-                      initial={{ scaleX: 0, opacity: 0 }}
-                      animate={{ scaleX: 1, opacity: 1 }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                      strokeWidth={2}
+                      fill="none"
+                      fillOpacity={0}
                     />
                   )}
                 </div>
                 
                 {/* 标签文字 */}
                 <span 
-                  className="text-[10px] font-medium mt-1 transition-colors duration-200"
+                  className="text-[10px] font-medium mt-1 transition-colors duration-150"
                   style={{ 
-                    color: active ? 'var(--accent-primary)' : 'var(--text-muted)',
+                    color: active 
+                      ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C') 
+                      : 'var(--text-muted)',
                     fontFamily: 'var(--font-primary)',
                   }}
                 >
                   {item.label}
                 </span>
-              </motion.button>
+              </button>
             );
           })}
         </div>
