@@ -12,22 +12,19 @@
   </author>
   <rights>© 2026 SAKURAIN 技术工作室</rights>
   <entry>
-    <title>高维离散决策空间中的几何数据增强：对称性挖掘与计算拓扑优化</title>
-    <link href="https://sakurain.tech/blog/008-geometric-data-augmentation"/>
-    <id>https://sakurain.tech/blog/008-geometric-data-augmentation</id>
+    <title>《机器学习》（下）：深入理论的密林</title>
+    <link href="https://sakurain.tech/blog/machine-learning-theory"/>
+    <id>https://sakurain.tech/blog/machine-learning-theory</id>
     <published>2026-02-10T00:00:00.000Z</published>
     <updated>2026-02-10T00:00:00.000Z</updated>
     <author>
       <name>SAKURAIN</name>
       <email>Yae_SakuRain@outlook.com</email>
     </author>
-    <summary>基于大规模自博弈数据管线中的工程实践，探讨如何在高维离散动作空间中安全地利用状态空间的对称性，构建计算高效且策略一致的数据增强系统。</summary>
-    <category term="强化学习"/>
-    <category term="数据流水线"/>
-    <category term="训练管线"/>
-    <category term="内存优化"/>
-    <category term="分布式系统"/>
-    <category term="搜索算法"/>
+    <summary>探讨周志华教授《机器学习》后半部分的核心理论，包括特征选择与稀疏学习、计算学习理论（PAC框架、VC维）、半监督学习等进阶主题。</summary>
+    <category term="机器学习理论"/>
+    <category term="深度学习"/>
+    <category term="神经网络"/>
   </entry>
 
   <entry>
@@ -45,6 +42,22 @@
     <category term="边缘计算"/>
     <category term="API安全"/>
     <category term="边缘函数"/>
+  </entry>
+
+  <entry>
+    <title>《机器学习》（上）：我的人工智能启蒙教材</title>
+    <link href="https://sakurain.tech/blog/machine-learning-book-review"/>
+    <id>https://sakurain.tech/blog/machine-learning-book-review</id>
+    <published>2026-01-03T00:00:00.000Z</published>
+    <updated>2026-01-03T00:00:00.000Z</updated>
+    <author>
+      <name>SAKURAIN</name>
+      <email>Yae_SakuRain@outlook.com</email>
+    </author>
+    <summary>分享周志华教授《机器学习》教材的阅读心得，重点解析NFL定理等核心概念，以及这些理论如何塑造了对机器学习的理解。</summary>
+    <category term="深度学习"/>
+    <category term="神经网络"/>
+    <category term="机器学习理论"/>
   </entry>
 
   <entry>

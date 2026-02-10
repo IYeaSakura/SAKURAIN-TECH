@@ -1,0 +1,16 @@
+[
+  {
+    "slug": "machine-learning-book-review",
+    "title": "《机器学习》（上）：我的人工智能启蒙教材",
+    "description": "分享周志华教授《机器学习》教材的阅读心得，重点解析NFL定理等核心概念，以及这些理论如何塑造了对机器学习的理解。",
+    "date": "2026-01-03",
+    "author": "SAKURAIN",
+    "tags": [
+      "深度学习",
+      "神经网络",
+      "机器学习理论"
+    ],
+    "cover": "/image/logo.webp",
+    "featured": true
+  }
+]

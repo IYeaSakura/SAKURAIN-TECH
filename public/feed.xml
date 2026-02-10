@@ -12,13 +12,13 @@
     <atom:link href="https://sakurain.tech/atom.xml" rel="alternate" type="application/atom+xml"/>
     
     <item>
-      <title>高维离散决策空间中的几何数据增强：对称性挖掘与计算拓扑优化</title>
-      <link>https://sakurain.tech/blog/008-geometric-data-augmentation</link>
-      <guid isPermaLink="true">https://sakurain.tech/blog/008-geometric-data-augmentation</guid>
+      <title>《机器学习》（下）：深入理论的密林</title>
+      <link>https://sakurain.tech/blog/machine-learning-theory</link>
+      <guid isPermaLink="true">https://sakurain.tech/blog/machine-learning-theory</guid>
       <pubDate>Tue, 10 Feb 2026 00:00:00 GMT</pubDate>
       <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
-      <description>基于大规模自博弈数据管线中的工程实践，探讨如何在高维离散动作空间中安全地利用状态空间的对称性，构建计算高效且策略一致的数据增强系统。</description>
-      <category>强化学习</category><category>数据流水线</category><category>训练管线</category><category>内存优化</category><category>分布式系统</category><category>搜索算法</category>
+      <description>探讨周志华教授《机器学习》后半部分的核心理论，包括特征选择与稀疏学习、计算学习理论（PAC框架、VC维）、半监督学习等进阶主题。</description>
+      <category>机器学习理论</category><category>深度学习</category><category>神经网络</category>
     </item>
 
     <item>
@@ -29,6 +29,16 @@
       <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
       <description>记录在腾讯云边缘函数上实现 HMAC-SHA256 认证系统的完整过程，包括遇到的坑和解决方案。</description>
       <category>腾讯云</category><category>边缘计算</category><category>API安全</category><category>边缘函数</category>
+    </item>
+
+    <item>
+      <title>《机器学习》（上）：我的人工智能启蒙教材</title>
+      <link>https://sakurain.tech/blog/machine-learning-book-review</link>
+      <guid isPermaLink="true">https://sakurain.tech/blog/machine-learning-book-review</guid>
+      <pubDate>Sat, 03 Jan 2026 00:00:00 GMT</pubDate>
+      <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
+      <description>分享周志华教授《机器学习》教材的阅读心得，重点解析NFL定理等核心概念，以及这些理论如何塑造了对机器学习的理解。</description>
+      <category>深度学习</category><category>神经网络</category><category>机器学习理论</category>
     </item>
 
     <item>
