@@ -148,32 +148,10 @@ function BlogPostContent() {
         )}
 
         {/* 右侧浮动工具栏 */}
-        <FloatingToolbar onBack={handleBack} />
+        <FloatingToolbar onExit={handleBack} />
 
         {/* 主内容区 */}
         <main className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 md:pb-12">
-          {/* 左上角返回按钮 - 仅桌面端显示 */}
-          <motion.button
-            onClick={handleBack}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="hidden md:flex items-center gap-2 px-4 py-2 mb-4 text-sm font-medium transition-all duration-200 hover:scale-105"
-            style={{
-              background: 'var(--bg-card)',
-              border: '2px solid var(--border-subtle)',
-              color: 'var(--text-primary)',
-              borderRadius: '8px',
-            }}
-            whileHover={{ 
-              borderColor: 'var(--accent-primary)',
-              boxShadow: '0 0 20px var(--accent-glow)',
-            }}
-          >
-            <ArrowLeft className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-            返回博客
-          </motion.button>
-
           <motion.article
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -199,22 +177,6 @@ function BlogPostContent() {
               />
               
               <div className="relative z-10 p-6 md:p-8">
-                {/* 移动端返回按钮 */}
-                <motion.button
-                  onClick={handleBack}
-                  className="md:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg mb-4 text-sm"
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-subtle)',
-                    color: 'var(--text-primary)',
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  返回列表
-                </motion.button>
-
                 <h1 
                   className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-4"
                   style={{ 
