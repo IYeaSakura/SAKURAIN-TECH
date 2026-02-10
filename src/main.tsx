@@ -20,7 +20,7 @@ import {
 // 处理静态部署硬跳转重定向
 function RedirectHandler() {
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const redirect = sessionStorage.getItem('spa-redirect');
     if (redirect) {
@@ -28,7 +28,7 @@ function RedirectHandler() {
       navigate(redirect, { replace: true });
     }
   }, [navigate]);
-  
+
   return null;
 }
 
@@ -109,45 +109,27 @@ export function preloadBlog() {
   return blogLoader;
 }
 
-// 页面加载 Skeleton 组件
-const PageSkeleton = () => {
-  console.log('[PageSkeleton] Rendering loading skeleton');
-  return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a0f' }}>
-      <div className="flex flex-col items-center gap-4">
-        <div
-          className="w-12 h-12 border-2 border-t-transparent rounded-full animate-spin"
-          style={{ borderColor: '#3b82f6', borderTopColor: 'transparent' }}
-        />
-        <p style={{ color: '#9ca3af' }}>加载中...</p>
-      </div>
-    </div>
-  );
-};
-
-
-
 // 带导航的布局组件 - 只在指定列表页显示导航
 function PageLayout({ children }: { children: React.ReactNode }) {
   const [siteData, setSiteData] = useState<SiteData | null>(null);
   const { theme, isTransitioning, toggleTheme } = useTheme();
   const location = useLocation();
-  
+
   useEffect(() => {
     fetch('/data/site-data.json')
       .then(res => res.json())
       .then(data => setSiteData(data))
       .catch(err => console.error('Failed to load site data:', err));
   }, []);
-  
+
   // 只在以下路径显示导航：首页、博客列表、文档列表、友链、关于、说说
   const showNavPaths = ['/', '/blog', '/docs', '/friends', '/about', '/notes'];
   const shouldShowNav = showNavPaths.includes(location.pathname);
-  
+
   if (!shouldShowNav) {
     return <>{children}</>;
   }
-  
+
   return (
     <>
       {siteData && (
@@ -171,7 +153,7 @@ function GlobalLayout({ children }: { children: React.ReactNode }) {
     <>
       <GlobalContextMenu />
       <DebugProtection />
-      
+
       {/* 全局鼠标指针效果 - 所有页面都显示 */}
       <MagneticCursor />
       <VelocityCursor />
@@ -207,58 +189,58 @@ createRoot(document.getElementById('root')!).render(
       <GlobalLayout>
         <PageLayout>
           <Routes>
-          <Route path="/" element={<App />} />
-          <Route path="/docs" element={
-            <Suspense fallback={<PageSkeleton />}>
-              <DocsPage />
-            </Suspense>
-          } />
-          <Route path="/docs/:categoryId" element={
-            <Suspense fallback={<PageSkeleton />}>
-              <DocsPage />
-            </Suspense>
-          } />
-          <Route path="/docs/:categoryId/:itemId" element={
-            <Suspense fallback={<PageSkeleton />}>
-              <DocsPage />
-            </Suspense>
-          } />
-          <Route path="/docs/:categoryId/:itemId/:chapterId" element={
-            <Suspense fallback={<PageSkeleton />}>
-              <DocsPage />
-            </Suspense>
-          } />
-          <Route path="/friends" element={
-            <Suspense fallback={<PageSkeleton />}>
-              <FriendsPage />
-            </Suspense>
-          } />
-          <Route path="/blog" element={
-            <Suspense fallback={<PageSkeleton />}>
-              <BlogPage />
-            </Suspense>
-          } />
-          <Route path="/blog/:slug" element={
-            <Suspense fallback={<PageSkeleton />}>
-              <BlogPostPage />
-            </Suspense>
-          } />
-          <Route path="/notes" element={
-            <Suspense fallback={<PageSkeleton />}>
-              <NotesPage />
-            </Suspense>
-          } />
-          <Route path="/about" element={
-            <Suspense fallback={<PageSkeleton />}>
-              <AboutPage />
-            </Suspense>
-          } />
-          <Route path="*" element={
-            <Suspense fallback={<PageSkeleton />}>
-              <NotFoundPage />
-            </Suspense>
-          } />
-        </Routes>
+            <Route path="/" element={<App />} />
+            <Route path="/docs" element={
+              <Suspense fallback={null}>
+                <DocsPage />
+              </Suspense>
+            } />
+            <Route path="/docs/:categoryId" element={
+              <Suspense fallback={null}>
+                <DocsPage />
+              </Suspense>
+            } />
+            <Route path="/docs/:categoryId/:itemId" element={
+              <Suspense fallback={null}>
+                <DocsPage />
+              </Suspense>
+            } />
+            <Route path="/docs/:categoryId/:itemId/:chapterId" element={
+              <Suspense fallback={null}>
+                <DocsPage />
+              </Suspense>
+            } />
+            <Route path="/friends" element={
+              <Suspense fallback={null}>
+                <FriendsPage />
+              </Suspense>
+            } />
+            <Route path="/blog" element={
+              <Suspense fallback={null}>
+                <BlogPage />
+              </Suspense>
+            } />
+            <Route path="/blog/:slug" element={
+              <Suspense fallback={null}>
+                <BlogPostPage />
+              </Suspense>
+            } />
+            <Route path="/notes" element={
+              <Suspense fallback={null}>
+                <NotesPage />
+              </Suspense>
+            } />
+            <Route path="/about" element={
+              <Suspense fallback={null}>
+                <AboutPage />
+              </Suspense>
+            } />
+            <Route path="*" element={
+              <Suspense fallback={null}>
+                <NotFoundPage />
+              </Suspense>
+            } />
+          </Routes>
         </PageLayout>
       </GlobalLayout>
     </BrowserRouter>

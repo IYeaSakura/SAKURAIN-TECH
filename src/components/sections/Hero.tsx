@@ -1,18 +1,19 @@
-import { memo, useState, useCallback, useRef, useEffect } from 'react';
-import { motion,
-AnimatePresence } from 'framer-motion';
-import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown, Globe, Map, Maximize2, X, Layers, Terminal as TerminalIcon } from 'lucide-react';
+import { memo, useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, Terminal, Cpu, Code2, Sparkles, ChevronDown, Globe, Map, Maximize2, X, Layers, Terminal as TerminalIcon, Play } from 'lucide-react';
 import {
   AmbientGlow,
   TwinklingStars,
   WebTerminal,
 } from '@/components/effects';
-import { CesiumGlobe } from '@/components/effects/CesiumGlobe';
-import { ChinaMap3D } from '@/components/effects/ChinaMap3D';
 import { GradientText } from '@/components/effects/TextEffects';
+import { PageLoader } from '@/components/ui/page-loader';
 import { useTheme } from '@/hooks';
 import { usePrefersReducedMotion, useThrottledScroll, useIsMobile } from '@/lib/performance';
 import type { SiteData } from '@/types';
+
+const CesiumGlobe = lazy(() => import('@/components/effects/CesiumGlobe').then(m => ({ default: m.CesiumGlobe })));
+const ChinaMap3D = lazy(() => import('@/components/effects/ChinaMap3D').then(m => ({ default: m.ChinaMap3D })));
 
 
 
@@ -30,36 +31,6 @@ const DEMOS: DemoConfig[] = [
 ];
 
 type DemoType = 'cesium' | 'chinamap' | 'terminal';
-
-// FPS 计数器 Hook
-function useFPS() {
-  const [fps, setFps] = useState(0);
-  const frameCount = useRef(0);
-  const lastTime = useRef(performance.now());
-
-  useEffect(() => {
-    let rafId: number;
-
-    const updateFPS = () => {
-      frameCount.current++;
-      const now = performance.now();
-      const delta = now - lastTime.current;
-
-      if (delta >= 1000) {
-        setFps(Math.round((frameCount.current * 1000) / delta));
-        frameCount.current = 0;
-        lastTime.current = now;
-      }
-
-      rafId = requestAnimationFrame(updateFPS);
-    };
-
-    rafId = requestAnimationFrame(updateFPS);
-    return () => cancelAnimationFrame(rafId);
-  }, []);
-
-  return fps;
-}
 
 interface HeroProps {
   data: SiteData['hero'];
@@ -550,37 +521,71 @@ const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
 
 GlowScrollIndicator.displayName = 'GlowScrollIndicator';
 
-// 演示内容渲染 - 同时渲染所有组件，通过 opacity 控制显隐，避免重新挂载导致黑屏
-const DemoContent = ({ demo, isDark }: { demo: { type: DemoType; isFullscreen: boolean; onFullscreenToggle: () => void }; isDark: boolean }) => {
+// 演示内容渲染 - 懒加载方式，手动触发加载
+const DemoContent = ({ demo, isDark, isLoaded, onLoad }: { demo: { type: DemoType; isFullscreen: boolean; onFullscreenToggle: () => void }; isDark: boolean; isLoaded: boolean; onLoad: () => void }) => {
   const isCesium = demo.type === 'cesium';
   const isChinaMap = demo.type === 'chinamap';
   const isTerminal = demo.type === 'terminal';
 
   return (
     <div className="relative w-full h-full">
+      {/* 未加载状态 - 显示加载按钮 */}
+      {!isLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            className="flex flex-col items-center gap-3 p-6 rounded-xl"
+            style={{
+              background: 'var(--bg-card)',
+              border: '2px solid var(--accent-primary)',
+              boxShadow: '0 0 30px var(--accent-glow)',
+            }}
+          >
+            <button
+              onClick={onLoad}
+              className="flex flex-col items-center gap-3"
+            >
+              <Play className="w-10 h-10" style={{ color: 'var(--accent-primary)' }} />
+              <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                点击加载 3D 场景
+              </span>
+            </button>
+          </motion.div>
+        </div>
+      )}
+
       {/* Cesium 地球 - 使用 CSS 过渡实现淡入淡出 */}
-      <div
-        className="absolute inset-0 transition-opacity duration-500 ease-in-out"
-        style={{
-          opacity: isCesium ? 1 : 0,
-          pointerEvents: isCesium ? 'auto' : 'none',
-          zIndex: isCesium ? 1 : 0,
-        }}
-      >
-        <CesiumGlobe isDark={isDark} />
-      </div>
+      {isLoaded && (
+        <div
+          className="absolute inset-0 transition-opacity duration-500 ease-in-out"
+          style={{
+            opacity: isCesium ? 1 : 0,
+            pointerEvents: isCesium ? 'auto' : 'none',
+            zIndex: isCesium ? 1 : 0,
+          }}
+        >
+          <Suspense fallback={<PageLoader />}>
+            <CesiumGlobe isDark={isDark} />
+          </Suspense>
+        </div>
+      )}
 
       {/* Three.js 中国地图 */}
-      <div
-        className="absolute inset-0 transition-opacity duration-500 ease-in-out"
-        style={{
-          opacity: isChinaMap ? 1 : 0,
-          pointerEvents: isChinaMap ? 'auto' : 'none',
-          zIndex: isChinaMap ? 1 : 0,
-        }}
-      >
-        <ChinaMap3D isDark={isDark} />
-      </div>
+      {isLoaded && (
+        <div
+          className="absolute inset-0 transition-opacity duration-500 ease-in-out"
+          style={{
+            opacity: isChinaMap ? 1 : 0,
+            pointerEvents: isChinaMap ? 'auto' : 'none',
+            zIndex: isChinaMap ? 1 : 0,
+          }}
+        >
+          <Suspense fallback={<PageLoader />}>
+            <ChinaMap3D isDark={isDark} />
+          </Suspense>
+        </div>
+      )}
 
       {/* Web 终端 */}
       <div
@@ -615,12 +620,16 @@ const GlobeShowcase = memo(() => {
   const [currentDemo, setCurrentDemo] = useState<DemoType>('cesium');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const isDark = theme !== 'light';
-  const fps = useFPS();
 
   const demoConfig = getDemoConfig(currentDemo);
+
+  const handleLoad = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
 
   // 进入全屏
   const enterFullscreen = useCallback(async () => {
@@ -682,11 +691,13 @@ const GlobeShowcase = memo(() => {
 
   // 切换下一个演示
   const handleSwitchDemo = useCallback(() => {
+    setIsLoaded(false);
     setCurrentDemo(prev => getNextDemo(prev));
   }, []);
 
   // 选择特定演示
   const handleSelectDemo = useCallback((demoId: DemoType) => {
+    setIsLoaded(false);
     setCurrentDemo(demoId);
     setShowDropdown(false);
   }, []);
@@ -858,28 +869,6 @@ const GlobeShowcase = memo(() => {
                 </div>
               </motion.div>
 
-              {/* 右上方 - FPS */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="absolute top-4 right-32 z-30"
-              >
-                <div
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
-                  style={{
-                    background: 'rgba(0, 0, 0, 0.5)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(59, 130, 246, 0.3)',
-                  }}
-                >
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>FPS:</span>
-                  <span className="text-xs font-mono font-bold" style={{ color: '#22c55e' }}>
-                    {fps}
-                  </span>
-                </div>
-              </motion.div>
-
               {/* 中间控制栏 - 切换按钮和下拉选择 */}
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -978,6 +967,8 @@ const GlobeShowcase = memo(() => {
               onFullscreenToggle: isFullscreen ? exitFullscreen : enterFullscreen
             }}
             isDark={isDark}
+            isLoaded={isLoaded}
+            onLoad={handleLoad}
           />
         </div>
 
