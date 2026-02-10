@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { useNavigate } from 'react-router';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Globe, X, Sparkles, FileText, Users, User } from 'lucide-react';
@@ -116,6 +117,7 @@ const tabs: Tab[] = [
 ];
 
 export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
+  const navigate = useNavigate();
   const [config, setConfig] = useState<WelcomeModalConfig>(defaultConfig);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -193,7 +195,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
     if (deploymentConfig.useWindowLocation) {
       window.location.href = '/blog';
     } else {
-      window.location.href = '/blog';
+      navigate('/blog');
     }
   };
 
@@ -202,7 +204,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
     if (deploymentConfig.useWindowLocation) {
       window.location.href = '/about';
     } else {
-      window.location.href = '/about';
+      navigate('/about');
     }
   };
 
@@ -214,7 +216,11 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
 
   const handleFriendsClick = () => {
     setIsOpen(false);
-    window.location.href = '/friends';
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = '/friends';
+    } else {
+      navigate('/friends');
+    }
   };
 
   const loadMarkdown = async () => {
