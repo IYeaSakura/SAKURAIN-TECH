@@ -511,24 +511,35 @@ export default function BlogIndex() {
                 </div>
               </div>
 
-              {/* 非对称网格布局 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-min">
-                {featuredPosts.map((post, index) => (
-                  <GlassCard
-                    key={post.slug}
-                    className={index === 0 ? 'md:col-span-2 md:row-span-2' : ''}
-                    hoverScale={1.02}
-                    accentColor="var(--accent-primary)"
-                  >
-                    <div className="h-full">
-                      {viewMode === 'grid' ? (
-                        <BlogCard post={post} index={index} featured={true} />
-                      ) : (
-                        <BlogListItem post={post} index={index} featured={true} />
-                      )}
-                    </div>
-                  </GlassCard>
-                ))}
+              {/* 动态网格布局 */}
+              <div className={`
+                grid gap-6 auto-rows-min
+                ${featuredPosts.length === 1 ? 'grid-cols-1' : ''}
+                ${featuredPosts.length === 2 ? 'grid-cols-1 md:grid-cols-2' : ''}
+                ${featuredPosts.length >= 3 ? 'grid-cols-1 md:grid-cols-3' : ''}
+              `}>
+                {featuredPosts.map((post, index) => {
+                  let spanClass = '';
+                  if (featuredPosts.length >= 3 && index === 0) {
+                    spanClass = 'md:col-span-2 md:row-span-2';
+                  }
+                  return (
+                    <GlassCard
+                      key={post.slug}
+                      className={spanClass}
+                      hoverScale={1.02}
+                      accentColor="var(--accent-primary)"
+                    >
+                      <div className="h-full">
+                        {viewMode === 'grid' ? (
+                          <BlogCard post={post} index={index} featured={true} />
+                        ) : (
+                          <BlogListItem post={post} index={index} featured={true} />
+                        )}
+                      </div>
+                    </GlassCard>
+                  );
+                })}
               </div>
             </motion.section>
           )}
