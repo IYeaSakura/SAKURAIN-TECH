@@ -7,6 +7,7 @@ import {
 } from '@/components/effects';
 import { ThemeToggle } from '@/components/atoms';
 import { deploymentConfig } from '@/config/deployment-config';
+import { useMobile } from '@/hooks';
 
 type Theme = 'light' | 'dark';
 
@@ -286,34 +287,44 @@ export default function NotFoundPage() {
     window.location.reload();
   }, []);
   
+  const isMobile = useMobile();
+  
   return (
     <div
       className="relative min-h-screen flex flex-col"
       style={{ background: 'var(--bg-primary)' }}
     >
-      {/* Global Effects */}
-      <MagneticCursor />
-      <VelocityCursor />
+      {/* Global Effects - 移动端降级 */}
+      {!isMobile && (
+        <>
+          <MagneticCursor />
+          <VelocityCursor />
+        </>
+      )}
 
-      {/* Background Decorations */}
-      <div className="fixed inset-0 pointer-events-none z-0 hidden lg:block">
-        <TwinklingStars
-          count={35}
-          color="var(--accent-primary)"
-          secondaryColor="var(--accent-secondary)"
-        />
-      </div>
+      {/* Background Decorations - 移动端降级 */}
+      {!isMobile && (
+        <>
+          <div className="fixed inset-0 pointer-events-none z-0">
+            <TwinklingStars
+              count={35}
+              color="var(--accent-primary)"
+              secondaryColor="var(--accent-secondary)"
+            />
+          </div>
 
-      <div className="fixed inset-0.5 pointer-events-none z-0">
-        <FlowingGradient
-          colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
-          speed={15}
-          opacity={0.05}
-        />
-      </div>
+          <div className="fixed inset-0.5 pointer-events-none z-0">
+            <FlowingGradient
+              colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
+              speed={15}
+              opacity={0.05}
+            />
+          </div>
 
-      <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
-      <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />
+          <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
+          <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />
+        </>
+      )}
 
       {/* Navigation */}
       <NavigationHeader

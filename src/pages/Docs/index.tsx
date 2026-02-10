@@ -5,7 +5,7 @@ import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, Chevr
 import type { LucideProps } from 'lucide-react';
 import { MagneticCursor, VelocityCursor, AmbientGlow, GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
-import { useConfig } from '@/hooks';
+import { useConfig, useMobile } from '@/hooks';
 import { deploymentConfig } from '@/config/deployment-config';
 import { DocListView } from './components/DocListView';
 import { SeriesDetailView } from './components/SeriesDetailView';
@@ -30,6 +30,7 @@ export default function DocsPage() {
     chapterId?: string;
   }>();
   const navigate = useNavigate();
+  const isMobile = useMobile();
 
   const { data: config, loading: configLoading, error: configError } = useConfig<DocsConfig>('/data/docs.json');
   const { data: siteData } = useConfig<SiteData>('/data/site-data.json');
@@ -188,7 +189,12 @@ export default function DocsPage() {
 
   return (
     <>
-      <MagneticCursor /><VelocityCursor />
+      {/* 鼠标效果 - 仅桌面端显示 */}
+      {!isMobile && (
+        <>
+          <MagneticCursor /><VelocityCursor />
+        </>
+      )}
       <AnimatePresence mode="wait">
         {selectedChapter && selectedItem?.type === 'series' && selectedCategory ? (
           <motion.div key="chapter-reader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="h-screen flex flex-col">
@@ -431,6 +437,8 @@ const CategoryCard = memo(({
 CategoryCard.displayName = 'CategoryCard';
 
 function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeViewProps) {
+  const isMobile = useMobile();
+  
   // 计算统计数据
   const categoryCount = config.categories.length;
   const docCount = config.categories.reduce((acc: number, cat: DocCategory) => 
@@ -564,8 +572,8 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
       {/* Footer - 使用共享组件 */}
       {siteData?.footer && <Footer data={siteData.footer} />}
 
-      {/* 底部光剑 */}
-      <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />
+      {/* 底部光剑 - 仅桌面端显示 */}
+      {!isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
     </div>
   );
 }

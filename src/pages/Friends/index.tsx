@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { AmbientGlow, LightBeam } from '@/components/effects';
+import { useMobile } from '@/hooks';
 import type { SiteData } from '@/types';
 
 // Types
@@ -1148,6 +1149,7 @@ export default function FriendsPage() {
   const [redirectModalOpen, setRedirectModalOpen] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [mailtoModalOpen, setMailtoModalOpen] = useState(false);
+  const isMobile = useMobile();
 
   const handleFriendClick = useCallback((friend: Friend) => {
     setSelectedFriend(friend);
@@ -1372,8 +1374,8 @@ export default function FriendsPage() {
       {/* Footer - 使用共享组件 */}
       {footerData && <Footer data={footerData} />}
 
-      {/* 底部光剑 */}
-      <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />
+      {/* 底部光剑 - 仅桌面端显示 */}
+      {!isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
 
       <RedirectModal
         isOpen={redirectModalOpen}

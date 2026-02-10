@@ -119,16 +119,6 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
     }
   };
 
-  // 计算相邻项目的缩放效果（macOS Dock 风格）
-  const getItemScale = (index: number) => {
-    if (hoveredIndex === null) return 1;
-    const distance = Math.abs(index - hoveredIndex);
-    if (distance === 0) return 1.3;
-    if (distance === 1) return 1.15;
-    if (distance === 2) return 1.05;
-    return 1;
-  };
-
   return (
     <>
       {/* 桌面端顶部导航 */}
@@ -263,121 +253,106 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
         </div>
       </motion.nav>
 
-      {/* 移动端底部 Dock 导航栏 - macOS 风格 */}
+      {/* 移动端底部 Dock 导航栏 - 贴底居中设计 */}
       <motion.div
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
-        className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+        transition={{ duration: 0.5, delay: 0.2, ease: [0.23, 1, 0.32, 1] }}
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50"
         onMouseLeave={() => setHoveredIndex(null)}
       >
-        {/* Dock 容器 - 悬浮胶囊设计 */}
+        {/* Dock 容器 - 贴底设计 */}
         <div
-          className="flex items-center gap-1 px-3 py-3 rounded-3xl"
+          className="flex items-center justify-center gap-0.5 px-2 py-2 pb-[env(safe-area-inset-bottom,8px)]"
           style={{
-            background: 'rgba(var(--bg-card-rgb, 15, 23, 42), 0.75)',
+            background: 'rgba(var(--bg-secondary-rgb, 10, 10, 15), 0.95)',
             backdropFilter: 'blur(20px) saturate(180%)',
             WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+            borderTop: '1px solid rgba(var(--accent-primary-rgb, 99, 102, 241), 0.15)',
+            boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
           }}
         >
           {dockItems.map((item, index) => {
             const Icon = item.icon;
             const active = isActive(item.href);
-            const scale = getItemScale(index);
             
             return (
               <motion.button
                 key={item.href}
                 onClick={() => handleDockClick(item.href)}
                 onMouseEnter={() => setHoveredIndex(index)}
-                initial={{ opacity: 0, scale: 0 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ 
                   opacity: 1, 
-                  scale: scale,
+                  y: 0,
                 }}
                 transition={{ 
                   type: 'spring',
-                  stiffness: 300,
-                  damping: 20,
-                  delay: index * 0.05 
+                  stiffness: 400,
+                  damping: 25,
+                  delay: index * 0.03 
                 }}
-                className="relative flex flex-col items-center justify-center w-12 h-12 rounded-2xl transition-colors duration-200"
+                className="relative flex flex-col items-center justify-center flex-1 max-w-[72px] py-2 px-1 rounded-xl transition-all duration-200 active:scale-95"
                 style={{
                   background: active 
-                    ? 'rgba(var(--accent-primary-rgb, 59, 130, 246), 0.2)' 
+                    ? 'rgba(var(--accent-primary-rgb, 99, 102, 241), 0.15)' 
                     : 'transparent',
                 }}
               >
-                {/* 图标 */}
-                <Icon 
-                  className="w-5 h-5 sm:w-6 sm:h-6 transition-all duration-200"
+                {/* 图标容器 */}
+                <div 
+                  className="relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200"
                   style={{
-                    color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
-                    filter: active ? 'drop-shadow(0 0 8px var(--accent-primary))' : 'none',
+                    background: active 
+                      ? 'rgba(var(--accent-primary-rgb, 99, 102, 241), 0.2)' 
+                      : hoveredIndex === index 
+                        ? 'rgba(var(--accent-primary-rgb, 99, 102, 241), 0.08)'
+                        : 'transparent',
                   }}
-                />
-                
-                {/* 激活指示器 - 发光圆点 */}
-                {active && (
-                  <motion.div
-                    layoutId="active-indicator"
-                    className="absolute -bottom-1 w-1 h-1 rounded-full"
+                >
+                  <Icon 
+                    className="w-5 h-5 transition-all duration-200"
                     style={{
-                      background: 'var(--accent-primary)',
-                      boxShadow: '0 0 6px var(--accent-primary), 0 0 12px var(--accent-primary)',
+                      color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                      filter: active ? 'drop-shadow(0 0 6px var(--accent-primary))' : 'none',
                     }}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
-                )}
-
-                {/* Tooltip - 悬浮时显示标签 */}
-                <AnimatePresence>
-                  {hoveredIndex === index && (
+                  
+                  {/* 激活指示器 - 顶部发光条 */}
+                  {active && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute -top-10 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg whitespace-nowrap pointer-events-none"
+                      layoutId="active-indicator"
+                      className="absolute -top-2 left-1/2 -translate-x-1/2 h-1 rounded-full"
                       style={{
-                        background: 'rgba(0, 0, 0, 0.8)',
-                        backdropFilter: 'blur(8px)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        width: '16px',
+                        background: 'var(--accent-primary)',
+                        boxShadow: '0 0 8px var(--accent-primary), 0 0 16px var(--accent-primary)',
                       }}
-                    >
-                      <span 
-                        className="text-[11px] font-medium"
-                        style={{ 
-                          color: active ? 'var(--accent-primary)' : '#e2e8f0',
-                          fontFamily: 'var(--font-primary)',
-                        }}
-                      >
-                        {item.label}
-                      </span>
-                      {/* Tooltip 箭头 */}
-                      <div 
-                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45"
-                        style={{
-                          background: 'rgba(0, 0, 0, 0.8)',
-                          borderRight: '1px solid rgba(255, 255, 255, 0.1)',
-                          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                        }}
-                      />
-                    </motion.div>
+                      initial={{ scaleX: 0, opacity: 0 }}
+                      animate={{ scaleX: 1, opacity: 1 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    />
                   )}
-                </AnimatePresence>
+                </div>
+                
+                {/* 标签文字 */}
+                <span 
+                  className="text-[10px] font-medium mt-1 transition-colors duration-200"
+                  style={{ 
+                    color: active ? 'var(--accent-primary)' : 'var(--text-muted)',
+                    fontFamily: 'var(--font-primary)',
+                  }}
+                >
+                  {item.label}
+                </span>
               </motion.button>
             );
           })}
         </div>
       </motion.div>
 
-      {/* 移动端底部安全区域填充 */}
-      <div className="md:hidden h-24" />
+      {/* 移动端底部安全区域填充 - 配合贴底Dock */}
+      <div className="md:hidden h-[calc(64px+env(safe-area-inset-bottom,8px))]" />
     </>
   );
 }

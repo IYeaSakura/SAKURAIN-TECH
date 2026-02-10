@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, Clock, Tag, Share2 } from 'lucide-react';
 import { MagneticCursor, VelocityCursor, AmbientGlow } from '@/components/effects';
 import { ThemeToggle } from '@/components/atoms';
-import { useTheme } from '@/hooks';
+import { useTheme, useMobile } from '@/hooks';
 import { MarkdownRenderer } from '@/pages/Docs/components/MarkdownRenderer';
 import { getBlogPost, formatDate, getReadingTime } from '../Blog/utils';
 import type { BlogPost } from '../Blog/types';
@@ -16,6 +16,7 @@ export default function BlogPost() {
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isMobile = useMobile();
 
   useEffect(() => {
     if (!slug) {
@@ -90,8 +91,13 @@ export default function BlogPost() {
 
   return (
     <>
-      <MagneticCursor />
-      <VelocityCursor />
+      {/* 鼠标效果 - 仅桌面端显示 */}
+      {!isMobile && (
+        <>
+          <MagneticCursor />
+          <VelocityCursor />
+        </>
+      )}
       
       <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
         <div className="absolute inset-0 pointer-events-none">
@@ -105,8 +111,13 @@ export default function BlogPost() {
               backgroundSize: '60px 60px',
             }}
           />
-          <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.12} />
-          <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.08} />
+          {/* 环境光效 - 仅桌面端显示 */}
+          {!isMobile && (
+            <>
+              <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.12} />
+              <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.08} />
+            </>
+          )}
           <div
             className="absolute inset-0"
             style={{
