@@ -1,8 +1,12 @@
 import { useState, useEffect, useMemo, memo, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import { PlantUML } from './PlantUML';
 import { CodeBlock } from './CodeBlock';
+import { ClickableImage } from './ImageModal';
 import { extractTextFromChildren, generateHeadingId, splitContentByHeadings } from '../utils';
 import type { HeadingAnchor } from '../types';
 
@@ -62,6 +66,7 @@ const contentOnlyComponents = {
   },
   blockquote: ({ children }: { children?: any }) => <blockquote className="border-l-4 pl-4 my-6 py-3 pr-4 rounded-r" style={{ borderColor: 'var(--accent-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{children}</blockquote>,
   hr: () => <hr className="my-8" style={{ borderColor: 'var(--border-color)' }} />,
+  img: ({ src, alt }: { src?: string; alt?: string }) => <ClickableImage src={src} alt={alt} />,
 };
 
 // Content Chunk - lazy rendered (uses contentOnlyComponents to avoid duplicate headings)
@@ -82,7 +87,7 @@ const ContentChunk = memo(({ content, index }: { content: string; index: number 
   return (
     <div ref={chunkRef} className="min-h-[20px]">
       {shouldRender ? (
-        <ReactMarkdown remarkPlugins={[remarkGfm]} components={contentOnlyComponents}>{content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={finalContentOnlyComponents}>{content}</ReactMarkdown>
       ) : (
         <div className="py-4" style={{ color: 'var(--text-muted)' }}>
           <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent-primary)' }} />
@@ -159,6 +164,27 @@ const markdownComponents = {
   td: ({ children }: { children?: any }) => <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>{processCellChildren(children)}</td>,
   blockquote: ({ children }: { children?: any }) => <blockquote className="border-l-4 pl-4 my-6 py-3 pr-4 rounded-r" style={{ borderColor: 'var(--accent-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{children}</blockquote>,
   hr: () => <hr className="my-8" style={{ borderColor: 'var(--border-color)' }} />,
+  img: ({ src, alt }: { src?: string; alt?: string }) => <ClickableImage src={src} alt={alt} />,
+};
+
+// Wrapper for pre elements to ensure horizontal scroll
+const PreBlock = ({ children }: { children?: any }) => {
+  return (
+    <div className="overflow-x-auto my-4 rounded-xl" style={{ maxWidth: '100%' }}>
+      {children}
+    </div>
+  );
+};
+
+// Update components to include pre wrapper
+const finalMarkdownComponents = {
+  ...markdownComponents,
+  pre: PreBlock,
+};
+
+const finalContentOnlyComponents = {
+  ...contentOnlyComponents,
+  pre: PreBlock,
 };
 
 // Optimized Markdown Renderer
@@ -171,12 +197,16 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
 
   // Small file: render directly
   if (content.length < 10000 || sections.length < 5) {
-    return <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{content}</ReactMarkdown>;
+    return (
+      <div className="markdown-body" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={finalMarkdownComponents}>{content}</ReactMarkdown>
+      </div>
+    );
   }
 
   // Large file: render headings immediately, content lazily
   return (
-    <>
+    <div className="markdown-body" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>
       {sections.map((section, index) => (
         <div key={index}>
           {section.headingId && section.headingText && section.headingLevel && (
@@ -191,7 +221,7 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
           <ContentChunk content={section.content || ' '} index={index} />
         </div>
       ))}
-    </>
+    </div>
   );
 };
 

@@ -1,0 +1,32 @@
+[
+  {
+    "slug": "adversarial-validation-protocol",
+    "title": "策略网络迭代的对抗验证协议：消除离线指标幻觉的A／B测试框架",
+    "description": "探讨如何构建严谨的对抗验证协议，通过头对头比较消除评估偏差，并建立具有统计显著性的模型排序机制。",
+    "date": "2025-08-22",
+    "author": "SAKURAIN",
+    "tags": [
+      "强化学习",
+      "策略验证",
+      "A/B测试",
+      "统计分析"
+    ],
+    "cover": "/image/logo.webp",
+    "featured": false
+  },
+  {
+    "slug": "dual-task-neural-network",
+    "title": "双任务神经网络架构在实时决策系统中的数值稳定性与计算权衡",
+    "description": "探讨双头架构在数值稳定性、计算效率与硬件适配方面的关键设计决策，包括共享残差底座、对数空间计算和梯度行为管理。",
+    "date": "2025-08-15",
+    "author": "SAKURAIN",
+    "tags": [
+      "深度学习",
+      "神经网络",
+      "多任务学习",
+      "数值稳定性"
+    ],
+    "cover": "/image/logo.webp",
+    "featured": false
+  }
+]

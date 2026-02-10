@@ -1,0 +1,690 @@
+﻿# 高维离散决策空间中的几何数据增强：对称性挖掘与计算拓扑优化
+
+我将为您深化这篇文章，补充严格的数学形式和可视化图表。以下是充实后的完整版本：
+
+---
+
+在监督学习的视觉域中，数据增强早已成为标准范式——随机裁剪、色彩抖动、几何变换将有限的数据集扩展为无限的训练流。然而，当我们将这一范式迁移至**离散决策系统**（discrete decision systems）时，会发现看似简单的旋转与翻转操作，在动作空间的几何约束下变得异常微妙。不同于图像像素的连续空间，离散动作空间的索引（index）与物理语义（semantic）之间存在非平凡的映射关系，粗暴的几何变换可能导致策略分布的拓扑破坏。
+
+本文基于我们在大规模自博弈数据管线中的工程实践，探讨如何在高维离散动作空间中安全地利用状态空间的对称性，构建计算高效且策略一致的数据增强系统。
+
+## 1. 离散空间中的对称性非平凡性
+
+### 1.1 等变性与数据增强的理论张力
+
+在连续状态空间（如机器人控制、物理模拟）中，数据增强通常依赖于**等变性（equivariance）**  假设：若变换 $T$ 作用于状态 $s$，则最优动作应相应地变换为 $T(a)$。形式化地，策略函数 $\pi$ 应满足：
+
+$$
+\pi(T(s)) = T(\pi(s))
+$$
+
+然而，在离散动作空间中，$T(a)$ 可能并非合法动作（invalid action），或映射至完全不同的语义类别。例如，在具有非对称边界约束的离散网格中，90度旋转可能导致动作索引的**模运算溢出问题**——某些边缘动作在变换后对应"不存在"的索引。
+
+更严谨地，设 $\mathcal{G}$ 为作用于状态空间 $\mathcal{S}$ 的变换群，$\mathcal{A}$ 为离散动作空间。数据增强的有效性要求存在一个群同态（group homomorphism）：
+
+$$
+\rho: \mathcal{G} \to \mathfrak{S}_{|\mathcal{A}|}
+$$
+
+其中 $\mathfrak{S}_{|\mathcal{A}|}$ 为动作索引集上的对称群。对于任意 $g \in \mathcal{G}$，$\rho(g)$ 给出动作索引的置换规则。若 $\rho$ 不是单射（injective），则不同的几何变换可能映射到相同的动作置换，导致信息损失。
+
+这要求我们在应用几何增强前，必须建立**动作空间的同构映射（isomorphism）**  ，确保变换群 $\mathcal{G}$ 在状态空间 $\mathcal{S}$ 与动作空间 $\mathcal{A}$ 上的作用保持结构一致性。
+
+```plantuml
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Latin Modern Roman
+
+title 群作用在状态-动作空间的交换图
+
+rectangle "状态空间 S" as S {
+  card "s" as s
+  card "g·s" as gs
+}
+
+rectangle "动作空间 A" as A {
+  card "π(s)" as ps
+  card "π(g·s)" as pgs
+  card "g·π(s)" as gps
+}
+
+s --> gs : g ∈ G
+s --> ps : 策略 π
+gs --> pgs : 策略 π
+ps --> gps : 群作用 ρ(g)
+
+pgs ..> gps : 等变性约束\lπ(g·s) = g·π(s)
+
+note right of A
+动作空间的群作用通过
+置换表示 ρ: G → S_{|A|}
+实现索引重映射
+end note
+@enduml
+```
+
+### 1.2 变换群的代数结构
+
+我们关注的状态空间通常具有**八阶二面体群（Dihedral Group** **$D_4$**​ **）**  对称性：4个旋转角度（0°, 90°, 180°, 270°）与2个翻转轴（水平/垂直）的组合。该群可表示为：
+
+$$
+D_4 = \langle r, f \mid r^4 = f^2 = I, \, f r f = r^{-1} \rangle
+$$
+
+其中 $r$ 为90°旋转生成元，$f$ 为水平翻转。该群的凯莱表（Cayley table）揭示了变换的合成关系：
+
+|$\circ$|$I$|$r$|$r^2$|$r^3$|$f$|$fr$|$fr^2$|$fr^3$|
+| --| --| --| --| --| --| --| --| --|
+|$I$|$I$|$r$|$r^2$|$r^3$|$f$|$fr$|$fr^2$|$fr^3$|
+|$r$|$r$|$r^2$|$r^3$|$I$|$fr^3$|$f$|$fr$|$fr^2$|
+|$r^2$|$r^2$|$r^3$|$I$|$r$|$fr^2$|$fr^3$|$f$|$fr$|
+|$r^3$|$r^3$|$I$|$r$|$r^2$|$fr$|$fr^2$|$fr^3$|$f$|
+|$f$|$f$|$fr$|$fr^2$|$fr^3$|$I$|$r$|$r^2$|$r^3$|
+|$fr$|$fr$|$fr^2$|$fr^3$|$f$|$r^3$|$I$|$r$|$r^2$|
+
+关键代数性质：
+
+- **非交换性**：旋转与翻转不可交换，$r \circ f \neq f \circ r$，事实上 $r f = f r^{-1}$
+- **轨道-稳定子定理（Orbit-Stabilizer）** ：对于样本 $s$，其轨道大小 $|Orb(s)| = |D_4| / |Stab(s)|$，其中 $Stab(s)$ 为稳定子群。若 $s$ 具有90°旋转对称性，则 $|Orb(s)| = 2$ 而非8。
+
+这意味着数据增强不能简单地"随机应用变换"，而必须考虑**群作用下的轨道（orbit）完整性**——若从原始样本生成8个增强变体，它们应在群作用下封闭，避免引入分布外的伪样本。
+
+```plantuml
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Latin Modern Roman
+
+title 八阶二面体群在数据增强中的轨道结构
+
+rectangle "原始样本\ns ∈ S" as Original
+
+rectangle "旋转轨道\nC4 子群作用" as Rot {
+  rectangle "R0 (恒等)\nI" as R0
+  rectangle "R90\nr" as R90
+  rectangle "R180\nr²" as R180
+  rectangle "R270\nr³" as R270
+}
+
+rectangle "翻转+旋转\n陪集 fC4" as Flip {
+  rectangle "Fh\nf" as Fh
+  rectangle "Fh∘R90\nfr" as FhR90
+  rectangle "Fh∘R180\nfr²" as FhR180
+  rectangle "Fh∘R270\nfr³" as FhR270
+}
+
+Original --> R0 : 基样本\n代表元
+R0 --> R90 : 生成元 r
+R90 --> R180 : r
+R180 --> R270 : r
+R270 --> R0 : r⁴=I
+
+R0 --> Fh : 翻转 f\n(陪集代表)
+R90 --> FhR90 : 共轭作用\nf∘r∘f⁻¹ = r⁻¹
+R180 --> FhR180
+R270 --> FhR270
+
+note right of Rot
+纯旋转子群 C4 ◁ D4\n指数 [D4:C4] = 2\n商群 D4/C4 ≅ Z2
+end note
+
+note bottom of Flip
+翻转改变手性（chirality）\n在具有方向敏感性的\n任务中需谨慎使用\nDet(f) = -1
+end note
+@enduml
+```
+
+## 2. 几何变换的实现拓扑
+
+### 2.1 张量旋转的维度陷阱
+
+在高维状态表示（如时空特征图 $s \in \mathbb{R}^{C \times T \times H \times W}$）中，几何变换必须精确作用于空间维度，避免扭曲通道（channel）或时间（temporal）维度。我们采用**显式维度标记**策略：
+
+设 $\mathbf{s}$ 为张量，其维度标记为 $(c, t, h, w)$。对于旋转 $R_\theta$，其作用应为：
+
+$$
+(R_\theta \cdot \mathbf{s})_{c,t,h,w} = \mathbf{s}_{c,t, R_\theta^{-1}(h,w)}
+$$
+
+其中 $R_\theta^{-1}(h,w)$ 表示坐标 $(h,w)$ 逆旋转 $\theta$ 角度后的位置。
+
+一个隐蔽的bug源于NumPy与PyTorch的维度排序差异：NumPy默认为 $(C, H, W)$，而某些卷积实现期望 $(N, C, H, W)$。在跨框架数据管线中，必须显式检查 `ndim`​ 与 `shape` 的一致性。
+
+对于90度旋转，其坐标变换为：
+
+$$
+\begin{pmatrix} h' \\ w' \end{pmatrix} = 
+\begin{pmatrix} 0 & -1 \\ 1 & 0 \end{pmatrix}
+\begin{pmatrix} h - c_h \\ w - c_w \end{pmatrix} + 
+\begin{pmatrix} c_h \\ c_w \end{pmatrix}
+$$
+
+其中 $(c_h, c_w)$ 为旋转中心（通常为 $(H/2, W/2)$）。
+
+### 2.2 策略向量的索引重映射
+
+这是离散决策系统特有的挑战。当状态 $s$ 旋转90°成为 $s'$ 时，动作 $a$ 在原始坐标系中的语义（如"向左"）在旋转后的坐标系中对应"向上"。然而，动作空间通常以**扁平索引（flat index）**   $i \in \{0, 1, ..., |\mathcal{A}|-1\}$ 存储，而非坐标元组。
+
+我们必须构建**索引置换矩阵（permutation matrix）**   $P_g \in \{0,1\}^{|\mathcal{A}| \times |\mathcal{A}|}$，使得对于变换 $g \in D_4$：
+
+$$
+\pi_g = P_g \cdot \pi
+$$
+
+其中 $\pi$ 为原始策略向量（MCTS访问计数归一化后的概率分布），$\pi_g$ 为变换后的策略。
+
+该矩阵的构建不能硬编码，而应根据空间维度动态生成。对于 $H \times W$ 的动作空间，90度旋转对应的置换为：
+
+$$
+\text{idx}_{new} = (H - 1 - \text{row}) \cdot W + \text{col} \quad \text{where} \quad (\text{row}, \text{col}) = \text{unravel}(\text{idx}_{old})
+$$
+
+形式化地，定义 unravel 操作：
+
+$$
+\text{row}(i) = \left\lfloor \frac{i}{W} \right\rfloor, \quad \text{col}(i) = i \mod W
+$$
+
+则90度旋转的置换函数为：
+
+$$
+\sigma_{r}(i) = (H - 1 - \text{col}(i)) \cdot W + \text{row}(i)
+$$
+
+对应的置换矩阵元素为：
+
+$$
+(P_r)_{i,j} = \delta_{i, \sigma_r(j)}
+$$
+
+其中 $\delta$ 为Kronecker delta函数。
+
+这种计算在数据增强的批量处理中可能成为瓶颈。我们采用**预计算查找表（LUT）**  策略，在初始化阶段为所有8种变换生成索引映射数组，避免在数据加载时重复计算坐标转换。
+
+```plantuml
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Latin Modern Roman
+
+title 策略向量的几何变换流程
+
+start
+
+:输入原始策略 π ∈ R^{H×W};
+:验证概率归一化\n∑π = 1;
+
+if (变换类型?) then (旋转 90°)
+  :应用坐标映射\nσ(i) = (H-1-col(i))·W + row(i);
+  :构造置换矩阵 P_r;
+else if (旋转 180°) then
+  :σ(i) = (H-1-row(i))·W + (W-1-col(i));
+else if (水平翻转) then
+  :σ(i) = row(i)·W + (W-1-col(i));
+else (垂直翻转)
+  :σ(i) = (H-1-row(i))·W + col(i);
+endif
+
+:矩阵乘法\nπ' = P · π;
+:验证概率守恒\n∑π' = 1;
+
+:与变换后的状态 s' 配对\n形成训练样本 (s', π');
+
+stop
+
+note right
+关键约束：
+1. 置换矩阵必须是双射\n   (一一对应且满射)
+2. 保持概率测度\n   ∑π_i = ∑π'_i = 1
+3. 支撑集不变\n   supp(π') = σ(supp(π))
+end note
+@enduml
+```
+
+```plantuml
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Latin Modern Roman
+
+title 置换矩阵的稀疏结构 (H=W=3)
+
+rectangle "原始策略网格" as Grid {
+  rectangle "0" as g0
+  rectangle "1" as g1
+  rectangle "2" as g2
+  rectangle "3" as g3
+  rectangle "4" as g4
+  rectangle "5" as g5
+  rectangle "6" as g6
+  rectangle "7" as g7
+  rectangle "8" as g8
+  
+  g0 -[hidden]> g1
+  g1 -[hidden]> g2
+  g3 -[hidden]> g4
+  g4 -[hidden]> g5
+  g6 -[hidden]> g7
+  g7 -[hidden]> g8
+  
+  g0 -[hidden]down-> g3
+  g3 -[hidden]down-> g6
+  g1 -[hidden]down-> g4
+  g4 -[hidden]down-> g7
+  g2 -[hidden]down-> g5
+  g5 -[hidden]down-> g8
+}
+
+rectangle "90°旋转后" as Rot {
+  rectangle "6" as r0
+  rectangle "3" as r1
+  rectangle "0" as r2
+  rectangle "7" as r3
+  rectangle "4" as r4
+  rectangle "1" as r5
+  rectangle "8" as r6
+  rectangle "5" as r7
+  rectangle "2" as r8
+  
+  r0 -[hidden]> r1
+  r1 -[hidden]> r2
+  r3 -[hidden]> r4
+  r4 -[hidden]> r5
+  r6 -[hidden]> r7
+  r7 -[hidden]> r8
+  
+  r0 -[hidden]down-> r3
+  r3 -[hidden]down-> r6
+  r1 -[hidden]down-> r4
+  r4 -[hidden]down-> r7
+  r2 -[hidden]down-> r5
+  r5 -[hidden]down-> r8
+}
+
+rectangle "置换矩阵 P_r (9×9)" as Matrix {
+  rectangle "行代表新索引\n列代表原索引" as desc
+  
+  rectangle "稀疏矩阵示例" as Sparse {
+    rectangle "P[0,6]=1" as p06
+    rectangle "P[1,3]=1" as p13
+    rectangle "P[2,0]=1" as p20
+    rectangle "..." as pdots
+  }
+}
+
+g0 --> r2 : 映射
+g1 --> r5
+g2 --> r8
+g3 --> r1
+g6 --> r0
+
+note bottom of Grid
+索引 unravel:\n0→(0,0), 1→(0,1), 2→(0,2)\n3→(1,0), ..., 8→(2,2)
+end note
+
+note bottom of Rot
+90°旋转公式:\nnew_row = H-1-old_col\nnew_col = old_row
+end note
+@enduml
+```
+
+## 3. 内存拓扑与计算效率的工程权衡
+
+### 3.1 惰性计算与物化存储的抉择
+
+数据增强可以在两个时间点执行：
+
+- **训练时增强（On-the-fly augmentation）**  ：每次从磁盘加载数据后实时变换，节省存储空间但增加CPU计算负载
+- **预增强物化（Pre-materialized augmentation）**  ：一次性生成所有变换变体并持久化，训练时直接读取，以空间换时间
+
+设原始数据集为 $\mathcal{D}$，其大小为 $N$，每个样本的平均存储成本为 $C_s$，计算成本为 $C_c$。则两种策略的总成本为：
+
+$$
+\text{Cost}_{\text{lazy}} = N \cdot C_s + N \cdot E \cdot C_c \quad \text{(训练时计算)}
+$$
+
+$$
+\text{Cost}_{\text{materialized}} = N \cdot |D_4| \cdot C_s = 8N \cdot C_s \quad \text{(预计算存储)}
+$$
+
+其中 $E$ 为训练周期数（epochs）。当 $E \cdot C_c > 7 C_s$ 时，物化策略更经济。
+
+在自博弈数据生成的场景中，我们面临独特的约束：**原始数据极其昂贵**（每样本需消耗大量MCTS模拟，$C_c \gg C_s$），而磁盘空间相对廉价。因此采用**预增强物化**策略，将原始数据集扩展8倍（$D_4$ 群轨道大小），训练时禁用随机变换以避免随机数生成的同步开销。
+
+然而，当原始数据规模达到TB级时，8倍扩展将压垮存储系统。此时必须采用**分块流水线（chunked pipeline）**  ：
+
+### 3.2 分块处理与内存映射
+
+设总数据量为 $M$ 字节，可用内存为 $B$ 字节。分块策略将数据划分为 $K = \lceil M/B \rceil$ 个块，每块处理流程的复杂度为：
+
+$$
+\text{Time}_{\text{chunk}} = O\left(\frac{B}{I} + \frac{B \cdot |D_4|}{O}\right)
+$$
+
+其中 $I$ 为磁盘I/O带宽，$O$ 为压缩吞吐量。
+
+我们不将整个数据集加载至内存进行变换，而是维护**滑动窗口缓冲区**：
+
+1. 从原始NPZ文件分块加载（如每次1000条轨迹）
+2. 在内存中执行8种变换，生成8000条增强样本
+3. 立即压缩并写入目标存储，释放缓冲区
+4. 更新元数据索引，记录变换类型与原始样本的映射关系
+
+这种**流式物化（streaming materialization）**  策略的瓶颈在于压缩算法的吞吐量。我们发现 `np.savez_compressed` 的默认zlib级别（6）在速度与压缩比之间取得了平衡；若调至9（最大压缩），处理时间增加3倍而空间节省仅5%，得不偿失。
+
+信息论视角下，压缩比取决于增强后数据的熵增：
+
+$$
+H(\mathcal{D}_{\text{aug}}) = H(\mathcal{D}) + H(\mathcal{G}|\mathcal{D})
+$$
+
+由于几何变换是确定性映射，$H(\mathcal{G}|\mathcal{D}) = 0$，理论上无损压缩应达到与原始数据相似的压缩率。
+
+### 3.3 多进程并行增强的拓扑
+
+几何变换是**无状态（stateless）**  且**无副作用（side-effect free）**  的纯函数，天然适合并行化。设CPU核心数为 $P$，数据块数为 $K$，则理想加速比为：
+
+$$
+S(P) = \frac{T_{\text{serial}}}{T_{\text{parallel}}} = \frac{K \cdot t}{ \lceil K/P \rceil \cdot t + t_{\text{overhead}}} \approx P \quad (\text{当 } K \gg P)
+$$
+
+我们采用**进程池（process pool）**  而非线程池，以绕过Python GIL并充分利用多核CPU的SIMD指令集（如AVX2加速的矩阵旋转）。
+
+关键工程细节：**进程间内存共享**。原始数据块通过 `multiprocessing.Array`​ 或 `shared_memory` 在进程间共享，避免序列化开销；每个工作进程将变换结果写入独立的临时文件，最后由主进程合并，消除写冲突。
+
+```plantuml
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Latin Modern Roman
+
+title 分块数据增强的并行拓扑与数据流
+
+node "原始数据存储\n(NPZ格式)" as Storage {
+    database "Chunk 0\n[0:1000)" as C0
+    database "Chunk 1\n[1000:2000)" as C1
+    database "Chunk N-1\n[...)" as CN
+}
+
+cloud "共享内存区\n(Shared Memory)" as Shared {
+    frame "内存映射\n只读视图" as mmap
+}
+
+node "进程池\nWorker Pool" as Pool {
+    node "Worker 0" as W0 {
+        note right
+          1. 加载 Chunk i
+          2. 生成 8 种变换
+          3. LZ4压缩
+          4. 写入 Temp.i.npz
+        end note
+    }
+    node "Worker 1" as W1 {
+        note right
+          1. 加载 Chunk j
+          2. 生成 8 种变换
+          3. LZ4压缩
+          4. 写入 Temp.j.npz
+        end note
+    }
+    node "Worker P-1" as WP {
+        note right
+          ...
+        end note
+    }
+}
+
+node "合并阶段\n(Merge Phase)" as Merge {
+    note right
+      1. 顺序读取 Temp files
+      2. 垂直堆叠 (vstack)
+      3. 生成索引映射表
+      4. 输出最终训练集
+    end note
+}
+
+storage "最终训练集\n(8N 样本)" as Output
+
+C0 --> mmap : 内存映射\n(零拷贝)
+C1 --> mmap
+CN --> mmap
+
+mmap --> W0 : 只读访问
+mmap --> W1 : 只读访问
+mmap --> WP : 只读访问
+
+W0 --> Merge : 本地临时文件\n(命名: temp_{chunk}_{worker})
+W1 --> Merge
+WP --> Merge
+
+Merge --> Output : 原子写入\n(避免部分写入)
+
+note right of Pool
+  并行度 P 的选择:
+  P = min(N_cpu, M_total/M_chunk)
+  避免内存溢出
+end note
+
+note bottom of Merge
+  合并阶段复杂度:
+  O(N log N) 用于索引排序
+  O(N) 用于数据追加
+end note
+@enduml
+```
+
+```plantuml
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Latin Modern Roman
+
+title 数据增强系统的类架构
+
+class AugmentationPipeline {
+    - chunksize: int
+    - num_workers: int
+    - transform_group: D4Group
+    - lut_cache: Dict[Transform, PermutationMatrix]
+    + __init__(config: PipelineConfig)
+    + process_dataset(input_path, output_path)
+    - _worker_fn(chunk_idx: int): ProcessedChunk
+    - _merge_chunks(chunk_list: List[Path])
+}
+
+class D4Group {
+    - elements: List[Transform]
+    - cayley_table: Matrix[8x8]
+    + generate_orbit(sample: Sample): List[Sample]
+    + compose(g1: Transform, g2: Transform): Transform
+    + inverse(g: Transform): Transform
+}
+
+class Transform {
+    <<abstract>>
+    + apply_state(state: Tensor): Tensor
+    + apply_action(policy: Vector): Vector
+    + permutation_matrix: SparseMatrix
+}
+
+class Rotation90 {
+    - k: int
+    + apply_state(s): rot90(s, k)
+    + apply_action(π): P_k · π
+}
+
+class HorizontalFlip {
+    + apply_state(s): flip(s, axis=-1)
+    + apply_action(π): P_f · π
+}
+
+class PermutationMatrix {
+    - indices: ndarray
+    - indptr: ndarray
+    + matvec(vec): ndarray
+    + tocoo(): coo_matrix
+}
+
+class Sample {
+    - state: Tensor
+    - policy: Vector
+    - value: float
+    + transform(t: Transform): Sample
+}
+
+AugmentationPipeline "1" *-- "1" D4Group : uses >
+D4Group "1" o-- "8" Transform : contains >
+Transform <|-- Rotation90
+Transform <|-- HorizontalFlip
+Transform "1" *-- "1" PermutationMatrix : uses >
+AugmentationPipeline ..> Sample : processes >
+
+note right of AugmentationPipeline
+遵循策略模式（Strategy Pattern）
+将变换逻辑与管线控制分离
+
+end note
+@enduml
+```
+
+## 4. 分布偏移与策略一致性验证
+
+### 4.1 增强后的分布对齐
+
+数据增强可能引入**协变量偏移（covariate shift）**  ——若训练集通过旋转扩展，而测试环境总是以固定方向呈现状态，模型可能过度拟合于增强引入的伪方向不变性。我们通过**双向验证（bidirectional validation）**  确保增强的合理性：
+
+- **前向验证**：增强样本输入网络，输出策略应与原始策略的变换版本一致
+
+  $$
+  \text{Network}(g \cdot s) = P_g \cdot \text{Network}(s)
+  $$
+- **后向验证**：原始样本与增强样本在同一批次训练时，损失贡献应处于同一量级（通过梯度范数监控）
+
+设损失函数为 $\mathcal{L}$，对于批次 $\mathcal{B} = \{(s_i, \pi_i)\}$，增强后的批次为 $\mathcal{B}' = \{(g \cdot s_i, P_g \pi_i)\}$，梯度对齐误差为：
+
+$$
+\epsilon_{\text{align}} = \left\| \frac{1}{|\mathcal{B}|}\sum_{i} \nabla_\theta \mathcal{L}(s_i, \pi_i) - \frac{1}{|\mathcal{B}'|}\sum_{j} \nabla_\theta \mathcal{L}(s'_j, \pi'_j) \right\|_2
+$$
+
+若 $\epsilon_{\text{align}} > \tau$（阈值，如 $10^{-3}$），则触发分布偏移警报。
+
+### 4.2 价值估计的不变性约束
+
+与策略不同，状态价值 $V(s)$ 在几何变换下应保持**严格不变（invariance）**  ：
+
+$$
+V(g \cdot s) = V(s), \quad \forall g \in \mathcal{G}
+$$
+
+这在实现中常被忽视。当对状态进行旋转时，必须确保对应的价值标签 $z$ 原样复制，而非进行任何变换。我们曾遇到过一个隐蔽的bug：在批量处理中，价值张量被错误地参与了索引置换，导致旋转后的状态对应了错误的价值估计，训练损失呈现周期性震荡（因旋转周期为4）。
+
+形式化地，价值网络的约束为：
+
+$$
+V_\theta(s) = V_\theta(g \cdot s), \quad \forall g \in D_4
+$$
+
+这等价于要求价值网络是 $D_4$ 不变的，可通过**不变性正则化**强化：
+
+$$
+\mathcal{L}_{\text{inv}} = \mathcal{L}_{\text{MSE}} + \lambda \sum_{g \in D_4} \| V_\theta(s) - V_\theta(g \cdot s) \|^2
+$$
+
+### 4.3 边界条件的对抗测试
+
+几何增强的鲁棒性需在**边界状态（boundary states）**  上特别验证：
+
+- 当状态具有非对称填充（asymmetric padding）时，旋转后可能产生原始空间中不可能出现的模式
+- 动作空间的边缘索引在变换后可能越界，需通过掩码（masking）过滤无效动作
+
+设动作空间的有效掩码为 $M \in \{0,1\}^{H \times W}$，变换后的掩码为：
+
+$$
+M' = P_g \cdot M
+$$
+
+对于任意动作 $a$，若 $M[a] = 0$（无效动作），则必须确保 $M'[\sigma_g(a)] = 0$，即无效动作在变换后仍保持无效。
+
+我们建立**对抗性测试套件**，随机抽取样本进行8种变换的闭环测试：状态 $\xrightarrow{g}$ 增强 $\xrightarrow{g^{-1}}$ 恢复，验证恢复后的状态与原始状态的L2误差小于机器精度（float32的 $10^{-6}$），确保变换群的可逆性实现正确。
+
+```plantuml
+@startuml
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Latin Modern Roman
+
+title 一致性验证的测试拓扑
+
+package "前向一致性测试" as Forward {
+    [原始状态 s] as s1
+    [策略网络] as Net1
+    [变换 g] as g1
+    [置换 P_g] as P1
+    [输出 π] as pi1
+    [输出 π'] as pi2
+    
+    s1 --> Net1
+    Net1 --> pi1
+    s1 --> g1
+    g1 --> Net1
+    Net1 --> pi2
+    pi1 --> P1
+    P1 --> [比较器]
+    pi2 --> [比较器]
+}
+
+package "循环一致性测试" as Cycle {
+    [原始状态 s] as s2
+    [变换 g] as g2
+    [逆变换 g⁻¹] as ginv
+    [恢复状态 s'] as s3
+    
+    s2 --> g2
+    g2 --> ginv
+    ginv --> s3
+    s2 --> [L2距离计算]
+    s3 --> [L2距离计算]
+}
+
+package "价值不变性测试" as Value {
+    [状态 s] as s4
+    [价值网络 V] as V
+    [变换 g] as g4
+    
+    s4 --> V : V(s)
+    s4 --> g4
+    g4 --> V : V(g·s)
+    V --> [差值检验\n|V(s)-V(g·s)| < ε]
+}
+
+[比较器] --> [通过/失败报告]
+[L2距离计算] --> [通过/失败报告]
+[差值检验\l|V(s)-V(g·s)| < ε] --> [通过/失败报告]
+
+note right of Forward
+前向一致性:
+‖P_g·π(s) - π(g·s)‖ < δ
+确保等变性实现正确
+end note
+
+note bottom of Cycle
+循环一致性:
+‖s - g⁻¹(g(s))‖₂ < 1e-6
+确保群作用的
+可逆性与精确性
+
+end note
+@enduml
+```
+
+## 结论
+
+在高维离散决策系统中实施几何数据增强，远非调用 `torch.rot90` 那么简单。它要求对动作空间的代数结构、张量内存布局的拓扑约束，以及分布对齐的统计特性有深刻理解。预计算索引映射、分块流式处理与不变性验证机制，共同构成了生产级增强系统的工程支柱。
+
+未来的优化方向包括：**可学习的数据增强（learned augmentation）**  ——通过元学习（meta-learning）自动发现状态空间的对称性，而非手工指定 $D_4$ 群；以及**惰性增强（lazy augmentation）**  ——在GPU训练时通过纹理采样（texture sampling）实时进行几何变换，彻底消除存储开销。但在当前存储成本低于计算成本的权衡点下，物化增强仍是可靠性最高的工程选择。
+
+---
+
+**附录：关键公式速查**
+
+1. **群作用相容性**：$\pi(g \cdot s) = \rho(g) \cdot \pi(s)$
+2. **轨道大小**：$|Orb(s)| = |\mathcal{G}| / |Stab(s)|$
+3. **置换矩阵**：$(P_g)_{i,j} = \delta_{i, \sigma_g(j)}$
+4. **旋转坐标变换**：$\sigma_r(i) = (H-1-c_i) \cdot W + r_i$
+5. **价值不变性**：$V(g \cdot s) = V(s)$
+6. **成本权衡**：$E \cdot C_c > 7 C_s$ 时选择物化策略
+

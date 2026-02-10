@@ -1,16 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Grid, List, X, ChevronLeft, ChevronRight, BarChart3, BookOpen, Calendar, Tag } from 'lucide-react';
+import { Search, Grid, List, X, ChevronLeft, ChevronRight, BarChart3, BookOpen, Calendar, Tag, Sparkles } from 'lucide-react';
 import { AmbientGlow, GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
 import { useMobile } from '@/hooks';
-import { clipPathRounded } from '@/utils/styles';
 import type { SiteData } from '@/types';
 
 import { BlogCard } from './components/BlogCard';
 import { BlogListItem } from './components/BlogListItem';
 import { getBlogIndex } from './utils';
-import { BlogArchiveHeatmap } from '@/components/BlogArchiveHeatmap';
 import { BlogTagCloud } from '@/components/BlogTagCloud';
 import { useBlogArchive, useMultipleMonthArchives } from '@/hooks/useBlogArchive';
 import type { BlogIndex } from './types';
@@ -30,6 +28,102 @@ type ViewMode = 'grid' | 'list';
 
 const POSTS_PER_PAGE = 9;
 
+// CSS clip-path helpers - 像素风格
+const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
+
+// 玻璃卡片组件
+function GlassCard({
+  children,
+  className = '',
+  hoverScale = 1.01,
+  accentColor = 'var(--accent-primary)',
+}: {
+  children: React.ReactNode;
+  className?: string;
+  hoverScale?: number;
+  accentColor?: string;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <motion.div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      whileHover={{ scale: hoverScale, y: -3 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className={`relative ${className}`}
+    >
+      {/* 玻璃反光层 */}
+      <div
+        className="absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-300"
+        style={{
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 40%, transparent 60%)',
+          opacity: isHovered ? 1 : 0.6,
+        }}
+      />
+      {/* 悬浮边缘发光 */}
+      <div
+        className="absolute -inset-[1px] rounded-2xl transition-all duration-300"
+        style={{
+          background: `linear-gradient(135deg, ${accentColor}60, transparent 50%)`,
+          opacity: isHovered ? 0.4 : 0,
+          filter: 'blur(4px)',
+          zIndex: -1,
+        }}
+      />
+      <div className="relative h-full">{children}</div>
+    </motion.div>
+  );
+}
+
+// 统计卡片组件
+function StatCard({
+  icon: Icon,
+  value,
+  label,
+  color,
+  delay = 0,
+}: {
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  value: number;
+  label: string;
+  color: string;
+  delay?: number;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4 + delay * 0.1, duration: 0.5 }}
+      whileHover={{ scale: 1.05, y: -4 }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative p-6 text-center cursor-default group"
+      style={{
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '2px solid rgba(255, 255, 255, 0.08)',
+        clipPath: clipPathRounded(6),
+      }}
+    >
+      {/* Hover glow */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isHovered ? 0.5 : 0 }}
+        transition={{ duration: 0.3 }}
+      />
+      <Icon className="w-6 h-6 mx-auto mb-3" style={{ color }} />
+      <div className="font-sans font-bold text-3xl mb-1" style={{ color: 'var(--text-primary)' }}>
+        {value}
+      </div>
+      <div className="text-sm" style={{ color: 'var(--text-muted)' }}>{label}</div>
+    </motion.div>
+  );
+}
+
 export default function BlogIndex() {
   const [data, setData] = useState<BlogIndex | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +135,7 @@ export default function BlogIndex() {
   const [tagsData, setTagsData] = useState<TagsResponse | null>(null);
   const [footerData, setFooterData] = useState<SiteData['footer'] | null>(null);
 
-  const { data: archiveData, loading: archiveLoading } = useBlogArchive();
+  const { data: archiveData } = useBlogArchive();
   const monthsToLoad = useMemo(() => {
     if (!archiveData?.months.length) return [];
     const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
@@ -77,7 +171,6 @@ export default function BlogIndex() {
       });
   }, []);
 
-  // 加载 footer 数据
   useEffect(() => {
     fetch('/data/site-data.json')
       .then(res => res.json())
@@ -190,7 +283,7 @@ export default function BlogIndex() {
   return (
     <>
       <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
-        {/* 统一背景特效 - 蓝绿配色 */}
+        {/* 统一背景特效 */}
         <div className="fixed inset-0 pointer-events-none">
           <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
           <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
@@ -208,7 +301,7 @@ export default function BlogIndex() {
         </div>
 
         <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-32 lg:pt-36 pb-12">
-          {/* 顶部工具栏 */}
+          {/* 顶部工具栏 - 固定定位 */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -290,94 +383,92 @@ export default function BlogIndex() {
           </motion.div>
 
           {/* Hero - 非对称布局 */}
-          <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
-            {/* 左侧：标题区 */}
-            <motion.div 
-              className=""
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-            >
+          <section className="relative pt-8 pb-16 overflow-hidden">
+            {/* 背景装饰 */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div
+                className="absolute top-20 right-20 w-64 h-64 opacity-20"
+                style={{ background: 'radial-gradient(circle, var(--accent-glow), transparent 70%)' }}
+              />
+            </div>
+
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* 左侧：标题和描述 */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-4 py-2 mb-6"
-                style={{
-                  background: 'rgba(59, 130, 246, 0.1)',
-                  border: '1px solid rgba(59, 130, 246, 0.3)',
-                  clipPath: clipPathRounded(4),
-                }}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, type: 'spring', stiffness: 100 }}
               >
-                <BookOpen className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>博客</span>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className="inline-flex items-center gap-2 px-4 py-2 mb-6"
+                  style={{
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    clipPath: clipPathRounded(4),
+                  }}
+                >
+                  <BookOpen className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>博客</span>
+                </motion.div>
+
+                <h1
+                  className="font-sans font-bold text-4xl md:text-5xl lg:text-6xl mb-6"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}
+                >
+                  探索博客
+                </h1>
+                
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.5 }}
+                  className="text-lg md:text-xl leading-relaxed max-w-xl"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {data.description}
+                </motion.p>
               </motion.div>
 
-              <h1 className="font-sans font-bold text-4xl sm:text-5xl lg:text-6xl mb-6">
-                <GradientText animate={true}>探索博客</GradientText>
-                {data.title}
-              </h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="text-lg leading-relaxed max-w-xl"
-                style={{ color: 'var(--text-muted)' }}
+              {/* 右侧：统计卡片 */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2, type: 'spring', stiffness: 100 }}
+                className="grid grid-cols-3 gap-4"
               >
-                {data.description}
-              </motion.p>
-            </motion.div>
+                <StatCard 
+                  icon={Calendar} 
+                  value={sortedMonths.length} 
+                  label="月份归档" 
+                  color="var(--accent-primary)" 
+                  delay={0}
+                />
+                <StatCard 
+                  icon={Tag} 
+                  value={tagsData?.tags.length || 0} 
+                  label="标签" 
+                  color="var(--accent-secondary)" 
+                  delay={1}
+                />
+                <StatCard 
+                  icon={BookOpen} 
+                  value={(data?.posts?.length || 0) + (regularPosts?.length || 0)} 
+                  label="文章总数" 
+                  color="#22c55e" 
+                  delay={2}
+                />
+              </motion.div>
+            </div>
+          </section>
 
-            {/* 右侧：统计卡片 - 像素风格 */}
-            <motion.div 
-              className=""
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  { icon: Calendar, value: sortedMonths.length, label: '月份归档', color: 'var(--accent-primary)' },
-                  { icon: Tag, value: tagsData?.tags.length || 0, label: '标签', color: 'var(--accent-secondary)' },
-                  { icon: BookOpen, value: (data?.posts?.length || 0) + (regularPosts?.length || 0), label: '文章总数', color: '#22c55e' },
-                ].map((stat, index) => (
-                  <motion.div
-                    key={stat.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 + index * 0.1, duration: 0.5 }}
-                    whileHover={{ scale: 1.05, y: -4 }}
-                    className="relative p-5 text-center cursor-default group"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.02)',
-                      border: '2px solid rgba(255, 255, 255, 0.08)',
-                      clipPath: clipPathRounded(6),
-                    }}
-                  >
-                    {/* Hover glow */}
-                    <motion.div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
-                      initial={{ opacity: 0 }}
-                      whileHover={{ opacity: 0.5 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                    
-                    <stat.icon className="w-6 h-6 mx-auto mb-3" style={{ color: stat.color }} />
-                    <div className="font-sans font-bold text-2xl mb-1" style={{ color: 'var(--text-primary)' }}>
-                      {stat.value}
-                    </div>
-                    <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {stat.label}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* 精选文章 */}
+          {/* 精选文章 - Bento Grid 风格 */}
           {featuredPosts.length > 0 && (
             <motion.section
               initial={{ opacity: 0, y: 30 }}
@@ -385,16 +476,58 @@ export default function BlogIndex() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="mb-16"
             >
-              <h2 className="font-sans font-bold text-2xl mb-6">
-                <GradientText animate={true}>精选文章</GradientText>
-              </h2>
-              <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+              <div className="flex items-center gap-4 mb-8">
+                <motion.div
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  className="flex items-center justify-center w-12 h-12 relative overflow-hidden"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '2px solid rgba(255, 255, 255, 0.1)',
+                    clipPath: clipPathRounded(6),
+                  }}
+                >
+                  <motion.div
+                    className="absolute inset-0"
+                    style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
+                    animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                  <Sparkles className="w-6 h-6 relative z-10" style={{ color: 'var(--accent-primary)' }} />
+                </motion.div>
+                <div>
+                  <h2
+                    className="font-sans font-bold text-2xl"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    精选文章
+                  </h2>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>编辑推荐的高质量内容</p>
+                </div>
+              </div>
+
+              {/* 非对称网格布局 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-min">
                 {featuredPosts.map((post, index) => (
-                  viewMode === 'grid' ? (
-                    <BlogCard key={post.slug} post={post} index={index} />
-                  ) : (
-                    <BlogListItem key={post.slug} post={post} index={index} />
-                  )
+                  <GlassCard
+                    key={post.slug}
+                    className={index === 0 ? 'md:col-span-2 md:row-span-2' : ''}
+                    hoverScale={1.02}
+                    accentColor="var(--accent-primary)"
+                  >
+                    <div className="h-full">
+                      {viewMode === 'grid' ? (
+                        <BlogCard post={post} index={index} featured={true} />
+                      ) : (
+                        <BlogListItem post={post} index={index} featured={true} />
+                      )}
+                    </div>
+                  </GlassCard>
                 ))}
               </div>
             </motion.section>
@@ -407,9 +540,40 @@ export default function BlogIndex() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
             >
-              <h2 className="font-sans font-bold text-2xl mb-6">
-                <GradientText animate={true}>全部文章</GradientText>
-              </h2>
+              <div className="flex items-center gap-4 mb-8">
+                <motion.div
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  className="flex items-center justify-center w-12 h-12 relative overflow-hidden"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '2px solid rgba(255, 255, 255, 0.1)',
+                    clipPath: clipPathRounded(6),
+                  }}
+                >
+                  <motion.div
+                    className="absolute inset-0"
+                    style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
+                    animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                  <BookOpen className="w-6 h-6 relative z-10" style={{ color: 'var(--accent-secondary)' }} />
+                </motion.div>
+                <div>
+                  <h2
+                    className="font-sans font-bold text-2xl"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--accent-secondary), var(--accent-tertiary))',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    全部文章
+                  </h2>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>按月份归档的所有文章</p>
+                </div>
+              </div>
 
               {regularPostsLoading ? (
                 <div className="flex items-center justify-center py-20">
@@ -425,15 +589,32 @@ export default function BlogIndex() {
               ) : (
                 <>
                   <div className="space-y-12">
-                    {sortedMonths.map((yearMonth) => {
+                    {sortedMonths.map((yearMonth, monthIndex) => {
                       const posts = postsByMonth[yearMonth];
                       const [year, month] = yearMonth.split('-');
 
                       return (
-                        <div key={yearMonth}>
+                        <motion.div 
+                          key={yearMonth}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true, margin: '-50px' }}
+                          transition={{ duration: 0.5, delay: monthIndex * 0.1 }}
+                        >
+                          {/* 月份标题 */}
                           <div className="flex items-center gap-3 mb-6">
+                            <div
+                              className="flex items-center justify-center w-10 h-10"
+                              style={{
+                                background: 'rgba(255, 255, 255, 0.03)',
+                                border: '2px solid rgba(255, 255, 255, 0.1)',
+                                clipPath: clipPathRounded(4),
+                              }}
+                            >
+                              <Calendar className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+                            </div>
                             <h3
-                              className="font-sans font-bold text-xl font-bold"
+                              className="font-sans font-bold text-xl"
                               style={{ color: 'var(--text-primary)' }}
                             >
                               {year}年{parseInt(month)}月
@@ -450,6 +631,8 @@ export default function BlogIndex() {
                               {posts.length} 篇
                             </span>
                           </div>
+
+                          {/* 文章网格 */}
                           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
                             {posts.map((post, index) => (
                               viewMode === 'grid' ? (
@@ -459,7 +642,7 @@ export default function BlogIndex() {
                               )
                             ))}
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
@@ -604,23 +787,7 @@ export default function BlogIndex() {
 
                   <div>
                     <h3 className="font-sans font-bold text-xl mb-4">
-                    <GradientText animate={true}>文章发布热力图</GradientText>
-                    </h3>
-                    {archiveLoading ? (
-                      <div className="flex items-center justify-center py-20">
-                        <div
-                          className="w-8 h-8 border-2 border-t-transparent animate-spin"
-                          style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
-                        />
-                      </div>
-                    ) : (
-                      <BlogArchiveHeatmap data={archiveData} />
-                    )}
-                  </div>
-
-                  <div>
-                    <h3 className="font-sans font-bold text-xl mb-4">
-                    <GradientText animate={true}>标签词云</GradientText>
+                      <GradientText animate={true}>标签词云</GradientText>
                     </h3>
                     {tagsData ? (
                       <BlogTagCloud tags={tagsData.tags} selectedTag={null} onSelectTag={() => {}} />
@@ -642,7 +809,7 @@ export default function BlogIndex() {
         {/* Footer */}
         {footerData && <Footer data={footerData} />}
 
-        {/* 底部光剑 - 仅桌面端显示 */}
+        {/* 底部光剑 */}
         {!isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
       </div>
     </>

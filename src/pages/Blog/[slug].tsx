@@ -1,22 +1,33 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, Clock, Tag, Share2 } from 'lucide-react';
+import { Calendar, Clock, Tag, Share2, ArrowLeft } from 'lucide-react';
 import { MagneticCursor, VelocityCursor, AmbientGlow } from '@/components/effects';
-import { ThemeToggle } from '@/components/atoms';
 import { useTheme, useMobile } from '@/hooks';
+import { ImagePreviewProvider, useImagePreview } from '@/contexts/ImagePreviewContext';
 import { MarkdownRenderer } from '@/pages/Docs/components/MarkdownRenderer';
+import { TableOfContents } from './components/TableOfContents';
+import { FloatingToolbar } from './components/FloatingToolbar';
 import { getBlogPost, formatDate, getReadingTime } from '../Blog/utils';
 import type { BlogPost } from '../Blog/types';
 
 export default function BlogPost() {
+  return (
+    <ImagePreviewProvider>
+      <BlogPostContent />
+    </ImagePreviewProvider>
+  );
+}
+
+function BlogPostContent() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const { theme, isTransitioning, toggleTheme } = useTheme();
+  useTheme();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMobile = useMobile();
+  useImagePreview();
 
   useEffect(() => {
     if (!slug) {
@@ -40,6 +51,10 @@ export default function BlogPost() {
         setLoading(false);
       });
   }, [slug, navigate]);
+
+  const handleBack = () => {
+    navigate('/blog');
+  };
 
   const handleShare = async () => {
     if (navigator.share && post) {
@@ -100,6 +115,7 @@ export default function BlogPost() {
       )}
       
       <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+        {/* 背景网格 */}
         <div className="absolute inset-0 pointer-events-none">
           <div
             className="absolute inset-0 opacity-5"
@@ -126,40 +142,44 @@ export default function BlogPost() {
           />
         </div>
 
-        <motion.header
-          initial={{ y: -100 }}
-          animate={{ y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="fixed top-0 left-0 right-0 z-50 mc-navbar"
-        >
-          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16 lg:h-20">
-              <motion.button
-                onClick={() => navigate('/blog')}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-primary)'
-                }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium">返回列表</span>
-              </motion.button>
+        {/* 左侧目录导航 - 仅桌面端显示 */}
+        {!isMobile && post.content && (
+          <TableOfContents content={post.content} />
+        )}
 
-              <ThemeToggle theme={theme} onToggle={toggleTheme} isTransitioning={isTransitioning} />
-            </div>
-          </div>
-        </motion.header>
+        {/* 右侧浮动工具栏 */}
+        <FloatingToolbar onBack={handleBack} />
 
-        <main className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-24 lg:pt-28 pb-12">
+        {/* 主内容区 */}
+        <main className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 md:pb-12">
+          {/* 左上角返回按钮 - 仅桌面端显示 */}
+          <motion.button
+            onClick={handleBack}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="hidden md:flex items-center gap-2 px-4 py-2 mb-4 text-sm font-medium transition-all duration-200 hover:scale-105"
+            style={{
+              background: 'var(--bg-card)',
+              border: '2px solid var(--border-subtle)',
+              color: 'var(--text-primary)',
+              borderRadius: '8px',
+            }}
+            whileHover={{ 
+              borderColor: 'var(--accent-primary)',
+              boxShadow: '0 0 20px var(--accent-glow)',
+            }}
+          >
+            <ArrowLeft className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+            返回博客
+          </motion.button>
+
           <motion.article
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
+            {/* 文章头部卡片 */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -178,9 +198,25 @@ export default function BlogPost() {
                 }}
               />
               
-              <div className="relative z-10 p-8">
+              <div className="relative z-10 p-6 md:p-8">
+                {/* 移动端返回按钮 */}
+                <motion.button
+                  onClick={handleBack}
+                  className="md:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg mb-4 text-sm"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  返回列表
+                </motion.button>
+
                 <h1 
-                  className="text-3xl sm:text-4xl lg:text-5xl font-black mb-4"
+                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-4"
                   style={{ 
                     color: 'var(--text-primary)',
                     letterSpacing: '-0.02em',
@@ -205,7 +241,7 @@ export default function BlogPost() {
                 </div>
                 
                 {post.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-6">
+                  <div className="flex flex-wrap gap-2 mb-2">
                     {post.tags.map((tag) => (
                       <span
                         key={tag}
@@ -224,11 +260,12 @@ export default function BlogPost() {
               </div>
             </motion.div>
 
+            {/* 文章内容 */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
-              className="relative rounded-2xl p-8"
+              className="relative rounded-2xl p-6 md:p-8"
               style={{
                 background: 'var(--bg-card)',
                 border: '2px solid var(--border-subtle)',
@@ -239,14 +276,15 @@ export default function BlogPost() {
               )}
             </motion.div>
 
+            {/* 底部操作区 - 仅移动端显示分享按钮 */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-8 flex items-center justify-between"
+              className="mt-8 flex items-center justify-between md:hidden"
             >
               <button
-                onClick={() => navigate('/blog')}
+                onClick={handleBack}
                 className="flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-200"
                 style={{
                   background: 'var(--bg-secondary)',
@@ -272,6 +310,7 @@ export default function BlogPost() {
               </button>
             </motion.div>
 
+            {/* 版权信息 */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

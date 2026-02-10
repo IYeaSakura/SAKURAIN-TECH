@@ -1,0 +1,17 @@
+[
+  {
+    "slug": "configuration-governance",
+    "title": "复杂机器学习系统的配置治理：从硬编码到配置即代码",
+    "description": "探讨如何通过配置中心化管理与模块化启动器架构，实现代码与环境的解耦，并建立可审计、可回滚的配置生命周期。",
+    "date": "2025-09-22",
+    "author": "SAKURAIN",
+    "tags": [
+      "配置管理",
+      "软件工程",
+      "系统架构",
+      "依赖注入"
+    ],
+    "cover": "/image/logo.webp",
+    "featured": false
+  }
+]

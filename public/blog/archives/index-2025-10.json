@@ -1,0 +1,17 @@
+[
+  {
+    "slug": "training-pipeline-fault-tolerance",
+    "title": "深度策略网络训练管线的容错机制与优化动力学",
+    "description": "探讨如何构建具备容错能力与状态一致性的训练管线，重点阐述装饰器模式在断点保护中的应用、复合损失函数的梯度动力学，以及异常分类与分级恢复策略。",
+    "date": "2025-10-31",
+    "author": "SAKURAIN",
+    "tags": [
+      "深度学习",
+      "训练管线",
+      "容错机制",
+      "优化算法"
+    ],
+    "cover": "/image/logo.webp",
+    "featured": false
+  }
+]
