@@ -1,20 +1,17 @@
 [
   {
-    "slug": "008-geometric-data-augmentation",
-    "title": "高维离散决策空间中的几何数据增强：对称性挖掘与计算拓扑优化",
-    "description": "基于大规模自博弈数据管线中的工程实践，探讨如何在高维离散动作空间中安全地利用状态空间的对称性，构建计算高效且策略一致的数据增强系统。",
+    "slug": "machine-learning-theory",
+    "title": "《机器学习》（下）：深入理论的密林",
+    "description": "探讨周志华教授《机器学习》后半部分的核心理论，包括特征选择与稀疏学习、计算学习理论（PAC框架、VC维）、半监督学习等进阶主题。",
     "date": "2026-02-10",
     "author": "SAKURAIN",
     "tags": [
-      "强化学习",
-      "数据流水线",
-      "训练管线",
-      "内存优化",
-      "分布式系统",
-      "搜索算法"
+      "机器学习理论",
+      "深度学习",
+      "神经网络"
     ],
     "cover": "/image/logo.webp",
-    "featured": false
+    "featured": true
   },
   {
     "slug": "api-security-edgeone",

@@ -13,21 +13,18 @@
   ],
   "items": [
     {
-      "id": "https://sakurain.tech/blog/008-geometric-data-augmentation",
-      "url": "https://sakurain.tech/blog/008-geometric-data-augmentation",
-      "title": "高维离散决策空间中的几何数据增强：对称性挖掘与计算拓扑优化",
-      "content_text": "基于大规模自博弈数据管线中的工程实践，探讨如何在高维离散动作空间中安全地利用状态空间的对称性，构建计算高效且策略一致的数据增强系统。",
+      "id": "https://sakurain.tech/blog/machine-learning-theory",
+      "url": "https://sakurain.tech/blog/machine-learning-theory",
+      "title": "《机器学习》（下）：深入理论的密林",
+      "content_text": "探讨周志华教授《机器学习》后半部分的核心理论，包括特征选择与稀疏学习、计算学习理论（PAC框架、VC维）、半监督学习等进阶主题。",
       "date_published": "2026-02-10T00:00:00.000Z",
       "author": {
         "name": "SAKURAIN"
       },
       "tags": [
-        "强化学习",
-        "数据流水线",
-        "训练管线",
-        "内存优化",
-        "分布式系统",
-        "搜索算法"
+        "机器学习理论",
+        "深度学习",
+        "神经网络"
       ]
     },
     {
@@ -44,6 +41,21 @@
         "边缘计算",
         "API安全",
         "边缘函数"
+      ]
+    },
+    {
+      "id": "https://sakurain.tech/blog/machine-learning-book-review",
+      "url": "https://sakurain.tech/blog/machine-learning-book-review",
+      "title": "《机器学习》（上）：我的人工智能启蒙教材",
+      "content_text": "分享周志华教授《机器学习》教材的阅读心得，重点解析NFL定理等核心概念，以及这些理论如何塑造了对机器学习的理解。",
+      "date_published": "2026-01-03T00:00:00.000Z",
+      "author": {
+        "name": "SAKURAIN"
+      },
+      "tags": [
+        "深度学习",
+        "神经网络",
+        "机器学习理论"
       ]
     },
     {
