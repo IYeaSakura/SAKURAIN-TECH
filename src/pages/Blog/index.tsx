@@ -209,28 +209,26 @@ export default function BlogIndex() {
     );
   }, [data, searchQuery]);
 
-  const postsByMonth = useMemo(() => {
+  const postsByYear = useMemo(() => {
     const grouped: Record<string, typeof filteredRegularPosts> = {};
 
     filteredRegularPosts.forEach(post => {
       const date = new Date(post.date);
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const yearMonth = `${year}-${month}`;
 
-      if (!grouped[yearMonth]) {
-        grouped[yearMonth] = [];
+      if (!grouped[year]) {
+        grouped[year] = [];
       }
 
-      grouped[yearMonth].push(post);
+      grouped[year].push(post);
     });
 
     return grouped;
   }, [filteredRegularPosts]);
 
-  const sortedMonths = useMemo(() => {
-    return Object.keys(postsByMonth).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
-  }, [postsByMonth]);
+  const sortedYears = useMemo(() => {
+    return Object.keys(postsByYear).sort((a, b) => parseInt(b) - parseInt(a));
+  }, [postsByYear]);
 
   const totalPages = useMemo(() => {
     if (!archiveData?.months.length) return 1;
@@ -445,8 +443,8 @@ export default function BlogIndex() {
               >
                 <StatCard 
                   icon={Calendar} 
-                  value={sortedMonths.length} 
-                  label="月份归档" 
+                  value={sortedYears.length} 
+                  label="年份归档" 
                   color="var(--accent-primary)" 
                   delay={0}
                 />
@@ -459,7 +457,7 @@ export default function BlogIndex() {
                 />
                 <StatCard 
                   icon={BookOpen} 
-                  value={(data?.posts?.length || 0) + (regularPosts?.length || 0)} 
+                  value={regularPosts?.length || 0} 
                   label="文章总数" 
                   color="#22c55e" 
                   delay={2}
@@ -545,7 +543,7 @@ export default function BlogIndex() {
           )}
 
           {/* 全部文章 */}
-          {sortedMonths.length > 0 && (
+          {sortedYears.length > 0 && (
             <motion.section
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -582,7 +580,7 @@ export default function BlogIndex() {
                   >
                     全部文章
                   </h2>
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>按月份归档的所有文章</p>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>按年份归档的所有文章</p>
                 </div>
               </div>
 
@@ -600,19 +598,18 @@ export default function BlogIndex() {
               ) : (
                 <>
                   <div className="space-y-12">
-                    {sortedMonths.map((yearMonth, monthIndex) => {
-                      const posts = postsByMonth[yearMonth];
-                      const [year, month] = yearMonth.split('-');
+                    {sortedYears.map((year, yearIndex) => {
+                      const posts = postsByYear[year];
 
                       return (
                         <motion.div 
-                          key={yearMonth}
+                          key={year}
                           initial={{ opacity: 0, y: 20 }}
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true, margin: '-50px' }}
-                          transition={{ duration: 0.5, delay: monthIndex * 0.1 }}
+                          transition={{ duration: 0.5, delay: yearIndex * 0.1 }}
                         >
-                          {/* 月份标题 */}
+                          {/* 年份标题 */}
                           <div className="flex items-center gap-3 mb-6">
                             <div
                               className="flex items-center justify-center w-10 h-10"
@@ -628,7 +625,7 @@ export default function BlogIndex() {
                               className="font-sans font-bold text-xl"
                               style={{ color: 'var(--text-primary)' }}
                             >
-                              {year}年{parseInt(month)}月
+                              {year}年
                             </h3>
                             <div className="flex-1 h-px" style={{ background: 'var(--border-subtle)' }} />
                             <span

@@ -178,7 +178,18 @@
       "featured": true,
       "unidirectional": true,
       "status": "online"
+    },
+    {
+      "id": "sumi233",
+      "name": "酥米的小站",
+      "url": "https://www.sumi233.top/",
+      "icon": "https://cdn.sumi233.top/gh/huang233893/blog-image-bed@main/top/huang233893/imgs/blog/usersumi.png",
+      "description": "终有一日，寻梦中人",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true,
+      "status": "online"
     }
   ],
-  "lastUpdated": "2026-02-10T17:49:19.744Z"
+  "lastUpdated": "2026-02-10T17:59:31.945Z"
 }
