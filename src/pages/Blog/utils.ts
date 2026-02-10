@@ -89,9 +89,24 @@ export function formatDate(dateString: string): string {
   });
 }
 
+export function formatDateCard(dateString: string): string {
+  const date = new Date(dateString);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${month}/${day}`;
+}
+
+export function formatDateDetail(dateString: string): string {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}/${month}/${day}`;
+}
+
 export function getReadingTime(content: string): string {
-  const wordsPerMinute = 200;
-  const words = content.split(/\s+/).length;
-  const minutes = Math.ceil(words / wordsPerMinute);
+  const chineseCharsPerMinute = 400;
+  const chineseChars = (content.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const minutes = Math.ceil(chineseChars / chineseCharsPerMinute);
   return `${minutes} 分钟阅读`;
 }

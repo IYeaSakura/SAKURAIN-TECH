@@ -16,6 +16,7 @@ function parseFrontmatter(content) {
   if (!match) return null;
 
   const frontmatterText = match[1];
+  const bodyContent = content.replace(frontmatterRegex, '').trim();
   const data = {};
 
   const lines = frontmatterText.split('\n');
@@ -39,7 +40,7 @@ function parseFrontmatter(content) {
     }
   }
 
-  return data;
+  return { frontmatter: data, content: bodyContent };
 }
 
 function formatDateKey(date) {
@@ -71,13 +72,14 @@ function generateArchive() {
   for (const file of files) {
     const filePath = path.join(POSTS_DIR, file);
     const content = fs.readFileSync(filePath, 'utf-8');
-    const frontmatter = parseFrontmatter(content);
+    const parsed = parseFrontmatter(content);
 
-    if (!frontmatter || !frontmatter.date) {
+    if (!parsed || !parsed.frontmatter || !parsed.frontmatter.date) {
       console.warn(`Skipping ${file}: no frontmatter or date found`);
       continue;
     }
 
+    const frontmatter = parsed.frontmatter;
     const date = new Date(frontmatter.date);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -103,7 +105,8 @@ function generateArchive() {
       author: frontmatter.author,
       tags: frontmatter.tags || [],
       cover: frontmatter.cover,
-      featured: frontmatter.featured === true || frontmatter.featured === 'true'
+      featured: frontmatter.featured === true || frontmatter.featured === 'true',
+      content: parsed.content
     });
   }
 

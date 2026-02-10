@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Clock, ArrowRight, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import type { BlogPost } from '../types';
-import { formatDate, getReadingTime } from '../utils';
+import { formatDateCard, getReadingTime } from '../utils';
 import { deploymentConfig } from '@/config/deployment-config';
 
 interface BlogCardProps {
@@ -249,7 +249,7 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false }
                 <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--text-muted)' }}>
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    {formatDate(post.date)}
+                    {formatDateCard(post.date)}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />

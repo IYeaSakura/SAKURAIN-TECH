@@ -8,7 +8,7 @@ import { ImagePreviewProvider, useImagePreview } from '@/contexts/ImagePreviewCo
 import { MarkdownRenderer } from '@/pages/Docs/components/MarkdownRenderer';
 import { TableOfContents } from './components/TableOfContents';
 import { FloatingToolbar } from './components/FloatingToolbar';
-import { getBlogPost, formatDate, getReadingTime } from '../Blog/utils';
+import { getBlogPost, formatDateDetail, getReadingTime } from '../Blog/utils';
 import type { BlogPost } from '../Blog/types';
 
 export default function BlogPost() {
@@ -228,7 +228,7 @@ function BlogPostContent() {
                 <div className="flex flex-wrap items-center gap-4 mb-6 text-sm" style={{ color: 'var(--text-muted)' }}>
                   <span className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    {formatDate(post.date)}
+                    {formatDateDetail(post.date)}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
