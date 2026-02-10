@@ -12,6 +12,25 @@ const FRIENDS_FILE = path.join(__dirname, '../public/data/friends.json');
 const TIMEOUT = 10000;
 const MAX_RETRIES = 2;
 
+function getBuildTimestamp() {
+  const now = new Date();
+  return now.toISOString();
+}
+
+function getTodayDate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function isDateBefore(date1, date2) {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  return d1 < d2;
+}
+
 function checkUrl(url) {
   return new Promise((resolve) => {
     const protocol = url.startsWith('https') ? https : http;
@@ -90,6 +109,7 @@ async function checkFriendsConnectivity() {
     console.log(`Checking connectivity for ${data.friends.length} friends...`);
 
     const results = [];
+    const unidirectionalFriends = [];
 
     for (const friend of data.friends) {
       if (!friend.url) {
@@ -104,9 +124,18 @@ async function checkFriendsConnectivity() {
       if (result.success) {
         console.log('✓ Online');
         friend.status = 'online';
+        if (friend.offlineSince) {
+          delete friend.offlineSince;
+        }
       } else {
         console.log('✗ Offline');
         friend.status = 'offline';
+        const today = getTodayDate();
+        if (!friend.offlineSince) {
+          friend.offlineSince = today;
+        } else if (isDateBefore(today, friend.offlineSince)) {
+          friend.offlineSince = today;
+        }
       }
 
       results.push({
@@ -116,8 +145,16 @@ async function checkFriendsConnectivity() {
         status: result.success ? 'online' : 'offline',
       });
 
+      if (friend.unidirectional === true) {
+        unidirectionalFriends.push(friend);
+      }
+
       await new Promise(resolve => setTimeout(resolve, 500));
     }
+
+    const bidirectionalFriends = data.friends.filter(friend => friend.unidirectional !== true);
+    data.friends = [...bidirectionalFriends, ...unidirectionalFriends];
+    data.lastUpdated = getBuildTimestamp();
 
     const updatedContent = JSON.stringify(data, null, 2);
     fs.writeFileSync(FRIENDS_FILE, updatedContent);

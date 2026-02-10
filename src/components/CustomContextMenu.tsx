@@ -2,15 +2,19 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Copy, 
-  Search, 
-  RefreshCw, 
-  Share, 
+import {
+  Copy,
+  Search,
+  RefreshCw,
+  Share,
   Home,
   Scissors,
   FileText,
-  Info
+  Info,
+  ExternalLink,
+  Link as LinkIcon,
+  Camera,
+  Printer
 } from 'lucide-react';
 
 interface ContextMenuProps {
@@ -19,9 +23,11 @@ interface ContextMenuProps {
   onClose: () => void;
   selectedText?: string;
   isEditable?: boolean;
+  linkUrl?: string;
+  linkText?: string;
 }
 
-export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: ContextMenuProps) {
+export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, linkUrl, linkText }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x, y });
   const [isMounted, setIsMounted] = useState(false);
@@ -33,11 +39,11 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
   useEffect(() => {
     setIsMounted(true);
     setIsOpening(true);
-    
+
     openTimeoutRef.current = window.setTimeout(() => {
       setIsOpening(false);
     }, 500);
-    
+
     return () => {
       setIsMounted(false);
       if (openTimeoutRef.current) {
@@ -53,9 +59,9 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
       try {
         const now = Date.now();
         if (now - lastMouseDownTime.current < 100) return;
-        
+
         if (isOpening) return;
-        
+
         if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
           onClose();
         }
@@ -128,7 +134,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
 
   const handleCopy = useCallback(async () => {
     if (!selectedText) return;
-    
+
     try {
       await navigator.clipboard.writeText(selectedText);
       onClose();
@@ -155,7 +161,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
 
   const handleCut = useCallback(async () => {
     if (!selectedText || !isEditable) return;
-    
+
     try {
       await navigator.clipboard.writeText(selectedText);
       document.execCommand('delete');
@@ -177,7 +183,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
 
   const handleSearch = useCallback(() => {
     if (!selectedText) return;
-    
+
     try {
       const searchUrl = `https://cn.bing.com/search?q=${encodeURIComponent(selectedText)}`;
       window.open(searchUrl, '_blank');
@@ -206,7 +212,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
   const handleShare = useCallback(async () => {
     try {
       const url = window.location.href;
-      
+
       if (navigator.share) {
         await navigator.share({
           title: document.title,
@@ -231,7 +237,150 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
     }
   }, [onClose]);
 
+  const handleOpenLinkInNewTab = useCallback(() => {
+    if (!linkUrl) return;
+
+    try {
+      window.open(linkUrl, '_blank');
+      onClose();
+    } catch (error) {
+      console.error('Failed to open link in new tab:', error);
+    }
+  }, [linkUrl, onClose]);
+
+  const handleOpenLinkInNewWindow = useCallback(() => {
+    if (!linkUrl) return;
+
+    try {
+      window.open(linkUrl, '_blank', 'width=800,height=600');
+      onClose();
+    } catch (error) {
+      console.error('Failed to open link in new window:', error);
+    }
+  }, [linkUrl, onClose]);
+
+  const handleCopyLinkUrl = useCallback(async () => {
+    if (!linkUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(linkUrl);
+      onClose();
+    } catch (error) {
+      console.error('Failed to copy link URL:', error);
+    }
+  }, [linkUrl, onClose]);
+
+  const handleCopyLinkText = useCallback(async () => {
+    if (!linkText) return;
+
+    try {
+      await navigator.clipboard.writeText(linkText);
+      onClose();
+    } catch (error) {
+      console.error('Failed to copy link text:', error);
+    }
+  }, [linkText, onClose]);
+
+  const handleScreenshot = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+      });
+
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      await video.play();
+
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Failed to get canvas context');
+      }
+
+      ctx.drawImage(video, 0, 0);
+
+      const link = document.createElement('a');
+      link.download = `screenshot-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+
+      stream.getTracks().forEach(track => track.stop());
+      onClose();
+    } catch (error) {
+      console.error('Failed to take screenshot:', error);
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        alert('您取消了截图选择');
+      } else {
+        alert('截图失败，请确保在 HTTPS 或 localhost 环境中使用');
+      }
+    }
+  }, [onClose]);
+
+  const handlePrint = useCallback(() => {
+    try {
+      window.print();
+      onClose();
+    } catch (error) {
+      console.error('Failed to print:', error);
+    }
+  }, [onClose]);
+
   const menuItems = [
+    {
+      icon: ExternalLink,
+      label: '在新标签页中打开',
+      onClick: handleOpenLinkInNewTab,
+      disabled: !linkUrl,
+      shortcut: '',
+      color: '#60a5fa',
+      show: !!linkUrl,
+    },
+    {
+      icon: LinkIcon,
+      label: '在新窗口中打开',
+      onClick: handleOpenLinkInNewWindow,
+      disabled: !linkUrl,
+      shortcut: '',
+      color: '#34d399',
+      show: !!linkUrl,
+    },
+    {
+      icon: Copy,
+      label: '复制链接',
+      onClick: handleCopyLinkUrl,
+      disabled: !linkUrl,
+      shortcut: '',
+      color: '#f472b6',
+      show: !!linkUrl,
+    },
+    {
+      icon: Copy,
+      label: '复制链接文字',
+      onClick: handleCopyLinkText,
+      disabled: !linkText,
+      shortcut: '',
+      color: '#a78bfa',
+      show: !!linkText,
+    },
+    {
+      icon: Camera,
+      label: '截图',
+      onClick: handleScreenshot,
+      shortcut: '',
+      color: '#fb923c',
+      show: !linkUrl,
+    },
+    {
+      icon: Printer,
+      label: '打印',
+      onClick: handlePrint,
+      shortcut: 'Ctrl+P',
+      color: '#f97316',
+      show: !linkUrl,
+    },
     {
       icon: Copy,
       label: '复制',
@@ -239,7 +388,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
       disabled: !selectedText,
       shortcut: 'Ctrl+C',
       color: '#60a5fa',
-      show: !!selectedText,
+      show: !!selectedText && !linkUrl,
     },
     {
       icon: Scissors,
@@ -248,7 +397,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
       disabled: !selectedText || !isEditable,
       shortcut: 'Ctrl+X',
       color: '#f472b6',
-      show: !!selectedText && isEditable,
+      show: !!selectedText && isEditable && !linkUrl,
     },
     {
       icon: FileText,
@@ -256,7 +405,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
       onClick: handlePaste,
       shortcut: 'Ctrl+V',
       color: '#a78bfa',
-      show: isEditable,
+      show: isEditable && !linkUrl,
     },
     {
       icon: Search,
@@ -265,7 +414,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
       disabled: !selectedText,
       shortcut: 'Ctrl+K',
       color: '#34d399',
-      show: !!selectedText,
+      show: !!selectedText && !linkUrl,
     },
     {
       icon: RefreshCw,
@@ -273,7 +422,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
       onClick: handleRefresh,
       shortcut: 'F5',
       color: '#2dd4bf',
-      show: true,
+      show: !linkUrl,
     },
     {
       icon: Home,
@@ -281,7 +430,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
       onClick: handleGoHome,
       shortcut: 'Alt+Home',
       color: '#818cf8',
-      show: true,
+      show: !linkUrl,
     },
     {
       icon: Share,
@@ -289,7 +438,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
       onClick: handleShare,
       shortcut: '',
       color: '#a3e635',
-      show: true,
+      show: !linkUrl,
     },
     {
       icon: Info,
@@ -297,7 +446,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
       onClick: handleAbout,
       shortcut: '',
       color: '#fb923c',
-      show: true,
+      show: !linkUrl,
     },
   ].filter(item => item.show);
 
@@ -322,7 +471,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
       >
         <div className="relative overflow-hidden pointer-events-auto">
           <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/5 via-transparent to-[var(--accent-secondary)]/5 pointer-events-none" />
-          
+
           <div className="relative p-2 space-y-0.5">
             {menuItems.map((item, index) => (
               <motion.button
@@ -361,9 +510,9 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
                   }
                 }}
               >
-                <div 
+                <div
                   className="flex items-center justify-center w-8 h-8 rounded-lg"
-                  style={{ 
+                  style={{
                     background: `${item.color}20`,
                     color: item.color,
                   }}
@@ -372,9 +521,9 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
                 </div>
                 <span className="flex-1 text-left font-medium">{item.label}</span>
                 {item.shortcut && (
-                  <span 
+                  <span
                     className="text-xs px-2 py-0.5 rounded-md font-mono"
-                    style={{ 
+                    style={{
                       background: `${item.color}10`,
                       color: `${item.color}80`,
                     }}
@@ -391,10 +540,28 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable }: C
   );
 }
 
+function getLinkFromElement(element: HTMLElement): { url: string; text: string } | null {
+  const linkElement = element.closest('a') as HTMLAnchorElement;
+  if (linkElement && linkElement.href) {
+    return {
+      url: linkElement.href,
+      text: linkElement.textContent || linkElement.innerText || linkElement.href,
+    };
+  }
+  return null;
+}
+
+function isUrl(text: string): boolean {
+  const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+  return urlPattern.test(text.trim());
+}
+
 export function GlobalContextMenu() {
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [selectedText, setSelectedText] = useState<string>('');
   const [isEditable, setIsEditable] = useState<boolean>(false);
+  const [linkUrl, setLinkUrl] = useState<string>('');
+  const [linkText, setLinkText] = useState<string>('');
   const [isMounted, setIsMounted] = useState(false);
   const isHandlingContextMenu = useRef(false);
 
@@ -418,15 +585,30 @@ export function GlobalContextMenu() {
         const text = selection?.toString().trim() || '';
 
         const target = event.target as HTMLElement;
-        const editable = target.isContentEditable || 
-                       target.tagName === 'INPUT' || 
+        const editable = target.isContentEditable ||
+                       target.tagName === 'INPUT' ||
                        target.tagName === 'TEXTAREA' ||
                        target.closest('input') !== null ||
                        target.closest('textarea') !== null;
 
+        const linkFromElement = getLinkFromElement(target);
+
+        let detectedLinkUrl = '';
+        let detectedLinkText = '';
+
+        if (linkFromElement) {
+          detectedLinkUrl = linkFromElement.url;
+          detectedLinkText = linkFromElement.text;
+        } else if (text && isUrl(text)) {
+          detectedLinkUrl = text;
+          detectedLinkText = text;
+        }
+
         setMenuPosition({ x: event.clientX, y: event.clientY });
         setSelectedText(text);
         setIsEditable(editable);
+        setLinkUrl(detectedLinkUrl);
+        setLinkText(detectedLinkText);
 
         setTimeout(() => {
           isHandlingContextMenu.current = false;
@@ -449,6 +631,8 @@ export function GlobalContextMenu() {
       setMenuPosition(null);
       setSelectedText('');
       setIsEditable(false);
+      setLinkUrl('');
+      setLinkText('');
     } catch (error) {
       console.error('Error in handleClose:', error);
     }
@@ -465,6 +649,8 @@ export function GlobalContextMenu() {
           onClose={handleClose}
           selectedText={selectedText}
           isEditable={isEditable}
+          linkUrl={linkUrl}
+          linkText={linkText}
         />
       )}
     </>
