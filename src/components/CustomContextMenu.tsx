@@ -17,6 +17,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { deploymentConfig } from '@/config/deployment-config';
+import { toast } from 'sonner';
 
 interface ContextMenuProps {
   x: number;
@@ -208,7 +209,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       if (deploymentConfig.useWindowLocation) {
         window.location.href = 'https://sakurain.net';
       } else {
-        window.location.href = 'https://sakurain.net';
+        navigate('/');
       }
     } catch (error) {
       console.error('Failed to go home:', error);
@@ -234,7 +235,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
         });
       } else {
         await navigator.clipboard.writeText(url);
-        alert('链接已复制到剪贴板！');
+        toast.success('链接已复制到剪贴板！');
       }
       onClose();
     } catch (error) {

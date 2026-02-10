@@ -9,6 +9,7 @@ import {
 import { Navigation } from '@/components/sections/Navigation';
 import { Hero } from '@/components/sections/Hero';
 import { WelcomeModal } from '@/components/WelcomeModal';
+import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
 import { useTheme } from '@/hooks';
 import type { SiteData } from '@/types';
 import { preloadDocs, preloadFriends } from '@/main';
@@ -87,20 +88,7 @@ function App() {
   }, []);
 
   if (loading) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: 'var(--bg-primary)' }}
-      >
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-12 h-12 border-2 border-t-transparent rounded-full animate-spin"
-            style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
-          />
-          <p style={{ color: 'var(--text-muted)' }}>加载中...</p>
-        </div>
-      </div>
-    );
+    return <LoadingPlaceholder />;
   }
 
   if (!siteData) {

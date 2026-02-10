@@ -50,7 +50,6 @@ export const MagneticCursor = memo(() => {
 
   return (
     <>
-      {/* 主光标 */}
       <motion.div
         ref={cursorRef}
         className="fixed top-0 left-0 pointer-events-none z-[100000] mix-blend-difference hidden lg:block"
@@ -70,13 +69,11 @@ export const MagneticCursor = memo(() => {
         <div className="w-full h-full rounded-full bg-white" />
       </motion.div>
       
-      {/* 光标轨迹 */}
       <CursorTrail />
     </>
   );
 });
 
-// ==================== 光标轨迹 - 优化版 ====================
 const CursorTrail = memo(() => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
@@ -92,7 +89,6 @@ const CursorTrail = memo(() => {
       pendingPointRef.current = { x: e.clientX, y: e.clientY };
     };
 
-    // 使用 requestAnimationFrame 批量更新
     const updatePoints = () => {
       if (pendingPointRef.current) {
         pointIdRef.current++;
@@ -141,16 +137,12 @@ const CursorTrail = memo(() => {
           initial={{ scale: 1 }}
           animate={{ scale: 0, opacity: 0 }}
           transition={{ duration: 0.5 }}
-          onAnimationComplete={() => {
-            setPoints((prev) => prev.filter((p) => p.id !== point.id));
-          }}
         />
       ))}
     </div>
   );
 });
 
-// ==================== 聚光灯效果 - 优化版 ====================
 export const SpotlightCursor = memo(({
   children,
   size = 300,
@@ -218,7 +210,6 @@ export const SpotlightCursor = memo(({
   );
 });
 
-// ==================== 鼠标跟随卡片 - 优化版 ====================
 export const MouseFollowCard = memo(({
   children,
   className = '',
@@ -234,7 +225,7 @@ export const MouseFollowCard = memo(({
   const [glarePosition, setGlarePosition] = useState({ x: 50, y: 50 });
   const prefersReducedMotion = usePrefersReducedMotion();
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!ref.current || prefersReducedMotion) return;
     const rect = ref.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -284,7 +275,6 @@ export const MouseFollowCard = memo(({
       >
         {children}
         
-        {/* 光泽效果 */}
         <div
           className="absolute inset-0 pointer-events-none rounded-inherit"
           style={{
@@ -297,7 +287,6 @@ export const MouseFollowCard = memo(({
   );
 });
 
-// ==================== 磁性元素 - 优化版 ====================
 export const MagneticElement = memo(({
   children,
   className = '',
@@ -349,7 +338,6 @@ export const MagneticElement = memo(({
   );
 });
 
-// ==================== 鼠标视差容器 - 优化版 ====================
 export const ParallaxContainer = memo(({
   children,
   className = '',
@@ -409,7 +397,6 @@ export const ParallaxContainer = memo(({
   );
 });
 
-// ==================== 鼠标速度效果 - 优化版 ====================
 export const VelocityCursor = memo(() => {
   const [velocity, setVelocity] = useState(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -485,7 +472,6 @@ export const VelocityCursor = memo(() => {
   );
 });
 
-// Display names
 MagneticCursor.displayName = 'MagneticCursor';
 CursorTrail.displayName = 'CursorTrail';
 SpotlightCursor.displayName = 'SpotlightCursor';
