@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Copy,
@@ -13,9 +14,9 @@ import {
   Info,
   ExternalLink,
   Link as LinkIcon,
-  Camera,
-  Printer
+  RotateCcw
 } from 'lucide-react';
+import { deploymentConfig } from '@/config/deployment-config';
 
 interface ContextMenuProps {
   x: number;
@@ -28,6 +29,7 @@ interface ContextMenuProps {
 }
 
 export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, linkUrl, linkText }: ContextMenuProps) {
+  const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x, y });
   const [isMounted, setIsMounted] = useState(false);
@@ -203,9 +205,21 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
 
   const handleGoHome = useCallback(() => {
     try {
-      window.location.href = 'https://sakurain.net';
+      if (deploymentConfig.useWindowLocation) {
+        window.location.href = 'https://sakurain.net';
+      } else {
+        window.location.href = 'https://sakurain.net';
+      }
     } catch (error) {
       console.error('Failed to go home:', error);
+    }
+  }, []);
+
+  const handleForceRefresh = useCallback(() => {
+    try {
+      window.location.href = window.location.href;
+    } catch (error) {
+      console.error('Failed to force refresh:', error);
     }
   }, []);
 
@@ -230,12 +244,16 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
 
   const handleAbout = useCallback(() => {
     try {
-      window.location.href = '/about';
+      if (deploymentConfig.useWindowLocation) {
+        window.location.href = '/about';
+      } else {
+        navigate('/about');
+      }
       onClose();
     } catch (error) {
       console.error('Failed to navigate to about:', error);
     }
-  }, [onClose]);
+  }, [onClose, navigate]);
 
   const handleOpenLinkInNewTab = useCallback(() => {
     if (!linkUrl) return;
@@ -281,54 +299,33 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
     }
   }, [linkText, onClose]);
 
-  const handleScreenshot = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-      });
-
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      await video.play();
-
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        throw new Error('Failed to get canvas context');
-      }
-
-      ctx.drawImage(video, 0, 0);
-
-      const link = document.createElement('a');
-      link.download = `screenshot-${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-
-      stream.getTracks().forEach(track => track.stop());
-      onClose();
-    } catch (error) {
-      console.error('Failed to take screenshot:', error);
-      if (error instanceof Error && error.name === 'NotAllowedError') {
-        alert('您取消了截图选择');
-      } else {
-        alert('截图失败，请确保在 HTTPS 或 localhost 环境中使用');
-      }
-    }
-  }, [onClose]);
-
-  const handlePrint = useCallback(() => {
-    try {
-      window.print();
-      onClose();
-    } catch (error) {
-      console.error('Failed to print:', error);
-    }
-  }, [onClose]);
-
   const menuItems = [
+    {
+      icon: Copy,
+      label: '复制',
+      onClick: handleCopy,
+      disabled: !selectedText,
+      shortcut: 'Ctrl+C',
+      color: '#60a5fa',
+      show: !!selectedText && !linkUrl,
+    },
+    {
+      icon: Scissors,
+      label: '剪切',
+      onClick: handleCut,
+      disabled: !selectedText || !isEditable,
+      shortcut: 'Ctrl+X',
+      color: '#f472b6',
+      show: !!selectedText && isEditable,
+    },
+    {
+      icon: FileText,
+      label: '粘贴',
+      onClick: handlePaste,
+      shortcut: 'Ctrl+V',
+      color: '#a78bfa',
+      show: isEditable,
+    },
     {
       icon: ExternalLink,
       label: '在新标签页中打开',
@@ -358,54 +355,12 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
     },
     {
       icon: Copy,
-      label: '复制链接文字',
+      label: '复制链接文本',
       onClick: handleCopyLinkText,
       disabled: !linkText,
       shortcut: '',
       color: '#a78bfa',
       show: !!linkText,
-    },
-    {
-      icon: Camera,
-      label: '截图',
-      onClick: handleScreenshot,
-      shortcut: '',
-      color: '#fb923c',
-      show: !linkUrl,
-    },
-    {
-      icon: Printer,
-      label: '打印',
-      onClick: handlePrint,
-      shortcut: 'Ctrl+P',
-      color: '#f97316',
-      show: !linkUrl,
-    },
-    {
-      icon: Copy,
-      label: '复制',
-      onClick: handleCopy,
-      disabled: !selectedText,
-      shortcut: 'Ctrl+C',
-      color: '#60a5fa',
-      show: !!selectedText && !linkUrl,
-    },
-    {
-      icon: Scissors,
-      label: '剪切',
-      onClick: handleCut,
-      disabled: !selectedText || !isEditable,
-      shortcut: 'Ctrl+X',
-      color: '#f472b6',
-      show: !!selectedText && isEditable && !linkUrl,
-    },
-    {
-      icon: FileText,
-      label: '粘贴',
-      onClick: handlePaste,
-      shortcut: 'Ctrl+V',
-      color: '#a78bfa',
-      show: isEditable && !linkUrl,
     },
     {
       icon: Search,
@@ -414,7 +369,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       disabled: !selectedText,
       shortcut: 'Ctrl+K',
       color: '#34d399',
-      show: !!selectedText && !linkUrl,
+      show: !!selectedText,
     },
     {
       icon: RefreshCw,
@@ -422,7 +377,15 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       onClick: handleRefresh,
       shortcut: 'F5',
       color: '#2dd4bf',
-      show: !linkUrl,
+      show: true,
+    },
+    {
+      icon: RotateCcw,
+      label: '强制刷新',
+      onClick: handleForceRefresh,
+      shortcut: 'Ctrl+F5',
+      color: '#f97316',
+      show: true,
     },
     {
       icon: Home,
@@ -430,7 +393,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       onClick: handleGoHome,
       shortcut: 'Alt+Home',
       color: '#818cf8',
-      show: !linkUrl,
+      show: true,
     },
     {
       icon: Share,
@@ -438,7 +401,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       onClick: handleShare,
       shortcut: '',
       color: '#a3e635',
-      show: !linkUrl,
+      show: true,
     },
     {
       icon: Info,
@@ -446,7 +409,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       onClick: handleAbout,
       shortcut: '',
       color: '#fb923c',
-      show: !linkUrl,
+      show: true,
     },
   ].filter(item => item.show);
 

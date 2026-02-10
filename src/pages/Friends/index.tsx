@@ -148,59 +148,75 @@ const PixelCard = memo(function PixelCard({
         {/* 高级感动画边框光效 - 四角 */}
         <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
           <motion.div
+            key={`tl-h-${isHovered}`}
             className="absolute top-0 left-0 w-full h-[2px]"
             style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
             animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
           />
-          <motion.div
-            className="absolute top-0 left-0 w-[2px] h-full"
-            style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
-            animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          />
+          {isHovered && (
+            <motion.div
+              key={`tl-v-${isHovered}`}
+              className="absolute top-0 left-0 w-[2px] h-full"
+              style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            />
+          )}
         </div>
         <div className="absolute top-0 right-0 w-4 h-4 pointer-events-none">
           <motion.div
+            key={`tr-h-${isHovered}`}
             className="absolute top-0 right-0 w-full h-[2px]"
             style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
             animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
           />
-          <motion.div
-            className="absolute top-0 right-0 w-[2px] h-full"
-            style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
-            animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          />
+          {isHovered && (
+            <motion.div
+              key={`tr-v-${isHovered}`}
+              className="absolute top-0 right-0 w-[2px] h-full"
+              style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            />
+          )}
         </div>
         <div className="absolute bottom-0 left-0 w-4 h-4 pointer-events-none">
           <motion.div
+            key={`bl-h-${isHovered}`}
             className="absolute bottom-0 left-0 w-full h-[2px]"
             style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
             animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
           />
-          <motion.div
-            className="absolute bottom-0 left-0 w-[2px] h-full"
-            style={{ background: 'linear-gradient(to top, var(--accent-secondary), transparent)' }}
-            animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          />
+          {isHovered && (
+            <motion.div
+              key={`bl-v-${isHovered}`}
+              className="absolute bottom-0 left-0 w-[2px] h-full"
+              style={{ background: 'linear-gradient(to top, var(--accent-secondary), transparent)' }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            />
+          )}
         </div>
         <div className="absolute bottom-0 right-0 w-4 h-4 pointer-events-none">
           <motion.div
+            key={`br-h-${isHovered}`}
             className="absolute bottom-0 right-0 w-full h-[2px]"
             style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
             animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
             transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
           />
-          <motion.div
-            className="absolute bottom-0 right-0 w-[2px] h-full"
-            style={{ background: 'linear-gradient(to top, var(--accent-primary), transparent)' }}
-            animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          />
+          {isHovered && (
+            <motion.div
+              key={`br-v-${isHovered}`}
+              className="absolute bottom-0 right-0 w-[2px] h-full"
+              style={{ background: 'linear-gradient(to top, var(--accent-primary), transparent)' }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            />
+          )}
         </div>
 
         {/* Hover glow background */}
