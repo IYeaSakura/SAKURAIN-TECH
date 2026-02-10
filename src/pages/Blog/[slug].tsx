@@ -148,7 +148,7 @@ function BlogPostContent() {
         )}
 
         {/* 右侧浮动工具栏 */}
-        <FloatingToolbar onExit={handleBack} />
+        <FloatingToolbar onExit={handleBack} content={post.content} title={post.title} />
 
         {/* 主内容区 */}
         <main className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 md:pb-12">
