@@ -110,3 +110,9 @@ export function getReadingTime(content: string): string {
   const minutes = Math.ceil(chineseChars / chineseCharsPerMinute);
   return `${minutes} 分钟阅读`;
 }
+
+export function getWordCount(content: string): number {
+  const chineseChars = (content.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const englishWords = (content.match(/[a-zA-Z]+/g) || []).length;
+  return chineseChars + englishWords;
+}
