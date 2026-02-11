@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, MessageCircle, Smile, Meh, Frown, Calendar, BarChart3, Sparkles } from 'lucide-react';
+import { Heart, MessageCircle, Smile, Meh, Frown, Calendar, BarChart3, Sparkles, Clock } from 'lucide-react';
 import { AmbientGlow, GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
 import { useMobile } from '@/hooks';
@@ -19,9 +19,11 @@ interface Note {
   day: string;
   hours: string;
   minutes: string;
+  seconds: string;
   yearMonth: string;
   fullDate: string;
   fullTime: string;
+  isFirstInDate?: boolean;
 }
 
 interface ArchiveData {
@@ -49,6 +51,7 @@ export default function NotesPage() {
   const [loadedCount, setLoadedCount] = useState(10);
   const [loadingMore, setLoadingMore] = useState(false);
   const [footerData, setFooterData] = useState<SiteData['footer'] | null>(null);
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
 
   const NOTES_PER_LOAD = 10;
 
@@ -164,11 +167,67 @@ export default function NotesPage() {
     return Object.keys(groupedNotes).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
   }, [groupedNotes]);
 
+  const flattenedNotes = useMemo(() => {
+    const allNotes: (Note & { isFirstInDate: boolean })[] = [];
+    sortedDates.forEach(date => {
+      const dateNotes = groupedNotes[date];
+      dateNotes.forEach((note, index) => {
+        allNotes.push({
+          ...note,
+          isFirstInDate: index === 0
+        });
+      });
+    });
+    return allNotes;
+  }, [sortedDates, groupedNotes]);
+
+  const earliestNote = useMemo(() => {
+    if (notes.length === 0) return null;
+    return notes.reduce((earliest, current) => {
+      return new Date(current.date) < new Date(earliest.date) ? current : earliest;
+    });
+  }, [notes]);
+
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const developmentTime = useMemo(() => {
+    if (!earliestNote) return null;
+    const startTime = new Date(earliestNote.date).getTime();
+    const endTime = currentTime;
+    const diff = endTime - startTime;
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    return { days, hours, minutes, seconds };
+  }, [earliestNote, currentTime]);
+
   const stats = useMemo(() => [
-    { label: '日志总数', value: notes.length.toString(), icon: MessageCircle, color: 'var(--accent-primary)' },
-    { label: '月份数', value: archiveData?.months.length.toString() || '0', icon: Calendar, color: 'var(--accent-secondary)' },
+    { label: '开发时长', value: developmentTime ? `${developmentTime.days}天${developmentTime.hours}时${developmentTime.minutes}分${developmentTime.seconds}秒` : '-', icon: MessageCircle, color: 'var(--accent-primary)' },
+    { label: '版本迭代', value: notes.length.toString(), icon: Calendar, color: 'var(--accent-secondary)' },
     { label: '心情分布', value: `${moodCounts.happy}/${moodCounts.neutral}/${moodCounts.sad}`, icon: BarChart3, color: '#22c55e' },
-  ], [notes.length, archiveData?.months.length, moodCounts]);
+  ], [developmentTime, notes.length, moodCounts]);
+
+  const toggleNoteExpansion = (noteId: string) => {
+    setExpandedNotes(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(noteId)) {
+        newSet.delete(noteId);
+      } else {
+        newSet.add(noteId);
+      }
+      return newSet;
+    });
+  };
 
   if (loading) {
     return (
@@ -400,17 +459,18 @@ export default function NotesPage() {
                   />
                 </div>
 
-                <div className="space-y-16">
-                  {sortedDates.map((date, dateIndex) => {
-                    const dateNotes = groupedNotes[date];
+                <div className="space-y-12">
+                  {flattenedNotes.map((note, index) => {
+                    const isLeft = index % 2 === 0;
+                    const align = isLeft ? 'right' : 'left';
                     return (
-                      <div key={date} className="relative">
+                      <div key={note.id} className="relative">
                         {/* 桌面端布局 */}
                         <div className="hidden md:block">
-                          <div className="relative flex items-start min-h-[200px]">
+                          <div className="relative flex items-start min-h-[180px]">
                             {/* 左侧内容 */}
                             <div className="w-[calc(50%-40px)]">
-                              {dateIndex % 2 === 0 && (
+                              {isLeft && (
                                 <motion.div
                                   initial={{ opacity: 0, x: -50 }}
                                   whileInView={{ opacity: 1, x: 0 }}
@@ -418,79 +478,107 @@ export default function NotesPage() {
                                   transition={{ duration: 0.5 }}
                                   className="text-right"
                                 >
-                                  {dateNotes.map((note, noteIndex) => (
-                                    <NoteCard key={note.id} note={note} index={noteIndex} align="right" />
-                                  ))}
+                                  <NoteCard 
+                                    note={note} 
+                                    index={index} 
+                                    align={align}
+                                    isExpanded={expandedNotes.has(note.id)}
+                                    onToggle={() => toggleNoteExpansion(note.id)}
+                                  />
                                 </motion.div>
                               )}
                             </div>
 
                             {/* 中间时间节点 */}
                             <div className="absolute left-1/2 top-0 -translate-x-1/2 w-20 flex flex-col items-center">
-                              {dateIndex > 0 && (
+                              {index > 0 && (
                                 <div
-                                  className="absolute bottom-full left-1/2 -translate-x-1/2 w-0.5 h-8"
+                                  className="absolute bottom-full left-1/2 -translate-x-1/2 w-0.5 h-6"
                                   style={{
-                                    background: 'linear-gradient(to top, rgba(59, 130, 246, 0.5), transparent)'
+                                    background: 'linear-gradient(to top, rgba(59, 130, 246, 0.3), transparent)'
                                   }}
                                 />
                               )}
 
-                              {/* 时间节点圆环 - 像素风格 */}
-                              <div className="relative w-14 h-14 flex items-center justify-center">
-                                <motion.div
-                                  className="absolute inset-0"
-                                  style={{
-                                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(34, 197, 94, 0.2))',
-                                    border: '2px solid rgba(59, 130, 246, 0.5)',
-                                    clipPath: clipPathRounded(4),
-                                  }}
-                                  whileHover={{ scale: 1.1 }}
-                                />
-                                <div
-                                  className="w-10 h-10 flex items-center justify-center"
-                                  style={{
-                                    background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                                    clipPath: clipPathRounded(3),
-                                  }}
-                                >
-                                  <Heart className="w-5 h-5 text-white" />
-                                </div>
+                              {/* 时间节点圆环 */}
+                              <div className="relative flex items-center justify-center">
+                                {note.isFirstInDate ? (
+                                  <>
+                                    <motion.div
+                                      className="absolute inset-0"
+                                      style={{
+                                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(34, 197, 94, 0.2))',
+                                        border: '2px solid rgba(59, 130, 246, 0.5)',
+                                        clipPath: clipPathRounded(4),
+                                        width: '48px',
+                                        height: '48px',
+                                      }}
+                                      whileHover={{ scale: 1.1 }}
+                                    />
+                                    <div
+                                      className="flex items-center justify-center"
+                                      style={{
+                                        background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                                        clipPath: clipPathRounded(3),
+                                        width: '32px',
+                                        height: '32px',
+                                      }}
+                                    >
+                                      <Heart className="w-4 h-4 text-white" />
+                                    </div>
+                                  </>
+                                  ) : (
+                                    <motion.div
+                                      className="w-3 h-3"
+                                      style={{
+                                        background: 'var(--accent-primary)',
+                                        clipPath: clipPathRounded(2),
+                                      }}
+                                      whileHover={{ scale: 1.3 }}
+                                    />
+                                  )}
                               </div>
 
-                              <div
-                                className="mt-3 px-3 py-1 text-xs font-medium whitespace-nowrap"
-                                style={{
-                                  background: 'rgba(255, 255, 255, 0.05)',
-                                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                                  color: 'var(--accent-secondary)',
-                                  clipPath: clipPathRounded(2),
-                                }}
-                              >
-                                {date}
-                              </div>
+                              {/* 日期标签 - 只在第一个笔记显示 */}
+                              {note.isFirstInDate && (
+                                <div
+                                  className="mt-2 px-2.5 py-1 text-xs font-medium whitespace-nowrap"
+                                  style={{
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    color: 'var(--accent-secondary)',
+                                    clipPath: clipPathRounded(2),
+                                  }}
+                                >
+                                  {note.fullDate}
+                                </div>
+                              )}
 
                               <div
                                 className="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-full"
                                 style={{
-                                  background: 'linear-gradient(to bottom, rgba(34, 197, 94, 0.5), transparent)',
-                                  maxHeight: '60px'
+                                  background: 'linear-gradient(to bottom, rgba(34, 197, 94, 0.3), transparent)',
+                                  maxHeight: '50px'
                                 }}
                               />
                             </div>
 
                             {/* 右侧内容 */}
                             <div className="w-[calc(50%-40px)] ml-auto">
-                              {dateIndex % 2 === 1 && (
+                              {!isLeft && (
                                 <motion.div
                                   initial={{ opacity: 0, x: 50 }}
                                   whileInView={{ opacity: 1, x: 0 }}
                                   viewport={{ margin: '-50px' }}
                                   transition={{ duration: 0.5 }}
                                 >
-                                  {dateNotes.map((note, noteIndex) => (
-                                    <NoteCard key={note.id} note={note} index={noteIndex} align="left" />
-                                  ))}
+                                  <NoteCard 
+                                    note={note} 
+                                    index={index} 
+                                    align={align}
+                                    isExpanded={expandedNotes.has(note.id)}
+                                    onToggle={() => toggleNoteExpansion(note.id)}
+                                  />
                                 </motion.div>
                               )}
                             </div>
@@ -500,43 +588,59 @@ export default function NotesPage() {
                         {/* 移动端布局 */}
                         <div className="md:hidden flex gap-4">
                           <div className="flex flex-col items-center">
-                            <div className="relative w-12 h-12 flex items-center justify-center">
+                            {note.isFirstInDate ? (
+                              <>
+                                <div className="relative w-10 h-10 flex items-center justify-center">
+                                  <div
+                                    className="absolute inset-0"
+                                    style={{
+                                      background: 'rgba(59, 130, 246, 0.2)',
+                                      border: '2px solid rgba(59, 130, 246, 0.5)',
+                                      clipPath: clipPathRounded(3),
+                                    }}
+                                  />
+                                  <div
+                                    className="w-6 h-6 flex items-center justify-center"
+                                    style={{
+                                      background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                                      clipPath: clipPathRounded(2),
+                                    }}
+                                  >
+                                    <Heart className="w-3 h-3 text-white" />
+                                  </div>
+                                </div>
+                                <div
+                                  className="mt-1.5 px-2 py-0.5 text-xs font-medium whitespace-nowrap"
+                                  style={{ color: 'var(--accent-secondary)' }}
+                                >
+                                  {note.fullDate}
+                                </div>
+                              </>
+                            ) : (
                               <div
-                                className="absolute inset-0"
+                                className="w-2 h-2"
                                 style={{
-                                  background: 'rgba(59, 130, 246, 0.2)',
-                                  border: '2px solid rgba(59, 130, 246, 0.5)',
-                                  clipPath: clipPathRounded(3),
-                                }}
-                              />
-                              <div
-                                className="w-8 h-8 flex items-center justify-center"
-                                style={{
-                                  background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                                  background: 'var(--accent-primary)',
                                   clipPath: clipPathRounded(2),
                                 }}
-                              >
-                                <Heart className="w-4 h-4 text-white" />
-                              </div>
-                            </div>
+                              />
+                            )}
                             <div
-                              className="mt-2 px-2 py-0.5 text-xs font-medium"
-                              style={{ color: 'var(--accent-secondary)' }} whitespace-nowrap
-                            >
-                              {date}
-                            </div>
-                            <div
-                              className="w-0.5 flex-1 min-h-[40px]"
+                              className="w-0.5 flex-1 min-h-[30px]"
                               style={{
-                                background: 'linear-gradient(to bottom, rgba(59, 130, 246, 0.5), transparent)'
+                                background: 'linear-gradient(to bottom, rgba(59, 130, 246, 0.3), transparent)'
                               }}
                             />
                           </div>
 
-                          <div className="flex-1 pb-6">
-                            {dateNotes.map((note, noteIndex) => (
-                              <NoteCard key={note.id} note={note} index={noteIndex} align="left" />
-                            ))}
+                          <div className="flex-1 pb-4">
+                            <NoteCard 
+                              note={note} 
+                              index={index} 
+                              align="left"
+                              isExpanded={expandedNotes.has(note.id)}
+                              onToggle={() => toggleNoteExpansion(note.id)}
+                            />
                           </div>
                         </div>
                       </div>
@@ -582,15 +686,49 @@ export default function NotesPage() {
   );
 }
 
-const NoteCard = ({ note, index, align }: {
+const NoteCard = ({ note, index, align, isExpanded, onToggle }: {
   note: Note;
   index: number;
   align: 'left' | 'right';
+  isExpanded: boolean;
+  onToggle: () => void;
 }) => {
   const currentMoodConfig = moodConfig[note.mood as Mood] || moodConfig.neutral;
   const MoodIcon = currentMoodConfig.icon;
   const [isHovered, setIsHovered] = useState(false);
   const color = currentMoodConfig.color;
+
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
+
+  const handleClick = () => {
+    onToggle();
+  };
+
+  const showContent = isExpanded || isHovered;
+
+  const formatContent = (content: string) => {
+    const lines = content.split('\n');
+    return lines.map((line, i) => {
+      if (line.trim().startsWith('- ')) {
+        return (
+          <li key={i} className="ml-4 list-disc marker:text-xs" style={{ color: 'var(--text-muted)' }}>
+            {line.trim().substring(2)}
+          </li>
+        );
+      }
+      return (
+        <p key={i} className="mb-1" style={{ color: 'var(--text-muted)' }}>
+          {line}
+        </p>
+      );
+    });
+  };
 
   return (
     <motion.div
@@ -599,17 +737,18 @@ const NoteCard = ({ note, index, align }: {
       viewport={{ margin: '-50px' }}
       transition={{
         duration: 0.6,
-        delay: index * 0.1,
+        delay: index * 0.05,
         type: 'spring',
         stiffness: 100,
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="relative mb-4 last:mb-0 group cursor-pointer"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
+      className="relative mb-4 last:mb-0 cursor-pointer"
     >
       {/* 像素风格卡片 */}
       <div
-        className="relative p-5 overflow-hidden transition-all duration-300"
+        className="relative p-4 overflow-hidden transition-all duration-300"
         style={{
           background: isHovered ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)',
           border: `2px solid ${isHovered ? color : 'rgba(255, 255, 255, 0.08)'}`,
@@ -654,36 +793,55 @@ const NoteCard = ({ note, index, align }: {
 
         <div className="relative z-10">
           {/* 头部：心情标签和时间 */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2">
             <motion.div
               animate={{ scale: isHovered ? 1.05 : 1 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="flex items-center gap-2 px-2.5 py-1"
+              className="flex items-center gap-2 px-2 py-0.5"
               style={{
                 background: currentMoodConfig.bgColor,
                 border: `1px solid ${color}30`,
                 clipPath: clipPathRounded(2),
               }}
             >
-              <MoodIcon className="w-3.5 h-3.5" style={{ color }} />
+              <MoodIcon className="w-3 h-3" style={{ color }} />
               <span className="text-xs font-medium" style={{ color }}>
                 {currentMoodConfig.label}
               </span>
             </motion.div>
-            <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              {note.fullTime}
-            </div>
+            <motion.div
+              animate={{ scale: isHovered ? 1.05 : 1 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              className="flex items-center gap-1.5 px-2 py-0.5"
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                clipPath: clipPathRounded(2),
+              }}
+            >
+              <Clock className="w-3 h-3" style={{ color: 'var(--accent-secondary)' }} />
+              <span className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
+                {note.fullTime}
+              </span>
+            </motion.div>
           </div>
 
           {/* 标题 */}
-          <h3 className="font-primary text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+          <h3 className="font-primary text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
             {note.title}
           </h3>
 
-          {/* 内容 */}
-          <p className="font-primary text-sm mb-3 leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-muted)' }}>
-            {note.content}
-          </p>
+          {/* 内容 - 可折叠 */}
+          <motion.div
+            initial={false}
+            animate={{ height: showContent ? 'auto' : 0, opacity: showContent ? 1 : 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="overflow-hidden text-left"
+          >
+            <div className="text-sm leading-relaxed">
+              {formatContent(note.content)}
+            </div>
+          </motion.div>
         </div>
       </div>
     </motion.div>

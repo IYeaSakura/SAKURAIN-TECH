@@ -11,8 +11,9 @@
     "day": "07",
     "hours": "10",
     "minutes": "30",
+    "seconds": "00",
     "yearMonth": "2025-02",
     "fullDate": "2025-02-07",
-    "fullTime": "10:30"
+    "fullTime": "10:30:00"
   }
 ]
