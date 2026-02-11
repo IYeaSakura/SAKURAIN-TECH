@@ -189,6 +189,16 @@
       "featured": true,
       "unidirectional": true,
       "status": "online"
+    },
+    {
+      "id": "anheyu",
+      "name": "安知鱼",
+      "url": "https://blog.anheyu.com/",
+      "icon": "https://npm.elemecdn.com/anzhiyu-blog-static@1.0.4/img/avatar.jpg",
+      "description": "生活明朗，万物可爱",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true
     }
   ],
   "lastUpdated": "2026-02-10T17:59:31.945Z"

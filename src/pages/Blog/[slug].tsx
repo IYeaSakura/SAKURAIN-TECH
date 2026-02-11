@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Tag, Share2, ArrowLeft } from 'lucide-react';
-import { MagneticCursor, VelocityCursor, AmbientGlow } from '@/components/effects';
+import { AmbientGlow } from '@/components/effects';
 import { useTheme, useMobile } from '@/hooks';
 import { ImagePreviewProvider, useImagePreview } from '@/contexts/ImagePreviewContext';
 import { MarkdownRenderer } from '@/pages/Docs/components/MarkdownRenderer';
-import { TableOfContents } from './components/TableOfContents';
+import { ArticleSidebar } from './components/ArticleSidebar';
 import { FloatingToolbar } from './components/FloatingToolbar';
-import { getBlogPost, formatDateDetail, getReadingTime } from '../Blog/utils';
+import { getBlogPost, formatDateDetail, getReadingTime, getWordCount } from '../Blog/utils';
 import type { BlogPost } from '../Blog/types';
 
 export default function BlogPost() {
@@ -24,6 +24,7 @@ function BlogPostContent() {
   const navigate = useNavigate();
   useTheme();
   const [post, setPost] = useState<BlogPost | null>(null);
+  const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isMobile = useMobile();
@@ -52,6 +53,18 @@ function BlogPostContent() {
       });
   }, [slug, navigate]);
 
+  useEffect(() => {
+    fetch('/blog/index.json')
+      .then(res => res.json())
+      .then((data) => {
+        const posts = data.posts || [];
+        setAllPosts(posts);
+      })
+      .catch(err => {
+        console.error('Failed to load blog index:', err);
+      });
+  }, []);
+
   const handleBack = () => {
     navigate('/blog');
   };
@@ -72,6 +85,24 @@ function BlogPostContent() {
       alert('链接已复制到剪贴板');
     }
   };
+
+  const handleNavigate = (slug: string) => {
+    navigate(`/blog/${slug}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const currentIndex = allPosts.findIndex(p => p.slug === slug);
+  const previousPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+  const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+
+  const relatedPosts = allPosts
+    .filter(p => p.slug !== slug && p.tags.some(tag => post?.tags.includes(tag)))
+    .slice(0, 3)
+    .map(p => ({
+      title: p.title,
+      slug: p.slug,
+      description: p.description,
+    }));
 
   if (loading) {
     return (
@@ -106,16 +137,7 @@ function BlogPostContent() {
 
   return (
     <>
-      {/* 鼠标效果 - 仅桌面端显示 */}
-      {!isMobile && (
-        <>
-          <MagneticCursor />
-          <VelocityCursor />
-        </>
-      )}
-      
       <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
-        {/* 背景网格 */}
         <div className="absolute inset-0 pointer-events-none">
           <div
             className="absolute inset-0 opacity-5"
@@ -127,7 +149,6 @@ function BlogPostContent() {
               backgroundSize: '60px 60px',
             }}
           />
-          {/* 环境光效 - 仅桌面端显示 */}
           {!isMobile && (
             <>
               <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.12} />
@@ -142,22 +163,29 @@ function BlogPostContent() {
           />
         </div>
 
-        {/* 左侧目录导航 - 仅桌面端显示 */}
         {!isMobile && post.content && (
-          <TableOfContents content={post.content} />
+          <ArticleSidebar
+            wordCount={post.content ? getWordCount(post.content) : undefined}
+            readingTime={post.content ? getReadingTime(post.content) : undefined}
+            date={post.date}
+            onBack={handleBack}
+            onPrevious={previousPost ? () => handleNavigate(previousPost.slug) : undefined}
+            onNext={nextPost ? () => handleNavigate(nextPost.slug) : undefined}
+            hasPrevious={!!previousPost}
+            hasNext={!!nextPost}
+            relatedPosts={relatedPosts}
+            onNavigate={handleNavigate}
+          />
         )}
 
-        {/* 右侧浮动工具栏 */}
         <FloatingToolbar onExit={handleBack} content={post.content} title={post.title} />
 
-        {/* 主内容区 */}
         <main className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 md:pb-12">
           <motion.article
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            {/* 文章头部卡片 */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -222,7 +250,6 @@ function BlogPostContent() {
               </div>
             </motion.div>
 
-            {/* 文章内容 */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -238,7 +265,6 @@ function BlogPostContent() {
               )}
             </motion.div>
 
-            {/* 底部操作区 - 仅移动端显示分享按钮 */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -272,7 +298,6 @@ function BlogPostContent() {
               </button>
             </motion.div>
 
-            {/* 版权信息 */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

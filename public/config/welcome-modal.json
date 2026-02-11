@@ -2,7 +2,7 @@
   "enabled": true,
   "title": "欢迎来到 SAKURAIN TEAM",
   "content": "本站是我团队的技术网站（开发中，进度约30%），非商业用途的哦~\n\n如果你是来找我们接项目的，那可能要让你失望了😅\n我们只是在这里展示一些技术验证和好玩的东西，不接任何商业业务！\n\n还有，本人不擅长前端，所以莫要笑话我的设计，please！",
-  "updates": "feat(响应式): 为移动端优化视觉效果和交互",
+  "updates": "feat(博客): 添加文章侧边栏组件并优化博客页面",
   "confirmButtonText": "不再显示",
   "closeButtonText": "关闭",
   "showOnce": false,

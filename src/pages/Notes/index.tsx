@@ -304,7 +304,7 @@ export default function NotesPage() {
                   className="text-xl mb-8 max-w-xl"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  自动通过Git commit记录生成开发日志，并支持通过心情筛选。
+                  通过Git commit记录自动生成的开发日志，本站的开发历程。
                 </motion.p>
               </div>
 
@@ -478,9 +478,9 @@ export default function NotesPage() {
                                   transition={{ duration: 0.5 }}
                                   className="text-right"
                                 >
-                                  <NoteCard 
-                                    note={note} 
-                                    index={index} 
+                                  <NoteCard
+                                    note={note}
+                                    index={index}
                                     align={align}
                                     isExpanded={expandedNotes.has(note.id)}
                                     onToggle={() => toggleNoteExpansion(note.id)}
@@ -570,9 +570,9 @@ export default function NotesPage() {
                                   viewport={{ margin: '-50px' }}
                                   transition={{ duration: 0.5 }}
                                 >
-                                  <NoteCard 
-                                    note={note} 
-                                    index={index} 
+                                  <NoteCard
+                                    note={note}
+                                    index={index}
                                     align={align}
                                     isExpanded={expandedNotes.has(note.id)}
                                     onToggle={() => toggleNoteExpansion(note.id)}
@@ -634,9 +634,9 @@ export default function NotesPage() {
                           </div>
 
                           <div className="flex-1 pb-4">
-                            <NoteCard 
-                              note={note} 
-                              index={index} 
+                            <NoteCard
+                              note={note}
+                              index={index}
                               align="left"
                               isExpanded={expandedNotes.has(note.id)}
                               onToggle={() => toggleNoteExpansion(note.id)}
