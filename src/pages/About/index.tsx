@@ -32,7 +32,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { GitHubHeatmap } from '@/components/GitHubHeatmap';
 import { Footer } from '@/components/sections/Footer';
 import { TwinklingStars, GradientText, LightBeam } from '@/components/effects';
-import { useMobile } from '@/hooks';
+import { useMobile, useAnimationEnabled } from '@/hooks';
 import type { SiteData } from '@/types';
 
 // 技术栈词云数据 - 随机颜色版本
@@ -207,6 +207,7 @@ const projectStats = [
 // 词云图组件
 function TechWordCloud() {
   const [hoveredTech, setHoveredTech] = useState<string | null>(null);
+  const animationEnabled = useAnimationEnabled();
 
   // 打乱词云顺序
   const shuffledTechData = useMemo(() => {
@@ -302,11 +303,11 @@ function TechWordCloud() {
             return (
               <motion.span
                 key={tech.name}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.02, type: 'spring', stiffness: 100 }}
-                whileHover={{ scale: 1.2, zIndex: 10, textShadow: `0 0 20px ${tech.color}` }}
+                initial={animationEnabled ? { opacity: 0, scale: 0.8 } : undefined}
+                whileInView={animationEnabled ? { opacity: 1, scale: 1 } : undefined}
+                viewport={animationEnabled ? { once: true } : undefined}
+                transition={animationEnabled ? { duration: 0.5, delay: index * 0.02, type: 'spring', stiffness: 100 } : undefined}
+                whileHover={animationEnabled ? { scale: 1.2, zIndex: 10, textShadow: `0 0 20px ${tech.color}` } : undefined}
                 onMouseEnter={() => setHoveredTech(tech.name)}
                 onMouseLeave={() => setHoveredTech(null)}
                 className={`inline-block px-3 py-1.5 rounded-lg cursor-pointer transition-all duration-300 font-medium ${getFontSize(tech.level)}`}
@@ -318,7 +319,7 @@ function TechWordCloud() {
                 }}
               >
                 {tech.name}
-                {hoveredTech === tech.name && (
+                {hoveredTech === tech.name && animationEnabled && (
                   <motion.span
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -343,9 +344,12 @@ function TechWordCloud() {
 
 // 标题组件 - 艺术字体效果
 function SectionTitle({ children, className = '', animated = true }: { children: string; className?: string; animated?: boolean }) {
+  const animationEnabled = useAnimationEnabled();
+  const shouldAnimate = animated && animationEnabled;
+
   return (
     <h2 className={`text-4xl font-bold mb-4 ${className}`}>
-      {animated ? (
+      {shouldAnimate ? (
         <GradientText
           className="font-sans font-black"
           colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-primary)']}
@@ -381,34 +385,39 @@ function GlassCard({
   accentColor?: string;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const animationEnabled = useAnimationEnabled();
 
   return (
     <motion.div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      whileHover={{ scale: hoverScale, y: -3 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
+      whileHover={animationEnabled ? { scale: hoverScale, y: -3 } : undefined}
+      transition={animationEnabled ? { duration: 0.25, ease: 'easeOut' } : undefined}
       className={`relative ${className}`}
     >
       {/* 玻璃反光层 - 顶部高光 */}
-      <div
-        className="absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-300"
-        style={{
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 40%, transparent 60%)',
-          opacity: isHovered ? 1 : 0.6,
-        }}
-      />
+      {animationEnabled && (
+        <div
+          className="absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-300"
+          style={{
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 40%, transparent 60%)',
+            opacity: isHovered ? 1 : 0.6,
+          }}
+        />
+      )}
 
       {/* 悬浮时的边缘发光 */}
-      <div
-        className="absolute -inset-[1px] rounded-2xl transition-all duration-300"
-        style={{
-          background: `linear-gradient(135deg, ${accentColor}60, transparent 50%)`,
-          opacity: isHovered ? 0.4 : 0,
-          filter: 'blur(4px)',
-          zIndex: -1,
-        }}
-      />
+      {animationEnabled && (
+        <div
+          className="absolute -inset-[1px] rounded-2xl transition-all duration-300"
+          style={{
+            background: `linear-gradient(135deg, ${accentColor}60, transparent 50%)`,
+            opacity: isHovered ? 0.4 : 0,
+            filter: 'blur(4px)',
+            zIndex: -1,
+          }}
+        />
+      )}
 
       {/* 内容 */}
       <div className="relative h-full">
@@ -472,6 +481,7 @@ export default function AboutPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [footerData, setFooterData] = useState<SiteData['footer'] | null>(null);
+  const animationEnabled = useAnimationEnabled();
 
   // 加载 footer 数据
   useEffect(() => {
@@ -511,9 +521,9 @@ export default function AboutPage() {
           <div className="grid lg:grid-cols-5 gap-8 items-end">
             {/* 左侧：头像和标签 - 占2列，底部对齐 */}
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
+              initial={animationEnabled ? { opacity: 0, x: -30 } : undefined}
+              animate={animationEnabled ? { opacity: 1, x: 0 } : undefined}
+              transition={animationEnabled ? { duration: 0.6 } : undefined}
               className="lg:col-span-2 flex flex-col items-center"
             >
               {/* 顶部问候语徽章 - 交互特效版 */}
@@ -523,26 +533,28 @@ export default function AboutPage() {
               <div className="relative mb-8">
                 <motion.div
                   className="relative"
-                  whileHover={{ scale: 1.03 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  whileHover={animationEnabled ? { scale: 1.03 } : undefined}
+                  transition={animationEnabled ? { type: "spring", stiffness: 300, damping: 20 } : undefined}
                 >
                   {/* 发光环 */}
-                  <motion.div
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                      filter: 'blur(25px)',
-                    }}
-                    animate={{
-                      opacity: [0.3, 0.7, 0.3],
-                      scale: [1, 1.1, 1],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  />
+                  {animationEnabled && (
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                        filter: 'blur(25px)',
+                      }}
+                      animate={{
+                        opacity: [0.3, 0.7, 0.3],
+                        scale: [1, 1.1, 1],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
+                  )}
 
                   <div
                     className="relative w-72 h-72 rounded-full p-1"
@@ -568,14 +580,18 @@ export default function AboutPage() {
                       border: '3px solid var(--bg-primary)',
                     }}
                   >
-                    <motion.div
-                      className="w-5 h-5 rounded-full"
-                      style={{ background: '#10b981' }}
-                      animate={{
-                        boxShadow: ['0 0 0 0 rgba(16, 185, 129, 0.4)', '0 0 0 6px rgba(16, 185, 129, 0)'],
-                      }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    />
+                    {animationEnabled ? (
+                      <motion.div
+                        className="w-5 h-5 rounded-full"
+                        style={{ background: '#10b981' }}
+                        animate={{
+                          boxShadow: ['0 0 0 0 rgba(16, 185, 129, 0.4)', '0 0 0 6px rgba(16, 185, 129, 0)'],
+                        }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full" style={{ background: '#10b981' }} />
+                    )}
                   </div>
                 </motion.div>
               </div>

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { AmbientGlow, LightBeam } from '@/components/effects';
-import { useMobile } from '@/hooks';
+import { useMobile, useAnimationEnabled } from '@/hooks';
 import type { SiteData } from '@/types';
 
 // Types
@@ -80,11 +80,13 @@ const PixelCard = memo(function PixelCard({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const animationEnabled = useAnimationEnabled();
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (!animationEnabled) return;
     const element = cardRef.current;
     if (!element) return;
     const rect = element.getBoundingClientRect();
@@ -92,7 +94,7 @@ const PixelCard = memo(function PixelCard({
     const y = (e.clientY - rect.top - rect.height / 2) / 20;
     mouseX.set(x);
     mouseY.set(y);
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, animationEnabled]);
 
   const handleMouseLeave = useCallback(() => {
     mouseX.set(0);
@@ -119,8 +121,8 @@ const PixelCard = memo(function PixelCard({
   return (
     <motion.div
       ref={cardRef}
-      initial={{ opacity: 0, y: 50, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={animationEnabled ? { opacity: 0, y: 50, scale: 0.9 } : undefined}
+      animate={animationEnabled ? { opacity: 1, y: 0, scale: 1 } : undefined}
       transition={{
         duration: 0.6,
         delay: index * 0.05,
@@ -160,7 +162,7 @@ const PixelCard = memo(function PixelCard({
               key={`tl-v-${isHovered}`}
               className="absolute top-0 left-0 w-[2px] h-full"
               style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
-              animate={{ opacity: 1 }}
+              animate={animationEnabled ? { opacity: 1 } : undefined}
               transition={{ duration: 0.3 }}
             />
           )}
@@ -178,7 +180,7 @@ const PixelCard = memo(function PixelCard({
               key={`tr-v-${isHovered}`}
               className="absolute top-0 right-0 w-[2px] h-full"
               style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
-              animate={{ opacity: 1 }}
+              animate={animationEnabled ? { opacity: 1 } : undefined}
               transition={{ duration: 0.3 }}
             />
           )}
@@ -196,7 +198,7 @@ const PixelCard = memo(function PixelCard({
               key={`bl-v-${isHovered}`}
               className="absolute bottom-0 left-0 w-[2px] h-full"
               style={{ background: 'linear-gradient(to top, var(--accent-secondary), transparent)' }}
-              animate={{ opacity: 1 }}
+              animate={animationEnabled ? { opacity: 1 } : undefined}
               transition={{ duration: 0.3 }}
             />
           )}
@@ -214,7 +216,7 @@ const PixelCard = memo(function PixelCard({
               key={`br-v-${isHovered}`}
               className="absolute bottom-0 right-0 w-[2px] h-full"
               style={{ background: 'linear-gradient(to top, var(--accent-primary), transparent)' }}
-              animate={{ opacity: 1 }}
+              animate={animationEnabled ? { opacity: 1 } : undefined}
               transition={{ duration: 0.3 }}
             />
           )}
@@ -224,7 +226,7 @@ const PixelCard = memo(function PixelCard({
         <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
-          animate={{ opacity: isHovered ? 1 : 0 }}
+          animate={animationEnabled ? { opacity: isHovered ? 1 : 0 } : undefined}
           transition={{ duration: 0.3 }}
         />
 
@@ -251,7 +253,7 @@ const PixelCard = memo(function PixelCard({
         <div className="flex items-start gap-4 relative z-10 flex-1">
           {/* Icon with pixel border */}
           <motion.div
-            animate={{ rotateX: currentRotateX, rotateY: currentRotateY }}
+            animate={animationEnabled ? { rotateX: currentRotateX, rotateY: currentRotateY } : undefined}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className="flex-shrink-0 w-16 h-16 flex items-center justify-center overflow-hidden relative"
             style={{
@@ -275,7 +277,7 @@ const PixelCard = memo(function PixelCard({
             <motion.div
               className="absolute inset-0 pointer-events-none"
               style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
-              animate={{ opacity: isHovered ? 0.5 : 0 }}
+              animate={animationEnabled ? { opacity: isHovered ? 0.5 : 0 } : undefined}
               transition={{ duration: 0.3 }}
             />
           </motion.div>
@@ -287,7 +289,7 @@ const PixelCard = memo(function PixelCard({
               {/* 标题容器 - 设置最大宽度，悬浮时显示完整名称 */}
               <div className="relative group/title flex-1 min-w-0">
                 <motion.h3
-                  animate={{ scale: isHovered ? 1.02 : 1 }}
+                  animate={animationEnabled ? { scale: isHovered ? 1.02 : 1 } : undefined}
                   transition={{ duration: 0.2 }}
                   className="font-bold text-lg truncate"
                   style={{
@@ -388,8 +390,8 @@ const PixelCard = memo(function PixelCard({
 
           {/* External link icon */}
           <motion.div
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : -10 }}
+            initial={animationEnabled ? { opacity: 0, x: -10 } : undefined}
+            animate={animationEnabled ? { opacity: isHovered ? 1 : 0, x: isHovered ? 0 : -10 } : undefined}
             transition={{ duration: 0.3 }}
             className="flex-shrink-0 self-center"
           >
@@ -414,26 +416,27 @@ const CategorySection = memo(function CategorySection({
   index: number;
   onClick: (friend: Friend) => void;
 }) {
+  const animationEnabled = useAnimationEnabled();
   const IconComponent = iconMap[category.icon] || Globe;
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={animationEnabled ? { opacity: 0, y: 50 } : undefined}
+      whileInView={animationEnabled ? { opacity: 1, y: 0 } : undefined}
       viewport={{ margin: '-50px' }}
       transition={{ duration: 0.6, delay: index * 0.1, type: 'spring', stiffness: 100 }}
       className="mb-24"
     >
       {/* Category Header */}
       <motion.div
-        initial={{ opacity: 0, x: -30 }}
-        whileInView={{ opacity: 1, x: 0 }}
+        initial={animationEnabled ? { opacity: 0, x: -30 } : undefined}
+        whileInView={animationEnabled ? { opacity: 1, x: 0 } : undefined}
         viewport={{ margin: '-50px' }}
         transition={{ duration: 0.5, delay: index * 0.1 + 0.1 }}
         className="flex items-center gap-4 mb-10"
       >
         <motion.div
-          whileHover={{ scale: 1.1, rotate: 5 }}
+          whileHover={animationEnabled ? { scale: 1.1, rotate: 5 } : undefined}
           whileTap={{ scale: 0.95 }}
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="flex items-center justify-center w-14 h-14 relative overflow-hidden"
@@ -447,15 +450,15 @@ const CategorySection = memo(function CategorySection({
           <motion.div
             className="absolute inset-0"
             style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
-            animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] }}
+            animate={animationEnabled ? { opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] } : undefined}
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
           />
           <IconComponent className="w-7 h-7 relative z-10" style={{ color: 'var(--accent-primary)' }} />
         </motion.div>
         <div>
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            initial={animationEnabled ? { opacity: 0 } : undefined}
+            whileInView={animationEnabled ? { opacity: 1 } : undefined}
             viewport={{ margin: '-50px' }}
             transition={{ delay: index * 0.1 + 0.2 }}
           >
@@ -471,8 +474,8 @@ const CategorySection = memo(function CategorySection({
             </h2>
           </motion.div>
           <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            initial={animationEnabled ? { opacity: 0 } : undefined}
+            whileInView={animationEnabled ? { opacity: 1 } : undefined}
             viewport={{ margin: '-50px' }}
             transition={{ delay: index * 0.1 + 0.3 }}
             className="text-sm font-medium"
@@ -505,6 +508,7 @@ const HeroSection = memo(function HeroSection({
   stats: { friends: number; categories: number; online: number };
   lastUpdated?: string;
 }) {
+  const animationEnabled = useAnimationEnabled();
   return (
     <section className="relative pt-20 pb-16 overflow-hidden">
       {/* Background decoration */}
@@ -519,13 +523,13 @@ const HeroSection = memo(function HeroSection({
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Title and description */}
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={animationEnabled ? { opacity: 0, x: -50 } : undefined}
+            animate={animationEnabled ? { opacity: 1, x: 0 } : undefined}
             transition={{ duration: 0.8, type: 'spring', stiffness: 100 }}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={animationEnabled ? { opacity: 0, scale: 0.9 } : undefined}
+              animate={animationEnabled ? { opacity: 1, scale: 1 } : undefined}
               transition={{ delay: 0.2, duration: 0.5 }}
               className="inline-flex items-center gap-2 px-4 py-2 mb-6"
               style={{
@@ -553,8 +557,8 @@ const HeroSection = memo(function HeroSection({
             </p>
             {lastUpdated && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={animationEnabled ? { opacity: 0 } : undefined}
+                animate={animationEnabled ? { opacity: 1 } : undefined}
                 transition={{ delay: 0.6, duration: 0.5 }}
                 className="mt-4 inline-flex items-center gap-2 px-3 py-1.5"
                 style={{
@@ -578,8 +582,8 @@ const HeroSection = memo(function HeroSection({
 
           {/* Right: Stats */}
           <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={animationEnabled ? { opacity: 0, x: 50 } : undefined}
+            animate={animationEnabled ? { opacity: 1, x: 0 } : undefined}
             transition={{ duration: 0.8, delay: 0.2, type: 'spring', stiffness: 100 }}
             className="grid grid-cols-3 gap-4"
           >
@@ -590,10 +594,10 @@ const HeroSection = memo(function HeroSection({
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+                animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
                 transition={{ delay: 0.4 + index * 0.1, duration: 0.5 }}
-                whileHover={{ scale: 1.05, y: -4 }}
+                whileHover={animationEnabled ? { scale: 1.05, y: -4 } : undefined}
                 className="relative p-6 text-center cursor-default group"
                 style={{
                   background: 'rgba(255, 255, 255, 0.02)',
@@ -605,8 +609,8 @@ const HeroSection = memo(function HeroSection({
                 <motion.div
                   className="absolute inset-0 pointer-events-none"
                   style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 0.5 }}
+                  initial={animationEnabled ? { opacity: 0 } : undefined}
+                  whileHover={animationEnabled ? { opacity: 0.5 } : undefined}
                   transition={{ duration: 0.3 }}
                 />
 
@@ -636,6 +640,7 @@ const MailtoModal = memo(function MailtoModal({
   onClose: () => void;
   contact: string;
 }) {
+  const animationEnabled = useAnimationEnabled();
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -659,16 +664,16 @@ const MailtoModal = memo(function MailtoModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={animationEnabled ? { opacity: 0 } : undefined}
+        animate={animationEnabled ? { opacity: 1 } : undefined}
         exit={{ opacity: 0 }}
         className="absolute inset-0"
         style={{ background: 'rgba(0, 0, 0, 0.7)' }}
         onClick={onClose}
       />
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
+        initial={animationEnabled ? { opacity: 0, scale: 0.9, y: 20 } : undefined}
+        animate={animationEnabled ? { opacity: 1, scale: 1, y: 0 } : undefined}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="relative w-full max-w-md p-6"
@@ -764,7 +769,7 @@ const MailtoModal = memo(function MailtoModal({
             </code>
             <motion.button
               onClick={handleCopyEmail}
-              whileHover={{ scale: 1.02 }}
+              whileHover={animationEnabled ? { scale: 1.02 } : undefined}
               whileTap={{ scale: 0.98 }}
               className="px-3 py-2 text-sm font-medium transition-all whitespace-nowrap"
               style={{
@@ -781,7 +786,7 @@ const MailtoModal = memo(function MailtoModal({
         <div className="flex gap-3">
           <motion.button
             onClick={onClose}
-            whileHover={{ scale: 1.02 }}
+            whileHover={animationEnabled ? { scale: 1.02 } : undefined}
             whileTap={{ scale: 0.98 }}
             className="flex-1 px-4 py-2 font-medium transition-all"
             style={{
@@ -806,6 +811,7 @@ const ApplySection = memo(function ApplySection({
   applyInfo: ApplyInfo;
   onApplyClick: () => void;
 }) {
+  const animationEnabled = useAnimationEnabled();
   const [isHovered, setIsHovered] = useState(false);
 
   const handleApplyClick = useCallback(() => {
@@ -821,8 +827,8 @@ const ApplySection = memo(function ApplySection({
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={animationEnabled ? { opacity: 0, y: 50 } : undefined}
+      whileInView={animationEnabled ? { opacity: 1, y: 0 } : undefined}
       viewport={{ margin: '-50px' }}
       transition={{ duration: 0.6, delay: 0.4, type: 'spring', stiffness: 100 }}
       className="mt-12 mb-8 relative overflow-hidden"
@@ -836,7 +842,7 @@ const ApplySection = memo(function ApplySection({
       <motion.div
         className="absolute inset-0 pointer-events-none"
         style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 70%)' }}
-        animate={{ opacity: isHovered ? 1 : 0 }}
+        animate={animationEnabled ? { opacity: isHovered ? 1 : 0 } : undefined}
         transition={{ duration: 0.3 }}
       />
 
@@ -844,14 +850,14 @@ const ApplySection = memo(function ApplySection({
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
           <div className="flex-1">
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={animationEnabled ? { opacity: 0, x: -20 } : undefined}
+              whileInView={animationEnabled ? { opacity: 1, x: 0 } : undefined}
               viewport={{ margin: '-50px' }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className="flex items-center gap-3 mb-4"
             >
               <motion.div
-                whileHover={{ scale: 1.1, rotate: 10 }}
+                whileHover={animationEnabled ? { scale: 1.1, rotate: 10 } : undefined}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 className="flex items-center justify-center w-12 h-12 relative overflow-hidden"
@@ -864,7 +870,7 @@ const ApplySection = memo(function ApplySection({
                 <motion.div
                   className="absolute inset-0"
                   style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
-                  animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] }}
+                  animate={animationEnabled ? { opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] } : undefined}
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 />
                 <Sparkles className="w-6 h-6 relative z-10" style={{ color: 'var(--accent-primary)' }} />
@@ -881,8 +887,8 @@ const ApplySection = memo(function ApplySection({
               </h2>
             </motion.div>
             <motion.p
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
+              initial={animationEnabled ? { opacity: 0 } : undefined}
+              whileInView={animationEnabled ? { opacity: 1 } : undefined}
               viewport={{ margin: '-50px' }}
               transition={{ delay: 0.3 }}
               className="mb-6"
@@ -891,8 +897,8 @@ const ApplySection = memo(function ApplySection({
               {applyInfo.description}
             </motion.p>
             <motion.ul
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
+              initial={animationEnabled ? { opacity: 0 } : undefined}
+              whileInView={animationEnabled ? { opacity: 1 } : undefined}
               viewport={{ margin: '-50px' }}
               transition={{ delay: 0.4 }}
               className="space-y-3"
@@ -900,15 +906,15 @@ const ApplySection = memo(function ApplySection({
               {applyInfo.requirements.map((req, index) => (
                 <motion.li
                   key={index}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={animationEnabled ? { opacity: 0, x: -10 } : undefined}
+                  whileInView={animationEnabled ? { opacity: 1, x: 0 } : undefined}
                   viewport={{ margin: '-50px' }}
                   transition={{ delay: 0.4 + index * 0.1 }}
                   className="flex items-center gap-3 text-sm font-medium"
                   style={{ color: 'var(--text-muted)' }}
                 >
                   <motion.div
-                    whileHover={{ scale: 1.2 }}
+                    whileHover={animationEnabled ? { scale: 1.2 } : undefined}
                     transition={{ type: 'spring', stiffness: 400 }}
                     className="w-2 h-2"
                     style={{ background: 'var(--accent-primary)', boxShadow: '0 0 6px var(--accent-primary)' }}
@@ -921,8 +927,8 @@ const ApplySection = memo(function ApplySection({
 
           <motion.button
             onClick={handleApplyClick}
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={animationEnabled ? { opacity: 0, scale: 0.9 } : undefined}
+            whileInView={animationEnabled ? { opacity: 1, scale: 1 } : undefined}
             viewport={{ margin: '-50px' }}
             transition={{ delay: 0.5, type: 'spring' }}
             onMouseEnter={() => setIsHovered(true)}
@@ -965,6 +971,7 @@ const RedirectModal = memo(function RedirectModal({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const animationEnabled = useAnimationEnabled();
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(3);
 
@@ -1007,16 +1014,16 @@ const RedirectModal = memo(function RedirectModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={animationEnabled ? { opacity: 0 } : undefined}
+        animate={animationEnabled ? { opacity: 1 } : undefined}
         exit={{ opacity: 0 }}
         className="absolute inset-0"
         style={{ background: 'rgba(0, 0, 0, 0.7)' }}
         onClick={onCancel}
       />
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
+        initial={animationEnabled ? { opacity: 0, scale: 0.9, y: 20 } : undefined}
+        animate={animationEnabled ? { opacity: 1, scale: 1, y: 0 } : undefined}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="relative w-full max-w-md p-6"
@@ -1109,7 +1116,7 @@ const RedirectModal = memo(function RedirectModal({
         <div className="flex gap-3">
           <motion.button
             onClick={onCancel}
-            whileHover={{ scale: 1.02 }}
+            whileHover={animationEnabled ? { scale: 1.02 } : undefined}
             whileTap={{ scale: 0.98 }}
             className="flex-1 px-4 py-2 font-medium transition-all"
             style={{
@@ -1123,7 +1130,7 @@ const RedirectModal = memo(function RedirectModal({
           </motion.button>
           <motion.button
             onClick={onConfirm}
-            whileHover={{ scale: 1.02 }}
+            whileHover={animationEnabled ? { scale: 1.02 } : undefined}
             whileTap={{ scale: 0.98 }}
             className="flex-1 px-4 py-2 font-medium transition-all"
             style={{
@@ -1150,6 +1157,7 @@ export default function FriendsPage() {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [mailtoModalOpen, setMailtoModalOpen] = useState(false);
   const isMobile = useMobile();
+  const animationEnabled = useAnimationEnabled();
 
   const handleFriendClick = useCallback((friend: Friend) => {
     setSelectedFriend(friend);
@@ -1295,21 +1303,21 @@ export default function FriendsPage() {
           {/* Featured Friends - 显示 featured=true 的友链 */}
           {data.friends.some(f => f.featured) && (
             <motion.section
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={animationEnabled ? { opacity: 0, y: 50 } : undefined}
+              whileInView={animationEnabled ? { opacity: 1, y: 0 } : undefined}
               viewport={{ margin: '-50px' }}
               transition={{ duration: 0.6, delay: 0.1, type: 'spring', stiffness: 100 }}
               className="mb-20"
             >
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={animationEnabled ? { opacity: 0, x: -30 } : undefined}
+                whileInView={animationEnabled ? { opacity: 1, x: 0 } : undefined}
                 viewport={{ margin: '-50px' }}
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="flex items-center gap-3 mb-10"
               >
                 <motion.div
-                  whileHover={{ scale: 1.1, rotate: 10 }}
+                  whileHover={animationEnabled ? { scale: 1.1, rotate: 10 } : undefined}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   className="flex items-center justify-center w-12 h-12 relative overflow-hidden"
@@ -1322,7 +1330,7 @@ export default function FriendsPage() {
                   <motion.div
                     className="absolute inset-0"
                     style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
-                    animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] }}
+                    animate={animationEnabled ? { opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] } : undefined}
                     transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                   />
                   <Star className="w-6 h-6 relative z-10" style={{ color: 'var(--accent-primary)' }} />

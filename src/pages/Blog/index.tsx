@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Grid, List, X, ChevronLeft, ChevronRight, BarChart3, BookOpen, Calendar, Tag, Sparkles } from 'lucide-react';
 import { AmbientGlow, GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
-import { useMobile } from '@/hooks';
+import { useMobile, useAnimationEnabled } from '@/hooks';
 import type { SiteData } from '@/types';
 
 import { BlogCard } from './components/BlogCard';
@@ -44,33 +44,38 @@ function GlassCard({
   accentColor?: string;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const animationEnabled = useAnimationEnabled();
 
   return (
     <motion.div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      whileHover={{ scale: hoverScale, y: -3 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
+      whileHover={animationEnabled ? { scale: hoverScale, y: -3 } : undefined}
+      transition={animationEnabled ? { duration: 0.25, ease: 'easeOut' } : undefined}
       className={`relative ${className}`}
     >
       {/* 玻璃反光层 */}
-      <div
-        className="absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-300"
-        style={{
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 40%, transparent 60%)',
-          opacity: isHovered ? 1 : 0.6,
-        }}
-      />
+      {animationEnabled && (
+        <div
+          className="absolute inset-0 rounded-2xl pointer-events-none transition-opacity duration-300"
+          style={{
+            background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 40%, transparent 60%)',
+            opacity: isHovered ? 1 : 0.6,
+          }}
+        />
+      )}
       {/* 悬浮边缘发光 */}
-      <div
-        className="absolute -inset-[1px] rounded-2xl transition-all duration-300"
-        style={{
-          background: `linear-gradient(135deg, ${accentColor}60, transparent 50%)`,
-          opacity: isHovered ? 0.4 : 0,
-          filter: 'blur(4px)',
-          zIndex: -1,
-        }}
-      />
+      {animationEnabled && (
+        <div
+          className="absolute -inset-[1px] rounded-2xl transition-all duration-300"
+          style={{
+            background: `linear-gradient(135deg, ${accentColor}60, transparent 50%)`,
+            opacity: isHovered ? 0.4 : 0,
+            filter: 'blur(4px)',
+            zIndex: -1,
+          }}
+        />
+      )}
       <div className="relative h-full">{children}</div>
     </motion.div>
   );
@@ -91,13 +96,14 @@ function StatCard({
   delay?: number;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const animationEnabled = useAnimationEnabled();
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.4 + delay * 0.1, duration: 0.5 }}
-      whileHover={{ scale: 1.05, y: -4 }}
+      initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+      animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
+      transition={animationEnabled ? { delay: 0.4 + delay * 0.1, duration: 0.5 } : undefined}
+      whileHover={animationEnabled ? { scale: 1.05, y: -4 } : undefined}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="relative p-6 text-center cursor-default group"
@@ -108,13 +114,15 @@ function StatCard({
       }}
     >
       {/* Hover glow */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isHovered ? 0.5 : 0 }}
-        transition={{ duration: 0.3 }}
-      />
+      {animationEnabled && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isHovered ? 0.5 : 0 }}
+          transition={{ duration: 0.3 }}
+        />
+      )}
       <Icon className="w-6 h-6 mx-auto mb-3" style={{ color }} />
       <div className="font-sans font-bold text-3xl mb-1" style={{ color: 'var(--text-primary)' }}>
         {value}
@@ -128,6 +136,7 @@ export default function BlogIndex() {
   const [data, setData] = useState<BlogIndex | null>(null);
   const [loading, setLoading] = useState(true);
   const isMobile = useMobile();
+  const animationEnabled = useAnimationEnabled();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -301,9 +310,9 @@ export default function BlogIndex() {
         <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-32 lg:pt-36 pb-12">
           {/* 顶部工具栏 - 固定定位 */}
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            initial={animationEnabled ? { opacity: 0, y: -20 } : undefined}
+            animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
+            transition={animationEnabled ? { duration: 0.5 } : undefined}
             className="fixed top-16 lg:top-20 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8 py-3"
             style={{
               background: 'linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) 80%, transparent 100%)'
@@ -393,14 +402,14 @@ export default function BlogIndex() {
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* 左侧：标题和描述 */}
               <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, type: 'spring', stiffness: 100 }}
+                initial={animationEnabled ? { opacity: 0, x: -50 } : undefined}
+                animate={animationEnabled ? { opacity: 1, x: 0 } : undefined}
+                transition={animationEnabled ? { duration: 0.8, type: 'spring', stiffness: 100 } : undefined}
               >
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2, duration: 0.5 }}
+                  initial={animationEnabled ? { opacity: 0, scale: 0.9 } : undefined}
+                  animate={animationEnabled ? { opacity: 1, scale: 1 } : undefined}
+                  transition={animationEnabled ? { delay: 0.2, duration: 0.5 } : undefined}
                   className="inline-flex items-center gap-2 px-4 py-2 mb-6"
                   style={{
                     background: 'rgba(59, 130, 246, 0.1)',
@@ -424,9 +433,9 @@ export default function BlogIndex() {
                 </h1>
 
                 <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
+                  initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+                  animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
+                  transition={animationEnabled ? { delay: 0.3, duration: 0.5 } : undefined}
                   className="text-lg md:text-xl leading-relaxed max-w-xl"
                   style={{ color: 'var(--text-muted)' }}
                 >
@@ -436,9 +445,9 @@ export default function BlogIndex() {
 
               {/* 右侧：统计卡片 */}
               <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: 0.2, type: 'spring', stiffness: 100 }}
+                initial={animationEnabled ? { opacity: 0, x: 50 } : undefined}
+                animate={animationEnabled ? { opacity: 1, x: 0 } : undefined}
+                transition={animationEnabled ? { duration: 0.8, delay: 0.2, type: 'spring', stiffness: 100 } : undefined}
                 className="grid grid-cols-3 gap-4"
               >
                 <StatCard
@@ -469,16 +478,16 @@ export default function BlogIndex() {
           {/* 精选文章 - Bento Grid 风格 */}
           {featuredPosts.length > 0 && (
             <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              initial={animationEnabled ? { opacity: 0, y: 30 } : undefined}
+              animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
+              transition={animationEnabled ? { duration: 0.6, delay: 0.4 } : undefined}
               className="mb-16"
             >
               <div className="flex items-center gap-4 mb-8">
                 <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  whileHover={animationEnabled ? { scale: 1.1, rotate: 5 } : undefined}
+                  whileTap={animationEnabled ? { scale: 0.95 } : undefined}
+                  transition={animationEnabled ? { type: 'spring', stiffness: 300, damping: 20 } : undefined}
                   className="flex items-center justify-center w-12 h-12 relative overflow-hidden"
                   style={{
                     background: 'rgba(255, 255, 255, 0.03)',
@@ -486,12 +495,14 @@ export default function BlogIndex() {
                     clipPath: clipPathRounded(6),
                   }}
                 >
-                  <motion.div
-                    className="absolute inset-0"
-                    style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
-                    animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  />
+                  {animationEnabled && (
+                    <motion.div
+                      className="absolute inset-0"
+                      style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
+                      animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  )}
                   <Sparkles className="w-6 h-6 relative z-10" style={{ color: 'var(--accent-primary)' }} />
                 </motion.div>
                 <div>
@@ -545,15 +556,15 @@ export default function BlogIndex() {
           {/* 全部文章 */}
           {sortedYears.length > 0 && (
             <motion.section
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
+              initial={animationEnabled ? { opacity: 0, y: 30 } : undefined}
+              animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
+              transition={animationEnabled ? { duration: 0.6, delay: 0.5 } : undefined}
             >
               <div className="flex items-center gap-4 mb-8">
                 <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  whileHover={animationEnabled ? { scale: 1.1, rotate: 5 } : undefined}
+                  whileTap={animationEnabled ? { scale: 0.95 } : undefined}
+                  transition={animationEnabled ? { type: 'spring', stiffness: 300, damping: 20 } : undefined}
                   className="flex items-center justify-center w-12 h-12 relative overflow-hidden"
                   style={{
                     background: 'rgba(255, 255, 255, 0.03)',
@@ -561,12 +572,14 @@ export default function BlogIndex() {
                     clipPath: clipPathRounded(6),
                   }}
                 >
-                  <motion.div
-                    className="absolute inset-0"
-                    style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
-                    animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  />
+                  {animationEnabled && (
+                    <motion.div
+                      className="absolute inset-0"
+                      style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
+                      animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  )}
                   <BookOpen className="w-6 h-6 relative z-10" style={{ color: 'var(--accent-secondary)' }} />
                 </motion.div>
                 <div>
@@ -604,10 +617,10 @@ export default function BlogIndex() {
                       return (
                         <motion.div
                           key={year}
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true, margin: '-50px' }}
-                          transition={{ duration: 0.5, delay: yearIndex * 0.1 }}
+                          initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+                          whileInView={animationEnabled ? { opacity: 1, y: 0 } : undefined}
+                          viewport={animationEnabled ? { once: true, margin: '-50px' } : undefined}
+                          transition={animationEnabled ? { duration: 0.5, delay: yearIndex * 0.1 } : undefined}
                         >
                           {/* 年份标题 */}
                           <div className="flex items-center gap-3 mb-6">
@@ -715,8 +728,8 @@ export default function BlogIndex() {
           {/* 无结果 */}
           {filteredRegularPosts.length === 0 && !regularPostsLoading && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={animationEnabled ? { opacity: 0 } : undefined}
+              animate={animationEnabled ? { opacity: 1 } : undefined}
               className="text-center py-20"
               style={{ color: 'var(--text-muted)' }}
             >
@@ -726,28 +739,29 @@ export default function BlogIndex() {
         </main>
 
         {/* 统计弹窗 */}
-        <AnimatePresence>
-          {showStats && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              style={{ background: 'rgba(0, 0, 0, 0.8)' }}
-              onClick={() => setShowStats(false)}
-            >
+        {animationEnabled ? (
+          <AnimatePresence>
+            {showStats && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-4xl max-h-[80vh] overflow-auto p-6 relative"
-                style={{
-                  background: 'var(--bg-card)',
-                  border: '2px solid var(--border-subtle)',
-                  clipPath: clipPathRounded(12),
-                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                style={{ background: 'rgba(0, 0, 0, 0.8)' }}
+                onClick={() => setShowStats(false)}
               >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="w-full max-w-4xl max-h-[80vh] overflow-auto p-6 relative"
+                  style={{
+                    background: 'var(--bg-card)',
+                    border: '2px solid var(--border-subtle)',
+                    clipPath: clipPathRounded(12),
+                  }}
+                >
                 <button
                   onClick={() => setShowStats(false)}
                   className="absolute top-4 right-4 p-2 transition-all duration-200 hover:scale-105"
@@ -813,6 +827,94 @@ export default function BlogIndex() {
             </motion.div>
           )}
         </AnimatePresence>
+        ) : (
+          showStats && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              style={{ background: 'rgba(0, 0, 0, 0.8)' }}
+              onClick={() => setShowStats(false)}
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-4xl max-h-[80vh] overflow-auto p-6 relative"
+                style={{
+                  background: 'var(--bg-card)',
+                  border: '2px solid var(--border-subtle)',
+                  clipPath: clipPathRounded(12),
+                }}
+              >
+                <button
+                  onClick={() => setShowStats(false)}
+                  className="absolute top-4 right-4 p-2 transition-all duration-200 hover:scale-105"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    color: 'var(--text-primary)',
+                    clipPath: clipPathRounded(4),
+                  }}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="space-y-8">
+                  <div>
+                    <h2 className="font-sans font-bold text-2xl mb-4" style={{ color: 'var(--text-primary)' }}>
+                      博客统计
+                    </h2>
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {[
+                        { value: data?.posts.length || 0, label: '精选文章', color: 'var(--accent-primary)' },
+                        { value: regularPosts?.length || 0, label: '普通文章', color: 'var(--accent-secondary)' },
+                        { value: tagsData?.total || 0, label: '标签总数', color: '#22c55e' },
+                        { value: archiveData?.months.length || 0, label: '归档月份', color: 'var(--text-primary)' },
+                      ].map((stat) => (
+                        <div
+                          key={stat.label}
+                          className="p-4 text-center"
+                          style={{
+                            background: 'var(--bg-secondary)',
+                            border: '1px solid var(--border-subtle)',
+                            clipPath: clipPathRounded(6),
+                          }}
+                        >
+                          <div className="text-3xl font-bold mb-1 font-sans font-bold" style={{ color: stat.color }}>
+                            {stat.value}
+                          </div>
+                          <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                            {stat.label}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-sans font-bold text-xl mb-4">
+                      <span
+                        className="bg-clip-text text-transparent font-sans font-black"
+                        style={{
+                          backgroundImage: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                        }}
+                      >
+                        标签词云
+                      </span>
+                    </h3>
+                    {tagsData ? (
+                      <BlogTagCloud tags={tagsData.tags} selectedTag={null} onSelectTag={() => {}} />
+                    ) : (
+                      <div className="flex items-center justify-center py-20">
+                        <div
+                          className="w-8 h-8 border-2 border-t-transparent animate-spin"
+                          style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        )}
 
         {/* Footer */}
         {footerData && <Footer data={footerData} />}

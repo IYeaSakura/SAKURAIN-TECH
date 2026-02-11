@@ -13,6 +13,9 @@ export { useWindowSize, useIsMobile, useIsTablet, useIsDesktop } from './useWind
 // use-mobile hook 导出的是 useIsMobile
 export { useIsMobile as useMobile } from './use-mobile';
 
+// 动画控制 hook
+export { useAnimationEnabled } from './useAnimationEnabled';
+
 // 主题相关 hooks
 export { useTheme } from './useTheme';
 
