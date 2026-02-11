@@ -69,6 +69,38 @@ function formatDate(dateStr) {
   };
 }
 
+function getLatestNoteDate() {
+  try {
+    const archivePath = path.join(process.cwd(), 'public/notes', 'archive.json');
+    if (!fs.existsSync(archivePath)) {
+      return null;
+    }
+
+    const archiveData = JSON.parse(fs.readFileSync(archivePath, 'utf-8'));
+    const months = archiveData.months || [];
+
+    let latestDate = null;
+
+    for (const month of months) {
+      const monthPath = path.join(OUTPUT_DIR, `index-${month}.json`);
+      if (fs.existsSync(monthPath)) {
+        const monthNotes = JSON.parse(fs.readFileSync(monthPath, 'utf-8'));
+        if (monthNotes.length > 0) {
+          const monthLatest = new Date(monthNotes[0].date);
+          if (!latestDate || monthLatest > latestDate) {
+            latestDate = monthLatest;
+          }
+        }
+      }
+    }
+
+    return latestDate;
+  } catch (error) {
+    console.warn('Failed to get latest note date:', error.message);
+    return null;
+  }
+}
+
 async function generateNotesArchive() {
   try {
     if (!fs.existsSync(POSTS_DIR)) {
@@ -89,8 +121,16 @@ async function generateNotesArchive() {
       return;
     }
 
+    const latestDate = getLatestNoteDate();
+    if (latestDate) {
+      console.log(`Latest note date in archive: ${latestDate.toISOString()}`);
+    } else {
+      console.log('No existing archive found, processing all notes.');
+    }
+
     const notes = [];
     const archive = {};
+    let skippedCount = 0;
 
     for (const file of files) {
       const filePath = path.join(POSTS_DIR, file);
@@ -99,6 +139,13 @@ async function generateNotesArchive() {
 
       if (!parsed || !parsed.date) {
         console.warn(`Skipping ${file}: missing date`);
+        continue;
+      }
+
+      const noteDate = new Date(parsed.date);
+
+      if (latestDate && noteDate <= latestDate) {
+        skippedCount++;
         continue;
       }
 
@@ -122,6 +169,12 @@ async function generateNotesArchive() {
       archive[yearMonth].push(note);
     }
 
+    if (notes.length === 0) {
+      console.log('No new notes to process.');
+      console.log(`Skipped ${skippedCount} existing notes.`);
+      return;
+    }
+
     const sortedNotes = notes.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     for (const yearMonth in archive) {
@@ -143,7 +196,8 @@ async function generateNotesArchive() {
     console.log(`Generated ${archivePath}`);
 
     console.log(`\nArchive generation completed!`);
-    console.log(`Total notes: ${notes.length}`);
+    console.log(`New notes processed: ${notes.length}`);
+    console.log(`Skipped existing notes: ${skippedCount}`);
     console.log(`Total months: ${months.length}`);
   } catch (error) {
     console.error('Failed to generate notes archive:', error);

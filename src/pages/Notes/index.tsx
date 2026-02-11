@@ -501,7 +501,7 @@ export default function NotesPage() {
                               )}
 
                               {/* 时间节点圆环 */}
-                              <div className="relative flex items-center justify-center">
+                              <div className="relative flex items-center justify-center" style={{ width: '48px', height: '48px' }}>
                                 {note.isFirstInDate ? (
                                   <>
                                     <motion.div
@@ -510,8 +510,6 @@ export default function NotesPage() {
                                         background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(34, 197, 94, 0.2))',
                                         border: '2px solid rgba(59, 130, 246, 0.5)',
                                         clipPath: clipPathRounded(4),
-                                        width: '48px',
-                                        height: '48px',
                                       }}
                                       whileHover={{ scale: 1.1 }}
                                     />
@@ -617,13 +615,15 @@ export default function NotesPage() {
                                 </div>
                               </>
                             ) : (
-                              <div
-                                className="w-2 h-2"
-                                style={{
-                                  background: 'var(--accent-primary)',
-                                  clipPath: clipPathRounded(2),
-                                }}
-                              />
+                              <div className="w-10 h-10 flex items-center justify-center">
+                                <div
+                                  className="w-2 h-2"
+                                  style={{
+                                    background: 'var(--accent-primary)',
+                                    clipPath: clipPathRounded(2),
+                                  }}
+                                />
+                              </div>
                             )}
                             <div
                               className="w-0.5 flex-1 min-h-[30px]"
