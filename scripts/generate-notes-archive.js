@@ -16,7 +16,7 @@ const MONTHS = [
 function parseMarkdown(content) {
   const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
   const match = content.match(frontmatterRegex);
-  
+
   if (!match) {
     return null;
   }
@@ -26,14 +26,14 @@ function parseMarkdown(content) {
 
   const frontmatter = {};
   const lines = frontmatterText.split('\n');
-  
+
   for (const line of lines) {
     const colonIndex = line.indexOf(':');
     if (colonIndex === -1) continue;
-    
+
     const key = line.slice(0, colonIndex).trim();
     const value = line.slice(colonIndex + 1).trim();
-    
+
     if (value.startsWith('[') && value.endsWith(']')) {
       frontmatter[key] = value.slice(1, -1).split(',').map(v => v.trim().replace(/"/g, ''));
     } else {
@@ -55,7 +55,7 @@ function formatDate(dateStr) {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   const seconds = String(date.getSeconds()).padStart(2, '0');
-  
+
   return {
     year,
     month,
@@ -103,19 +103,27 @@ function getLatestNoteDate() {
 
 async function generateNotesArchive() {
   try {
-    if (!fs.existsSync(POSTS_DIR)) {
+    if(!fs.existsSync(POSTS_DIR)) {
       console.log('Notes posts directory not found. Creating...');
       fs.mkdirSync(POSTS_DIR, { recursive: true });
       console.log(`Created ${POSTS_DIR}`);
       return;
     }
 
-    if (!fs.existsSync(OUTPUT_DIR)) {
+    if (fs.existsSync(OUTPUT_DIR)) {
+      console.log('Cleaning up existing archives...');
+      const files = fs.readdirSync(OUTPUT_DIR);
+      for (const file of files) {
+        const filePath = path.join(OUTPUT_DIR, file);
+        fs.unlinkSync(filePath);
+      }
+      console.log(`Deleted ${files.length} archive files`);
+    } else {
       fs.mkdirSync(OUTPUT_DIR, { recursive: true });
     }
 
     const files = fs.readdirSync(POSTS_DIR).filter(file => file.endsWith('.md'));
-    
+
     if (files.length === 0) {
       console.log('No note files found.');
       return;
