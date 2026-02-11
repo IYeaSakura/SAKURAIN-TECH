@@ -199,6 +199,16 @@
       "category": "blogs",
       "featured": true,
       "unidirectional": true
+    },
+    {
+      "id": "chengshuo",
+      "name": "成烁BLOG",
+      "url": "https://blog.chengshuo.top",
+      "icon": "https://blog.chengshuo.top/usr/uploads/2025/08/1293883047.webp",
+      "description": "致一锦程 探索不停",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true
     }
   ],
   "lastUpdated": "2026-02-10T17:59:31.945Z"
