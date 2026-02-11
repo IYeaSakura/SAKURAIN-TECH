@@ -54,6 +54,7 @@ function formatDate(dateStr) {
   const day = String(date.getDate()).padStart(2, '0');
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
   
   return {
     year,
@@ -61,9 +62,10 @@ function formatDate(dateStr) {
     day,
     hours,
     minutes,
+    seconds,
     yearMonth: `${year}-${month}`,
     fullDate: `${year}-${month}-${day}`,
-    fullTime: `${hours}:${minutes}`
+    fullTime: `${hours}:${minutes}:${seconds}`
   };
 }
 
