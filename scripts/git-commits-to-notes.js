@@ -146,6 +146,11 @@ function main() {
   let invalid = 0;
 
   commits.forEach((commit, index) => {
+    if (commit.subject === 'NULL') {
+      skipped++;
+      return;
+    }
+
     const filename = formatDateToFilename(commit.date);
 
     if (!filename) {
