@@ -72,7 +72,7 @@ export default function NotesPage() {
 
         const allNotes: Note[] = [];
         const monthsToLoad = archive.months.slice(0, Math.ceil(NOTES_PER_LOAD / 10));
-        
+
         for (const month of monthsToLoad) {
           const monthResponse = await fetch(`/notes/archives/index-${month}.json`);
           if (monthResponse.ok) {
@@ -164,9 +164,8 @@ export default function NotesPage() {
     return Object.keys(groupedNotes).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
   }, [groupedNotes]);
 
-  // 统计数据 - 像素风格
   const stats = useMemo(() => [
-    { label: '说说总数', value: notes.length.toString(), icon: MessageCircle, color: 'var(--accent-primary)' },
+    { label: '日志总数', value: notes.length.toString(), icon: MessageCircle, color: 'var(--accent-primary)' },
     { label: '月份数', value: archiveData?.months.length.toString() || '0', icon: Calendar, color: 'var(--accent-secondary)' },
     { label: '心情分布', value: `${moodCounts.happy}/${moodCounts.neutral}/${moodCounts.sad}`, icon: BarChart3, color: '#22c55e' },
   ], [notes.length, archiveData?.months.length, moodCounts]);
@@ -177,8 +176,8 @@ export default function NotesPage() {
         <div className="flex flex-col items-center gap-4">
           <div
             className="w-12 h-12 border-2 border-t-transparent animate-spin"
-            style={{ 
-              borderColor: 'var(--accent-primary)', 
+            style={{
+              borderColor: 'var(--accent-primary)',
               borderTopColor: 'transparent',
               clipPath: clipPathRounded(6),
             }}
@@ -227,7 +226,7 @@ export default function NotesPage() {
                   }}
                 >
                   <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                  <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>随笔记录 · 心情分享</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>开发记录 · 心情分享</span>
                 </motion.div>
 
                 <motion.h1
@@ -236,7 +235,7 @@ export default function NotesPage() {
                   transition={{ duration: 0.6, delay: 0.1 }}
                   className="font-sans font-bold text-5xl lg:text-6xl mb-6"
                 >
-                  <GradientText animate={true}>说说</GradientText>
+                  <GradientText animate={true}>日志</GradientText>
                 </motion.h1>
 
                 <motion.p
@@ -246,7 +245,7 @@ export default function NotesPage() {
                   className="text-xl mb-8 max-w-xl"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  记录日常想法、随笔和有趣的发现，分享生活中的点滴感悟
+                  自动通过Git commit记录生成开发日志，并支持通过心情筛选。
                 </motion.p>
               </div>
 
@@ -278,7 +277,7 @@ export default function NotesPage() {
 
                       <div
                         className="w-12 h-12 flex items-center justify-center"
-                        style={{ 
+                        style={{
                           background: `${stat.color}20`,
                           clipPath: clipPathRounded(4),
                         }}
@@ -393,7 +392,7 @@ export default function NotesPage() {
               <div className="relative">
                 {/* 时间线中轴线 - 蓝绿渐变 */}
                 <div className="absolute inset-0 pointer-events-none hidden md:block">
-                  <div 
+                  <div
                     className="absolute top-0 left-1/2 w-px h-full -translate-x-1/2"
                     style={{
                       background: 'linear-gradient(to bottom, transparent, rgba(59, 130, 246, 0.5) 20%, rgba(34, 197, 94, 0.5) 80%, transparent)',
@@ -429,26 +428,26 @@ export default function NotesPage() {
                             {/* 中间时间节点 */}
                             <div className="absolute left-1/2 top-0 -translate-x-1/2 w-20 flex flex-col items-center">
                               {dateIndex > 0 && (
-                                <div 
+                                <div
                                   className="absolute bottom-full left-1/2 -translate-x-1/2 w-0.5 h-8"
-                                  style={{ 
-                                    background: 'linear-gradient(to top, rgba(59, 130, 246, 0.5), transparent)' 
+                                  style={{
+                                    background: 'linear-gradient(to top, rgba(59, 130, 246, 0.5), transparent)'
                                   }}
                                 />
                               )}
 
                               {/* 时间节点圆环 - 像素风格 */}
                               <div className="relative w-14 h-14 flex items-center justify-center">
-                                <motion.div 
+                                <motion.div
                                   className="absolute inset-0"
-                                  style={{ 
+                                  style={{
                                     background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(34, 197, 94, 0.2))',
                                     border: '2px solid rgba(59, 130, 246, 0.5)',
                                     clipPath: clipPathRounded(4),
                                   }}
                                   whileHover={{ scale: 1.1 }}
                                 />
-                                <div 
+                                <div
                                   className="w-10 h-10 flex items-center justify-center"
                                   style={{
                                     background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
@@ -459,9 +458,8 @@ export default function NotesPage() {
                                 </div>
                               </div>
 
-                              {/* 日期标签 */}
-                              <div 
-                                className="mt-3 px-3 py-1 text-xs font-medium"
+                              <div
+                                className="mt-3 px-3 py-1 text-xs font-medium whitespace-nowrap"
                                 style={{
                                   background: 'rgba(255, 255, 255, 0.05)',
                                   border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -472,11 +470,11 @@ export default function NotesPage() {
                                 {date}
                               </div>
 
-                              <div 
+                              <div
                                 className="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-full"
-                                style={{ 
+                                style={{
                                   background: 'linear-gradient(to bottom, rgba(34, 197, 94, 0.5), transparent)',
-                                  maxHeight: '60px' 
+                                  maxHeight: '60px'
                                 }}
                               />
                             </div>
@@ -503,17 +501,17 @@ export default function NotesPage() {
                         <div className="md:hidden flex gap-4">
                           <div className="flex flex-col items-center">
                             <div className="relative w-12 h-12 flex items-center justify-center">
-                              <div 
+                              <div
                                 className="absolute inset-0"
-                                style={{ 
-                                  background: 'rgba(59, 130, 246, 0.2)', 
+                                style={{
+                                  background: 'rgba(59, 130, 246, 0.2)',
                                   border: '2px solid rgba(59, 130, 246, 0.5)',
                                   clipPath: clipPathRounded(3),
                                 }}
                               />
-                              <div 
+                              <div
                                 className="w-8 h-8 flex items-center justify-center"
-                                style={{ 
+                                style={{
                                   background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
                                   clipPath: clipPathRounded(2),
                                 }}
@@ -521,16 +519,16 @@ export default function NotesPage() {
                                 <Heart className="w-4 h-4 text-white" />
                               </div>
                             </div>
-                            <div 
+                            <div
                               className="mt-2 px-2 py-0.5 text-xs font-medium"
-                              style={{ color: 'var(--accent-secondary)' }}
+                              style={{ color: 'var(--accent-secondary)' }} whitespace-nowrap
                             >
                               {date}
                             </div>
-                            <div 
+                            <div
                               className="w-0.5 flex-1 min-h-[40px]"
-                              style={{ 
-                                background: 'linear-gradient(to bottom, rgba(59, 130, 246, 0.5), transparent)' 
+                              style={{
+                                background: 'linear-gradient(to bottom, rgba(59, 130, 246, 0.5), transparent)'
                               }}
                             />
                           </div>
@@ -610,7 +608,7 @@ const NoteCard = ({ note, index, align }: {
       className="relative mb-4 last:mb-0 group cursor-pointer"
     >
       {/* 像素风格卡片 */}
-      <div 
+      <div
         className="relative p-5 overflow-hidden transition-all duration-300"
         style={{
           background: isHovered ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)',
