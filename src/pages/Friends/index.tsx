@@ -81,6 +81,7 @@ const PixelCard = memo(function PixelCard({
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
   const animationEnabled = useAnimationEnabled();
+  const isMobile = useMobile();
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -148,106 +149,110 @@ const PixelCard = memo(function PixelCard({
       >
         {/* 内容容器 - 使用 padding 而不是 margin，确保边框完整显示 */}
         <div className="relative p-6 h-full flex flex-col">
-        {/* 高级感动画边框光效 - 四角 */}
-        <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
-          <motion.div
-            key={`tl-h-${isHovered}`}
-            className="absolute top-0 left-0 w-full h-[2px]"
-            style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
-            animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-          />
-          {isHovered && (
-            <motion.div
-              key={`tl-v-${isHovered}`}
-              className="absolute top-0 left-0 w-[2px] h-full"
-              style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
-              animate={animationEnabled ? { opacity: 1 } : undefined}
-              transition={{ duration: 0.3 }}
-            />
-          )}
-        </div>
-        <div className="absolute top-0 right-0 w-4 h-4 pointer-events-none">
-          <motion.div
-            key={`tr-h-${isHovered}`}
-            className="absolute top-0 right-0 w-full h-[2px]"
-            style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
-            animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-          />
-          {isHovered && (
-            <motion.div
-              key={`tr-v-${isHovered}`}
-              className="absolute top-0 right-0 w-[2px] h-full"
-              style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
-              animate={animationEnabled ? { opacity: 1 } : undefined}
-              transition={{ duration: 0.3 }}
-            />
-          )}
-        </div>
-        <div className="absolute bottom-0 left-0 w-4 h-4 pointer-events-none">
-          <motion.div
-            key={`bl-h-${isHovered}`}
-            className="absolute bottom-0 left-0 w-full h-[2px]"
-            style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
-            animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-          />
-          {isHovered && (
-            <motion.div
-              key={`bl-v-${isHovered}`}
-              className="absolute bottom-0 left-0 w-[2px] h-full"
-              style={{ background: 'linear-gradient(to top, var(--accent-secondary), transparent)' }}
-              animate={animationEnabled ? { opacity: 1 } : undefined}
-              transition={{ duration: 0.3 }}
-            />
-          )}
-        </div>
-        <div className="absolute bottom-0 right-0 w-4 h-4 pointer-events-none">
-          <motion.div
-            key={`br-h-${isHovered}`}
-            className="absolute bottom-0 right-0 w-full h-[2px]"
-            style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
-            animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-          />
-          {isHovered && (
-            <motion.div
-              key={`br-v-${isHovered}`}
-              className="absolute bottom-0 right-0 w-[2px] h-full"
-              style={{ background: 'linear-gradient(to top, var(--accent-primary), transparent)' }}
-              animate={animationEnabled ? { opacity: 1 } : undefined}
-              transition={{ duration: 0.3 }}
-            />
-          )}
-        </div>
+        {!isMobile && (
+          <>
+            <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
+              <motion.div
+                key={`tl-h-${isHovered}`}
+                className="absolute top-0 left-0 w-full h-[2px]"
+                style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
+                animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              />
+              {isHovered && (
+                <motion.div
+                  key={`tl-v-${isHovered}`}
+                  className="absolute top-0 left-0 w-[2px] h-full"
+                  style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
+                  animate={animationEnabled ? { opacity: 1 } : undefined}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+            </div>
+            <div className="absolute top-0 right-0 w-4 h-4 pointer-events-none">
+              <motion.div
+                key={`tr-h-${isHovered}`}
+                className="absolute top-0 right-0 w-full h-[2px]"
+                style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
+                animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              />
+              {isHovered && (
+                <motion.div
+                  key={`tr-v-${isHovered}`}
+                  className="absolute top-0 right-0 w-[2px] h-full"
+                  style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
+                  animate={animationEnabled ? { opacity: 1 } : undefined}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+            </div>
+            <div className="absolute bottom-0 left-0 w-4 h-4 pointer-events-none">
+              <motion.div
+                key={`bl-h-${isHovered}`}
+                className="absolute bottom-0 left-0 w-full h-[2px]"
+                style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
+                animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              />
+              {isHovered && (
+                <motion.div
+                  key={`bl-v-${isHovered}`}
+                  className="absolute bottom-0 left-0 w-[2px] h-full"
+                  style={{ background: 'linear-gradient(to top, var(--accent-secondary), transparent)' }}
+                  animate={animationEnabled ? { opacity: 1 } : undefined}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+            </div>
+            <div className="absolute bottom-0 right-0 w-4 h-4 pointer-events-none">
+              <motion.div
+                key={`br-h-${isHovered}`}
+                className="absolute bottom-0 right-0 w-full h-[2px]"
+                style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
+                animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              />
+              {isHovered && (
+                <motion.div
+                  key={`br-v-${isHovered}`}
+                  className="absolute bottom-0 right-0 w-[2px] h-full"
+                  style={{ background: 'linear-gradient(to top, var(--accent-primary), transparent)' }}
+                  animate={animationEnabled ? { opacity: 1 } : undefined}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+            </div>
+          </>
+        )}
 
-        {/* Hover glow background */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
-          animate={animationEnabled ? { opacity: isHovered ? 1 : 0 } : undefined}
-          transition={{ duration: 0.3 }}
-        />
+        {!isMobile && (
+          <>
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
+              animate={animationEnabled ? { opacity: isHovered ? 1 : 0 } : undefined}
+              transition={{ duration: 0.3 }}
+            />
 
-        {/* Scanline effect */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px)',
-            opacity: isHovered ? 0.5 : 0,
-          }}
-        />
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px)',
+                opacity: isHovered ? 0.5 : 0,
+              }}
+            />
 
-        {/* Shine effect */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 55%, transparent 60%)',
-          }}
-          animate={isHovered ? { x: '200%' } : { x: '-100%' }}
-          transition={{ duration: 0.8 }}
-        />
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 55%, transparent 60%)',
+              }}
+              animate={isHovered ? { x: '200%' } : { x: '-100%' }}
+              transition={{ duration: 0.8 }}
+            />
+          </>
+        )}
 
         {/* Content - 使用 flex-1 确保内容区填满剩余空间 */}
         <div className="flex items-start gap-4 relative z-10 flex-1">
@@ -273,13 +278,14 @@ const PixelCard = memo(function PixelCard({
               <Globe className="w-10 h-10" style={{ color: 'var(--accent-primary)' }} />
             )}
 
-            {/* Icon glow */}
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
-              animate={animationEnabled ? { opacity: isHovered ? 0.5 : 0 } : undefined}
-              transition={{ duration: 0.3 }}
-            />
+            {!isMobile && (
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
+                animate={animationEnabled ? { opacity: isHovered ? 0.5 : 0 } : undefined}
+                transition={{ duration: 0.3 }}
+              />
+            )}
           </motion.div>
 
           {/* Content */}
@@ -294,7 +300,7 @@ const PixelCard = memo(function PixelCard({
                   className="font-bold text-lg truncate"
                   style={{
                     color: 'var(--text-primary)',
-                    textShadow: isHovered ? '0 0 10px var(--accent-glow)' : 'none',
+                    textShadow: !isMobile && isHovered ? '0 0 10px var(--accent-glow)' : 'none',
                     maxWidth: '100%',
                   }}
                 >
@@ -417,6 +423,7 @@ const CategorySection = memo(function CategorySection({
   onClick: (friend: Friend) => void;
 }) {
   const animationEnabled = useAnimationEnabled();
+  const isMobile = useMobile();
   const IconComponent = iconMap[category.icon] || Globe;
 
   return (
@@ -446,13 +453,14 @@ const CategorySection = memo(function CategorySection({
             clipPath: clipPathRounded(6),
           }}
         >
-          {/* Glow effect */}
-          <motion.div
-            className="absolute inset-0"
-            style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
-            animate={animationEnabled ? { opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] } : undefined}
-            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          />
+          {!isMobile && (
+            <motion.div
+              className="absolute inset-0"
+              style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
+              animate={animationEnabled ? { opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] } : undefined}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          )}
           <IconComponent className="w-7 h-7 relative z-10" style={{ color: 'var(--accent-primary)' }} />
         </motion.div>
         <div>
@@ -509,15 +517,17 @@ const HeroSection = memo(function HeroSection({
   lastUpdated?: string;
 }) {
   const animationEnabled = useAnimationEnabled();
+  const isMobile = useMobile();
   return (
     <section className="relative pt-20 pb-16 overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute top-20 right-20 w-64 h-64 opacity-20"
-          style={{ background: 'radial-gradient(circle, var(--accent-glow), transparent 70%)' }}
-        />
-      </div>
+      {!isMobile && (
+        <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute top-20 right-20 w-64 h-64 opacity-20"
+            style={{ background: 'radial-gradient(circle, var(--accent-glow), transparent 70%)' }}
+          />
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -605,14 +615,15 @@ const HeroSection = memo(function HeroSection({
                   clipPath: clipPathRounded(6),
                 }}
               >
-                {/* Hover glow */}
-                <motion.div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
-                  initial={animationEnabled ? { opacity: 0 } : undefined}
-                  whileHover={animationEnabled ? { opacity: 0.5 } : undefined}
-                  transition={{ duration: 0.3 }}
-                />
+                {!isMobile && (
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
+                    initial={animationEnabled ? { opacity: 0 } : undefined}
+                    whileHover={animationEnabled ? { opacity: 0.5 } : undefined}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
 
                 <stat.icon className="w-6 h-6 mx-auto mb-3" style={{ color: 'var(--accent-primary)' }} />
                 <div className="font-sans font-bold text-3xl mb-1" style={{ color: 'var(--text-primary)' }}>
@@ -812,6 +823,7 @@ const ApplySection = memo(function ApplySection({
   onApplyClick: () => void;
 }) {
   const animationEnabled = useAnimationEnabled();
+  const isMobile = useMobile();
   const [isHovered, setIsHovered] = useState(false);
 
   const handleApplyClick = useCallback(() => {
@@ -838,13 +850,14 @@ const ApplySection = memo(function ApplySection({
         clipPath: clipPathRounded(12),
       }}
     >
-      {/* Glow background */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 70%)' }}
-        animate={animationEnabled ? { opacity: isHovered ? 1 : 0 } : undefined}
-        transition={{ duration: 0.3 }}
-      />
+      {!isMobile && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 70%)' }}
+          animate={animationEnabled ? { opacity: isHovered ? 1 : 0 } : undefined}
+          transition={{ duration: 0.3 }}
+        />
+      )}
 
       <div className="p-8 md:p-12 relative z-10">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
@@ -867,12 +880,14 @@ const ApplySection = memo(function ApplySection({
                   clipPath: clipPathRounded(4),
                 }}
               >
-                <motion.div
-                  className="absolute inset-0"
-                  style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
-                  animate={animationEnabled ? { opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] } : undefined}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                />
+                {!isMobile && (
+                  <motion.div
+                    className="absolute inset-0"
+                    style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
+                    animate={animationEnabled ? { opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] } : undefined}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                )}
                 <Sparkles className="w-6 h-6 relative z-10" style={{ color: 'var(--accent-primary)' }} />
               </motion.div>
               <h2
@@ -939,17 +954,18 @@ const ApplySection = memo(function ApplySection({
               color: 'white',
               border: `2px solid ${isHovered ? 'transparent' : 'var(--accent-primary)'}`,
               clipPath: clipPathRounded(6),
-              boxShadow: isHovered ? '0 0 30px var(--accent-glow)' : 'none',
+              boxShadow: !isMobile && isHovered ? '0 0 30px var(--accent-glow)' : 'none',
               transform: isHovered ? 'translateY(-2px)' : 'none',
             }}
           >
-            {/* Shine effect */}
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}
-              animate={isHovered ? { x: '200%' } : { x: '-100%' }}
-              transition={{ duration: 0.6 }}
-            />
+            {!isMobile && (
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}
+                animate={isHovered ? { x: '200%' } : { x: '-100%' }}
+                transition={{ duration: 0.6 }}
+              />
+            )}
             <Mail className="w-5 h-5 relative z-10" />
             <span className="relative z-10">申请友链</span>
           </motion.button>
@@ -1272,22 +1288,24 @@ export default function FriendsPage() {
 
   return (
     <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      {/* 统一背景特效 */}
-      <div className="fixed inset-0 pointer-events-none">
-        <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
-        <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
-        <AmbientGlow color="var(--accent-primary)" opacity={0.08} position="center" size={600} />
+      {!isMobile && (
+        <div className="fixed inset-0 pointer-events-none">
+          <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
+          <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
+          <AmbientGlow color="var(--accent-primary)" opacity={0.08} position="center" size={600} />
+        </div>
+      )}
 
-        {/* 网格背景 */}
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255, 0.1) 1px, transparent 1px),
-                             linear-gradient(90deg, rgba(255,255,255, 0.1) 1px, transparent 1px)`,
-            backgroundSize: '80px 80px'
-          }}
-        />
-      </div>
+      {/* 网格背景 */}
+      <div
+        className="fixed inset-0 pointer-events-none opacity-[0.02]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255,255,255, 0.1) 1px, transparent 1px),
+                           linear-gradient(90deg, rgba(255,255,255, 0.1) 1px, transparent 1px)`,
+          background: 'var(--bg-primary)',
+          backgroundSize: '80px 80px'
+        }}
+      />
 
       {/* Main Content */}
       <main className="relative z-10">
@@ -1327,12 +1345,14 @@ export default function FriendsPage() {
                     clipPath: clipPathRounded(4),
                   }}
                 >
-                  <motion.div
-                    className="absolute inset-0"
-                    style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
-                    animate={animationEnabled ? { opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] } : undefined}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  />
+                  {!isMobile && (
+                    <motion.div
+                      className="absolute inset-0"
+                      style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
+                      animate={animationEnabled ? { opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] } : undefined}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    />
+                  )}
                   <Star className="w-6 h-6 relative z-10" style={{ color: 'var(--accent-primary)' }} />
                 </motion.div>
                 <h2
