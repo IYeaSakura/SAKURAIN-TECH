@@ -17,11 +17,10 @@ interface NavigationProps {
   isThemeTransitioning?: boolean;
 }
 
-// 移动端 Dock 导航项配置
 const dockItems = [
   { label: '首页', href: '/', icon: Home },
   { label: '博客', href: '/blog', icon: FileText },
-  { label: '说说', href: '/notes', icon: MessageCircle },
+  { label: '日志', href: '/notes', icon: MessageCircle },
   { label: '文档', href: '/docs', icon: BookOpen },
   { label: '友链', href: '/friends', icon: Heart },
   { label: '关于', href: '/about', icon: User, isCustom: true },
