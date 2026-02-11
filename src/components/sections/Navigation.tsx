@@ -192,55 +192,55 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
 
             {/* 桌面端主题切换按钮 */}
             <div className="hidden md:flex items-center gap-4 flex-shrink-0">
-              <button 
-                onClick={onThemeToggle} 
+              <button
+                onClick={onThemeToggle}
                 disabled={isThemeTransitioning}
                 className="relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95"
-                style={{ 
-                  background: 'var(--bg-secondary)', 
-                  border: '1px solid var(--border-color)', 
-                  color: 'var(--text-secondary)' 
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-secondary)'
                 }}
               >
                 <AnimatePresence mode="wait" initial={false}>
-                  <motion.div 
-                    key={theme} 
-                    initial={{ rotate: -90, opacity: 0 }} 
-                    animate={{ rotate: 0, opacity: 1 }} 
-                    exit={{ rotate: 90, opacity: 0 }} 
+                  <motion.div
+                    key={theme}
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
                     {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
                   </motion.div>
                 </AnimatePresence>
-                <span 
-                  className="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-2" 
-                  style={{ 
-                    background: theme === 'light' ? '#f59e0b' : '#6366f1', 
-                    borderColor: 'var(--bg-primary)' 
-                  }} 
+                <span
+                  className="absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-2"
+                  style={{
+                    background: theme === 'light' ? '#f59e0b' : '#6366f1',
+                    borderColor: 'var(--bg-primary)'
+                  }}
                 />
               </button>
             </div>
 
             {/* 移动端顶部按钮（仅主题切换，移除菜单按钮） */}
             <div className="flex items-center gap-1 sm:gap-2 md:hidden flex-shrink-0">
-              <button 
-                onClick={onThemeToggle} 
+              <button
+                onClick={onThemeToggle}
                 disabled={isThemeTransitioning}
                 className="relative p-2 rounded-lg sm:p-2.5 sm:rounded-xl transition-all duration-300 hover:scale-110 active:scale-95"
-                style={{ 
-                  background: 'var(--bg-secondary)', 
-                  border: '1px solid var(--border-color)', 
-                  color: 'var(--text-secondary)' 
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-secondary)'
                 }}
               >
                 <AnimatePresence mode="wait" initial={false}>
-                  <motion.div 
-                    key={theme} 
-                    initial={{ rotate: -90, opacity: 0 }} 
-                    animate={{ rotate: 0, opacity: 1 }} 
-                    exit={{ rotate: 90, opacity: 0 }} 
+                  <motion.div
+                    key={theme}
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
                     transition={{ duration: 0.2 }}
                   >
                     {theme === 'light' ? <Moon className="w-4 h-4 sm:w-5 sm:h-5" /> : <Sun className="w-4 h-4 sm:w-5 sm:h-5" />}
@@ -263,8 +263,8 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
         <div
           className="flex items-center justify-center gap-1 px-2 py-1.5 pb-[env(safe-area-inset-bottom,8px)]"
           style={{
-            background: theme === 'dark' 
-              ? 'rgba(30, 30, 30, 0.9)' 
+            background: theme === 'dark'
+              ? 'rgba(30, 30, 30, 0.9)'
               : 'rgba(255, 255, 255, 0.9)',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
@@ -280,7 +280,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
             const Icon = item.icon;
             const active = isActive(item.href);
             const isCustomIcon = (item as any).isCustom;
-            
+
             return (
               <button
                 key={item.href}
@@ -291,52 +291,52 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                 }}
               >
                 {/* 图标容器 */}
-                <div 
+                <div
                   className="relative flex items-center justify-center w-10 h-10 rounded-2xl transition-all duration-150"
                   style={{
                     background: 'transparent',
                   }}
                 >
                   {isCustomIcon ? (
-                    <svg 
-                      width="20" 
-                      height="20" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       className="w-5 h-5 transition-all duration-150"
                     >
-                      <path 
-                        d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" 
+                      <path
+                        d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
                         strokeWidth="2"
                         style={{
-                          stroke: active 
-                            ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C') 
+                          stroke: active
+                            ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C')
                             : 'var(--text-secondary)',
                         }}
                       />
-                      <circle 
-                        cx="12" 
-                        cy="7" 
-                        r="4" 
+                      <circle
+                        cx="12"
+                        cy="7"
+                        r="4"
                         strokeWidth="2"
                         style={{
-                          stroke: active 
-                            ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C') 
+                          stroke: active
+                            ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C')
                             : 'var(--text-secondary)',
                         }}
                       />
                     </svg>
                   ) : (
-                    <Icon 
+                    <Icon
                       className="w-5 h-5 transition-all duration-150"
                       style={{
-                        color: active 
-                          ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C') 
+                        color: active
+                          ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C')
                           : 'var(--text-secondary)',
-                        stroke: active 
-                          ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C') 
+                        stroke: active
+                          ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C')
                           : 'var(--text-secondary)',
                       }}
                       strokeWidth={2}
@@ -345,13 +345,13 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
                     />
                   )}
                 </div>
-                
+
                 {/* 标签文字 */}
-                <span 
+                <span
                   className="text-[10px] font-medium mt-1 transition-colors duration-150"
-                  style={{ 
-                    color: active 
-                      ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C') 
+                  style={{
+                    color: active
+                      ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C')
                       : 'var(--text-muted)',
                     fontFamily: 'var(--font-primary)',
                   }}

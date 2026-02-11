@@ -323,11 +323,8 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
         const result = await response.json();
         if (result.success) {
           rateLimiterRef.current.recordSend();
-          // 删除之前相同 userId 的弹幕
-          setDanmakus(prev => {
-            const filtered = prev.filter(d => d.userId !== userId.current);
-            return [...filtered, result.danmaku || newDanmaku];
-          });
+          // 直接添加新弹幕到列表中，不删除之前的弹幕
+          setDanmakus(prev => [...prev, result.danmaku || newDanmaku]);
           setInputText('');
           setMarkdownText('');
           setShowMarkdownInput(false);
