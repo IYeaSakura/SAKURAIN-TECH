@@ -15,7 +15,7 @@ const supportsViewTransition = typeof document !== 'undefined' &&
   'startViewTransition' in document;
 
 export function useTheme(): ThemeState {
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('light');
   const [isTransitioning, setIsTransitioning] = useState(false);
   const clickPositionRef = useRef({ x: 0, y: 0 });
   const rippleRef = useRef<HTMLDivElement | null>(null);
@@ -27,8 +27,8 @@ export function useTheme(): ThemeState {
       setTheme(stored);
       document.documentElement.setAttribute('data-theme', stored);
     } else {
-      setTheme('dark');
-      document.documentElement.setAttribute('data-theme', 'dark');
+      setTheme('light');
+      document.documentElement.setAttribute('data-theme', 'light');
     }
   }, []);
 
