@@ -16,7 +16,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
     <footer
       className="relative overflow-hidden"
       style={{ 
-        backgroundColor: '#000000',
+        backgroundColor: 'var(--bg-primary)',
       }}
     >
       {/* 顶部分割线 */}

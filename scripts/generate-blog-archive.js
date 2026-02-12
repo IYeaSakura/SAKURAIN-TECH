@@ -105,8 +105,7 @@ function generateArchive() {
       author: frontmatter.author,
       tags: frontmatter.tags || [],
       cover: frontmatter.cover,
-      featured: frontmatter.featured === true || frontmatter.featured === 'true',
-      content: parsed.content
+      featured: frontmatter.featured === true || frontmatter.featured === 'true'
     });
   }
 
