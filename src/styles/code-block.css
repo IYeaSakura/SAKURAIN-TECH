@@ -84,6 +84,78 @@
   overflow-x: auto !important;
   background: var(--bg-primary) !important;
   color: var(--text-primary) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* Ensure all elements within code blocks use monospace font */
+.code-block-content *,
+.prism-code *,
+.token,
+.token * {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace !important;
+}
+
+/* Fix for black ghosting in dark mode */
+.dark .code-block-container {
+  text-shadow: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+.dark .code-block-content {
+  text-shadow: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+.dark .prism-code {
+  text-shadow: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+.dark .prism-code * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  color: inherit !important;
+  background: transparent !important;
+}
+
+.dark .token {
+  text-shadow: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  color: inherit !important;
+  background: transparent !important;
+}
+
+/* Additional fix for any inherited text shadows */
+.dark .code-block-container *, 
+.dark .code-block-content *, 
+.dark .prism-code *, 
+.dark .token * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+}
+
+/* Ensure no text-shadow is applied to any element in code blocks */
+.code-block-container *, 
+.code-block-content *, 
+.prism-code *, 
+.token * {
+  text-shadow: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  mix-blend-mode: normal !important;
 }
 
 /* Line Numbers */
@@ -99,20 +171,20 @@
   opacity: 0.5;
 }
 
-/* Syntax Highlighting Colors - Light Theme */
+/* Syntax Highlighting Colors - Light Theme (GitHub Style) */
 .light .token.comment {
-  color: #57606a !important;
+  color: #6f42c1 !important;
   font-style: italic;
 }
 
 .light .token.prolog,
 .light .token.doctype,
 .light .token.cdata {
-  color: #57606a !important;
+  color: #6f42c1 !important;
 }
 
 .light .token.punctuation {
-  color: #374151 !important;
+  color: #24292f !important;
 }
 
 .light .token.property,
@@ -122,7 +194,7 @@
 .light .token.constant,
 .light .token.symbol,
 .light .token.deleted {
-  color: #dc2626 !important;
+  color: #0550ae !important;
 }
 
 .light .token.selector,
@@ -131,13 +203,13 @@
 .light .token.char,
 .light .token.builtin,
 .light .token.inserted {
-  color: #083a6e !important;
+  color: #0a3069 !important;
 }
 
 .light .token.operator,
 .light .token.entity,
 .light .token.url {
-  color: #dc2626 !important;
+  color: #24292f !important;
 }
 
 .light .token.atrule,
@@ -145,29 +217,29 @@
 .light .token.keyword,
 .light .token.function,
 .light .token.class-name {
-  color: #7c3aed !important;
+  color: #cf222e !important;
 }
 
 .light .token.regex,
 .light .token.important,
 .light .token.variable {
-  color: #ea580c !important;
+  color: #953800 !important;
 }
 
-/* Syntax Highlighting Colors - Dark Theme */
+/* Syntax Highlighting Colors - Dark Theme (GitHub Style) */
 .dark .token.comment {
-  color: #8b949e !important;
+  color: #a78bfa !important;
   font-style: italic;
 }
 
 .dark .token.prolog,
 .dark .token.doctype,
 .dark .token.cdata {
-  color: #8b949e !important;
+  color: #a78bfa !important;
 }
 
 .dark .token.punctuation {
-  color: #8b949e !important;
+  color: #d1d5db !important;
 }
 
 .dark .token.property,
@@ -177,7 +249,7 @@
 .dark .token.constant,
 .dark .token.symbol,
 .dark .token.deleted {
-  color: #ff7b72 !important;
+  color: #3b82f6 !important;
 }
 
 .dark .token.selector,
@@ -186,13 +258,13 @@
 .dark .token.char,
 .dark .token.builtin,
 .dark .token.inserted {
-  color: #a5d6ff !important;
+  color: #6ee7b7 !important;
 }
 
 .dark .token.operator,
 .dark .token.entity,
 .dark .token.url {
-  color: #ff7b72 !important;
+  color: #d1d5db !important;
 }
 
 .dark .token.atrule,
@@ -200,13 +272,13 @@
 .dark .token.keyword,
 .dark .token.function,
 .dark .token.class-name {
-  color: #d2a8ff !important;
+  color: #f472b6 !important;
 }
 
 .dark .token.regex,
 .dark .token.important,
 .dark .token.variable {
-  color: #79c0ff !important;
+  color: #fbbf24 !important;
 }
 
 /* Inline Code */
