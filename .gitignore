@@ -5,3 +5,4 @@ dist
 .env
 public/blog/posts/origin
 prompt.md
+.trae

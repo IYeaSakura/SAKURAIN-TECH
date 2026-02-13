@@ -950,7 +950,7 @@ const ApplySection = memo(function ApplySection({
             onMouseLeave={() => setIsHovered(false)}
             className="relative flex items-center gap-2 px-8 py-4 font-bold transition-all duration-300 overflow-hidden"
             style={{
-              background: isHovered ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' : 'rgba(59, 130, 246, 0.1)',
+              background: isHovered ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' : 'var(--accent-primary)',
               color: 'white',
               border: `2px solid ${isHovered ? 'transparent' : 'var(--accent-primary)'}`,
               clipPath: clipPathRounded(6),
