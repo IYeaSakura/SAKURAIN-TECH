@@ -386,3 +386,5 @@ $$
 - SPRT决策边界：第4.2节
 - Clopper-Pearson置信区间：第4.3节
 - 样本量规划（MDE）：第4.3节
+
+*理论知识如有纰漏，欢迎指正：Yae_SakuRain@outlook.com。*

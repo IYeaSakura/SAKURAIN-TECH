@@ -13,6 +13,24 @@
   ],
   "items": [
     {
+      "id": "https://sakurain.tech/blog/mcts-distributed-implementation-mathematics",
+      "url": "https://sakurain.tech/blog/mcts-distributed-implementation-mathematics",
+      "title": "从单线程到纳秒级分布式：实现一个工业级MCTS系统的完整数学 journey",
+      "content_text": "深入探讨MCTS系统的数学原理和工程实现，从单线程到分布式系统的完整实现过程，包括置信区间、并行计算、实时约束等方面的数学推导和代码实现。",
+      "date_published": "2026-02-12T00:00:00.000Z",
+      "author": {
+        "name": "SAKURAIN"
+      },
+      "tags": [
+        "蒙特卡洛树搜索",
+        "深度学习",
+        "强化学习",
+        "实时系统",
+        "系统架构",
+        "并行计算"
+      ]
+    },
+    {
       "id": "https://sakurain.tech/blog/machine-learning-theory",
       "url": "https://sakurain.tech/blog/machine-learning-theory",
       "title": "《机器学习》（下）：深入理论的密林",

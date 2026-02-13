@@ -311,11 +311,11 @@ const PixelCard = memo(function PixelCard({
                 <div
                   className="absolute left-0 -top-1 -translate-y-full opacity-0 group-hover/title:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap"
                   style={{
-                    background: 'rgba(15, 23, 42, 0.95)',
-                    border: '1px solid rgba(59, 130, 246, 0.5)',
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-color)',
                     padding: '4px 12px',
                     borderRadius: '4px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                   }}
                 >
                   <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -327,7 +327,7 @@ const PixelCard = memo(function PixelCard({
                     style={{
                       borderLeft: '5px solid transparent',
                       borderRight: '5px solid transparent',
-                      borderTop: '5px solid rgba(59, 130, 246, 0.5)',
+                      borderTop: '5px solid var(--border-color)',
                     }}
                   />
                 </div>
@@ -679,7 +679,7 @@ const MailtoModal = memo(function MailtoModal({
         animate={animationEnabled ? { opacity: 1 } : undefined}
         exit={{ opacity: 0 }}
         className="absolute inset-0"
-        style={{ background: 'rgba(0, 0, 0, 0.7)' }}
+        style={{ background: 'rgba(0, 0, 0, 0.5)' }}
         onClick={onClose}
       />
       <motion.div
@@ -689,8 +689,8 @@ const MailtoModal = memo(function MailtoModal({
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="relative w-full max-w-md p-6"
         style={{
-          background: 'rgba(15, 23, 42, 0.95)',
-          border: '2px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--bg-secondary)',
+          border: '2px solid var(--border-color)',
           clipPath: clipPathRounded(12),
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
         }}
@@ -1034,7 +1034,7 @@ const RedirectModal = memo(function RedirectModal({
         animate={animationEnabled ? { opacity: 1 } : undefined}
         exit={{ opacity: 0 }}
         className="absolute inset-0"
-        style={{ background: 'rgba(0, 0, 0, 0.7)' }}
+        style={{ background: 'rgba(0, 0, 0, 0.5)' }}
         onClick={onCancel}
       />
       <motion.div
@@ -1044,8 +1044,8 @@ const RedirectModal = memo(function RedirectModal({
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className="relative w-full max-w-md p-6"
         style={{
-          background: 'rgba(15, 23, 42, 0.95)',
-          border: '2px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--bg-secondary)',
+          border: '2px solid var(--border-color)',
           clipPath: clipPathRounded(12),
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
         }}
