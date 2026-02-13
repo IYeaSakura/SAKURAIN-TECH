@@ -96,6 +96,43 @@
   font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace !important;
 }
 
+/* KaTeX formula horizontal scroll */
+.markdown-body .katex-display {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background-color: transparent !important;
+}
+
+.markdown-body .katex-display > math {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+.markdown-body .katex {
+  white-space: nowrap !important;
+}
+
+/* Custom scrollbar for KaTeX formulas */
+.markdown-body .katex-display::-webkit-scrollbar {
+  height: 4px !important;
+}
+
+.markdown-body .katex-display::-webkit-scrollbar-track {
+  background: var(--bg-secondary) !important;
+}
+
+.markdown-body .katex-display::-webkit-scrollbar-thumb {
+  background: var(--border-color) !important;
+  border-radius: 2px !important;
+}
+
+.markdown-body .katex-display::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted) !important;
+}
+
 /* Fix for black ghosting in dark mode */
 .dark .code-block-container {
   text-shadow: none !important;
