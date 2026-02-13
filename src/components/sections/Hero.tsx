@@ -15,7 +15,7 @@ import type { SiteData } from '@/types';
 const CesiumGlobe = lazy(() => import('@/components/effects/CesiumGlobe').then(m => ({ default: m.CesiumGlobe })));
 const ChinaMap3D = lazy(() => import('@/components/effects/ChinaMap3D').then(m => ({ default: m.ChinaMap3D })));
 
-
+const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
 
 interface DemoConfig {
   id: DemoType;
@@ -133,30 +133,15 @@ const StatCard = memo(({
       className="relative cursor-default group"
       style={{ perspective: '1000px' }}
     >
-      {/* 发光边框效果 */}
-      <div
-        className="absolute -inset-[2px] rounded-lg transition-opacity duration-500"
-        style={{
-          background: isHovered
-            ? `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))`
-            : 'transparent',
-          backgroundSize: '300% 300%',
-          animation: isHovered ? 'gradient-shift 3s ease infinite' : 'none',
-          opacity: isHovered ? 1 : 0,
-          filter: 'blur(4px)',
-          zIndex: -1,
-        }}
-      />
       <div
         className="relative p-5 sm:p-6 text-center overflow-hidden transition-all duration-300"
         style={{
           background: 'var(--bg-card)',
-          border: '3px solid',
+          border: '2px solid',
           borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
-          transform: isHovered ? 'translateY(-8px) scale(1.02)' : 'none',
-          boxShadow: isHovered
-            ? `0 20px 40px var(--accent-glow), 0 0 30px ${color}20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)`
-            : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
+          clipPath: clipPathRounded(6),
+          boxShadow: isHovered ? '0 0 30px var(--accent-glow)' : 'none',
+          transform: isHovered ? 'translateY(-2px)' : 'none',
         }}
       >
         {/* Glow background - 顶部径向渐变 */}
@@ -226,11 +211,11 @@ const PrimaryButton = memo(({
         fontWeight: 700,
         letterSpacing: '0.05em',
         color: 'white',
-        background: 'linear-gradient(135deg, var(--accent-primary), color-mix(in srgb, var(--accent-primary) 80%, var(--accent-secondary)))',
-        boxShadow: isHovered
-          ? '0 8px 30px var(--accent-glow), 0 0 60px var(--accent-primary)40, inset 0 0 20px rgba(255,255,255,0.2)'
-          : '0 4px 20px var(--accent-glow)',
-        transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+        background: isHovered ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' : 'var(--accent-primary)',
+        border: `2px solid ${isHovered ? 'transparent' : 'var(--accent-primary)'}`,
+        clipPath: clipPathRounded(6),
+        boxShadow: isHovered ? '0 0 30px var(--accent-glow)' : 'none',
+        transform: isHovered ? 'translateY(-2px)' : 'none',
       }}
     >
       {/* 光效背景 */}
@@ -240,14 +225,6 @@ const PrimaryButton = memo(({
           background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
           transform: isHovered ? 'translateX(100%)' : 'translateX(-100%)',
           transition: 'transform 0.6s ease',
-        }}
-      />
-      {/* 脉冲光环 */}
-      <div
-        className="absolute inset-0 rounded-xl transition-opacity duration-300"
-        style={{
-          boxShadow: `inset 0 0 20px rgba(255,255,255,0.3), 0 0 30px var(--accent-primary)`,
-          opacity: isHovered ? 0.6 : 0,
         }}
       />
       <span className="relative z-10 flex items-center gap-2">
@@ -287,10 +264,9 @@ const SecondaryButton = memo(({
         background: 'transparent',
         border: '2px solid',
         borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
-        boxShadow: isHovered
-          ? '0 0 30px var(--accent-glow), inset 0 0 20px var(--accent-primary)10'
-          : 'none',
-        transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+        clipPath: clipPathRounded(6),
+        boxShadow: isHovered ? '0 0 30px var(--accent-glow)' : 'none',
+        transform: isHovered ? 'translateY(-2px)' : 'none',
       }}
     >
       {/* 悬停光晕 */}

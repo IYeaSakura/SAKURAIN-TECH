@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Code, Check, Copy } from 'lucide-react';
 import '../../../styles/code-block.css';
 
@@ -68,7 +67,6 @@ export const CodeBlock = ({ language, value }: CodeBlockProps) => {
       </div>
       <div className="code-block-content">
         <SyntaxHighlighter
-          style={vscDarkPlus}
           language={language || 'text'}
           PreTag="div"
           className="prism-code"
@@ -78,10 +76,9 @@ export const CodeBlock = ({ language, value }: CodeBlockProps) => {
             fontSize: '0.875rem', 
             lineHeight: '1.6', 
             padding: '1rem',
-            fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace",
+            fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace !important",
             whiteSpace: 'pre',
-            overflowX: 'auto',
-            background: 'transparent'
+            overflowX: 'auto'
           }}
           showLineNumbers
           lineNumberStyle={{ 
