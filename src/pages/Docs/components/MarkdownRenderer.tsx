@@ -88,7 +88,7 @@ const ContentChunk = memo(({ content, index }: { content: string; index: number 
   return (
     <div ref={chunkRef} className="min-h-[20px]">
       {shouldRender ? (
-        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={finalContentOnlyComponents}>{content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={finalContentOnlyComponentsWithMath}>{content}</ReactMarkdown>
       ) : (
         <div className="py-4" style={{ color: 'var(--text-muted)' }}>
           <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent-primary)' }} />
@@ -177,15 +177,39 @@ const PreBlock = ({ children }: { children?: any }) => {
   );
 };
 
+
+
 // Update components to include pre wrapper
 const finalMarkdownComponents = {
   ...markdownComponents,
-  pre: PreBlock,
+  pre: PreBlock
 };
 
 const finalContentOnlyComponents = {
   ...contentOnlyComponents,
-  pre: PreBlock,
+  pre: PreBlock
+};
+
+// Wrapper for math elements to ensure horizontal scroll without affecting layout
+const MathBlock = ({ children }: { children?: any }) => {
+  return (
+    <div style={{ overflowX: 'auto', overflowY: 'hidden', margin: 0, padding: 0, border: 'none', backgroundColor: 'transparent' }}>
+      <div style={{ whiteSpace: 'nowrap' }}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// Update components to include math wrapper
+const finalMarkdownComponentsWithMath = {
+  ...finalMarkdownComponents,
+  math: MathBlock
+};
+
+const finalContentOnlyComponentsWithMath = {
+  ...finalContentOnlyComponents,
+  math: MathBlock
 };
 
 // Optimized Markdown Renderer
@@ -200,7 +224,7 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
   if (content.length < 10000 || sections.length < 5) {
     return (
       <div className="markdown-body" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>
-        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={finalMarkdownComponents}>{content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={finalMarkdownComponentsWithMath}>{content}</ReactMarkdown>
       </div>
     );
   }
