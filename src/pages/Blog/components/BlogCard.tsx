@@ -199,11 +199,11 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false }
                   <div
                     className="absolute left-0 -top-1 -translate-y-full opacity-0 group-hover/title:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap"
                     style={{
-                      background: 'rgba(15, 23, 42, 0.95)',
-                      border: '1px solid rgba(59, 130, 246, 0.5)',
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-color)',
                       padding: '4px 12px',
                       clipPath: clipPathRounded(4),
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                     }}
                   >
                     <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>

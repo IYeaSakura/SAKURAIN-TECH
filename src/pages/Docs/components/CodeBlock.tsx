@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Code } from 'lucide-react';
+import { Code, Check, Copy } from 'lucide-react';
+import '../../../styles/code-block.css';
 
 interface CodeBlockProps {
   language: string;
@@ -34,41 +35,65 @@ export const CodeBlock = ({ language, value }: CodeBlockProps) => {
 
   if (isShortCode) {
     return (
-      <code className="px-2 py-1 rounded text-sm font-mono" style={{ background: 'var(--bg-secondary)', color: 'var(--accent-primary)', border: '1px solid var(--border-color)' }}>
+      <code className="inline-code">
         {value}
       </code>
     );
   }
 
   return (
-    <div className="relative group my-4 rounded-xl overflow-hidden border" style={{ borderColor: 'var(--border-color)' }}>
-      <div className="flex items-center justify-between px-4 py-2 text-xs" style={{ background: '#1e1e1e', borderBottom: '1px solid #333', color: '#858585' }}>
-        <div className="flex items-center gap-2"><Code className="w-3.5 h-3.5" /><span className="font-medium">{displayLang}</span></div>
-        <button onClick={handleCopy} className="flex items-center gap-1 px-2 py-1 rounded transition-colors hover:bg-white/10" style={{ color: copied ? '#4ade80' : 'inherit' }}>
+    <div className="code-block-container">
+      <div className="code-block-header">
+        <div className="code-block-lang">
+          <Code className="code-block-lang-icon" />
+          <span>{displayLang}</span>
+        </div>
+        <button 
+          onClick={handleCopy} 
+          className={`code-block-copy ${copied ? 'copied' : ''}`}
+          aria-label={copied ? '已复制' : '复制代码'}
+        >
           {copied ? (
-            <><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg><span>已复制</span></>
+            <>
+              <Check className="code-block-copy-icon" />
+              <span>已复制</span>
+            </>
           ) : (
-            <><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg><span>复制</span></>
+            <>
+              <Copy className="code-block-copy-icon" />
+              <span>复制</span>
+            </>
           )}
         </button>
       </div>
-      <div className="overflow-x-auto">
+      <div className="code-block-content">
         <SyntaxHighlighter
           style={vscDarkPlus}
           language={language || 'text'}
           PreTag="div"
+          className="prism-code"
           customStyle={{ 
             margin: 0, 
-            borderRadius: '0 0 0.75rem 0.75rem', 
-            fontSize: '0.8125rem', 
+            borderRadius: 0, 
+            fontSize: '0.875rem', 
             lineHeight: '1.6', 
-            padding: '1.25rem',
-            fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace",
+            padding: '1rem',
+            fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace",
             whiteSpace: 'pre',
-            overflowX: 'auto'
+            overflowX: 'auto',
+            background: 'transparent'
           }}
           showLineNumbers
-          lineNumberStyle={{ minWidth: '2.5em', paddingRight: '1em', color: '#4b5563', textAlign: 'right', fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace" }}
+          lineNumberStyle={{ 
+            minWidth: '2.5em', 
+            paddingRight: '1em', 
+            color: 'var(--text-muted)', 
+            textAlign: 'right', 
+            fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace",
+            fontSize: '0.875rem',
+            opacity: '0.5'
+          }}
+          lineNumberContainerStyle={{ display: 'inline-block', paddingRight: '1em' }}
         >
           {value}
         </SyntaxHighlighter>

@@ -9,6 +9,7 @@ import { CodeBlock } from './CodeBlock';
 import { ClickableImage } from './ImageModal';
 import { extractTextFromChildren, generateHeadingId, splitContentByHeadings } from '../utils';
 import type { HeadingAnchor } from '../types';
+import '../../../styles/code-block.css';
 
 // Heading Anchor Component - rendered immediately
 const HeadingAnchorElement = memo(({ heading }: { heading: HeadingAnchor }) => {
@@ -42,7 +43,7 @@ const contentOnlyComponents = {
     if (language === 'plantuml' || codeString.includes('@startuml')) {
       return <PlantUML code={codeString} />;
     }
-    if (inline) return <code className="px-1.5 py-0.5 rounded text-sm font-mono" style={{ background: 'var(--bg-secondary)', color: 'var(--accent-primary)', border: '1px solid var(--border-color)' }}>{children}</code>;
+    if (inline) return <code className="inline-code">{children}</code>;
     if (language) return <CodeBlock language={language} value={codeString} />;
     return <CodeBlock language="text" value={codeString} />;
   },

@@ -1,5 +1,22 @@
 [
   {
+    "slug": "mcts-distributed-implementation-mathematics",
+    "title": "从单线程到纳秒级分布式：实现一个工业级MCTS系统的完整数学 journey",
+    "description": "深入探讨MCTS系统的数学原理和工程实现，从单线程到分布式系统的完整实现过程，包括置信区间、并行计算、实时约束等方面的数学推导和代码实现。",
+    "date": "2026-02-12",
+    "author": "SAKURAIN",
+    "tags": [
+      "蒙特卡洛树搜索",
+      "深度学习",
+      "强化学习",
+      "实时系统",
+      "系统架构",
+      "并行计算"
+    ],
+    "cover": "/image/logo.webp",
+    "featured": false
+  },
+  {
     "slug": "machine-learning-theory",
     "title": "《机器学习》（下）：深入理论的密林",
     "description": "探讨周志华教授《机器学习》后半部分的核心理论，包括特征选择与稀疏学习、计算学习理论（PAC框架、VC维）、半监督学习等进阶主题。",

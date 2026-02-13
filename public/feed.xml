@@ -5,12 +5,22 @@
     <link>https://sakurain.tech</link>
     <description>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。</description>
     <language>zh-CN</language>
-    <lastBuildDate>Tue, 10 Feb 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 12 Feb 2026 00:00:00 GMT</lastBuildDate>
     <copyright>© 2026 SAKURAIN 技术工作室</copyright>
     <generator>SAKURAIN Feed Generator</generator>
     <atom:link href="https://sakurain.tech/feed.xml" rel="self" type="application/rss+xml"/>
     <atom:link href="https://sakurain.tech/atom.xml" rel="alternate" type="application/atom+xml"/>
     
+    <item>
+      <title>从单线程到纳秒级分布式：实现一个工业级MCTS系统的完整数学 journey</title>
+      <link>https://sakurain.tech/blog/mcts-distributed-implementation-mathematics</link>
+      <guid isPermaLink="true">https://sakurain.tech/blog/mcts-distributed-implementation-mathematics</guid>
+      <pubDate>Thu, 12 Feb 2026 00:00:00 GMT</pubDate>
+      <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
+      <description>深入探讨MCTS系统的数学原理和工程实现，从单线程到分布式系统的完整实现过程，包括置信区间、并行计算、实时约束等方面的数学推导和代码实现。</description>
+      <category>蒙特卡洛树搜索</category><category>深度学习</category><category>强化学习</category><category>实时系统</category><category>系统架构</category><category>并行计算</category>
+    </item>
+
     <item>
       <title>《机器学习》（下）：深入理论的密林</title>
       <link>https://sakurain.tech/blog/machine-learning-theory</link>
