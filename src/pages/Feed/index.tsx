@@ -52,7 +52,7 @@ interface FeedItem {
 const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
 
 const POSTS_PER_PAGE = 9;
-const FETCH_TIMEOUT = 8000; // 8秒超时
+const FETCH_TIMEOUT = 8000;
 
 // Format date helper
 const formatDate = (dateStr: string): string => {
@@ -77,12 +77,16 @@ function StatCard({
   label,
   color,
   delay = 0,
+  onClick,
+  active = false,
 }: {
   icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   value: number | string;
   label: string;
   color: string;
   delay?: number;
+  onClick?: () => void;
+  active?: boolean;
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const animationEnabled = useAnimationEnabled();
@@ -95,10 +99,11 @@ function StatCard({
       whileHover={animationEnabled ? { scale: 1.05, y: -4 } : undefined}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="relative p-6 text-center cursor-default group"
+      onClick={onClick}
+      className={`relative p-6 text-center cursor-default group ${onClick ? 'cursor-pointer' : ''}`}
       style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '2px solid rgba(255, 255, 255, 0.08)',
+        background: active ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.02)',
+        border: `2px solid ${active ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.08)'}`,
         clipPath: clipPathRounded(6),
       }}
     >
@@ -112,10 +117,146 @@ function StatCard({
         />
       )}
       <Icon className="w-6 h-6 mx-auto mb-3" style={{ color }} />
-      <div className="font-sans font-bold text-3xl mb-1" style={{ color: 'var(--text-primary)' }}>
+      <div className="font-sans font-bold text-3xl mb-1 break-all px-1" style={{ color: 'var(--text-primary)' }}>
         {value}
       </div>
       <div className="text-sm" style={{ color: 'var(--text-muted)' }}>{label}</div>
+    </motion.div>
+  );
+}
+
+// 统计面板组件
+function StatsPanel({ 
+  items, 
+  onClose 
+}: { 
+  items: FeedItem[]; 
+  onClose: () => void;
+}) {
+  const stats = useMemo(() => {
+    // 按来源统计
+    const sourceStats: Record<string, number> = {};
+    items.forEach(item => {
+      sourceStats[item.source] = (sourceStats[item.source] || 0) + 1;
+    });
+    
+    // 按日期统计（最近7天）
+    const dateStats: Record<string, number> = {};
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      dateStats[d.toISOString().split('T')[0]] = 0;
+    }
+    
+    items.forEach(item => {
+      if (item.pubDate) {
+        const date = new Date(item.pubDate).toISOString().split('T')[0];
+        if (dateStats.hasOwnProperty(date)) {
+          dateStats[date]++;
+        }
+      }
+    });
+    
+    // 排序来源
+    const sortedSources = Object.entries(sourceStats)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+    
+    return { sourceStats: sortedSources, dateStats };
+  }, [items]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      className="mb-8 overflow-hidden"
+    >
+      <div 
+        className="p-6"
+        style={{
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '2px solid rgba(255, 255, 255, 0.08)',
+          clipPath: clipPathRounded(12),
+        }}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+            统计详情
+          </h3>
+          <button 
+            onClick={onClose}
+            className="p-2 transition-colors hover:bg-white/5"
+            style={{ clipPath: clipPathRounded(4) }}
+          >
+            <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+          </button>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* 来源统计 */}
+          <div>
+            <h4 className="text-sm font-medium mb-4" style={{ color: 'var(--text-muted)' }}>
+              文章来源分布
+            </h4>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {stats.sourceStats.map(([source, count], index) => (
+                <div 
+                  key={source}
+                  className="flex items-center justify-between p-3"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    clipPath: clipPathRounded(4),
+                  }}
+                >
+                  <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
+                    {index + 1}. {source}
+                  </span>
+                  <span 
+                    className="px-2 py-1 text-xs font-medium"
+                    style={{
+                      background: 'var(--accent-primary)20',
+                      color: 'var(--accent-primary)',
+                      clipPath: clipPathRounded(2),
+                    }}
+                  >
+                    {count} 篇
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* 日期统计 */}
+          <div>
+            <h4 className="text-sm font-medium mb-4" style={{ color: 'var(--text-muted)' }}>
+              最近7天更新
+            </h4>
+            <div className="space-y-2">
+              {Object.entries(stats.dateStats).map(([date, count]) => (
+                <div key={date} className="flex items-center gap-3">
+                  <span className="text-sm w-24" style={{ color: 'var(--text-muted)' }}>
+                    {date.slice(5)}
+                  </span>
+                  <div className="flex-1 h-6 bg-white/5 overflow-hidden" style={{ clipPath: clipPathRounded(2) }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.max((count / Math.max(...Object.values(stats.dateStats))) * 100, 5)}%` }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                      className="h-full"
+                      style={{ background: 'var(--accent-primary)' }}
+                    />
+                  </div>
+                  <span className="text-sm w-8 text-right" style={{ color: 'var(--text-primary)' }}>
+                    {count}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -302,7 +443,7 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   );
 }
 
-// Parse feed content - auto-detect format (RSS, Atom, or JSON)
+// Parse feed content - auto-detect format
 const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> => {
   const items: FeedItem[] = [];
   
@@ -310,7 +451,6 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
   try {
     const jsonData = JSON.parse(content);
     
-    // JSON Feed format (jsonfeed.org)
     if (jsonData.items && Array.isArray(jsonData.items)) {
       jsonData.items.forEach((item: any) => {
         items.push({
@@ -327,7 +467,6 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
       return items;
     }
     
-    // Some JSON feeds may use different structure
     if (jsonData.entries && Array.isArray(jsonData.entries)) {
       jsonData.entries.forEach((item: any) => {
         items.push({
@@ -347,11 +486,10 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
     // Not JSON, continue to XML parsing
   }
   
-  // Parse as XML (RSS or Atom)
+  // Parse as XML
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(content, 'text/xml');
   
-  // Check if it's RSS or Atom
   const isRSS = xmlDoc.querySelector('rss') !== null;
   const isAtom = xmlDoc.querySelector('feed') !== null;
   
@@ -403,7 +541,7 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
   return items;
 };
 
-// Feed Card Component
+// Feed Card Component - 使用博客卡片相同的像素风格
 const FeedCard = memo(function FeedCard({
   item,
   index,
@@ -411,127 +549,249 @@ const FeedCard = memo(function FeedCard({
   item: FeedItem;
   index: number;
 }) {
-  const animationEnabled = useAnimationEnabled();
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <motion.article
-      initial={animationEnabled ? { opacity: 0, y: 30 } : undefined}
-      animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
+    <motion.div
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{
-        duration: 0.5,
+        duration: 0.6,
         delay: index * 0.05,
         type: 'spring',
         stiffness: 100,
       }}
-      className="group relative h-full"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      className="group relative block cursor-pointer h-full"
+      style={{ perspective: '1000px' }}
     >
-      <motion.div
-        whileHover={animationEnabled ? { y: -4 } : undefined}
-        transition={{ duration: 0.25 }}
-        className="relative p-6 h-full"
-        style={{
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '2px solid rgba(255, 255, 255, 0.08)',
-          clipPath: clipPathRounded(8),
-        }}
+      <a
+        href={item.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block h-full"
       >
-        {/* Hover glow */}
-        {animationEnabled && (
-          <motion.div
-            className="absolute -inset-[1px] pointer-events-none"
-            style={{
-              background: 'linear-gradient(135deg, var(--accent-primary)30, transparent 50%)',
-              filter: 'blur(4px)',
-              zIndex: -1,
-            }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isHovered ? 0.5 : 0 }}
-            transition={{ duration: 0.3 }}
-          />
-        )}
-
-        {/* Source Header */}
-        <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/5">
-          <div
-            className="w-8 h-8 flex-shrink-0 flex items-center justify-center overflow-hidden"
-            style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              clipPath: clipPathRounded(4),
-            }}
-          >
-            {!imageError ? (
-              <img
-                src={item.sourceIcon}
-                alt={item.source}
-                className="w-6 h-6 object-contain"
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <Globe className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <span className="text-sm font-medium truncate block" style={{ color: 'var(--text-primary)' }}>
-              {item.source}
-            </span>
-          </div>
-          <a
-            href={item.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-shrink-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{ color: 'var(--accent-primary)' }}
-          >
-            <ExternalLink className="w-4 h-4" />
-          </a>
-        </div>
-
-        {/* Content */}
-        <a
-          href={item.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block"
+        {/* 像素风格外框 */}
+        <div
+          className="relative h-full transition-all duration-300"
+          style={{
+            background: isHovered ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)',
+            border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.1)'}`,
+            clipPath: clipPathRounded(8),
+            transform: isHovered ? 'translateY(-4px)' : 'none',
+          }}
         >
-          <h3
-            className="font-bold text-lg mb-2 line-clamp-2 transition-colors group-hover:text-[var(--accent-primary)]"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            {item.title}
-          </h3>
-          
-          {item.description && (
-            <p
-              className="text-sm line-clamp-3 mb-4"
-              style={{ color: 'var(--text-muted)' }}
-            >
-              {item.description}
-            </p>
-          )}
-        </a>
+          <div className="relative p-6 h-full flex flex-col">
+            {/* 四角光效动画 */}
+            <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
+              <motion.div
+                className="absolute top-0 left-0 w-full h-[2px]"
+                style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
+                animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              />
+              {isHovered && (
+                <motion.div
+                  className="absolute top-0 left-0 w-[2px] h-full"
+                  style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+            </div>
+            <div className="absolute top-0 right-0 w-4 h-4 pointer-events-none">
+              <motion.div
+                className="absolute top-0 right-0 w-full h-[2px]"
+                style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
+                animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              />
+              {isHovered && (
+                <motion.div
+                  className="absolute top-0 right-0 w-[2px] h-full"
+                  style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+            </div>
+            <div className="absolute bottom-0 left-0 w-4 h-4 pointer-events-none">
+              <motion.div
+                className="absolute bottom-0 left-0 w-full h-[2px]"
+                style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
+                animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              />
+              {isHovered && (
+                <motion.div
+                  className="absolute bottom-0 left-0 w-[2px] h-full"
+                  style={{ background: 'linear-gradient(to top, var(--accent-secondary), transparent)' }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+            </div>
+            <div className="absolute bottom-0 right-0 w-4 h-4 pointer-events-none">
+              <motion.div
+                className="absolute bottom-0 right-0 w-full h-[2px]"
+                style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
+                animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              />
+              {isHovered && (
+                <motion.div
+                  className="absolute bottom-0 right-0 w-[2px] h-full"
+                  style={{ background: 'linear-gradient(to top, var(--accent-primary), transparent)' }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+            </div>
 
-        {/* Footer */}
-        <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
-          {item.pubDate && (
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              {formatDate(item.pubDate)}
-            </span>
-          )}
-          {item.author && (
-            <span className="flex items-center gap-1">
-              <User className="w-3 h-3" />
-              {item.author}
-            </span>
-          )}
+            {/* Hover glow background */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
+              animate={{ opacity: isHovered ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+            />
+
+            {/* Scanline effect */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px)',
+                opacity: isHovered ? 0.5 : 0,
+              }}
+            />
+
+            {/* Shine effect */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 55%, transparent 60%)',
+              }}
+              animate={isHovered ? { x: '200%' } : { x: '-100%' }}
+              transition={{ duration: 0.8 }}
+            />
+
+            {/* Content */}
+            <div className="flex flex-col flex-1 relative z-10">
+              {/* Source Header with Icon */}
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/5">
+                <motion.div
+                  animate={{
+                    scale: isHovered ? 1.1 : 1,
+                    rotate: isHovered ? 5 : 0,
+                  }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  className="w-10 h-10 flex-shrink-0 flex items-center justify-center overflow-hidden"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.1)'}`,
+                    clipPath: clipPathRounded(4),
+                  }}
+                >
+                  {!imageError ? (
+                    <img
+                      src={item.sourceIcon}
+                      alt={item.source}
+                      className="w-6 h-6 object-contain"
+                      onError={() => setImageError(true)}
+                    />
+                  ) : (
+                    <Globe className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+                  )}
+                  {/* Icon glow */}
+                  <motion.div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
+                    animate={{ opacity: isHovered ? 0.5 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </motion.div>
+                
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium truncate block" style={{ color: 'var(--text-primary)' }}>
+                    {item.source}
+                  </span>
+                </div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : -10 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex-shrink-0"
+                >
+                  <ExternalLink className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+                </motion.div>
+              </div>
+
+              {/* Title */}
+              <div className="flex items-start gap-2 mb-3">
+                <div className="relative group/title flex-1 min-w-0">
+                  <motion.h3
+                    animate={{ scale: isHovered ? 1.02 : 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="font-bold text-lg line-clamp-2"
+                    style={{
+                      color: 'var(--text-primary)',
+                      textShadow: isHovered ? '0 0 10px var(--accent-glow)' : 'none',
+                    }}
+                  >
+                    {item.title}
+                  </motion.h3>
+
+                  {/* 悬浮提示 */}
+                  <div
+                    className="absolute left-0 -top-1 -translate-y-full opacity-0 group-hover/title:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap"
+                    style={{
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-color)',
+                      padding: '4px 12px',
+                      clipPath: clipPathRounded(4),
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                    }}
+                  >
+                    <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {item.title}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <p
+                className="text-sm line-clamp-3 mb-4 flex-1"
+                style={{ color: 'var(--text-muted)' }}
+              >
+                {item.description || '暂无摘要'}
+              </p>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
+                  {item.pubDate && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {formatDate(item.pubDate).split(' ')[0]}
+                    </span>
+                  )}
+                  {item.author && (
+                    <span className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      {item.author}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </motion.div>
-    </motion.article>
+      </a>
+    </motion.div>
   );
 });
 
@@ -650,6 +910,9 @@ function LoadingProgress({ loaded, total }: { loaded: number; total: number }) {
   );
 }
 
+// 刷新冷却时间（毫秒）
+const REFRESH_COOLDOWN_MS = 60 * 1000; // 60秒
+
 // Main Feed Page Component
 export default function FeedPage() {
   const [, setFriends] = useState<Friend[]>([]);
@@ -662,18 +925,19 @@ export default function FeedPage() {
   const [showStats, setShowStats] = useState(false);
   const [showSubscribe, setShowSubscribe] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [refreshCooldown, _setRefreshCooldown] = useState(0);
   const isMobile = useMobile();
   const animationEnabled = useAnimationEnabled();
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastRefreshTimeRef = useRef<number>(Date.now() - REFRESH_COOLDOWN_MS); // 初始设置为已过期
+  const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Get feed URL for a friend
   const getFeedUrl = useCallback((friend: Friend): string => {
     if (friend.feed) return friend.feed;
     const baseUrl = friend.url.replace(/\/$/, '');
     return `${baseUrl}/feed`;
   }, []);
 
-  // Fetch feed for a single friend via proxy with timeout
   const fetchFriendFeed = useCallback(async (
     friend: Friend, 
     forceRefresh = false,
@@ -713,9 +977,7 @@ export default function FeedPage() {
     }
   }, [getFeedUrl]);
 
-  // Load all data with progressive loading
   const loadData = useCallback(async (forceRefresh = false) => {
-    // Cancel previous loading
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -726,7 +988,6 @@ export default function FeedPage() {
       setLoading(true);
       setLoadingProgress({ loaded: 0, total: 0 });
       
-      // Load friends data and footer
       const [friendsRes, siteRes] = await Promise.all([
         fetch(`/data/friends.json?v=${Date.now()}`, { cache: 'no-store', signal }),
         fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store', signal }),
@@ -737,7 +998,6 @@ export default function FeedPage() {
       const friendsData = await friendsRes.json();
       const siteData = await siteRes.json();
       
-      // Filter friends: has feed field
       const eligibleFriends = friendsData.friends?.filter(
         (f: Friend) => f.feed && f.feed.trim() !== ''
       ) || [];
@@ -746,7 +1006,6 @@ export default function FeedPage() {
       setFooterData(siteData.footer);
       setLoadingProgress({ loaded: 0, total: eligibleFriends.length });
       
-      // Fetch feeds progressively
       const allFeeds: FeedItem[] = [];
       
       for (let i = 0; i < eligibleFriends.length; i++) {
@@ -758,7 +1017,6 @@ export default function FeedPage() {
         
         setLoadingProgress({ loaded: i + 1, total: eligibleFriends.length });
         
-        // Update display progressively for first page
         if (i < 3 || allFeeds.length <= POSTS_PER_PAGE) {
           const sorted = [...allFeeds].sort((a, b) => {
             const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
@@ -770,7 +1028,6 @@ export default function FeedPage() {
         }
       }
       
-      // Final sort and set
       if (!signal.aborted) {
         const sorted = allFeeds.sort((a, b) => {
           const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
@@ -790,14 +1047,12 @@ export default function FeedPage() {
     }
   }, [fetchFriendFeed]);
 
-  // Update displayed items based on page
   const updateDisplayItems = useCallback((items: FeedItem[], page: number) => {
     const start = (page - 1) * POSTS_PER_PAGE;
     const end = start + POSTS_PER_PAGE;
     setDisplayItems(items.slice(start, end));
   }, []);
 
-  // Initial load
   useEffect(() => {
     loadData();
     return () => {
@@ -807,27 +1062,63 @@ export default function FeedPage() {
     };
   }, [loadData]);
 
-  // Refresh feeds
+  // Refresh feeds with cooldown
   const handleRefresh = useCallback(async () => {
+    const now = Date.now();
+    const elapsed = now - lastRefreshTimeRef.current;
+    
+    if (elapsed < REFRESH_COOLDOWN_MS) {
+      const remaining = Math.ceil((REFRESH_COOLDOWN_MS - elapsed) / 1000);
+      console.log(`请等待 ${remaining} 秒后再次刷新`);
+      return;
+    }
+    
+    lastRefreshTimeRef.current = now;
     setRefreshing(true);
+    setShowStats(false);
+    _setRefreshCooldown(60);
+    
+    // 启动冷却倒计时
+    if (cooldownTimerRef.current) {
+      clearInterval(cooldownTimerRef.current);
+    }
+    cooldownTimerRef.current = setInterval(() => {
+      _setRefreshCooldown((prev) => {
+        if (prev <= 1) {
+          if (cooldownTimerRef.current) {
+            clearInterval(cooldownTimerRef.current);
+            cooldownTimerRef.current = null;
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
     await loadData(true);
     setRefreshing(false);
   }, [loadData]);
 
-  // Handle page change
+  // Cleanup cooldown timer on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownTimerRef.current) {
+        clearInterval(cooldownTimerRef.current);
+      }
+    };
+  }, []);
+
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
     updateDisplayItems(allItems, page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [allItems, updateDisplayItems]);
 
-  // Calculate total pages
   const totalPages = useMemo(() => 
     Math.ceil(allItems.length / POSTS_PER_PAGE),
     [allItems.length]
   );
 
-  // Calculate stats
   const stats = useMemo(() => {
     const totalSources = new Set(allItems.map(item => item.source)).size;
     const latestDate = allItems.length > 0 
@@ -888,7 +1179,6 @@ export default function FeedPage() {
           }}
         >
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            {/* 左侧占位 */}
             <div className="flex-1" />
 
             <div className="flex items-center gap-2">
@@ -909,20 +1199,23 @@ export default function FeedPage() {
 
               {/* 刷新按钮 */}
               <motion.button
-                whileHover={animationEnabled ? { scale: 1.05 } : undefined}
+                whileHover={animationEnabled && refreshCooldown === 0 ? { scale: 1.05 } : undefined}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleRefresh}
-                disabled={refreshing}
-                className="flex items-center gap-2 px-3 py-2 transition-all disabled:opacity-50"
+                disabled={refreshing || refreshCooldown > 0}
+                className="flex items-center gap-2 px-3 py-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed relative"
                 style={{
-                  background: 'var(--bg-secondary)',
+                  background: refreshCooldown > 0 ? 'rgba(255, 255, 255, 0.05)' : 'var(--bg-secondary)',
                   border: '1px solid var(--border-subtle)',
                   clipPath: clipPathRounded(4),
-                  color: 'var(--text-primary)',
+                  color: refreshCooldown > 0 ? 'var(--text-muted)' : 'var(--text-primary)',
                 }}
+                title={refreshCooldown > 0 ? `${refreshCooldown}秒后可刷新` : '强制刷新（60秒冷却）'}
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                <span className="text-sm font-medium hidden sm:block">刷新</span>
+                <span className="text-sm font-medium hidden sm:block">
+                  {refreshCooldown > 0 ? `${refreshCooldown}s` : '刷新'}
+                </span>
               </motion.button>
 
               {/* 订阅按钮 */}
@@ -946,7 +1239,7 @@ export default function FeedPage() {
         </motion.div>
 
         {/* Hero Section */}
-        <section className="relative pt-8 pb-16 overflow-hidden">
+        <section className="relative pt-8 pb-12 overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
             <div
               className="absolute top-20 right-20 w-64 h-64 opacity-20"
@@ -1029,6 +1322,13 @@ export default function FeedPage() {
             </motion.div>
           </div>
         </section>
+
+        {/* 统计面板 */}
+        <AnimatePresence>
+          {showStats && (
+            <StatsPanel items={allItems} onClose={() => setShowStats(false)} />
+          )}
+        </AnimatePresence>
 
         {/* 加载进度条（刷新时显示） */}
         {loading && allItems.length > 0 && (
