@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>SAKURAIN | 博弈算法与数据工程专家</title>
   <subtitle>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。</subtitle>
-  <link href="https://sakurain.tech/atom.xml" rel="self" type="application/atom+xml"/>
-  <link href="https://sakurain.tech" rel="alternate" type="text/html"/>
+  <link href="https://sakurain.net/atom.xml" rel="self" type="application/atom+xml"/>
+  <link href="https://sakurain.net" rel="alternate" type="text/html"/>
   <updated>2026-02-12T00:00:00.000Z</updated>
-  <id>https://sakurain.tech/</id>
+  <id>https://sakurain.net/</id>
   <author>
     <name>SAKURAIN</name>
     <email>Yae_SakuRain@outlook.com</email>
@@ -13,8 +13,8 @@
   <rights>© 2026 SAKURAIN 技术工作室</rights>
   <entry>
     <title>从单线程到纳秒级分布式：实现一个工业级MCTS系统的完整数学 journey</title>
-    <link href="https://sakurain.tech/blog/mcts-distributed-implementation-mathematics"/>
-    <id>https://sakurain.tech/blog/mcts-distributed-implementation-mathematics</id>
+    <link href="https://sakurain.net/blog/mcts-distributed-implementation-mathematics"/>
+    <id>https://sakurain.net/blog/mcts-distributed-implementation-mathematics</id>
     <published>2026-02-12T00:00:00.000Z</published>
     <updated>2026-02-12T00:00:00.000Z</updated>
     <author>
@@ -32,8 +32,8 @@
 
   <entry>
     <title>《机器学习》（下）：深入理论的密林</title>
-    <link href="https://sakurain.tech/blog/machine-learning-theory"/>
-    <id>https://sakurain.tech/blog/machine-learning-theory</id>
+    <link href="https://sakurain.net/blog/machine-learning-theory"/>
+    <id>https://sakurain.net/blog/machine-learning-theory</id>
     <published>2026-02-10T00:00:00.000Z</published>
     <updated>2026-02-10T00:00:00.000Z</updated>
     <author>
@@ -48,8 +48,8 @@
 
   <entry>
     <title>在腾讯云 EO 上实现 API 安全验证系统</title>
-    <link href="https://sakurain.tech/blog/api-security-edgeone"/>
-    <id>https://sakurain.tech/blog/api-security-edgeone</id>
+    <link href="https://sakurain.net/blog/api-security-edgeone"/>
+    <id>https://sakurain.net/blog/api-security-edgeone</id>
     <published>2026-02-08T00:00:00.000Z</published>
     <updated>2026-02-08T00:00:00.000Z</updated>
     <author>
@@ -65,8 +65,8 @@
 
   <entry>
     <title>《机器学习》（上）：我的人工智能启蒙教材</title>
-    <link href="https://sakurain.tech/blog/machine-learning-book-review"/>
-    <id>https://sakurain.tech/blog/machine-learning-book-review</id>
+    <link href="https://sakurain.net/blog/machine-learning-book-review"/>
+    <id>https://sakurain.net/blog/machine-learning-book-review</id>
     <published>2026-01-03T00:00:00.000Z</published>
     <updated>2026-01-03T00:00:00.000Z</updated>
     <author>
@@ -81,8 +81,8 @@
 
   <entry>
     <title>面向实时约束的蒙特卡洛树搜索系统：时间预算控制与内存拓扑优化</title>
-    <link href="https://sakurain.tech/blog/mcts-realtime-constraints"/>
-    <id>https://sakurain.tech/blog/mcts-realtime-constraints</id>
+    <link href="https://sakurain.net/blog/mcts-realtime-constraints"/>
+    <id>https://sakurain.net/blog/mcts-realtime-constraints</id>
     <published>2025-11-14T00:00:00.000Z</published>
     <updated>2025-11-14T00:00:00.000Z</updated>
     <author>
@@ -98,8 +98,8 @@
 
   <entry>
     <title>深度策略网络训练管线的容错机制与优化动力学</title>
-    <link href="https://sakurain.tech/blog/training-pipeline-fault-tolerance"/>
-    <id>https://sakurain.tech/blog/training-pipeline-fault-tolerance</id>
+    <link href="https://sakurain.net/blog/training-pipeline-fault-tolerance"/>
+    <id>https://sakurain.net/blog/training-pipeline-fault-tolerance</id>
     <published>2025-10-31T00:00:00.000Z</published>
     <updated>2025-10-31T00:00:00.000Z</updated>
     <author>
@@ -115,8 +115,8 @@
 
   <entry>
     <title>复杂机器学习系统的配置治理：从硬编码到配置即代码</title>
-    <link href="https://sakurain.tech/blog/configuration-governance"/>
-    <id>https://sakurain.tech/blog/configuration-governance</id>
+    <link href="https://sakurain.net/blog/configuration-governance"/>
+    <id>https://sakurain.net/blog/configuration-governance</id>
     <published>2025-09-22T00:00:00.000Z</published>
     <updated>2025-09-22T00:00:00.000Z</updated>
     <author>
@@ -132,8 +132,8 @@
 
   <entry>
     <title>策略网络迭代的对抗验证协议：消除离线指标幻觉的A／B测试框架</title>
-    <link href="https://sakurain.tech/blog/adversarial-validation-protocol"/>
-    <id>https://sakurain.tech/blog/adversarial-validation-protocol</id>
+    <link href="https://sakurain.net/blog/adversarial-validation-protocol"/>
+    <id>https://sakurain.net/blog/adversarial-validation-protocol</id>
     <published>2025-08-22T00:00:00.000Z</published>
     <updated>2025-08-22T00:00:00.000Z</updated>
     <author>
@@ -149,8 +149,8 @@
 
   <entry>
     <title>双任务神经网络架构在实时决策系统中的数值稳定性与计算权衡</title>
-    <link href="https://sakurain.tech/blog/dual-task-neural-network"/>
-    <id>https://sakurain.tech/blog/dual-task-neural-network</id>
+    <link href="https://sakurain.net/blog/dual-task-neural-network"/>
+    <id>https://sakurain.net/blog/dual-task-neural-network</id>
     <published>2025-08-15T00:00:00.000Z</published>
     <updated>2025-08-15T00:00:00.000Z</updated>
     <author>
@@ -166,8 +166,8 @@
 
   <entry>
     <title>大规模自博弈数据生成系统的分布式架构与存储优化</title>
-    <link href="https://sakurain.tech/blog/selfplay-data-pipeline"/>
-    <id>https://sakurain.tech/blog/selfplay-data-pipeline</id>
+    <link href="https://sakurain.net/blog/selfplay-data-pipeline"/>
+    <id>https://sakurain.net/blog/selfplay-data-pipeline</id>
     <published>2025-07-18T00:00:00.000Z</published>
     <updated>2025-07-18T00:00:00.000Z</updated>
     <author>

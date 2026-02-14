@@ -1,28 +1,37 @@
-import { memo } from 'react';
-import { motion } from 'framer-motion';
-import { useIsMobile } from '@/lib/performance';
+import { memo, useState, useEffect } from 'react';
+import { usePerformance } from '@/contexts/PerformanceContext';
 
-// 3D 立方体面配置
-const cubeFaces = [
-  { transform: 'translateZ(40px)', border: 'var(--accent-primary)' },
-  { transform: 'rotateY(180deg) translateZ(40px)', border: 'var(--accent-secondary)' },
-  { transform: 'rotateY(90deg) translateZ(40px)', border: 'var(--accent-tertiary)' },
-  { transform: 'rotateY(-90deg) translateZ(40px)', border: 'var(--accent-primary)' },
-  { transform: 'rotateX(90deg) translateZ(40px)', border: 'var(--accent-secondary)' },
-  { transform: 'rotateX(-90deg) translateZ(40px)', border: 'var(--accent-tertiary)' },
-];
-
+/**
+ * 统一的首屏加载占位符 - 错峰动画避免卡顿
+ * 优先使用 CSS 动画，减少 JS 计算负担
+ */
 export const LoadingPlaceholder = memo(() => {
-  const isMobile = useIsMobile();
-  
+  const { effectiveQuality } = usePerformance();
+  const [animationPhase, setAnimationPhase] = useState(0);
+  const isLowQuality = effectiveQuality === 'low';
+
+  // 错峰启动动画，避免同时开始造成卡顿
+  useEffect(() => {
+    if (isLowQuality) return; // 低性能设备不使用复杂动画
+
+    const timers = [
+      setTimeout(() => setAnimationPhase(1), 100),   // 旋转动画
+      setTimeout(() => setAnimationPhase(2), 300),   // 文字显示
+      setTimeout(() => setAnimationPhase(3), 500),   // 进度条
+      setTimeout(() => setAnimationPhase(4), 700),   // 骨架屏
+    ];
+
+    return () => timers.forEach(clearTimeout);
+  }, [isLowQuality]);
+
   return (
     <div 
-      className="min-h-screen flex items-center justify-center relative overflow-hidden" 
+      className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
       style={{ background: 'var(--bg-primary)' }}
     >
-      {/* 背景网格 - 立体透视感 */}
+      {/* 静态背景网格 - 无动画 */}
       <div
-        className="absolute inset-0 -z-10 pointer-events-none"
+        className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: `
             linear-gradient(var(--accent-primary) 1px, transparent 1px),
@@ -30,335 +39,165 @@ export const LoadingPlaceholder = memo(() => {
           `,
           backgroundSize: '60px 60px',
           opacity: 0.03,
-          transform: 'perspective(500px) rotateX(60deg)',
-          transformOrigin: 'center top',
         }}
       />
 
-      {/* 环境光晕效果 */}
-      {!isMobile && (
-        <>
-          <div
-            className="absolute top-1/4 left-1/4 -z-5 pointer-events-none"
-            style={{
-              width: '600px',
-              height: '600px',
-              background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)',
-              filter: 'blur(120px)',
-              opacity: 0.12,
-            }}
-          />
-          <div
-            className="absolute bottom-1/4 right-1/4 -z-5 pointer-events-none"
-            style={{
-              width: '500px',
-              height: '500px',
-              background: 'radial-gradient(circle, var(--accent-secondary) 0%, transparent 70%)',
-              filter: 'blur(100px)',
-              opacity: 0.08,
-            }}
-          />
-        </>
-      )}
-
-      {/* 主加载容器 */}
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 flex flex-col items-center gap-10"
-      >
-        {/* 3D 旋转立方体加载器 */}
-        <div 
-          className="relative"
-          style={{ 
-            width: 80, 
-            height: 80, 
-            perspective: 600,
+      {/* 主加载动画 - 使用 CSS 动画而非 framer-motion */}
+      <div className="relative">
+        {/* 外层旋转 - CSS 动画 */}
+        <div
+          className="w-16 h-16 rounded-lg"
+          style={{
+            border: '4px solid var(--bg-tertiary)',
+            borderTopColor: 'var(--accent-primary)',
+            borderRightColor: 'var(--accent-secondary)',
+            animation: animationPhase >= 1 && !isLowQuality
+              ? 'spin 1s linear infinite'
+              : 'none',
           }}
+        />
+        
+        {/* 内层反向旋转 - 低性能设备不显示 */}
+        {!isLowQuality && (
+          <div
+            className="absolute inset-2 rounded"
+            style={{
+              border: '3px solid transparent',
+              borderBottomColor: 'var(--accent-tertiary)',
+              borderLeftColor: 'var(--accent-primary)',
+              animation: animationPhase >= 1
+                ? 'spin-reverse 1.5s linear infinite'
+                : 'none',
+            }}
+          />
+        )}
+      </div>
+
+      {/* 加载文字 - 淡入显示 */}
+      <div 
+        className="mt-6 text-center space-y-2 transition-opacity duration-300"
+        style={{ opacity: animationPhase >= 2 ? 1 : 0 }}
+      >
+        <p 
+          className="font-pixel text-lg tracking-wider"
+          style={{ color: 'var(--accent-primary)' }}
         >
-          {/* 外发光环 */}
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            style={{
-              border: '2px solid var(--accent-primary)',
-              opacity: 0.3,
-              filter: 'blur(8px)',
-            }}
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.3, 0.1, 0.3],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
+          LOADING...
+        </p>
+        <p 
+          className="text-sm"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          正在初始化系统
+        </p>
+      </div>
+
+      {/* 进度条 - CSS 动画 */}
+      <div 
+        className="mt-8 w-48 h-1 rounded-full overflow-hidden transition-opacity duration-300"
+        style={{ 
+          background: 'var(--bg-tertiary)',
+          opacity: animationPhase >= 3 ? 1 : 0,
+        }}
+      >
+        <div
+          className="h-full rounded-full"
+          style={{
+            background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))',
+            animation: animationPhase >= 3
+              ? 'progress 1.2s ease-in-out forwards'
+              : 'none',
+          }}
+        />
+      </div>
+
+      {/* 骨架屏预览 - 错峰淡入 */}
+      <div 
+        className="mt-12 w-full max-w-md space-y-4 transition-opacity duration-500"
+        style={{ opacity: animationPhase >= 4 ? 1 : 0 }}
+      >
+        {/* 模拟标题 */}
+        <div 
+          className="h-8 rounded w-2/3 mx-auto skeleton-pulse"
+          style={{ background: 'var(--bg-card)' }}
+        />
+        {/* 模拟段落 */}
+        <div className="space-y-2">
+          <div 
+            className="h-4 rounded w-full skeleton-pulse"
+            style={{ background: 'var(--bg-card)', animationDelay: '0.1s' }}
           />
-
-          {/* 3D 立方体 */}
-          <motion.div
-            className="absolute inset-0"
-            style={{
-              transformStyle: 'preserve-3d',
-              width: 80,
-              height: 80,
-            }}
-            animate={{
-              rotateX: [0, 360],
-              rotateY: [0, 360],
-              rotateZ: [0, -360],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-          >
-            {cubeFaces.map((face, index) => (
-              <div
-                key={index}
-                className="absolute inset-0 flex items-center justify-center"
-                style={{
-                  transform: face.transform,
-                  backfaceVisibility: 'hidden',
-                  background: `linear-gradient(135deg, var(--bg-card) 0%, rgba(var(--accent-primary-rgb, 99, 102, 241), 0.1) 100%)`,
-                  border: `2px solid ${face.border}`,
-                  borderRadius: '8px',
-                  boxShadow: `0 0 20px ${face.border}30, inset 0 0 20px ${face.border}10`,
-                  width: 80,
-                  height: 80,
-                }}
-              >
-                {/* 面内发光点 */}
-                <motion.div
-                  className="w-3 h-3 rounded-full"
-                  style={{
-                    background: face.border,
-                    boxShadow: `0 0 10px ${face.border}, 0 0 20px ${face.border}`,
-                  }}
-                  animate={{
-                    scale: [1, 1.3, 1],
-                    opacity: [0.8, 1, 0.8],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                    delay: index * 0.1,
-                  }}
-                />
-              </div>
-            ))}
-          </motion.div>
-
-          {/* 内层旋转环 */}
-          <motion.div
-            className="absolute inset-2 rounded-full"
-            style={{
-              border: '2px solid var(--accent-secondary)',
-              borderTopColor: 'transparent',
-              borderBottomColor: 'transparent',
-            }}
-            animate={{ rotate: -360 }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: 'linear',
-            }}
-          />
-
-          {/* 中心脉冲核心 */}
-          <motion.div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-            style={{
-              width: 16,
-              height: 16,
-              borderRadius: '50%',
-              background: 'var(--accent-primary)',
-              boxShadow: `
-                0 0 20px var(--accent-primary),
-                0 0 40px var(--accent-primary),
-                0 0 60px var(--accent-glow),
-                inset 0 0 10px rgba(255,255,255,0.5)
-              `,
-            }}
-            animate={{
-              scale: [1, 1.2, 1],
-              boxShadow: [
-                '0 0 20px var(--accent-primary), 0 0 40px var(--accent-primary), 0 0 60px var(--accent-glow), inset 0 0 10px rgba(255,255,255,0.5)',
-                '0 0 30px var(--accent-primary), 0 0 60px var(--accent-primary), 0 0 90px var(--accent-glow), inset 0 0 15px rgba(255,255,255,0.7)',
-                '0 0 20px var(--accent-primary), 0 0 40px var(--accent-primary), 0 0 60px var(--accent-glow), inset 0 0 10px rgba(255,255,255,0.5)',
-              ],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
+          <div 
+            className="h-4 rounded w-5/6 mx-auto skeleton-pulse"
+            style={{ background: 'var(--bg-card)', animationDelay: '0.2s' }}
           />
         </div>
-
-        {/* 加载文字区域 */}
-        <motion.div
-          className="flex flex-col items-center gap-4"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-        >
-          {/* 主标题 - 立体字效果 */}
-          <div className="relative">
-            <motion.p
-              className="text-2xl font-bold tracking-widest"
-              style={{
-                color: 'var(--text-primary)',
-                textShadow: `
-                  0 0 10px var(--accent-glow),
-                  0 0 30px var(--accent-glow),
-                  2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black),
-                  -1px -1px 0 rgba(255,255,255,0.1)
-                `,
+        {/* 模拟卡片 */}
+        <div className="grid grid-cols-3 gap-3 mt-6">
+          {[...Array(3)].map((_, i) => (
+            <div 
+              key={i}
+              className="h-20 rounded-lg skeleton-pulse"
+              style={{ 
+                background: 'var(--bg-card)',
+                animationDelay: `${0.3 + i * 0.15}s`,
               }}
-              animate={{
-                textShadow: [
-                  '0 0 10px var(--accent-glow), 0 0 30px var(--accent-glow), 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black), -1px -1px 0 rgba(255,255,255,0.1)',
-                  '0 0 20px var(--accent-glow), 0 0 50px var(--accent-glow), 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black), -1px -1px 0 rgba(255,255,255,0.2)',
-                  '0 0 10px var(--accent-glow), 0 0 30px var(--accent-glow), 2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black), -1px -1px 0 rgba(255,255,255,0.1)',
-                ],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            >
-              LOADING
-            </motion.p>
-          </div>
-
-          {/* 动态点状指示器 */}
-          <div className="flex gap-2">
-            {[0, 1, 2].map((index) => (
-              <motion.div
-                key={index}
-                className="w-3 h-3 rounded-full"
-                style={{
-                  background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                  boxShadow: '0 0 10px var(--accent-glow)',
-                }}
-                animate={{
-                  scale: [1, 1.4, 1],
-                  opacity: [0.4, 1, 0.4],
-                  y: [0, -8, 0],
-                }}
-                transition={{
-                  duration: 1.2,
-                  repeat: Infinity,
-                  delay: index * 0.15,
-                  ease: 'easeInOut',
-                }}
-              />
-            ))}
-          </div>
-        </motion.div>
-
-        {/* 进度条 - 带立体效果 */}
-        <motion.div
-          className="relative w-56 h-2 rounded-full overflow-hidden"
-          style={{
-            background: 'var(--border-subtle)',
-            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
-          }}
-          initial={{ width: 0, opacity: 0 }}
-          animate={{ width: '14rem', opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          {/* 进度条光效 */}
-          <motion.div
-            className="absolute inset-0 rounded-full"
-            style={{
-              background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary))',
-              backgroundSize: '200% 100%',
-              boxShadow: '0 0 10px var(--accent-glow), 0 0 20px var(--accent-primary)',
-            }}
-            animate={{
-              x: ['-100%', '100%'],
-              backgroundPosition: ['0% 0%', '200% 0%'],
-            }}
-            transition={{
-              x: { duration: 2, repeat: Infinity, ease: 'linear' },
-              backgroundPosition: { duration: 3, repeat: Infinity, ease: 'linear' },
-            }}
-          />
-          
-          {/* 进度条高光 */}
-          <div
-            className="absolute top-0 left-0 right-0 h-px rounded-full"
-            style={{
-              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
-            }}
-          />
-        </motion.div>
-
-        {/* 状态文字 */}
-        <motion.p
-          className="text-sm font-mono"
-          style={{ color: 'var(--text-muted)' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <motion.span
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            系统初始化中...
-          </motion.span>
-        </motion.p>
-      </motion.div>
-
-      {/* 角落装饰 - 3D风格 */}
-      <div className="absolute top-0 left-0 w-32 h-32 opacity-20 pointer-events-none">
-        <div
-          className="absolute top-4 left-4 w-12 h-12"
-          style={{
-            border: '2px solid var(--accent-primary)',
-            borderRadius: '4px',
-            transform: 'perspective(100px) rotateX(10deg) rotateY(-10deg)',
-            boxShadow: '0 0 20px var(--accent-primary)30',
-          }}
-        />
-        <div
-          className="absolute top-6 left-6 w-12 h-12"
-          style={{
-            border: '1px solid var(--accent-secondary)',
-            borderRadius: '4px',
-            transform: 'perspective(100px) rotateX(10deg) rotateY(-10deg) translateZ(10px)',
-          }}
-        />
+            />
+          ))}
+        </div>
       </div>
-      
-      <div className="absolute bottom-0 right-0 w-32 h-32 opacity-20 pointer-events-none">
-        <div
-          className="absolute bottom-4 right-4 w-12 h-12"
-          style={{
-            border: '2px solid var(--accent-secondary)',
-            borderRadius: '4px',
-            transform: 'perspective(100px) rotateX(-10deg) rotateY(10deg)',
-            boxShadow: '0 0 20px var(--accent-secondary)30',
-          }}
-        />
-        <div
-          className="absolute bottom-6 right-6 w-12 h-12"
-          style={{
-            border: '1px solid var(--accent-tertiary)',
-            borderRadius: '4px',
-            transform: 'perspective(100px) rotateX(-10deg) rotateY(10deg) translateZ(10px)',
-          }}
-        />
-      </div>
+
+      {/* CSS 动画定义 */}
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes spin-reverse {
+          from { transform: rotate(360deg); }
+          to { transform: rotate(0deg); }
+        }
+        @keyframes progress {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+        .skeleton-pulse {
+          animation: skeleton-pulse 2s ease-in-out infinite;
+        }
+        @keyframes skeleton-pulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.8; }
+        }
+      `}</style>
     </div>
   );
 });
 
 LoadingPlaceholder.displayName = 'LoadingPlaceholder';
+
+/**
+ * 简化版加载占位符 - 用于区域加载
+ */
+export const SectionLoadingPlaceholder = memo(() => (
+  <div className="min-h-[300px] flex flex-col items-center justify-center">
+    <div
+      className="w-10 h-10 rounded-lg"
+      style={{
+        border: '3px solid var(--bg-tertiary)',
+        borderTopColor: 'var(--accent-primary)',
+        animation: 'spin 1s linear infinite',
+      }}
+    />
+    <p className="mt-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+      加载中...
+    </p>
+    <style>{`
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    `}</style>
+  </div>
+));
+
+SectionLoadingPlaceholder.displayName = 'SectionLoadingPlaceholder';

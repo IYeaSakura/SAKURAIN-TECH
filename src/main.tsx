@@ -10,6 +10,7 @@ import { Navigation } from '@/components/sections/Navigation';
 import { useTheme, useMobile } from '@/hooks';
 import { PerformanceProvider, usePerformance } from '@/contexts/PerformanceContext';
 import { RouteLoader } from '@/components/RouterTransition';
+import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
 import type { SiteData } from '@/types';
 import {
   MagneticCursor,
@@ -69,22 +70,116 @@ export function preloadBlog() {
   return blogLoader;
 }
 
+/**
+ * 错峰加载 Hook - 控制特效和动画的渐进式加载
+ */
+function useStaggeredLoad(isReady: boolean) {
+  const [phases, setPhases] = useState({
+    phase1: false, // 基础内容
+    phase2: false, // 鼠标效果
+    phase3: false, // 星星背景
+    phase4: false, // 渐变背景
+    phase5: false, // 光束效果
+  });
+
+  useEffect(() => {
+    if (!isReady) return;
+
+    // 错峰启动各个特效，避免同时开始动画
+    const timers = [
+      setTimeout(() => setPhases(p => ({ ...p, phase1: true })), 0),
+      setTimeout(() => setPhases(p => ({ ...p, phase2: true })), 100),
+      setTimeout(() => setPhases(p => ({ ...p, phase3: true })), 300),
+      setTimeout(() => setPhases(p => ({ ...p, phase4: true })), 500),
+      setTimeout(() => setPhases(p => ({ ...p, phase5: true })), 700),
+    ];
+
+    return () => timers.forEach(clearTimeout);
+  }, [isReady]);
+
+  return phases;
+}
+
+/**
+ * 首屏加载管理器 - 确保关键资源加载完成后再显示内容
+ */
+function useInitialLoad() {
+  const [isReady, setIsReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { effectiveQuality } = usePerformance();
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadCriticalResources = async () => {
+      try {
+        // 并行加载关键资源
+        const loadPromises = [
+          // 加载站点数据
+          fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' })
+            .then(res => res.ok ? res.json() : null)
+            .catch(() => null),
+          // 预加载关键字体
+          document.fonts.ready,
+          // 给浏览器时间处理初始渲染
+          new Promise(resolve => requestAnimationFrame(resolve)),
+        ];
+
+        await Promise.all(loadPromises);
+
+        // 低性能设备额外等待时间确保渲染完成
+        if (effectiveQuality === 'low') {
+          await new Promise(resolve => setTimeout(resolve, 150));
+        }
+
+        if (mounted) {
+          setIsReady(true);
+          // 延迟隐藏加载状态，确保平滑过渡
+          setTimeout(() => setIsLoading(false), 150);
+        }
+      } catch (error) {
+        console.error('Failed to load critical resources:', error);
+        if (mounted) {
+          setIsReady(true);
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadCriticalResources();
+
+    return () => {
+      mounted = false;
+    };
+  }, [effectiveQuality]);
+
+  return { isReady, isLoading };
+}
+
 // 带导航的布局组件 - 只在指定列表页显示导航
 function PageLayout({ children }: { children: React.ReactNode }) {
   const [siteData, setSiteData] = useState<SiteData | null>(null);
   const { theme, isTransitioning, toggleTheme } = useTheme();
   const location = useLocation();
+  const { isReady, isLoading } = useInitialLoad();
 
   useEffect(() => {
-    fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' })
-      .then(res => res.json())
-      .then(data => setSiteData(data))
-      .catch(err => console.error('Failed to load site data:', err));
-  }, []);
+    if (isReady) {
+      fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' })
+        .then(res => res.json())
+        .then(data => setSiteData(data))
+        .catch(err => console.error('Failed to load site data:', err));
+    }
+  }, [isReady]);
 
   // 只在以下路径显示导航：首页、博客列表、文档列表、友链、关于、说说
   const showNavPaths = ['/', '/blog', '/docs', '/friends', '/about', '/notes'];
   const shouldShowNav = showNavPaths.includes(location.pathname);
+
+  // 首屏加载期间显示加载占位符
+  if (isLoading) {
+    return <LoadingPlaceholder />;
+  }
 
   if (!shouldShowNav) {
     return <>{children}</>;
@@ -110,47 +205,61 @@ function GlobalLayout({ children }: { children: React.ReactNode }) {
   const isHomePage = location.pathname === '/';
   const isMobile = useMobile();
   const { enableMouseEffects, effectiveQuality } = usePerformance();
+  const { isReady } = useInitialLoad();
+  const phases = useStaggeredLoad(isReady);
 
   // 根据性能级别调整特效参数
-  const starCount = effectiveQuality === 'low' ? 15 : effectiveQuality === 'medium' ? 25 : 35;
-  const gradientSpeed = effectiveQuality === 'low' ? 20 : 15;
-  const gradientOpacity = effectiveQuality === 'low' ? 0.03 : 0.05;
-  const beamIntensity = effectiveQuality === 'low' ? 0.2 : 0.3;
+  const starCount = effectiveQuality === 'low' ? 10 : effectiveQuality === 'medium' ? 20 : 30;
+  const gradientSpeed = effectiveQuality === 'low' ? 25 : 18;
+  const gradientOpacity = effectiveQuality === 'low' ? 0.02 : 0.04;
+  const beamIntensity = effectiveQuality === 'low' ? 0.15 : 0.25;
+
+  // 是否启用特效
+  const enableEffects = isReady && effectiveQuality !== 'low';
 
   return (
     <>
       <GlobalContextMenu />
       <DebugProtection />
 
-      {/* 全局鼠标指针效果 - 仅桌面端显示且非低性能模式 */}
-      {!isMobile && enableMouseEffects && (
+      {/* 全局鼠标指针效果 - 错峰加载 */}
+      {phases.phase2 && !isMobile && enableMouseEffects && (
         <>
           <MagneticCursor />
           <VelocityCursor />
         </>
       )}
 
-      {/* 首页专属背景特效 - 根据性能级别降级 */}
-      {isHomePage && effectiveQuality !== 'low' && (
+      {/* 首页专属背景特效 - 错峰加载 */}
+      {enableEffects && isHomePage && (
         <>
-          <div className="fixed inset-0 pointer-events-none z-0">
-            <TwinklingStars 
-              count={starCount} 
-              color="var(--accent-primary)" 
-              secondaryColor="var(--accent-secondary)"
-              shootingStars={effectiveQuality === 'high'}
-            />
-          </div>
+          {/* Phase 3: 星星背景 */}
+          {phases.phase3 && (
+            <div className="fixed inset-0 pointer-events-none z-0">
+              <TwinklingStars 
+                count={starCount} 
+                color="var(--accent-primary)" 
+                secondaryColor="var(--accent-secondary)"
+                shootingStars={effectiveQuality === 'high'}
+              />
+            </div>
+          )}
 
-          <div className="fixed inset-0 pointer-events-none z-0">
-            <FlowingGradient
-              colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
-              speed={gradientSpeed}
-              opacity={gradientOpacity}
-            />
-          </div>
+          {/* Phase 4: 渐变背景 */}
+          {phases.phase4 && (
+            <div className="fixed inset-0 pointer-events-none z-0">
+              <FlowingGradient
+                colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
+                speed={gradientSpeed}
+                opacity={gradientOpacity}
+              />
+            </div>
+          )}
 
-          <LightBeam position="top" color="var(--accent-primary)" intensity={beamIntensity} />
+          {/* Phase 5: 光束效果 */}
+          {phases.phase5 && (
+            <LightBeam position="top" color="var(--accent-primary)" intensity={beamIntensity} />
+          )}
         </>
       )}
 

@@ -10,6 +10,7 @@ import { deploymentConfig } from '@/config/deployment-config';
 import { DocListView } from './components/DocListView';
 import { SeriesDetailView } from './components/SeriesDetailView';
 import { clipPathRounded } from '@/utils/styles';
+import { RouteLoader } from '@/components/RouterTransition';
 import type { DocCategory, DocItem, DocSeries, Chapter, DocsConfig } from './types';
 import type { SiteData } from '@/types';
 
@@ -154,20 +155,9 @@ export default function DocsPage() {
     }
   };
 
-  if (configLoading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-      <div className="flex items-center gap-3">
-        <div 
-          className="w-6 h-6 border-2 border-t-transparent animate-spin" 
-          style={{ 
-            borderColor: 'var(--accent-primary)',
-            clipPath: clipPathRounded(4),
-          }} 
-        />
-        <span style={{ color: 'var(--text-secondary)' }}>加载...</span>
-      </div>
-    </div>
-  );
+  if (configLoading) {
+    return <RouteLoader />;
+  }
 
   if (configError || !config) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>

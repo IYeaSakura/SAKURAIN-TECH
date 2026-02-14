@@ -18,12 +18,12 @@ const SITE_DATA_PATH = path.join(__dirname, '../public/data/site-data.json');
 
 // Feed 配置
 const FEED_CONFIG = {
-  title: 'SAKURAIN 博客',
-  description: '专注博弈论算法工程化与大规模数据分析',
-  siteUrl: 'https://sakurain.tech',
-  feedUrl: 'https://sakurain.tech/feed.xml',
-  atomUrl: 'https://sakurain.tech/atom.xml',
-  jsonFeedUrl: 'https://sakurain.tech/feed.json',
+  title: 'SAKURAIN TEAM',
+  description: '用代码构建世界',
+  siteUrl: 'https://sakurain.net',
+  feedUrl: 'https://sakurain.net/feed.xml',
+  atomUrl: 'https://sakurain.net/atom.xml',
+  jsonFeedUrl: 'https://sakurain.net/feed.json',
   author: {
     name: 'SAKURAIN',
     email: 'Yae_SakuRain@outlook.com'
@@ -51,14 +51,14 @@ function loadSiteData() {
 // 读取所有博客文章
 function loadAllPosts() {
   const posts = [];
-  
+
   if (!fs.existsSync(ARCHIVES_DIR)) {
     console.warn('Archives directory not found:', ARCHIVES_DIR);
     return posts;
   }
 
   const files = fs.readdirSync(ARCHIVES_DIR).filter(file => file.startsWith('index-') && file.endsWith('.json'));
-  
+
   for (const file of files) {
     const filePath = path.join(ARCHIVES_DIR, file);
     try {
@@ -78,15 +78,15 @@ function loadAllPosts() {
 
 // 生成 RSS 2.0 Feed
 function generateRSS(posts, siteInfo) {
-  const lastBuildDate = posts.length > 0 
-    ? new Date(posts[0].date).toUTCString() 
+  const lastBuildDate = posts.length > 0
+    ? new Date(posts[0].date).toUTCString()
     : new Date().toUTCString();
 
   const items = posts.map(post => {
     const pubDate = new Date(post.date).toUTCString();
     const link = `${FEED_CONFIG.siteUrl}/blog/${post.slug}`;
     const categories = post.tags?.map(tag => `<category>${escapeXml(tag)}</category>`).join('') || '';
-    
+
     return `
     <item>
       <title>${escapeXml(post.title)}</title>
@@ -118,8 +118,8 @@ function generateRSS(posts, siteInfo) {
 
 // 生成 Atom Feed
 function generateAtom(posts, siteInfo) {
-  const updated = posts.length > 0 
-    ? new Date(posts[0].date).toISOString() 
+  const updated = posts.length > 0
+    ? new Date(posts[0].date).toISOString()
     : new Date().toISOString();
 
   const entries = posts.map(post => {
@@ -127,7 +127,7 @@ function generateAtom(posts, siteInfo) {
     const link = `${FEED_CONFIG.siteUrl}/blog/${post.slug}`;
     const categories = post.tags?.map(tag => `
     <category term="${escapeXml(tag)}"/>`).join('') || '';
-    
+
     return `
   <entry>
     <title>${escapeXml(post.title)}</title>
@@ -209,32 +209,32 @@ function escapeXml(str) {
 // 主函数
 function generateFeeds() {
   console.log('Generating blog feeds...');
-  
+
   const siteInfo = loadSiteData();
   const posts = loadAllPosts();
-  
+
   if (posts.length === 0) {
     console.warn('No posts found, skipping feed generation');
     return;
   }
-  
+
   console.log(`Found ${posts.length} posts`);
-  
+
   // 生成 RSS 2.0
   const rss = generateRSS(posts, siteInfo);
   fs.writeFileSync(path.join(OUTPUT_DIR, 'feed.xml'), rss);
   console.log('✓ Generated feed.xml (RSS 2.0)');
-  
+
   // 生成 Atom
   const atom = generateAtom(posts, siteInfo);
   fs.writeFileSync(path.join(OUTPUT_DIR, 'atom.xml'), atom);
   console.log('✓ Generated atom.xml (Atom)');
-  
+
   // 生成 JSON Feed
   const jsonFeed = generateJSONFeed(posts, siteInfo);
   fs.writeFileSync(path.join(OUTPUT_DIR, 'feed.json'), jsonFeed);
   console.log('✓ Generated feed.json (JSON Feed)');
-  
+
   console.log('Feed generation completed!');
   console.log('  - RSS 2.0: /feed.xml');
   console.log('  - Atom: /atom.xml');

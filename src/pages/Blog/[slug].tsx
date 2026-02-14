@@ -9,6 +9,7 @@ import { MarkdownRenderer } from '@/pages/Docs/components/MarkdownRenderer';
 import { ArticleSidebar } from './components/ArticleSidebar';
 import { FloatingToolbar } from './components/FloatingToolbar';
 import { getBlogPost, formatDateDetail, getReadingTime, getWordCount } from '../Blog/utils';
+import { RouteLoader } from '@/components/RouterTransition';
 import type { BlogPost } from '../Blog/types';
 
 export default function BlogPost() {
@@ -105,17 +106,7 @@ function BlogPostContent() {
     }));
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-12 h-12 border-2 border-t-transparent rounded-full animate-spin"
-            style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
-          />
-          <p style={{ color: 'var(--text-muted)' }}>加载中...</p>
-        </div>
-      </div>
-    );
+    return <RouteLoader />;
   }
 
   if (error || !post) {

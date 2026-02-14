@@ -1,6 +1,5 @@
-import { useState, useEffect, Suspense, lazy, memo } from 'react';
-import { motion } from 'framer-motion';
-import { Bell } from 'lucide-react';
+import { useState, useEffect, Suspense, lazy } from 'react';
+import { usePerformance } from '@/contexts/PerformanceContext';
 import {
   ScrollProgress,
   SecurityProtection,
@@ -9,7 +8,7 @@ import {
 import { Navigation } from '@/components/sections/Navigation';
 import { Hero } from '@/components/sections/Hero';
 import { WelcomeModal } from '@/components/WelcomeModal';
-import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
+import { SectionLoadingPlaceholder } from '@/components/ui/loading-placeholder';
 import { useTheme } from '@/hooks';
 import type { SiteData } from '@/types';
 import { preloadDocs, preloadFriends } from '@/main';
@@ -39,23 +38,89 @@ interface StatsChartsData {
   charts: any[];
 }
 
-// 简单的加载占位组件
-const SectionFallback = memo(() => (
-  <div className="min-h-[300px] flex items-center justify-center">
-    <div
-      className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
-      style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
-    />
-  </div>
-));
+/**
+ * 错峰加载的底部光剑 - 延迟显示避免首屏动画冲突
+ */
+function StaggeredLightBeam() {
+  const [visible, setVisible] = useState(false);
+  const { effectiveQuality } = usePerformance();
 
-SectionFallback.displayName = 'SectionFallback';
+  useEffect(() => {
+    // 延迟加载底部光剑，避免与其他动画同时开始
+    const timer = setTimeout(() => setVisible(true), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!visible || effectiveQuality === 'low') return null;
+
+  return <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />;
+}
+
+/**
+ * 错峰加载的悬浮按钮
+ */
+function StaggeredFloatingButton() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    // 延迟显示，避免首屏动画拥堵
+    const timer = setTimeout(() => setVisible(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <button
+      onClick={() => window.dispatchEvent(new CustomEvent('open-welcome-modal'))}
+      id="welcome-bell"
+      className="fixed left-0 top-[20%] z-50 hidden xl:flex flex-col items-center justify-center gap-1 animate-slide-in-left"
+      style={{
+        width: '28px',
+        height: '64px',
+        background: 'linear-gradient(180deg, var(--accent-primary) 0%, color-mix(in srgb, var(--accent-primary) 70%, var(--accent-secondary)) 100%)',
+        border: 'none',
+        borderRadius: '0 8px 8px 0',
+        boxShadow: '2px 0 12px var(--accent-glow), inset -2px 0 4px rgba(255,255,255,0.2)',
+        animation: 'slideInLeft 0.5s ease-out',
+      }}
+    >
+      <svg 
+        className="w-4 h-4" 
+        style={{ color: 'white' }}
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2"
+      >
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      </svg>
+      <span 
+        className="text-[9px] font-bold tracking-wider"
+        style={{ 
+          color: 'white',
+          writingMode: 'vertical-rl',
+          textOrientation: 'mixed',
+        }}
+      >
+        欢迎
+      </span>
+      <style>{`
+        @keyframes slideInLeft {
+          from { opacity: 0; transform: translateX(-20px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
+    </button>
+  );
+}
 
 function App() {
   const [siteData, setSiteData] = useState<SiteData | null>(null);
   const [timelineData, setTimelineData] = useState<TimelineData | null>(null);
   const [statsChartsData, setStatsChartsData] = useState<StatsChartsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const { theme, isTransitioning, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -69,11 +134,11 @@ function App() {
         setSiteData(site);
         setTimelineData(timeline);
         setStatsChartsData(stats);
-        setLoading(false);
+        setDataLoaded(true);
       })
       .catch((error) => {
         console.error('Failed to load site data:', error);
-        setLoading(false);
+        setDataLoaded(true);
       });
   }, []);
 
@@ -87,25 +152,18 @@ function App() {
     return () => clearTimeout(preloadTimer);
   }, []);
 
-  if (loading) {
-    return <LoadingPlaceholder />;
-  }
-
-  if (!siteData) {
+  if (!dataLoaded || !siteData) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
         style={{ background: 'var(--bg-primary)' }}
       >
         <div className="text-center">
-          <p style={{ color: 'var(--text-muted)' }} className="mb-4">无法加载网站数据</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 rounded-lg text-white"
-            style={{ background: 'var(--accent-primary)' }}
-          >
-            重试
-          </button>
+          <div
+            className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-4"
+            style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
+          />
+          <p style={{ color: 'var(--text-muted)' }}>加载中...</p>
         </div>
       </div>
     );
@@ -135,87 +193,53 @@ function App() {
         {/* Hero 首屏直接渲染，无需懒加载 */}
         <Hero data={siteData.hero} />
 
-        {/* 其他区域懒加载 */}
-        <Suspense fallback={<SectionFallback />}>
+        {/* 其他区域懒加载，使用统一的加载占位符 */}
+        <Suspense fallback={<SectionLoadingPlaceholder />}>
           <Services data={siteData.services} />
         </Suspense>
 
-        <Suspense fallback={<SectionFallback />}>
+        <Suspense fallback={<SectionLoadingPlaceholder />}>
           <TechStack data={siteData.techStack} />
         </Suspense>
 
         {statsChartsData && (
-          <Suspense fallback={<SectionFallback />}>
+          <Suspense fallback={<SectionLoadingPlaceholder />}>
             <StatsCharts data={statsChartsData} />
           </Suspense>
         )}
 
         {timelineData && (
-          <Suspense fallback={<SectionFallback />}>
+          <Suspense fallback={<SectionLoadingPlaceholder />}>
             <Timeline data={timelineData} />
           </Suspense>
         )}
 
-        <Suspense fallback={<SectionFallback />}>
+        <Suspense fallback={<SectionLoadingPlaceholder />}>
           <Pricing data={siteData.pricing} />
         </Suspense>
 
-        <Suspense fallback={<SectionFallback />}>
+        <Suspense fallback={<SectionLoadingPlaceholder />}>
           <Process data={siteData.process} />
         </Suspense>
 
-        <Suspense fallback={<SectionFallback />}>
+        <Suspense fallback={<SectionLoadingPlaceholder />}>
           <Comparison data={siteData.comparison} />
         </Suspense>
 
-        <Suspense fallback={<SectionFallback />}>
+        <Suspense fallback={<SectionLoadingPlaceholder />}>
           <Contact data={siteData.contact} />
         </Suspense>
       </main>
 
-      <Suspense fallback={<SectionFallback />}>
+      <Suspense fallback={<SectionLoadingPlaceholder />}>
         <Footer data={siteData.footer} />
       </Suspense>
 
-      {/* 底部光剑 */}
-      <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />
+      {/* 错峰加载的底部光剑 */}
+      <StaggeredLightBeam />
 
-      {/* 贴边铃铛 - 打开欢迎弹窗 */}
-      <motion.button
-        initial={{ opacity: 0, x: -10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 2, duration: 0.5 }}
-        onClick={() => window.dispatchEvent(new CustomEvent('open-welcome-modal'))}
-        id="welcome-bell"
-        className="fixed left-0 top-[20%] z-50 hidden xl:flex flex-col items-center justify-center gap-1"
-        style={{
-          width: '28px',
-          height: '64px',
-          background: 'linear-gradient(180deg, var(--accent-primary) 0%, color-mix(in srgb, var(--accent-primary) 70%, var(--accent-secondary)) 100%)',
-          border: 'none',
-          borderRadius: '0 8px 8px 0',
-          boxShadow: '2px 0 12px var(--accent-glow), inset -2px 0 4px rgba(255,255,255,0.2)',
-        }}
-        whileHover={{ 
-          width: '32px',
-          x: 4,
-        }}
-      >
-        <Bell 
-          className="w-4 h-4" 
-          style={{ color: 'white' }} 
-        />
-        <span 
-          className="text-[9px] font-bold tracking-wider"
-          style={{ 
-            color: 'white',
-            writingMode: 'vertical-rl',
-            textOrientation: 'mixed',
-          }}
-        >
-          欢迎
-        </span>
-      </motion.button>
+      {/* 错峰加载的悬浮按钮 */}
+      <StaggeredFloatingButton />
     </div>
   );
 }

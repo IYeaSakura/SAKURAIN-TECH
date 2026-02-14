@@ -11,6 +11,7 @@ import { BlogListItem } from './components/BlogListItem';
 import { getBlogIndex } from './utils';
 import { BlogTagCloud } from '@/components/BlogTagCloud';
 import { useBlogArchive, useMultipleMonthArchives } from '@/hooks/useBlogArchive';
+import { RouteLoader } from '@/components/RouterTransition';
 import type { BlogIndex } from './types';
 
 interface TagData {
@@ -250,21 +251,7 @@ export default function BlogIndex() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-        <div className="flex flex-col items-center gap-4">
-          <div
-            className="w-12 h-12 border-2 border-t-transparent animate-spin"
-            style={{
-              borderColor: 'var(--accent-primary)',
-              borderTopColor: 'transparent',
-              clipPath: clipPathRounded(6),
-            }}
-          />
-          <p style={{ color: 'var(--text-muted)' }}>加载中...</p>
-        </div>
-      </div>
-    );
+    return <RouteLoader />;
   }
 
   if (!data) {
