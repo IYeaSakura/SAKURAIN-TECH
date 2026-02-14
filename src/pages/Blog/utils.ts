@@ -1,13 +1,17 @@
 import type { BlogPost, BlogIndex } from './types';
 
 export async function getBlogIndex(): Promise<BlogIndex> {
-  const response = await fetch('/blog/index.json');
+  const response = await fetch(`/blog/index.json?v=${Date.now()}`, {
+    cache: 'no-store',
+  });
   return response.json();
 }
 
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   try {
-    const response = await fetch(`/blog/posts/${slug}.md`);
+    const response = await fetch(`/blog/posts/${slug}.md?v=${Date.now()}`, {
+      cache: 'no-store',
+    });
     if (!response.ok) return null;
     
     const text = await response.text();

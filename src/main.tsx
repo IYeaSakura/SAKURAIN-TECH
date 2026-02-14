@@ -76,7 +76,7 @@ function PageLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   useEffect(() => {
-    fetch('/data/site-data.json')
+    fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => setSiteData(data))
       .catch(err => console.error('Failed to load site data:', err));

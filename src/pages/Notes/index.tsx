@@ -57,7 +57,7 @@ export default function NotesPage() {
 
   // 加载 footer 数据
   useEffect(() => {
-    fetch('/data/site-data.json')
+    fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' })
       .then(res => res.json())
       .then((data: SiteData) => {
         setFooterData(data.footer);
@@ -68,7 +68,7 @@ export default function NotesPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const archiveResponse = await fetch('/notes/archive.json');
+        const archiveResponse = await fetch(`/notes/archive.json?v=${Date.now()}`, { cache: 'no-store' });
         if (!archiveResponse.ok) throw new Error('Failed to load archive');
         const archive = await archiveResponse.json();
         setArchiveData(archive);
@@ -77,7 +77,7 @@ export default function NotesPage() {
         const monthsToLoad = archive.months.slice(0, Math.ceil(NOTES_PER_LOAD / 10));
 
         for (const month of monthsToLoad) {
-          const monthResponse = await fetch(`/notes/archives/index-${month}.json`);
+          const monthResponse = await fetch(`/notes/archives/index-${month}.json?v=${Date.now()}`, { cache: 'no-store' });
           if (monthResponse.ok) {
             const monthNotes = await monthResponse.json();
             allNotes.push(...monthNotes);
@@ -110,7 +110,7 @@ export default function NotesPage() {
 
       const newNotes: Note[] = [];
       for (const month of monthsToLoad) {
-        const monthResponse = await fetch(`/notes/archives/index-${month}.json`);
+        const monthResponse = await fetch(`/notes/archives/index-${month}.json?v=${Date.now()}`, { cache: 'no-store' });
         if (monthResponse.ok) {
           const monthNotes = await monthResponse.json();
           newNotes.push(...monthNotes);

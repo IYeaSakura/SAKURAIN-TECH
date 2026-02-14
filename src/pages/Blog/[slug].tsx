@@ -54,7 +54,7 @@ function BlogPostContent() {
   }, [slug, navigate]);
 
   useEffect(() => {
-    fetch('/blog/index.json')
+    fetch(`/blog/index.json?v=${Date.now()}`, { cache: 'no-store' })
       .then(res => res.json())
       .then((data) => {
         const posts = data.posts || [];

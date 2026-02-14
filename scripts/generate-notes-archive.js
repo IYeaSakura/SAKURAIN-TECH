@@ -47,6 +47,19 @@ function parseMarkdown(content) {
   };
 }
 
+function getWordCount(content) {
+  const chineseChars = (content.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const englishWords = (content.match(/[a-zA-Z]+/g) || []).length;
+  return chineseChars + englishWords;
+}
+
+function getReadingTime(content) {
+  const chineseCharsPerMinute = 400;
+  const chineseChars = (content.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const minutes = Math.ceil(chineseChars / chineseCharsPerMinute);
+  return `${minutes} 分钟阅读`;
+}
+
 function formatDate(dateStr) {
   const date = new Date(dateStr);
   const year = date.getFullYear();
@@ -158,6 +171,8 @@ async function generateNotesArchive() {
       }
 
       const formatted = formatDate(parsed.date);
+      const wordCount = getWordCount(parsed.content);
+      const readingTime = getReadingTime(parsed.content);
       const note = {
         id: file.replace('.md', ''),
         slug: file.replace('.md', ''),
@@ -165,6 +180,8 @@ async function generateNotesArchive() {
         content: parsed.content,
         date: parsed.date,
         mood: parsed.mood || 'neutral',
+        wordCount,
+        readingTime,
         ...formatted
       };
 

@@ -1204,11 +1204,11 @@ export default function FriendsPage() {
   // Load friends data and footer data
   useEffect(() => {
     Promise.all([
-      fetch('/data/friends.json').then(res => {
+      fetch(`/data/friends.json?v=${Date.now()}`, { cache: 'no-store' }).then(res => {
         if (!res.ok) throw new Error('Failed to load friends data');
         return res.json();
       }),
-      fetch('/data/site-data.json').then(res => res.json())
+      fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' }).then(res => res.json())
     ])
       .then(([friendsData, siteData]: [FriendsData, SiteData]) => {
         setData(friendsData);

@@ -61,9 +61,9 @@ function App() {
   useEffect(() => {
     // 并行加载数据
     Promise.all([
-      fetch('/data/site-data.json').then((res) => res.json()),
-      fetch('/data/timeline.json').then((res) => res.json()),
-      fetch('/data/stats-charts.json').then((res) => res.json()),
+      fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' }).then((res) => res.json()),
+      fetch(`/data/timeline.json?v=${Date.now()}`, { cache: 'no-store' }).then((res) => res.json()),
+      fetch(`/data/stats-charts.json?v=${Date.now()}`, { cache: 'no-store' }).then((res) => res.json()),
     ])
       .then(([site, timeline, stats]: [SiteData, TimelineData, StatsChartsData]) => {
         setSiteData(site);

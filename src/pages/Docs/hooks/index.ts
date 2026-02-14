@@ -25,7 +25,9 @@ export function useDocument(path: string) {
       setError(null);
       
       try {
-        const response = await fetch(path);
+        const response = await fetch(`${path}?v=${Date.now()}`, {
+          cache: 'no-store',
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const text = await response.text();
         
