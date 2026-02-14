@@ -146,7 +146,7 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
     setLoading(true);
     setError(null);
     
-    fetch(chapter.path)
+    fetch(`${chapter.path}?v=${Date.now()}`, { cache: 'no-store' })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.text();

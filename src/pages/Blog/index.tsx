@@ -167,7 +167,7 @@ export default function BlogIndex() {
   }, []);
 
   useEffect(() => {
-    fetch('/blog/tags.json')
+    fetch(`/blog/tags.json?v=${Date.now()}`, { cache: 'no-store' })
       .then(res => {
         if (!res.ok) throw new Error('Failed to load tags data');
         return res.json();
@@ -181,7 +181,7 @@ export default function BlogIndex() {
   }, []);
 
   useEffect(() => {
-    fetch('/data/site-data.json')
+    fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' })
       .then(res => res.json())
       .then((data: SiteData) => {
         setFooterData(data.footer);

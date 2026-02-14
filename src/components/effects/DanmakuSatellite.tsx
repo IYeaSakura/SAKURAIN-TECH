@@ -218,7 +218,7 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
 
     try {
       debugLog('Loading Beidou satellites...');
-      const response = await fetch('/data/beidou-satellites.json');
+      const response = await fetch(`/data/beidou-satellites.json?v=${Date.now()}`, { cache: 'no-store' });
       if (response.ok) {
         const satellites = await response.json();
         setBeidouSatellites(satellites);

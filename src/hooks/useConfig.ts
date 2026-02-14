@@ -16,7 +16,9 @@ export function useConfig<T>(url: string): ConfigState<T> {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const response = await fetch(url);
+        const response = await fetch(`${url}?v=${Date.now()}`, {
+          cache: 'no-store',
+        });
         if (!response.ok) {
           throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
         }

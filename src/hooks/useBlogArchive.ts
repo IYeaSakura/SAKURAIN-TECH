@@ -29,7 +29,9 @@ export function useBlogArchive() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch('/blog/archive.json');
+        const response = await fetch(`/blog/archive.json?v=${Date.now()}`, {
+          cache: 'no-store',
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch archive data');
         }
@@ -77,7 +79,9 @@ export function useMonthArchive(yearMonth: string) {
           return;
         }
 
-        const response = await fetch(`/blog/archives/index-${yearMonth}.json`);
+        const response = await fetch(`/blog/archives/index-${yearMonth}.json?v=${Date.now()}`, {
+          cache: 'no-store',
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch month archive data');
         }
@@ -127,7 +131,9 @@ export function useMultipleMonthArchives(months: string[]) {
         
         for (const month of monthsToFetch) {
           try {
-            const response = await fetch(`/blog/archives/index-${month}.json`);
+            const response = await fetch(`/blog/archives/index-${month}.json?v=${Date.now()}`, {
+          cache: 'no-store',
+        });
             if (response.ok) {
               const monthData = await response.json();
               monthCache.set(month, monthData);
