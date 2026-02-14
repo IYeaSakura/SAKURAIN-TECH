@@ -1,15 +1,15 @@
 /**
  * Feed 代理 - 带 KV 缓存和速率限制
- * 
+ *
  * 查询参数:
  * - url: 要获取的 feed URL (必需)
  * - force: 强制刷新缓存，忽略过期时间 (可选，传入任意值即生效)
- * 
+ *
  * 缓存策略:
  * - 默认缓存 24 小时
  * - 支持强制刷新（每 IP 每 60 秒限 1 次）
  * - 缓存键包含 URL，不同 URL 独立缓存
- * 
+ *
  * 速率限制:
  * - 普通请求：60次/分钟
  * - 强制刷新：1次/60秒
@@ -24,15 +24,15 @@ const FORCE_REFRESH_COOLDOWN = 60 * 1000; // 60 秒强制刷新冷却
 async function checkForceRefreshLimit(ip) {
   const key = `feed:force:${ip}`;
   const data = await FEED_KV.get(key);
-  
+
   if (!data) {
     return { allowed: true };
   }
-  
+
   const lastRefresh = parseInt(data, 10);
   const now = Date.now();
   const elapsed = now - lastRefresh;
-  
+
   if (elapsed < FORCE_REFRESH_COOLDOWN) {
     const remaining = Math.ceil((FORCE_REFRESH_COOLDOWN - elapsed) / 1000);
     return {
@@ -40,7 +40,7 @@ async function checkForceRefreshLimit(ip) {
       remaining,
     };
   }
-  
+
   return { allowed: true };
 }
 
@@ -159,7 +159,7 @@ export async function onRequestGet(context) {
       }
     }
 
-    const kv = context.env?.FEED_KV;
+    const kv = FEED_KV;
     const cacheKey = `feed:${feedUrl}`;
 
     // 尝试从缓存获取（如果不是强制刷新）
@@ -169,7 +169,7 @@ export async function onRequestGet(context) {
         if (cached) {
           const data = JSON.parse(cached);
           const now = Date.now();
-          
+
           // 检查缓存是否过期（24小时）
           if (data.timestamp && (now - data.timestamp) < CACHE_TTL) {
             return new Response(data.content, {
@@ -198,9 +198,9 @@ export async function onRequestGet(context) {
     });
 
     if (!feedResponse.ok) {
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: `Failed to fetch feed: HTTP ${feedResponse.status}`,
-        status: feedResponse.status 
+        status: feedResponse.status
       }), {
         status: 502,
         headers: {
