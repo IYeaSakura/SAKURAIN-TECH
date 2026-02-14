@@ -14,7 +14,9 @@
       "并行计算"
     ],
     "cover": "/image/logo.webp",
-    "featured": false
+    "featured": false,
+    "wordCount": 8055,
+    "readingTime": "13 分钟阅读"
   },
   {
     "slug": "machine-learning-theory",
@@ -28,7 +30,9 @@
       "神经网络"
     ],
     "cover": "/image/logo.webp",
-    "featured": true
+    "featured": true,
+    "wordCount": 8155,
+    "readingTime": "16 分钟阅读"
   },
   {
     "slug": "api-security-edgeone",
@@ -43,6 +47,8 @@
       "边缘函数"
     ],
     "cover": "/image/logo.webp",
-    "featured": false
+    "featured": false,
+    "wordCount": 3136,
+    "readingTime": "7 分钟阅读"
   }
 ]

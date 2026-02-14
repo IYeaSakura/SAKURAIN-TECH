@@ -1,8 +1,9 @@
 import { memo, useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrefersReducedMotion, usePageVisibility } from '@/lib/performance';
+import { usePerformance } from '@/contexts/PerformanceContext';
 
-// ==================== 光剑效果 ====================
+// ==================== 光剑效果 - 优化版 ====================
 export const LightBeam = memo(({
   position = 'top',
   color = 'var(--accent-primary)',
@@ -15,9 +16,10 @@ export const LightBeam = memo(({
   animate?: boolean;
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const shouldAnimate = animate && !prefersReducedMotion;
+  const { effectiveQuality } = usePerformance();
+  const shouldAnimate = animate && !prefersReducedMotion && effectiveQuality !== 'low';
   const isHorizontal = position === 'top' || position === 'bottom';
-  
+
   const positionStyles = useMemo(() => ({
     top: { top: 0, left: 0, right: 0, height: '2px' },
     bottom: { bottom: 0, left: 0, right: 0, height: '2px' },
@@ -34,37 +36,34 @@ export const LightBeam = memo(({
       <motion.div
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(${isHorizontal ? '90deg' : '180deg'}, 
-            transparent, 
-            ${color}, 
+          background: `linear-gradient(${isHorizontal ? '90deg' : '180deg'},
+            transparent,
+            ${color},
             transparent
           )`,
-          boxShadow: `
-            0 0 10px ${color},
-            0 0 20px ${color},
-            0 0 40px ${color},
-            0 0 80px ${color}
-          `,
-          opacity: intensity,
+          boxShadow: effectiveQuality === 'low'
+            ? `0 0 5px ${color}, 0 0 10px ${color}` // 低性能：减少发光层数
+            : `0 0 10px ${color}, 0 0 20px ${color}, 0 0 40px ${color}, 0 0 80px ${color}`,
+          opacity: effectiveQuality === 'low' ? intensity * 0.7 : intensity,
         }}
         animate={shouldAnimate ? {
           opacity: [intensity * 0.5, intensity, intensity * 0.5],
         } : {}}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
       />
-      
-      {/* 扫描动画 - 只在需要时渲染 */}
-      {shouldAnimate && (
+
+      {/* 扫描动画 - 仅在高质量模式下渲染 */}
+      {shouldAnimate && effectiveQuality === 'high' && (
         <motion.div
           className="absolute"
           style={{
-            ...(isHorizontal 
+            ...(isHorizontal
               ? { width: '30%', height: '100%' }
               : { height: '30%', width: '100%' }
             ),
-            background: `linear-gradient(${isHorizontal ? '90deg' : '180deg'}, 
-              transparent, 
-              ${color}, 
+            background: `linear-gradient(${isHorizontal ? '90deg' : '180deg'},
+              transparent,
+              ${color},
               transparent
             )`,
             filter: 'blur(4px)',
@@ -79,7 +78,7 @@ export const LightBeam = memo(({
   );
 });
 
-// ==================== 脉冲光环 ====================
+// ==================== 脉冲光环 - 优化版 ====================
 export const PulseRing = memo(({
   color = 'var(--accent-primary)',
   size = 100,
@@ -92,10 +91,11 @@ export const PulseRing = memo(({
   duration?: number;
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
-  
-  if (prefersReducedMotion) {
+  const { effectiveQuality } = usePerformance();
+
+  if (prefersReducedMotion || effectiveQuality === 'low') {
     return (
-      <div 
+      <div
         className="absolute pointer-events-none"
         style={{
           width: size,
@@ -115,9 +115,12 @@ export const PulseRing = memo(({
       </div>
     );
   }
-  
+
+  // 中等质量减少环数
+  const ringCount = effectiveQuality === 'medium' ? 2 : 3;
+
   return (
-    <div 
+    <div
       className="absolute pointer-events-none"
       style={{
         width: size,
@@ -127,13 +130,13 @@ export const PulseRing = memo(({
         transform: 'translate(-50%, -50%)',
       }}
     >
-      {[0, 1, 2].map((i) => (
+      {Array.from({ length: ringCount }).map((_, i) => (
         <motion.div
           key={i}
           className="absolute inset-0 rounded-full"
           style={{
             border: `2px solid ${color}`,
-            boxShadow: `0 0 20px ${color}, inset 0 0 20px ${color}`,
+            boxShadow: effectiveQuality === 'high' ? `0 0 20px ${color}, inset 0 0 20px ${color}` : 'none',
             willChange: 'transform, opacity',
           }}
           initial={{ scale: 0.5, opacity: 0 }}
@@ -144,7 +147,7 @@ export const PulseRing = memo(({
           transition={{
             duration,
             repeat: Infinity,
-            delay: delay + i * (duration / 3),
+            delay: delay + i * (duration / ringCount),
             ease: 'easeOut',
           }}
         />
@@ -153,7 +156,7 @@ export const PulseRing = memo(({
   );
 });
 
-// ==================== 霓虹文字 ====================
+// ==================== 霓虹文字 - 优化版 ====================
 export const NeonText = memo(({
   children,
   color = 'var(--accent-primary)',
@@ -166,38 +169,32 @@ export const NeonText = memo(({
   className?: string;
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
-  
-  if (prefersReducedMotion || !flicker) {
+  const { effectiveQuality } = usePerformance();
+
+  if (prefersReducedMotion || !flicker || effectiveQuality === 'low') {
     return (
       <span
         className={`relative ${className}`}
         style={{
           color,
-          textShadow: `
-            0 0 5px ${color},
-            0 0 10px ${color},
-            0 0 20px ${color},
-            0 0 40px ${color}
-          `,
+          textShadow: effectiveQuality === 'low'
+            ? `0 0 5px ${color}` // 低性能：减少发光
+            : `0 0 5px ${color}, 0 0 10px ${color}, 0 0 20px ${color}, 0 0 40px ${color}`,
         }}
       >
         {children}
       </span>
     );
   }
-  
+
   return (
     <motion.span
       className={`relative ${className}`}
       style={{
         color,
-        textShadow: `
-          0 0 5px ${color},
-          0 0 10px ${color},
-          0 0 20px ${color},
-          0 0 40px ${color},
-          0 0 80px ${color}
-        `,
+        textShadow: effectiveQuality === 'high'
+          ? `0 0 5px ${color}, 0 0 10px ${color}, 0 0 20px ${color}, 0 0 40px ${color}, 0 0 80px ${color}`
+          : `0 0 5px ${color}, 0 0 10px ${color}, 0 0 20px ${color}`,
       }}
       animate={{
         opacity: [1, 0.9, 1, 0.95, 1],
@@ -213,7 +210,7 @@ export const NeonText = memo(({
   );
 });
 
-// ==================== 点击波纹效果 ====================
+// ==================== 点击波纹效果 - 优化版 ====================
 interface Ripple {
   id: number;
   x: number;
@@ -229,10 +226,11 @@ export const RippleEffect = memo(({
 }) => {
   const [ripples, setRipples] = useState<Ripple[]>([]);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { effectiveQuality } = usePerformance();
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (prefersReducedMotion) return;
-    
+    if (prefersReducedMotion || effectiveQuality === 'low') return;
+
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -242,7 +240,7 @@ export const RippleEffect = memo(({
     setTimeout(() => {
       setRipples((prev) => prev.filter((r) => r.id !== id));
     }, 600);
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, effectiveQuality]);
 
   return (
     <div className="relative overflow-hidden" onClick={handleClick}>
@@ -270,7 +268,7 @@ export const RippleEffect = memo(({
   );
 });
 
-// ==================== 发光边框 ====================
+// ==================== 发光边框 - 优化版 ====================
 export const GlowingBorder = memo(({
   children,
   color = 'var(--accent-primary)',
@@ -285,7 +283,8 @@ export const GlowingBorder = memo(({
   className?: string;
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const shouldAnimate = animate && !prefersReducedMotion;
+  const { effectiveQuality } = usePerformance();
+  const shouldAnimate = animate && !prefersReducedMotion && effectiveQuality !== 'low';
 
   return (
     <div className={`relative ${className}`}>
@@ -294,12 +293,12 @@ export const GlowingBorder = memo(({
         className="absolute -inset-[1px] rounded-lg pointer-events-none transition-opacity duration-1000"
         style={{
           background: `linear-gradient(45deg, ${color}, transparent, ${color})`,
-          opacity: intensity * 0.5,
+          opacity: intensity * (effectiveQuality === 'low' ? 0.3 : 0.5),
         }}
       />
-      
-      {/* 旋转渐变 - 只在需要时渲染 */}
-      {shouldAnimate && (
+
+      {/* 旋转渐变 - 只在高质量时渲染 */}
+      {shouldAnimate && effectiveQuality === 'high' && (
         <motion.div
           className="absolute -inset-[2px] rounded-lg pointer-events-none overflow-hidden"
           style={{ opacity: intensity * 0.3 }}
@@ -315,7 +314,7 @@ export const GlowingBorder = memo(({
           />
         </motion.div>
       )}
-      
+
       {/* 内容 */}
       <div className="relative z-10 bg-[var(--bg-card)] rounded-lg">
         {children}
@@ -349,51 +348,58 @@ export const TwinklingStars = memo(({
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
+  const { getParticleCount, effectiveQuality } = usePerformance();
   const [shootingStar, setShootingStar] = useState<{ x: number; y: number; id: number } | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  
-  // 限制最大数量
-  const starCount = Math.min(count, 35);
-  
+
+  // 使用性能上下文推荐的粒子数量
+  const starCount = getParticleCount(Math.min(count, effectiveQuality === 'low' ? 15 : 35));
+
   // 生成多样化的星星 - 只生成一次
-  const stars = useMemo(() => 
+  const stars = useMemo(() =>
     Array.from({ length: starCount }, (_, i) => {
       const rand = Math.random();
       let type: Star['type'] = 'small';
       let size = 1;
-      
-      if (rand > 0.9) {
-        type = 'sparkle';
-        size = Math.random() * 3 + 2;
-      } else if (rand > 0.7) {
-        type = 'large';
-        size = Math.random() * 2 + 2;
-      } else if (rand > 0.4) {
-        type = 'medium';
-        size = Math.random() * 1.5 + 1.5;
-      } else {
+
+      // 低性能模式下减少大星星数量
+      if (effectiveQuality === 'low') {
         type = 'small';
         size = Math.random() * 1 + 0.5;
+      } else {
+        if (rand > 0.9) {
+          type = 'sparkle';
+          size = Math.random() * 3 + 2;
+        } else if (rand > 0.7) {
+          type = 'large';
+          size = Math.random() * 2 + 2;
+        } else if (rand > 0.4) {
+          type = 'medium';
+          size = Math.random() * 1.5 + 1.5;
+        } else {
+          type = 'small';
+          size = Math.random() * 1 + 0.5;
+        }
       }
-      
+
       return {
         id: i,
         x: Math.random() * 100,
         y: Math.random() * 100,
         size,
         delay: Math.random() * 5,
-        duration: Math.random() * 3 + 2,
+        duration: effectiveQuality === 'low' ? Math.random() * 2 + 3 : Math.random() * 3 + 2,
         type,
         color: Math.random() > 0.7 ? secondaryColor : color,
       };
     }),
-    [starCount, color, secondaryColor]
+    [starCount, color, secondaryColor, effectiveQuality]
   );
 
-  // 流星效果 - 只在页面可见时运行
+  // 流星效果 - 只在页面可见时运行，低性能模式禁用
   useEffect(() => {
-    if (!shootingStars || prefersReducedMotion || !isVisible) return;
-    
+    if (!shootingStars || prefersReducedMotion || !isVisible || effectiveQuality === 'low') return;
+
     const createShootingStar = () => {
       const id = Date.now();
       setShootingStar({
@@ -401,27 +407,29 @@ export const TwinklingStars = memo(({
         y: Math.random() * 30,
         id,
       });
-      
+
       setTimeout(() => {
         setShootingStar((current) => (current?.id === id ? null : current));
       }, 1500);
     };
-    
+
+    // 降低流星生成频率
+    const interval = effectiveQuality === 'medium' ? 6000 : 4000;
     intervalRef.current = setInterval(() => {
       if (Math.random() > 0.6) {
         createShootingStar();
       }
-    }, 4000);
-    
+    }, interval);
+
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [shootingStars, prefersReducedMotion, isVisible]);
+  }, [shootingStars, prefersReducedMotion, isVisible, effectiveQuality]);
 
   if (prefersReducedMotion) {
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {stars.slice(0, 10).map((star) => (
+        {stars.slice(0, 5).map((star) => (
           <div
             key={star.id}
             className="absolute rounded-full"
@@ -445,7 +453,25 @@ export const TwinklingStars = memo(({
       {stars.map((star) => {
         const isSparkle = star.type === 'sparkle';
         const isLarge = star.type === 'large';
-        
+
+        // 低性能模式使用静态渲染
+        if (effectiveQuality === 'low') {
+          return (
+            <div
+              key={star.id}
+              className="absolute rounded-full"
+              style={{
+                left: `${star.x}%`,
+                top: `${star.y}%`,
+                width: star.size,
+                height: star.size,
+                background: star.color,
+                opacity: 0.5,
+              }}
+            />
+          );
+        }
+
         return (
           <motion.div
             key={star.id}
@@ -473,14 +499,13 @@ export const TwinklingStars = memo(({
               className="absolute inset-0 rounded-full"
               style={{
                 background: star.color,
-                boxShadow: `
-                  0 0 ${star.size * 2}px ${star.color},
-                  0 0 ${star.size * 4}px ${star.color}
-                `,
+                boxShadow: effectiveQuality === 'high'
+                  ? `0 0 ${star.size * 2}px ${star.color}, 0 0 ${star.size * 4}px ${star.color}`
+                  : `0 0 ${star.size}px ${star.color}`,
               }}
             />
-            {/* 十字光芒 - 大星星才有 */}
-            {(isLarge || isSparkle) && (
+            {/* 十字光芒 - 仅在高质量模式下显示 */}
+            {effectiveQuality === 'high' && (isLarge || isSparkle) && (
               <>
                 <div
                   className="absolute rounded-full"
@@ -511,10 +536,10 @@ export const TwinklingStars = memo(({
           </motion.div>
         );
       })}
-      
+
       {/* 流星效果 */}
       <AnimatePresence>
-        {shootingStar && isVisible && (
+        {shootingStar && isVisible && effectiveQuality !== 'low' && (
           <motion.div
             key={shootingStar.id}
             className="absolute w-1 h-1 rounded-full"
@@ -561,7 +586,7 @@ export const TwinklingStars = memo(({
   );
 });
 
-// ==================== 流动渐变背景 ====================
+// ==================== 流动渐变背景 - 优化版 ====================
 export const FlowingGradient = memo(({
   colors = ['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)'],
   speed = 10,
@@ -573,12 +598,17 @@ export const FlowingGradient = memo(({
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
-  const gradientString = useMemo(() => 
+  const { effectiveQuality } = usePerformance();
+  const gradientString = useMemo(() =>
     `linear-gradient(90deg, ${colors.join(', ')}, ${colors[0]})`,
     [colors]
   );
-  
-  if (prefersReducedMotion) {
+
+  // 低性能模式：降低速度和透明度
+  const actualSpeed = effectiveQuality === 'low' ? speed * 1.5 : speed;
+  const actualOpacity = effectiveQuality === 'low' ? opacity * 0.7 : opacity;
+
+  if (prefersReducedMotion || effectiveQuality === 'low') {
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
@@ -586,14 +616,14 @@ export const FlowingGradient = memo(({
           style={{
             background: gradientString,
             backgroundSize: '200% 100%',
-            opacity,
+            opacity: actualOpacity,
             filter: 'blur(60px)',
           }}
         />
       </div>
     );
   }
-  
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
       <motion.div
@@ -601,7 +631,7 @@ export const FlowingGradient = memo(({
         style={{
           background: gradientString,
           backgroundSize: '200% 100%',
-          opacity,
+          opacity: actualOpacity,
           filter: 'blur(60px)',
           willChange: 'background-position',
         }}
@@ -609,7 +639,7 @@ export const FlowingGradient = memo(({
           backgroundPosition: ['0% 50%', '200% 50%'],
         } : {}}
         transition={{
-          duration: speed,
+          duration: actualSpeed,
           repeat: Infinity,
           ease: 'linear',
         }}
@@ -630,8 +660,9 @@ export const EnergyOrb = memo(({
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
-  
-  if (prefersReducedMotion) {
+  const { effectiveQuality } = usePerformance();
+
+  if (prefersReducedMotion || effectiveQuality === 'low') {
     return (
       <div
         className="relative pointer-events-none"
@@ -657,53 +688,56 @@ export const EnergyOrb = memo(({
         className="absolute inset-[20%] rounded-full"
         style={{
           background: `radial-gradient(circle at 30% 30%, ${color}, ${secondaryColor})`,
-          boxShadow: `
-            0 0 30px ${color},
-            0 0 60px ${color}
-          `,
+          boxShadow: effectiveQuality === 'high'
+            ? `0 0 30px ${color}, 0 0 60px ${color}`
+            : `0 0 15px ${color}`,
         }}
         animate={isVisible ? {
           scale: [1, 1.1, 1],
         } : {}}
         transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
       />
-      
-      {/* 内环 */}
-      <motion.div
-        className="absolute inset-[10%] rounded-full border-2"
-        style={{
-          borderColor: color,
-          boxShadow: `0 0 20px ${color}, inset 0 0 20px ${color}`,
-          willChange: 'transform',
-        }}
-        animate={isVisible ? {
-          rotate: 360,
-          scale: [1, 1.05, 1],
-        } : {}}
-        transition={{
-          rotate: { duration: 10, repeat: Infinity, ease: 'linear' },
-          scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
-        }}
-      />
-      
-      {/* 外环 */}
-      <motion.div
-        className="absolute inset-0 rounded-full border"
-        style={{
-          borderColor: secondaryColor,
-          opacity: 0.5,
-          willChange: 'transform',
-        }}
-        animate={isVisible ? {
-          rotate: -360,
-        } : {}}
-        transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
-      />
+
+      {/* 内环 - 仅在高质量时显示 */}
+      {effectiveQuality === 'high' && (
+        <motion.div
+          className="absolute inset-[10%] rounded-full border-2"
+          style={{
+            borderColor: color,
+            boxShadow: `0 0 20px ${color}, inset 0 0 20px ${color}`,
+            willChange: 'transform',
+          }}
+          animate={isVisible ? {
+            rotate: 360,
+            scale: [1, 1.05, 1],
+          } : {}}
+          transition={{
+            rotate: { duration: 10, repeat: Infinity, ease: 'linear' },
+            scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+          }}
+        />
+      )}
+
+      {/* 外环 - 仅在高质量时显示 */}
+      {effectiveQuality === 'high' && (
+        <motion.div
+          className="absolute inset-0 rounded-full border"
+          style={{
+            borderColor: secondaryColor,
+            opacity: 0.5,
+            willChange: 'transform',
+          }}
+          animate={isVisible ? {
+            rotate: -360,
+          } : {}}
+          transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+        />
+      )}
     </div>
   );
 });
 
-// ==================== 全息投影效果 ====================
+// ==================== 全息投影效果 - 优化版 ====================
 export const HologramEffect = memo(({
   children,
   color = 'var(--accent-primary)',
@@ -713,7 +747,8 @@ export const HologramEffect = memo(({
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
-  
+  const { effectiveQuality } = usePerformance();
+
   return (
     <div className="relative">
       {/* 扫描线 */}
@@ -724,9 +759,9 @@ export const HologramEffect = memo(({
           backgroundSize: '100% 4px',
         }}
       />
-      
-      {/* 扫描动画 - 只在需要时渲染 */}
-      {!prefersReducedMotion && isVisible && (
+
+      {/* 扫描动画 - 仅在高质量时渲染 */}
+      {!prefersReducedMotion && isVisible && effectiveQuality === 'high' && (
         <motion.div
           className="absolute inset-x-0 h-8 pointer-events-none z-20"
           style={{
@@ -738,7 +773,7 @@ export const HologramEffect = memo(({
           transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
         />
       )}
-      
+
       {children}
     </div>
   );

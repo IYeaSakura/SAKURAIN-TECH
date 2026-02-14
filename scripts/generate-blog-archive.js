@@ -43,6 +43,19 @@ function parseFrontmatter(content) {
   return { frontmatter: data, content: bodyContent };
 }
 
+function getWordCount(content) {
+  const chineseChars = (content.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const englishWords = (content.match(/[a-zA-Z]+/g) || []).length;
+  return chineseChars + englishWords;
+}
+
+function getReadingTime(content) {
+  const chineseCharsPerMinute = 400;
+  const chineseChars = (content.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const minutes = Math.ceil(chineseChars / chineseCharsPerMinute);
+  return `${minutes} 分钟阅读`;
+}
+
 function formatDateKey(date) {
   const d = new Date(date);
   const year = d.getFullYear();
@@ -71,8 +84,8 @@ function generateArchive() {
 
   for (const file of files) {
     const filePath = path.join(POSTS_DIR, file);
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const parsed = parseFrontmatter(content);
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    const parsed = parseFrontmatter(fileContent);
 
     if (!parsed || !parsed.frontmatter || !parsed.frontmatter.date) {
       console.warn(`Skipping ${file}: no frontmatter or date found`);
@@ -80,6 +93,7 @@ function generateArchive() {
     }
 
     const frontmatter = parsed.frontmatter;
+    const bodyContent = parsed.content;
     const date = new Date(frontmatter.date);
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -96,6 +110,10 @@ function generateArchive() {
     postsByDate[dateKey]++;
 
     const slug = file.replace('.md', '');
+    
+    // Calculate reading time and word count from content
+    const wordCount = getWordCount(bodyContent);
+    const readingTime = getReadingTime(bodyContent);
 
     archive[yearMonth].push({
       slug,
@@ -105,7 +123,9 @@ function generateArchive() {
       author: frontmatter.author,
       tags: frontmatter.tags || [],
       cover: frontmatter.cover,
-      featured: frontmatter.featured === true || frontmatter.featured === 'true'
+      featured: frontmatter.featured === true || frontmatter.featured === 'true',
+      wordCount,
+      readingTime
     });
   }
 

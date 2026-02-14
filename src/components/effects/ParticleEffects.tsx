@@ -1,6 +1,7 @@
 import { memo, useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePrefersReducedMotion, usePageVisibility } from '@/lib/performance';
+import { usePerformance } from '@/contexts/PerformanceContext';
 
 interface Particle {
   id: number;
@@ -32,12 +33,13 @@ export const ParticleBurst = memo(({
   const frameRef = useRef<number | null>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
+  const { getParticleCount, effectiveQuality } = usePerformance();
   
-  // 限制最大粒子数以提高性能
-  const particleCount = Math.min(count, 25);
+  // 根据性能级别限制粒子数量
+  const particleCount = getParticleCount(Math.min(count, 25));
 
   useEffect(() => {
-    if (trigger && !prefersReducedMotion && isVisible) {
+    if (trigger && !prefersReducedMotion && isVisible && effectiveQuality !== 'low') {
       const newParticles: Particle[] = Array.from({ length: particleCount }, (_, i) => {
         const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.5;
         const velocity = Math.random() * 5 + 2;
@@ -55,13 +57,14 @@ export const ParticleBurst = memo(({
       });
       setParticles(newParticles);
     }
-  }, [trigger, particleCount, colors, prefersReducedMotion, isVisible]);
+  }, [trigger, particleCount, colors, prefersReducedMotion, isVisible, effectiveQuality]);
 
   useEffect(() => {
-    if (prefersReducedMotion || !isVisible) return;
+    if (prefersReducedMotion || !isVisible || effectiveQuality === 'low') return;
     
     let lastTime = performance.now();
-    const targetFPS = 30;
+    // 根据性能级别调整目标帧率
+    const targetFPS = effectiveQuality === 'medium' ? 24 : 30;
     const frameInterval = 1000 / targetFPS;
     
     const updateParticles = (currentTime: number) => {
@@ -92,9 +95,9 @@ export const ParticleBurst = memo(({
     return () => {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, [particles.length, prefersReducedMotion, isVisible]);
+  }, [particles.length, prefersReducedMotion, isVisible, effectiveQuality]);
 
-  if (particles.length === 0 || prefersReducedMotion) return null;
+  if (particles.length === 0 || prefersReducedMotion || effectiveQuality === 'low') return null;
 
   return (
     <div
@@ -109,7 +112,9 @@ export const ParticleBurst = memo(({
             width: particle.size,
             height: particle.size,
             background: particle.color,
-            boxShadow: `0 0 ${particle.size * 2}px ${particle.color}`,
+            boxShadow: effectiveQuality === 'high' 
+              ? `0 0 ${particle.size * 2}px ${particle.color}`
+              : 'none',
             transform: `translate(${particle.x}px, ${particle.y}px)`,
             opacity: particle.life,
             willChange: 'transform, opacity',
@@ -130,26 +135,29 @@ export const FloatingBubbles = memo(({
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
+  const { getParticleCount, effectiveQuality } = usePerformance();
   
-  // 限制最大数量
-  const bubbleCount = Math.min(count, 15);
+  // 根据性能级别限制数量
+  const bubbleCount = getParticleCount(Math.min(count, 15));
   
   const bubbles = useMemo(() => 
     Array.from({ length: bubbleCount }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       size: Math.random() * 20 + 10,
-      duration: Math.random() * 10 + 10,
+      duration: effectiveQuality === 'low' 
+        ? Math.random() * 5 + 15 // 低性能：更慢的动画
+        : Math.random() * 10 + 10,
       delay: Math.random() * 5,
       color: colors[Math.floor(Math.random() * colors.length)],
     })),
-    [bubbleCount, colors]
+    [bubbleCount, colors, effectiveQuality]
   );
 
-  if (prefersReducedMotion) {
+  if (prefersReducedMotion || effectiveQuality === 'low') {
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {bubbles.slice(0, 5).map((bubble) => (
+        {bubbles.slice(0, 3).map((bubble) => (
           <div
             key={bubble.id}
             className="absolute rounded-full"
@@ -178,7 +186,9 @@ export const FloatingBubbles = memo(({
             width: bubble.size,
             height: bubble.size,
             background: `radial-gradient(circle at 30% 30%, ${bubble.color}60, ${bubble.color}20)`,
-            boxShadow: `0 0 20px ${bubble.color}30, inset 0 0 10px ${bubble.color}20`,
+            boxShadow: effectiveQuality === 'high' 
+              ? `0 0 20px ${bubble.color}30, inset 0 0 10px ${bubble.color}20`
+              : 'none',
             willChange: 'transform, opacity',
           }}
           initial={{ y: '110vh', opacity: 0 }}
@@ -212,22 +222,28 @@ export const SparkEffect = memo(({
   const [isHovered, setIsHovered] = useState(false);
   const sparkIdRef = useRef(0);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { effectiveQuality } = usePerformance();
+
+  // 低性能模式禁用火花效果
+  const actualSparkCount = effectiveQuality === 'low' ? 0 : effectiveQuality === 'medium' ? 2 : sparkCount;
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isHovered || prefersReducedMotion) return;
+    if (!isHovered || prefersReducedMotion || effectiveQuality === 'low') return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    if (Math.random() > 0.9) {
+    // 降低生成频率
+    const threshold = effectiveQuality === 'medium' ? 0.95 : 0.9;
+    if (Math.random() > threshold) {
       sparkIdRef.current += 1;
       const id = sparkIdRef.current;
-      setSparks((prev) => [...prev.slice(-sparkCount), { id, x, y }]);
+      setSparks((prev) => [...prev.slice(-actualSparkCount), { id, x, y }]);
       setTimeout(() => {
         setSparks((prev) => prev.filter((s) => s.id !== id));
       }, 600);
     }
-  }, [isHovered, sparkCount, prefersReducedMotion]);
+  }, [isHovered, actualSparkCount, prefersReducedMotion, effectiveQuality]);
 
   return (
     <div
@@ -237,7 +253,7 @@ export const SparkEffect = memo(({
       onMouseMove={handleMouseMove}
     >
       {children}
-      {!prefersReducedMotion && (
+      {!prefersReducedMotion && effectiveQuality !== 'low' && (
         <AnimatePresence>
           {sparks.map((spark) => (
             <motion.div
@@ -257,7 +273,9 @@ export const SparkEffect = memo(({
                 className="w-1 h-1 rounded-full"
                 style={{
                   background: color,
-                  boxShadow: `0 0 6px ${color}, 0 0 12px ${color}`,
+                  boxShadow: effectiveQuality === 'high' 
+                    ? `0 0 6px ${color}, 0 0 12px ${color}`
+                    : `0 0 3px ${color}`,
                 }}
               />
             </motion.div>
@@ -283,9 +301,13 @@ export const TrailEffect = memo(({
   const isHovered = useRef(false);
   const rafRef = useRef<number | null>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { effectiveQuality } = usePerformance();
+
+  // 根据性能级别调整拖尾长度
+  const actualLength = effectiveQuality === 'low' ? 0 : effectiveQuality === 'medium' ? 3 : length;
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!containerRef.current || !isHovered.current || prefersReducedMotion) return;
+    if (!containerRef.current || !isHovered.current || prefersReducedMotion || effectiveQuality === 'low') return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -295,12 +317,12 @@ export const TrailEffect = memo(({
     }
 
     rafRef.current = requestAnimationFrame(() => {
-      setPositions((prev) => [...prev.slice(-length), { x, y }]);
+      setPositions((prev) => [...prev.slice(-actualLength), { x, y }]);
     });
-  }, [length, prefersReducedMotion]);
+  }, [actualLength, prefersReducedMotion, effectiveQuality]);
 
   useEffect(() => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion || effectiveQuality === 'low') return;
     
     const interval = setInterval(() => {
       setPositions((prev) => prev.slice(1));
@@ -310,7 +332,7 @@ export const TrailEffect = memo(({
       clearInterval(interval);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, effectiveQuality]);
 
   return (
     <div
@@ -320,7 +342,7 @@ export const TrailEffect = memo(({
       onMouseLeave={() => { isHovered.current = false; setPositions([]); }}
       onMouseMove={handleMouseMove}
     >
-      {!prefersReducedMotion && positions.map((pos, i) => (
+      {effectiveQuality !== 'low' && !prefersReducedMotion && positions.map((pos, i) => (
         <div
           key={i}
           className="absolute rounded-full pointer-events-none"
@@ -330,9 +352,9 @@ export const TrailEffect = memo(({
             width: (i + 1) * 2,
             height: (i + 1) * 2,
             background: color,
-            opacity: (i + 1) / length * 0.5,
+            opacity: (i + 1) / actualLength * 0.5,
             transform: 'translate(-50%, -50%)',
-            boxShadow: `0 0 ${(i + 1) * 2}px ${color}`,
+            boxShadow: effectiveQuality === 'high' ? `0 0 ${(i + 1) * 2}px ${color}` : 'none',
           }}
         />
       ))}
@@ -356,9 +378,10 @@ export const ShockwaveEffect = memo(({
   const [waves, setWaves] = useState<number[]>([]);
   const idRef = useRef(0);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { effectiveQuality } = usePerformance();
 
   useEffect(() => {
-    if (trigger && !prefersReducedMotion) {
+    if (trigger && !prefersReducedMotion && effectiveQuality !== 'low') {
       idRef.current += 1;
       const id = idRef.current;
       setWaves((prev) => [...prev, id]);
@@ -366,9 +389,9 @@ export const ShockwaveEffect = memo(({
         setWaves((prev) => prev.filter((w) => w !== id));
       }, 1000);
     }
-  }, [trigger, prefersReducedMotion]);
+  }, [trigger, prefersReducedMotion, effectiveQuality]);
 
-  if (prefersReducedMotion) return null;
+  if (prefersReducedMotion || effectiveQuality === 'low') return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -411,12 +434,13 @@ export const ConstellationEffect = memo(({
   const rafRef = useRef<number | null>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
+  const { getParticleCount, effectiveQuality, targetFrameRate } = usePerformance();
   
-  // 限制最大数量
-  const pointCount = Math.min(count, 20);
+  // 根据性能级别限制点数
+  const pointCount = getParticleCount(Math.min(count, 20));
 
   useEffect(() => {
-    if (prefersReducedMotion || !isVisible) return;
+    if (prefersReducedMotion || !isVisible || effectiveQuality === 'low') return;
     
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -425,7 +449,7 @@ export const ConstellationEffect = memo(({
     if (!ctx) return;
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio, 2);
+      const dpr = effectiveQuality === 'high' ? Math.min(window.devicePixelRatio, 2) : 1;
       canvas.width = canvas.offsetWidth * dpr;
       canvas.height = canvas.offsetHeight * dpr;
       ctx.scale(dpr, dpr);
@@ -455,8 +479,7 @@ export const ConstellationEffect = memo(({
     canvas.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     let lastTime = performance.now();
-    const targetFPS = 24;
-    const frameInterval = 1000 / targetFPS;
+    const frameInterval = 1000 / targetFrameRate;
 
     const animate = (currentTime: number) => {
       const deltaTime = currentTime - lastTime;
@@ -494,7 +517,8 @@ export const ConstellationEffect = memo(({
 
           // 点之间连接 - 限制连接数
           let connections = 0;
-          for (let j = i + 1; j < points.length && connections < 2; j++) {
+          const maxConnections = effectiveQuality === 'high' ? 2 : 1;
+          for (let j = i + 1; j < points.length && connections < maxConnections; j++) {
             const d = Math.hypot(points[i].x - points[j].x, points[i].y - points[j].y);
             if (d < connectionDistance) {
               ctx.globalAlpha = (1 - d / connectionDistance) * 0.25;
@@ -529,9 +553,9 @@ export const ConstellationEffect = memo(({
       canvas.removeEventListener('mousemove', handleMouseMove);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [pointCount, connectionDistance, color, prefersReducedMotion, isVisible]);
+  }, [pointCount, connectionDistance, color, prefersReducedMotion, isVisible, effectiveQuality, targetFrameRate]);
 
-  if (prefersReducedMotion) return null;
+  if (prefersReducedMotion || effectiveQuality === 'low') return null;
 
   return (
     <canvas

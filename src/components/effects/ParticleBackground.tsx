@@ -1,5 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useWindowSize } from '@/hooks';
+import { usePerformance } from '@/contexts/PerformanceContext';
+import { usePrefersReducedMotion } from '@/lib/performance';
 
 interface Particle {
   x: number;
@@ -17,7 +19,14 @@ export function ParticleBackground() {
   const rafRef = useRef<number | null>(null);
   const frameCountRef = useRef(0);
   const isVisibleRef = useRef(true);
+  const lastFrameTimeRef = useRef(0);
+  
   const { width, height } = useWindowSize();
+  const { effectiveQuality, targetFrameRate, getParticleCount, canvasDPR } = usePerformance();
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  // 根据性能级别决定是否启用
+  const isEnabled = effectiveQuality !== 'low' && !prefersReducedMotion;
 
   // Use passive event listener for mouse movement
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -35,6 +44,8 @@ export function ParticleBackground() {
   }, []);
 
   useEffect(() => {
+    if (!isEnabled) return;
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -42,15 +53,17 @@ export function ParticleBackground() {
     if (!ctx) return;
 
     // Set canvas size with device pixel ratio consideration
-    const dpr = Math.min(window.devicePixelRatio, 2);
+    const dpr = canvasDPR;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
     ctx.scale(dpr, dpr);
 
-    // Initialize particles - reduce count for better performance
-    const particleCount = Math.min(40, Math.floor(width / 40));
+    // Initialize particles - 根据性能级别调整数量
+    const baseParticleCount = Math.floor(width / 40);
+    const particleCount = getParticleCount(Math.min(baseParticleCount, 40));
+    
     particlesRef.current = Array.from({ length: particleCount }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -62,16 +75,14 @@ export function ParticleBackground() {
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
-    let lastTime = performance.now();
-    const targetFPS = 30;
-    const frameInterval = 1000 / targetFPS;
+    const frameInterval = 1000 / targetFrameRate;
 
     const animate = (currentTime: number) => {
-      // Skip frames to maintain target FPS
-      const deltaTime = currentTime - lastTime;
-
+      // 帧率控制
+      const deltaTime = currentTime - lastFrameTimeRef.current;
+      
       if (deltaTime >= frameInterval && isVisibleRef.current) {
-        lastTime = currentTime - (deltaTime % frameInterval);
+        lastFrameTimeRef.current = currentTime - (deltaTime % frameInterval);
         frameCountRef.current++;
 
         // Clear canvas with solid color for better performance
@@ -118,33 +129,36 @@ export function ParticleBackground() {
         // Get accent color from CSS variable
         const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim() || '#6366f1';
         ctx.fillStyle = accentColor;
-        ctx.globalAlpha = 0.4;
+        ctx.globalAlpha = effectiveQuality === 'medium' ? 0.3 : 0.4;
         ctx.fill();
         ctx.globalAlpha = 1;
 
         // Draw connections (limited for performance)
-        ctx.strokeStyle = accentColor;
-        ctx.lineWidth = 0.5;
+        // 仅在高质量模式下显示连线
+        if (effectiveQuality === 'high') {
+          ctx.strokeStyle = accentColor;
+          ctx.lineWidth = 0.5;
 
-        for (let i = 0; i < particles.length; i += 3) {
-          let connections = 0;
-          for (let j = i + 1; j < particles.length && connections < 3; j += 3) {
-            const dx = particles[i].x - particles[j].x;
-            const dy = particles[i].y - particles[j].y;
-            const distSq = dx * dx + dy * dy;
+          for (let i = 0; i < particles.length; i += 3) {
+            let connections = 0;
+            for (let j = i + 1; j < particles.length && connections < 3; j += 3) {
+              const dx = particles[i].x - particles[j].x;
+              const dy = particles[i].y - particles[j].y;
+              const distSq = dx * dx + dy * dy;
 
-            if (distSq < 10000) { // 100^2
-              const dist = Math.sqrt(distSq);
-              ctx.globalAlpha = (1 - dist / 100) * 0.15;
-              ctx.beginPath();
-              ctx.moveTo(particles[i].x, particles[i].y);
-              ctx.lineTo(particles[j].x, particles[j].y);
-              ctx.stroke();
-              connections++;
+              if (distSq < 10000) { // 100^2
+                const dist = Math.sqrt(distSq);
+                ctx.globalAlpha = (1 - dist / 100) * 0.15;
+                ctx.beginPath();
+                ctx.moveTo(particles[i].x, particles[i].y);
+                ctx.lineTo(particles[j].x, particles[j].y);
+                ctx.stroke();
+                connections++;
+              }
             }
           }
+          ctx.globalAlpha = 1;
         }
-        ctx.globalAlpha = 1;
       }
 
       rafRef.current = requestAnimationFrame(animate);
@@ -156,7 +170,17 @@ export function ParticleBackground() {
       window.removeEventListener('mousemove', handleMouseMove);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [width, height, handleMouseMove]);
+  }, [width, height, handleMouseMove, isEnabled, targetFrameRate, canvasDPR, effectiveQuality, getParticleCount]);
+
+  // 如果禁用，不渲染 canvas
+  if (!isEnabled) {
+    return (
+      <div
+        className="fixed inset-0 -z-10"
+        style={{ background: 'var(--bg-primary)' }}
+      />
+    );
+  }
 
   return (
     <canvas

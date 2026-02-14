@@ -253,7 +253,7 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false }
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {getReadingTime(post.content || '')}
+                    {post.readingTime || getReadingTime(post.content || '')}
                   </span>
                 </div>
 
