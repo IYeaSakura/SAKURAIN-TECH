@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User } from 'lucide-react';
+import { BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User, Rss } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router';
 import { cn } from '@/lib/utils';
 import type { SiteData } from '@/types';
@@ -21,8 +21,9 @@ const dockItems = [
   { label: '首页', href: '/', icon: Home },
   { label: '博客', href: '/blog', icon: FileText },
   { label: '日志', href: '/notes', icon: MessageCircle },
-  { label: '文档', href: '/docs', icon: BookOpen },
   { label: '友链', href: '/friends', icon: Heart },
+  { label: '朋友圈', href: '/feed', icon: Rss },
+  { label: '文档', href: '/docs', icon: BookOpen },
   { label: '关于', href: '/about', icon: User, isCustom: true },
 ];
 
@@ -90,6 +91,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
       case 'Heart': return Heart;
       case 'FileText': return FileText;
       case 'User': return User;
+      case 'Rss': return Rss;
       default: return null;
     }
   };
