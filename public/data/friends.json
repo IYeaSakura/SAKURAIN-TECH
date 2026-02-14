@@ -90,6 +90,7 @@
       "name": "白荼日记",
       "url": "https://blog.iletter.top/",
       "icon": "https://www.ittoolman.top/images/avatar.png",
+      "feed": "https://blog.iletter.top/feed/",
       "description": "没有什么可以留住，除了死亡。",
       "category": "blogs",
       "featured": true,
@@ -110,6 +111,7 @@
       "name": "Xuan's blog",
       "url": "https://blog.ybyq.wang/",
       "icon": "https://blog.ybyq.wang/usr/themes/handsome/assets/img/avatar.png",
+      "feed": "https://blog.ybyq.wang/feed/",
       "description": "分享技术教程和学习笔记",
       "category": "blogs",
       "featured": true,
@@ -130,6 +132,7 @@
       "name": "紫血小站",
       "url": "https://blog.ziyibbs.com",
       "icon": "https://blog.ziyibbs.com/favicon/logo.png",
+      "feed": "https://blog.ziyibbs.com/feed/",
       "description": "人山人海人来人往，自尊自爱自由自在",
       "category": "blogs",
       "featured": true,
@@ -140,6 +143,7 @@
       "name": "记录生活，精彩一刻",
       "url": "https://9sb.net",
       "icon": "https://9sb.net/logo.svg",
+      "feed": "https://9sb.net/feed/",
       "description": "资源 共享 生活 学习",
       "category": "blogs",
       "featured": true,
@@ -171,6 +175,7 @@
       "name": "天海博客",
       "url": "https://woolyun.com/",
       "icon": "https://woolyun.com/wp-content/uploads/2025/05/yyl-e1746698677584.jpg",
+      "feed": "https://woolyun.com/feed/",
       "description": "建站经验记录，实用工具推荐，免费资源分享。",
       "category": "blogs",
       "featured": true,
@@ -211,7 +216,7 @@
       "status": "online"
     },
     {
-      "id": "chengshuo",
+      "id": "2xnz",
       "name": "二叉树树",
       "url": "https://2x.nz",
       "icon": "https://q2.qlogo.cn/headimg_dl?dst_uin=2726730791&spec=0",
@@ -226,6 +231,7 @@
       "name": "Inalineの小站",
       "url": "https://inaline.net",
       "icon": "https://inaline.net/usr/themes/inaline/assets/images/logo/cover.png",
+      "feed": "https://inaline.net/feed/",
       "description": "此情可待成追忆，只是当时已惘然",
       "category": "blogs",
       "featured": true,
@@ -244,5 +250,5 @@
       "status": "online"
     }
   ],
-  "lastUpdated": "2026-02-14T15:04:51.158Z"
+  "lastUpdated": "2026-02-14T16:07:40.918Z"
 }

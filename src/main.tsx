@@ -38,6 +38,7 @@ function RedirectHandler() {
 // 路由懒加载（代码分割）- 使用统一的加载占位符
 const DocsPage = lazy(() => import('./pages/Docs/index'));
 const FriendsPage = lazy(() => import('./pages/Friends/index'));
+const FeedPage = lazy(() => import('./pages/Feed/index'));
 const BlogPage = lazy(() => import('./pages/Blog/index'));
 const BlogPostPage = lazy(() => import('./pages/Blog/[slug]'));
 const NotesPage = lazy(() => import('./pages/Notes/index'));
@@ -172,8 +173,8 @@ function PageLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isReady]);
 
-  // 只在以下路径显示导航：首页、博客列表、文档列表、友链、关于、说说
-  const showNavPaths = ['/', '/blog', '/docs', '/friends', '/about', '/notes'];
+  // 只在以下路径显示导航：首页、博客列表、文档列表、友链、朋友圈、关于、说说
+  const showNavPaths = ['/', '/blog', '/docs', '/friends', '/feed', '/about', '/notes'];
   const shouldShowNav = showNavPaths.includes(location.pathname);
 
   // 首屏加载期间显示加载占位符
@@ -300,6 +301,11 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/friends" element={
                 <Suspense fallback={<RouteLoader />}>
                   <FriendsPage />
+                </Suspense>
+              } />
+              <Route path="/feed" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <FeedPage />
                 </Suspense>
               } />
               <Route path="/blog" element={
