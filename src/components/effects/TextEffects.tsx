@@ -1,6 +1,7 @@
 import { memo, useState, useEffect, useRef, useCallback } from 'react';
 import { motion, useInView, type Variants } from 'framer-motion';
 import { usePrefersReducedMotion, usePageVisibility } from '@/lib/performance';
+import { usePerformance } from '@/contexts/PerformanceContext';
 
 // ==================== 打字机效果 ====================
 export const TypewriterText = memo(({
@@ -254,9 +255,11 @@ export const GradientText = memo(({
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
+  const { effectiveQuality } = usePerformance();
   const gradient = `linear-gradient(90deg, ${colors.join(', ')}, ${colors[0]})`;
 
-  if (prefersReducedMotion || !animate) {
+  // 低性能模式禁用动画
+  if (prefersReducedMotion || !animate || effectiveQuality === 'low') {
     return (
       <span
         className={`bg-clip-text text-transparent ${className}`}
@@ -270,6 +273,9 @@ export const GradientText = memo(({
     );
   }
 
+  // 中等质量降低动画速度
+  const actualSpeed = effectiveQuality === 'medium' ? speed * 1.5 : speed;
+
   return (
     <motion.span
       className={`bg-clip-text text-transparent ${className}`}
@@ -281,7 +287,7 @@ export const GradientText = memo(({
         backgroundPosition: ['0% 50%', '200% 50%'],
       } : {}}
       transition={{
-        duration: speed,
+        duration: actualSpeed,
         repeat: Infinity,
         ease: 'linear',
       }}

@@ -10,6 +10,7 @@ import { GradientText } from '@/components/effects/TextEffects';
 import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
 import { useTheme } from '@/hooks';
 import { usePrefersReducedMotion, useThrottledScroll, useIsMobile } from '@/lib/performance';
+import { usePerformance } from '@/contexts/PerformanceContext';
 import type { SiteData } from '@/types';
 
 const CesiumGlobe = lazy(() => import('@/components/effects/CesiumGlobe').then(m => ({ default: m.CesiumGlobe })));
@@ -981,6 +982,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
   const { scrollY } = useThrottledScroll(16);
+  const { effectiveQuality, enableBackgroundAnimations } = usePerformance();
 
   // 计算滚动动画值
   const scrollProgress = Math.min(scrollY / 300, 1);
@@ -997,30 +999,52 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
   const primaryCta = data.cta.find(c => c.primary);
   const secondaryCta = data.cta.find(c => !c.primary);
 
+  // 根据性能级别调整背景特效
+  const showAmbientGlow = !isMobile && effectiveQuality !== 'low';
+  const starCount = effectiveQuality === 'low' ? 10 : effectiveQuality === 'medium' ? 15 : 20;
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* 静态网格背景 */}
+      {/* 静态网格背景 - 低性能模式下简化 */}
       <div
-        className="absolute inset-0 -z-20 pointer-events-none opacity-5"
+        className="absolute inset-0 -z-20 pointer-events-none"
         style={{
-          backgroundImage: `
-            linear-gradient(var(--accent-primary) 1px, transparent 1px),
-            linear-gradient(90deg, var(--accent-primary) 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 60px',
+          backgroundImage: effectiveQuality === 'low' 
+            ? 'none'
+            : `linear-gradient(var(--accent-primary) 1px, transparent 1px),
+               linear-gradient(90deg, var(--accent-primary) 1px, transparent 1px)`,
+          backgroundSize: effectiveQuality === 'low' ? '0' : '60px 60px',
+          opacity: effectiveQuality === 'low' ? 0 : 0.05,
         }}
       />
 
-      {/* 环境光效 - 桌面端显示 */}
-      {!isMobile && (
+      {/* 环境光效 - 根据性能级别显示 */}
+      {showAmbientGlow && (
         <>
-          <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.15} />
-          <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.1} />
+          <AmbientGlow 
+            position="top-left" 
+            color="var(--accent-primary)" 
+            size={effectiveQuality === 'medium' ? 400 : 500} 
+            opacity={effectiveQuality === 'medium' ? 0.12 : 0.15} 
+          />
+          <AmbientGlow 
+            position="bottom-right" 
+            color="var(--accent-secondary)" 
+            size={effectiveQuality === 'medium' ? 320 : 400} 
+            opacity={effectiveQuality === 'medium' ? 0.08 : 0.1} 
+          />
 
           {/* 闪烁星星 */}
-          <div className="absolute inset-0">
-            <TwinklingStars count={20} color="var(--accent-secondary)" secondaryColor="var(--mc-gold)" />
-          </div>
+          {enableBackgroundAnimations && (
+            <div className="absolute inset-0">
+              <TwinklingStars 
+                count={starCount} 
+                color="var(--accent-secondary)" 
+                secondaryColor="var(--mc-gold)"
+                shootingStars={effectiveQuality === 'high'}
+              />
+            </div>
+          )}
         </>
       )}
 

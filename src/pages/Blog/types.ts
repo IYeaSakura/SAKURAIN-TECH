@@ -8,6 +8,8 @@ export interface BlogPost {
   cover: string;
   featured: boolean;
   content?: string;
+  readingTime?: string;
+  wordCount?: number;
 }
 
 export interface BlogIndex {

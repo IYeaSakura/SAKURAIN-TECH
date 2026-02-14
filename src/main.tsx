@@ -8,6 +8,8 @@ import { GlobalContextMenu } from '@/components/CustomContextMenu';
 import { DebugProtection } from '@/components/DebugProtection';
 import { Navigation } from '@/components/sections/Navigation';
 import { useTheme, useMobile } from '@/hooks';
+import { PerformanceProvider, usePerformance } from '@/contexts/PerformanceContext';
+import { RouteLoader } from '@/components/RouterTransition';
 import type { SiteData } from '@/types';
 import {
   MagneticCursor,
@@ -32,56 +34,14 @@ function RedirectHandler() {
   return null;
 }
 
-// 路由懒加载（代码分割）
-const DocsPage = lazy(() => {
-  console.log('[LazyLoad] Loading DocsPage...');
-  return import('./pages/Docs/index').then(module => {
-    console.log('[LazyLoad] DocsPage loaded');
-    return module;
-  });
-});
-const FriendsPage = lazy(() => {
-  console.log('[LazyLoad] Loading FriendsPage...');
-  return import('./pages/Friends/index').then(module => {
-    console.log('[LazyLoad] FriendsPage loaded');
-    return module;
-  });
-});
-const BlogPage = lazy(() => {
-  console.log('[LazyLoad] Loading BlogPage...');
-  return import('./pages/Blog/index').then(module => {
-    console.log('[LazyLoad] BlogPage loaded');
-    return module;
-  });
-});
-const BlogPostPage = lazy(() => {
-  console.log('[LazyLoad] Loading BlogPostPage...');
-  return import('./pages/Blog/[slug]').then(module => {
-    console.log('[LazyLoad] BlogPostPage loaded');
-    return module;
-  });
-});
-const NotesPage = lazy(() => {
-  console.log('[LazyLoad] Loading NotesPage...');
-  return import('./pages/Notes/index').then(module => {
-    console.log('[LazyLoad] NotesPage loaded');
-    return module;
-  });
-});
-const AboutPage = lazy(() => {
-  console.log('[LazyLoad] Loading AboutPage...');
-  return import('./pages/About/index').then(module => {
-    console.log('[LazyLoad] AboutPage loaded');
-    return module;
-  });
-});
-const NotFoundPage = lazy(() => {
-  console.log('[LazyLoad] Loading NotFoundPage...');
-  return import('./pages/NotFound/index').then(module => {
-    console.log('[LazyLoad] NotFoundPage loaded');
-    return module;
-  });
-});
+// 路由懒加载（代码分割）- 使用统一的加载占位符
+const DocsPage = lazy(() => import('./pages/Docs/index'));
+const FriendsPage = lazy(() => import('./pages/Friends/index'));
+const BlogPage = lazy(() => import('./pages/Blog/index'));
+const BlogPostPage = lazy(() => import('./pages/Blog/[slug]'));
+const NotesPage = lazy(() => import('./pages/Notes/index'));
+const AboutPage = lazy(() => import('./pages/About/index'));
+const NotFoundPage = lazy(() => import('./pages/NotFound/index'));
 
 // 预加载函数
 let docsLoader: Promise<any> | null = null;
@@ -149,36 +109,48 @@ function GlobalLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
   const isMobile = useMobile();
+  const { enableMouseEffects, effectiveQuality } = usePerformance();
+
+  // 根据性能级别调整特效参数
+  const starCount = effectiveQuality === 'low' ? 15 : effectiveQuality === 'medium' ? 25 : 35;
+  const gradientSpeed = effectiveQuality === 'low' ? 20 : 15;
+  const gradientOpacity = effectiveQuality === 'low' ? 0.03 : 0.05;
+  const beamIntensity = effectiveQuality === 'low' ? 0.2 : 0.3;
 
   return (
     <>
       <GlobalContextMenu />
       <DebugProtection />
 
-      {/* 全局鼠标指针效果 - 仅桌面端显示 */}
-      {!isMobile && (
+      {/* 全局鼠标指针效果 - 仅桌面端显示且非低性能模式 */}
+      {!isMobile && enableMouseEffects && (
         <>
           <MagneticCursor />
           <VelocityCursor />
         </>
       )}
 
-      {/* 首页专属背景特效 - 移动端降级，不显示复杂特效 */}
-      {isHomePage && !isMobile && (
+      {/* 首页专属背景特效 - 根据性能级别降级 */}
+      {isHomePage && effectiveQuality !== 'low' && (
         <>
           <div className="fixed inset-0 pointer-events-none z-0">
-            <TwinklingStars count={35} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
+            <TwinklingStars 
+              count={starCount} 
+              color="var(--accent-primary)" 
+              secondaryColor="var(--accent-secondary)"
+              shootingStars={effectiveQuality === 'high'}
+            />
           </div>
 
           <div className="fixed inset-0 pointer-events-none z-0">
             <FlowingGradient
               colors={['var(--accent-primary)', 'var(--accent-secondary)', 'var(--accent-tertiary)']}
-              speed={15}
-              opacity={0.05}
+              speed={gradientSpeed}
+              opacity={gradientOpacity}
             />
           </div>
 
-          <LightBeam position="top" color="var(--accent-primary)" intensity={0.3} />
+          <LightBeam position="top" color="var(--accent-primary)" intensity={beamIntensity} />
         </>
       )}
 
@@ -189,65 +161,67 @@ function GlobalLayout({ children }: { children: React.ReactNode }) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <RedirectHandler />
-      <GlobalLayout>
-        <PageLayout>
-          <Routes>
-            <Route path="/" element={<App />} />
-            <Route path="/docs" element={
-              <Suspense fallback={null}>
-                <DocsPage />
-              </Suspense>
-            } />
-            <Route path="/docs/:categoryId" element={
-              <Suspense fallback={null}>
-                <DocsPage />
-              </Suspense>
-            } />
-            <Route path="/docs/:categoryId/:itemId" element={
-              <Suspense fallback={null}>
-                <DocsPage />
-              </Suspense>
-            } />
-            <Route path="/docs/:categoryId/:itemId/:chapterId" element={
-              <Suspense fallback={null}>
-                <DocsPage />
-              </Suspense>
-            } />
-            <Route path="/friends" element={
-              <Suspense fallback={null}>
-                <FriendsPage />
-              </Suspense>
-            } />
-            <Route path="/blog" element={
-              <Suspense fallback={null}>
-                <BlogPage />
-              </Suspense>
-            } />
-            <Route path="/blog/:slug" element={
-              <Suspense fallback={null}>
-                <BlogPostPage />
-              </Suspense>
-            } />
-            <Route path="/notes" element={
-              <Suspense fallback={null}>
-                <NotesPage />
-              </Suspense>
-            } />
-            <Route path="/about" element={
-              <Suspense fallback={null}>
-                <AboutPage />
-              </Suspense>
-            } />
-            <Route path="*" element={
-              <Suspense fallback={null}>
-                <NotFoundPage />
-              </Suspense>
-            } />
-          </Routes>
-        </PageLayout>
-      </GlobalLayout>
-    </BrowserRouter>
+    <PerformanceProvider>
+      <BrowserRouter>
+        <RedirectHandler />
+        <GlobalLayout>
+          <PageLayout>
+            <Routes>
+              <Route path="/" element={<App />} />
+              <Route path="/docs" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <DocsPage />
+                </Suspense>
+              } />
+              <Route path="/docs/:categoryId" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <DocsPage />
+                </Suspense>
+              } />
+              <Route path="/docs/:categoryId/:itemId" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <DocsPage />
+                </Suspense>
+              } />
+              <Route path="/docs/:categoryId/:itemId/:chapterId" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <DocsPage />
+                </Suspense>
+              } />
+              <Route path="/friends" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <FriendsPage />
+                </Suspense>
+              } />
+              <Route path="/blog" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <BlogPage />
+                </Suspense>
+              } />
+              <Route path="/blog/:slug" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <BlogPostPage />
+                </Suspense>
+              } />
+              <Route path="/notes" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <NotesPage />
+                </Suspense>
+              } />
+              <Route path="/about" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <AboutPage />
+                </Suspense>
+              } />
+              <Route path="*" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <NotFoundPage />
+                </Suspense>
+              } />
+            </Routes>
+          </PageLayout>
+        </GlobalLayout>
+      </BrowserRouter>
+    </PerformanceProvider>
   </StrictMode>,
 );

@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { usePrefersReducedMotion, usePageVisibility } from '@/lib/performance';
+import { usePerformance } from '@/contexts/PerformanceContext';
 
 // 环境光晕效果
 export const AmbientGlow = memo(({ 
@@ -18,6 +19,7 @@ export const AmbientGlow = memo(({
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
+  const { effectiveQuality } = usePerformance();
   
   const positionStyles = {
     'top-left': { top: '10%', left: '10%' },
@@ -27,16 +29,21 @@ export const AmbientGlow = memo(({
     'center': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
   };
 
-  if (prefersReducedMotion) {
+  // 低性能模式降低模糊度和大小
+  const actualSize = effectiveQuality === 'low' ? size * 0.7 : size;
+  const actualOpacity = effectiveQuality === 'low' ? opacity * 0.7 : opacity;
+  const blurAmount = effectiveQuality === 'low' ? 60 : 80;
+
+  if (prefersReducedMotion || effectiveQuality === 'low') {
     return (
       <div
         className={`absolute pointer-events-none ${className}`}
         style={{
-          width: size,
-          height: size,
+          width: actualSize,
+          height: actualSize,
           background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-          filter: 'blur(80px)',
-          opacity,
+          filter: `blur(${blurAmount}px)`,
+          opacity: actualOpacity,
           ...positionStyles[position],
         }}
       />
@@ -47,16 +54,16 @@ export const AmbientGlow = memo(({
     <motion.div
       className={`absolute pointer-events-none ${className}`}
       style={{
-        width: size,
-        height: size,
+        width: actualSize,
+        height: actualSize,
         background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
-        filter: 'blur(80px)',
-        opacity,
+        filter: `blur(${blurAmount}px)`,
+        opacity: actualOpacity,
         ...positionStyles[position],
       }}
       animate={isVisible ? {
         scale: [1, 1.1, 1],
-        opacity: [opacity, opacity * 0.7, opacity],
+        opacity: [actualOpacity, actualOpacity * 0.7, actualOpacity],
       } : {}}
       transition={{
         duration: 8,
@@ -77,14 +84,15 @@ export const FloatingParticles = memo(({
 }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
+  const { getParticleCount, effectiveQuality } = usePerformance();
   
-  // 限制数量
-  const particleCount = Math.min(count, 20);
+  // 根据性能级别限制数量
+  const particleCount = getParticleCount(Math.min(count, 20));
 
-  if (prefersReducedMotion) {
+  if (prefersReducedMotion || effectiveQuality === 'low') {
     return (
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {Array.from({ length: Math.min(particleCount, 5) }).map((_, i) => (
+        {Array.from({ length: Math.min(particleCount, 3) }).map((_, i) => (
           <div
             key={i}
             className="absolute rounded-full"
@@ -137,15 +145,18 @@ export const FloatingParticles = memo(({
 export const ScanLine = memo(() => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
+  const { effectiveQuality } = usePerformance();
   
-  if (prefersReducedMotion) return null;
+  if (prefersReducedMotion || effectiveQuality === 'low') return null;
   
   return (
     <motion.div
       className="absolute inset-x-0 h-px pointer-events-none z-10"
       style={{
         background: 'linear-gradient(90deg, transparent, var(--accent-primary), transparent)',
-        boxShadow: '0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary)',
+        boxShadow: effectiveQuality === 'high' 
+          ? '0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary)'
+          : '0 0 5px var(--accent-primary)',
       }}
       initial={{ top: '0%', opacity: 0 }}
       animate={isVisible ? { 
@@ -165,6 +176,7 @@ export const ScanLine = memo(() => {
 export const AnimatedGrid = memo(() => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
+  const { effectiveQuality } = usePerformance();
   
   if (prefersReducedMotion) {
     return (
@@ -177,6 +189,24 @@ export const AnimatedGrid = memo(() => {
               linear-gradient(to bottom, color-mix(in srgb, var(--accent-primary) 3%, transparent) 1px, transparent 1px)
             `,
             backgroundSize: '60px 60px',
+          }}
+        />
+      </div>
+    );
+  }
+  
+  // 低性能模式使用静态网格
+  if (effectiveQuality === 'low') {
+    return (
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, color-mix(in srgb, var(--accent-primary) 2%, transparent) 1px, transparent 1px),
+              linear-gradient(to bottom, color-mix(in srgb, var(--accent-primary) 2%, transparent) 1px, transparent 1px)
+            `,
+            backgroundSize: '80px 80px',
           }}
         />
       </div>
@@ -210,8 +240,9 @@ export const AnimatedGrid = memo(() => {
 // 光标跟随光效
 export const CursorGlow = memo(() => {
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { effectiveQuality } = usePerformance();
   
-  if (prefersReducedMotion) return null;
+  if (prefersReducedMotion || effectiveQuality === 'low') return null;
   
   return (
     <motion.div

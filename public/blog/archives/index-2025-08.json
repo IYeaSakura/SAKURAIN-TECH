@@ -12,7 +12,9 @@
       "统计分析"
     ],
     "cover": "/image/logo.webp",
-    "featured": false
+    "featured": false,
+    "wordCount": 4123,
+    "readingTime": "8 分钟阅读"
   },
   {
     "slug": "dual-task-neural-network",
@@ -27,6 +29,8 @@
       "数值稳定性"
     ],
     "cover": "/image/logo.webp",
-    "featured": false
+    "featured": false,
+    "wordCount": 2963,
+    "readingTime": "6 分钟阅读"
   }
 ]
