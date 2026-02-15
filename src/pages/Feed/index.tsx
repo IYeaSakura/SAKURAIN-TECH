@@ -70,6 +70,44 @@ const formatDate = (dateStr: string): string => {
   }
 };
 
+// Get relative time (e.g., 5 minutes ago, 2 hours ago, 1 day ago)
+const getRelativeTime = (dateStr: string): string => {
+  try {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) {
+      return `${diffInSeconds}秒前`;
+    }
+
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes}分钟前`;
+    }
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return `${diffInHours}小时前`;
+    }
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 30) {
+      return `${diffInDays}天前`;
+    }
+
+    const diffInMonths = Math.floor(diffInDays / 30);
+    if (diffInMonths < 12) {
+      return `${diffInMonths}月前`;
+    }
+
+    const diffInYears = Math.floor(diffInMonths / 12);
+    return `${diffInYears}年前`;
+  } catch {
+    return dateStr;
+  }
+};
+
 // 统计卡片组件
 function StatCard({
   icon: Icon,
@@ -1336,7 +1374,7 @@ export default function FeedPage() {
               />
               <StatCard
                 icon={Clock}
-                value={stats.latestUpdate ? formatDate(stats.latestUpdate.toISOString()).split(' ')[0] : '-'}
+                value={stats.latestUpdate ? getRelativeTime(stats.latestUpdate.toISOString()) : '-'}
                 label="最近更新"
                 color="#22c55e"
                 delay={2}
