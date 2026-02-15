@@ -174,7 +174,7 @@ function PageLayout({ children }: { children: React.ReactNode }) {
   }, [isReady]);
 
   // 只在以下路径显示导航：首页、博客列表、文档列表、友链、朋友圈、关于、说说
-  const showNavPaths = ['/', '/blog', '/docs', '/friends', '/feed', '/about', '/notes'];
+  const showNavPaths = ['/', '/blog', '/docs', '/friends', '/friends-circle', '/about', '/notes'];
   const shouldShowNav = showNavPaths.includes(location.pathname);
 
   // 首屏加载期间显示加载占位符
@@ -303,7 +303,7 @@ createRoot(document.getElementById('root')!).render(
                   <FriendsPage />
                 </Suspense>
               } />
-              <Route path="/feed" element={
+              <Route path="/friends-circle" element={
                 <Suspense fallback={<RouteLoader />}>
                   <FeedPage />
                 </Suspense>

@@ -242,7 +242,7 @@ function StatsPanel({
                   <div className="flex-1 h-6 bg-white/5 overflow-hidden" style={{ clipPath: clipPathRounded(2) }}>
                     <motion.div
                       initial={{ width: 0 }}
-                      animate={{ width: `${Math.max((count / Math.max(...Object.values(stats.dateStats))) * 100, 5)}%` }}
+                      animate={{ width: count > 0 ? `${Math.max((count / Math.max(...Object.values(stats.dateStats))) * 100, 1)}%` : '0%' }}
                       transition={{ duration: 0.5, delay: 0.1 }}
                       className="h-full"
                       style={{ background: 'var(--accent-primary)' }}
@@ -904,7 +904,7 @@ function LoadingProgress({ loaded, total }: { loaded: number; total: number }) {
         />
       </div>
       <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-        正在加载友链动态... {loaded}/{total}
+        正在加载朋友圈... {loaded}/{total}
       </p>
     </div>
   );
@@ -926,6 +926,7 @@ export default function FeedPage() {
   const [showSubscribe, setShowSubscribe] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshCooldown, _setRefreshCooldown] = useState(0);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
   const isMobile = useMobile();
   const animationEnabled = useAnimationEnabled();
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -942,16 +943,19 @@ export default function FeedPage() {
     friend: Friend, 
     forceRefresh = false,
     signal?: AbortSignal
-  ): Promise<FeedItem[]> => {
+  ): Promise<{ items: FeedItem[], timestamp: number }> => {
     try {
       const feedUrl = getFeedUrl(friend);
-      const proxyUrl = `/api/feed/proxy?url=${encodeURIComponent(feedUrl)}${forceRefresh ? '&force=1' : ''}`;
+      // 根据forceRefresh参数选择不同的接口
+      const apiUrl = forceRefresh 
+        ? `/api/feed/refresh?url=${encodeURIComponent(feedUrl)}`
+        : `/api/feed/get?url=${encodeURIComponent(feedUrl)}`;
       
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Timeout')), FETCH_TIMEOUT);
       });
       
-      const fetchPromise = fetch(proxyUrl, {
+      const fetchPromise = fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, application/json, */*',
@@ -966,14 +970,22 @@ export default function FeedPage() {
       }
       
       const content = await response.text();
-      return parseFeed(content, friend);
+      const timestampHeader = response.headers.get('X-Feed-Timestamp');
+      const timestamp = timestampHeader ? parseInt(timestampHeader, 10) : Date.now();
+      
+      const items = await parseFeed(content, friend);
+      
+      return {
+        items,
+        timestamp
+      };
     } catch (err) {
       if ((err as Error).name === 'AbortError') {
         console.warn(`Feed fetch aborted for ${friend.name}`);
       } else {
         console.warn(`Failed to fetch feed for ${friend.name}:`, err);
       }
-      return [];
+      return { items: [], timestamp: Date.now() };
     }
   }, [getFeedUrl]);
 
@@ -1007,13 +1019,19 @@ export default function FeedPage() {
       setLoadingProgress({ loaded: 0, total: eligibleFriends.length });
       
       const allFeeds: FeedItem[] = [];
+      let latestTimestamp = 0;
       
       for (let i = 0; i < eligibleFriends.length; i++) {
         if (signal.aborted) break;
         
         const friend = eligibleFriends[i];
-        const items = await fetchFriendFeed(friend, forceRefresh, signal);
+        const { items, timestamp } = await fetchFriendFeed(friend, forceRefresh, signal);
         allFeeds.push(...items);
+        
+        // 更新最新时间戳
+        if (timestamp > latestTimestamp) {
+          latestTimestamp = timestamp;
+        }
         
         setLoadingProgress({ loaded: i + 1, total: eligibleFriends.length });
         
@@ -1037,6 +1055,13 @@ export default function FeedPage() {
         setAllItems(sorted);
         setCurrentPage(1);
         updateDisplayItems(sorted, 1);
+        
+        // 使用KV存储中的最新时间戳更新lastRefreshTime
+        if (latestTimestamp > 0) {
+          setLastRefreshTime(new Date(latestTimestamp));
+        } else {
+          setLastRefreshTime(new Date());
+        }
       }
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
@@ -1121,15 +1146,12 @@ export default function FeedPage() {
 
   const stats = useMemo(() => {
     const totalSources = new Set(allItems.map(item => item.source)).size;
-    const latestDate = allItems.length > 0 
-      ? new Date(Math.max(...allItems.map(i => i.pubDate ? new Date(i.pubDate).getTime() : 0)))
-      : null;
     return {
       totalSources,
       totalArticles: allItems.length,
-      latestUpdate: latestDate,
+      latestUpdate: lastRefreshTime,
     };
-  }, [allItems]);
+  }, [allItems, lastRefreshTime]);
 
   if (loading && allItems.length === 0) {
     return (
@@ -1277,7 +1299,7 @@ export default function FeedPage() {
                   WebkitTextFillColor: 'transparent',
                 }}
               >
-                友链动态
+                朋友圈
               </h1>
 
               <motion.p
