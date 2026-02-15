@@ -70,7 +70,7 @@ package "离线评估范式" {
     [离线数据集\nD = {(s_t, a_t, r_t)}] as Dataset
     [重要性采样估计\nV_IS 或 V_DR] as Estimator
     [价值函数近似\nQ_phi(s,a)] as QFunction
-    
+
     Dataset --> Estimator : 轨迹数据
     Dataset --> QFunction : 拟合
     QFunction --> Estimator :  bootstrap
@@ -81,7 +81,7 @@ package "对抗评估范式" {
     [策略 pi_B\n(NN骨架)] as PolicyB
     [共享环境动态\nP(s'|s,a)] as Env
     [胜负统计\np = W/(W+L+D)] as WinRate
-    
+
     PolicyA --> Env : 动作 a_t^A
     PolicyB --> Env : 动作 a_t^B
     Env --> PolicyA : 状态 s_{t+1}
@@ -164,25 +164,25 @@ loop until terminal state s_T
   activate Env
   Env -> Copy : deepcopy(s_t)
   deactivate Env
-  
+
   Copy --> PolicyA : s_t^(copy)
   activate PolicyA
   PolicyA -> PolicyA : MCTS模拟\na_t^A = argmax_a {Q(s_t, a) + c * UCB(s_t, a)}
   PolicyA --> Env : 执行动作 a_t^A
   deactivate PolicyA
-  
+
   activate Env
   Env -> Env : s_{t+1} = P(s_t, a_t^A; xi)
-  
+
   Env -> Copy : deepcopy(s_{t+1})
   deactivate Env
-  
+
   Copy --> PolicyB : s_{t+1}^(copy)
   activate PolicyB
   PolicyB -> PolicyB : MCTS模拟\na_t^B = argmax_a {Q(s_{t+1}, a) + c * UCB(s_{t+1}, a)}
   PolicyB --> Env : 执行动作 a_t^B
   deactivate PolicyB
-  
+
   activate Env
   Env -> Env : s_{t+2} = P(s_{t+1}, a_t^B; xi)
   deactivate Env
@@ -193,7 +193,7 @@ Env --> Stats : 紷积回报比较\nR(tau_A) ?> R(tau_B)
 note right of Stats
 胜负判定：
 - 若 R_A > R_B: Win (+1)
-- 若 R_A < R_B: Loss (0)  
+- 若 R_A < R_B: Loss (0)
 - 若 R_A = R_B: Draw (0.5)
 end note
 @enduml
@@ -296,7 +296,7 @@ package "并行采样层" {
     node "进程 3\nseed=1, B先" as P3
     node "..." as PDots
     node "进程 2N-1" as PN
-    
+
     P0 --> [结果: Win/Loss]
     P1 --> [结果: Win/Loss]
     P2 --> [结果: Win/Loss]
@@ -309,7 +309,7 @@ package "统计聚合层" {
     component "胜率估计\np_hat = k/n" as Est
     component "Clopper-Pearson CI\n[L, U] = BetaQuantiles" as CI
     component "SPRT检验\n\nLambda_n ?> A" as SPRT
-    
+
     Stats --> Est
     Est --> CI
     Est --> SPRT
@@ -319,7 +319,7 @@ package "决策规则层" {
     component "显著性检验\np < 0.05?" as Sig
     component "实用显著性\np_hat > 0.55?" as Prac
     component "效应量评估\n[L, U] 下限 > 0.5?" as Effect
-    
+
     CI --> Sig
     CI --> Effect
     Est --> Prac
