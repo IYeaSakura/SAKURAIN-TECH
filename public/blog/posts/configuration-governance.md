@@ -93,7 +93,7 @@ $$
 设基础配置为 $C_{base}$，环境配置为 $C_{env}$，合并操作 $\oplus$ 定义为递归字典合并：
 
 $$
-C_{final} = C_{base} \oplus C_{env} = \{k \mapsto \begin{cases} 
+C_{final} = C_{base} \oplus C_{env} = \{k \mapsto \begin{cases}
 C_{env}(k) & \text{if } k \in \text{dom}(C_{env}) \\
 C_{base}(k) & \text{otherwise}
 \end{cases} \mid k \in \text{dom}(C_{base}) \cup \text{dom}(C_{env})\}
@@ -172,7 +172,7 @@ JSON 作为配置格式的最大缺陷在于其**弱类型系统**。布尔值 `
 定义**类型一致性度量** $\mathcal{T}(v, \tau)$，表示值 $v$ 与目标类型 $\tau$ 的兼容程度：
 
 $$
-\mathcal{T}(v, \tau) = \begin{cases} 
+\mathcal{T}(v, \tau) = \begin{cases}
 1 & \text{if } \text{type}(v) = \tau \\
 0.5 & \text{if } \text{coercible}(v, \tau) \\
 0 & \text{otherwise}
@@ -196,7 +196,7 @@ start
 
 partition "类型推断层" {
   :识别值的表面类型\n(string/number/boolean/null);
-  
+
   if (值为字符串且\n匹配布尔模式?) then (是)
     :标记为潜在布尔值;
   else if (值为字符串且\n匹配数值模式?) then (是)
@@ -208,7 +208,7 @@ partition "类型推断层" {
 
 partition "模式匹配层" {
   :查询配置模式Schema\n获取目标类型τ;
-  
+
   if (表面类型 == τ?) then (是)
     :直接通过;
   else (否)
@@ -402,7 +402,7 @@ Config --> Trainer : training_budget
 设配置模式版本为 $v_c \in \mathbb{N}$，代码期望版本为 $v_{code} \in \mathbb{N}$。兼容性函数为：
 
 $$
-\text{compatible}(v_c, v_{code}) = \begin{cases} 
+\text{compatible}(v_c, v_{code}) = \begin{cases}
 \text{FULL} & \text{if } v_c = v_{code} \\
 \text{BACKWARD} & \text{if } v_c < v_{code} \land \text{defaults available} \\
 \text{INCOMPATIBLE} & \text{otherwise}
@@ -462,7 +462,7 @@ Snapshotting --> Running : 启动服务
 state Running {
   [*] --> Processing : 处理任务
   Processing --> Processing : 持续运行
-  
+
   state "配置变更请求" as ChangeReq {
     [*] --> Review : 人工审核
     Review --> Reject : 拒绝

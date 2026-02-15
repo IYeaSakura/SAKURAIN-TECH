@@ -8,7 +8,7 @@ cover: /image/logo.webp
 featured: false
 ---
 
-从 Kimi 刚上线长上下文功能那会儿我就是重度用户，记得第一次把一本 300 页的 PDF 直接丢进对话框，看着它几秒钟就总结出章节关联性，那种震撼到现在还记得。后来 K2.5 发布，说是万亿参数 MoE、原生多模态、还有那个听起来很科幻的 Agent Swarm，我第一时间就拉了技术报告来看。但真正让我花时间的，不是跑 demo，而是试图理解那个 **PARL（Parallel-Agent Reinforcement Learning）**  框架背后的数学——尤其是当 100 个子代理并行执行时，如何避免"串行崩溃"（Serial Collapse），以及 Critical Steps 作为优化目标到底在最小化什么。
+从 Kimi 刚上线那会儿我就是忠实用户，因为 Kimi 是最早支持文件上传的模型之一（大学期间写各种课程报告的救星~），后来用 AI 辅助编码和阅读论文，Kimi 都完美胜任。前段时间 Kimi K2.5 大模型发布，说是万亿参数 MoE、原生多模态、还有那个听起来很科幻的 Agent Swarm，出于对技术的新技术的热爱，我第一时间就拉了技术报告来看。尝试跑了一下demo，花了点功夫去理解那个 **PARL（Parallel-Agent Reinforcement Learning）**  框架背后的数学——尤其是当 100 个子代理并行执行时，如何避免"串行崩溃"（Serial Collapse），以及 Critical Steps 作为优化目标到底在最小化什么。
 
 这篇博客把我啃技术报告、复现 PARL 奖励函数、以及推导 MoE 路由算法的笔记整理出来。有些公式官方没给细节，我是从实现反推的，如果推导有误，欢迎指正。
 
@@ -26,7 +26,7 @@ $$
 
 如果直接取硬 Top-K：$\mathcal{I} = \text{TopKIndices}(\mathbf{g}, K)$，则输出为 $\sum_{i \in \mathcal{I}} g_i E_i(\mathbf{h})$。但 $\text{TopK}$ 操作是不可导的，这导致专家网络无法通过梯度更新。
 
-** Straight-Through Estimator (STE) 的推导 **：
+**Straight-Through Estimator (STE) 的推导**：
 
 为了反向传播，我们需要一个可导的近似。设前向传播使用硬选择：
 
@@ -380,7 +380,7 @@ par 并行执行
     Orch -> A1 : 分配任务 τ_1
     Orch -> A2 : 分配任务 τ_2
     Orch -> AN : 分配任务 τ_N
-    
+
     A1 -> Env : 执行动作
     A2 -> Env : 执行动作
     AN -> Env : 执行动作
@@ -500,7 +500,7 @@ $$
 
 其中 $V(s) = \mathbb{E}_{\mathbf{a}}[Q(s, \mathbf{a})]$ 为标准状态价值基线。
 
-**证明**：  
+**证明**：
 无偏性显然，因为 $\mathbb{E}_{a_0}[Q(s, a_0, a_{-0})] = \sum_{a_0'} \pi_0(a_0'|s) Q(s, a_0', a_{-0})$。
 
 对于方差，注意到反事实基线条件于 $a_{-0}$，而标准基线条件于 $s$。由方差分解公式：
@@ -544,7 +544,7 @@ $$
 
 **定理**（退火策略的收敛）：假设奖励有界 $|r| \leq R_{\max}$，则当 $t \to \infty$，策略 $\pi_t$ 收敛到优化 $r_{\text{perf}}$ 的最优策略 $\pi^*$。
 
-**证明草图**：  
+**证明草图**：
 定义策略差异 $D_t = \|\pi_t - \pi^*\|$。由策略梯度定理：
 
 $$
@@ -553,7 +553,7 @@ $$
 
 当 $t$ 足够大，$\lambda_1(t), \lambda_2(t) < \epsilon$，梯度主要由 $r_{\text{perf}}$ 驱动。由随机逼近理论，步长满足 Robbins-Monro 条件时，$\pi_t \to \pi^*$ almost surely。
 
-**防止 Serial Collapse 的充分条件**：  
+**防止 Serial Collapse 的充分条件**：
  early training 阶段，需要：
 
 $$
@@ -599,13 +599,13 @@ $$
       iii. 计算 CriticalSteps(t) = s_main^(t) + max_i s_i^(t)
       iv.  观察奖励 r_t = λ_1·r_parallel + λ_2·r_finish + λ_3·r_perf
       v.   状态转移 s_{t+1} ~ P(·|s_t, a_0^(t))
-   
+
    c. 计算回报 G_t = Σ γ^k r_{t+k}
    d. 对于每个时间步 t：
       i.   计算反事实基线 b_t = Σ_{a'} π(a'|s_t) Q(s_t, a', a_{-0})
       ii.  计算优势 A_t = G_t - b_t
       iii. 更新策略：π ← π + α·A_t·∇log π(a_0^(t)|s_t)
-   
+
    e. 退火：λ_1 ← λ_1·γ_decay，λ_2 ← λ_2·γ_decay
 
 2. 返回 π*
@@ -615,7 +615,7 @@ $$
 
 ## 结语：从规模到架构的范式转移
 
-万亿参数模型的工程化不是简单的"堆参数"，而是在**稀疏性、并行性、内存效率**之间做精细的数学权衡。
+综合来看，万亿参数模型的工程化靠简单的"堆参数"是不行的，需要在**稀疏性、并行性、内存效率**之间做精细的数学权衡。
 
 MoE 的 Bias-only 路由、MLA 的低秩压缩、PARL 的 Critical Steps 优化，每一个都是对标准范式的深刻重构。特别是 PARL 框架，它揭示了 LLM 发展的下一个核心趋势：**Scaling Law 正在从训练时的参数堆砌，转向推理时的计算高效分配**。
 
