@@ -8,7 +8,7 @@ cover: /image/logo.webp
 featured: false
 ---
 
-从 Kimi 刚上线那会儿我就是忠实用户，因为 Kimi 是最早支持文件上传的模型之一（大学期间写各种课程报告的救星~），后来用 AI 辅助编码和阅读论文，Kimi 都完美胜任。前段时间 Kimi K2.5 大模型发布，说是万亿参数 MoE、原生多模态、还有那个听起来很科幻的 Agent Swarm，出于对技术的新技术的热爱，我第一时间就拉了技术报告来看。尝试跑了一下demo，花了点功夫去理解那个 **PARL（Parallel-Agent Reinforcement Learning）**  框架背后的数学——尤其是当 100 个子代理并行执行时，如何避免"串行崩溃"（Serial Collapse），以及 Critical Steps 作为优化目标到底在最小化什么。
+从 Kimi 刚上线那会儿我就是忠实用户，因为 Kimi 是最早支持文件上传的模型之一（大学期间写各种课程报告的救星~），后来用 AI 辅助编码和阅读论文，Kimi 都完美胜任。前段时间 Kimi K2.5 大模型发布，说是万亿参数 MoE、原生多模态、还有那个听起来很科幻的 Agent Swarm，出于对新技术的热爱，我第一时间就拉了技术报告来看。尝试跑了一下demo，花了点功夫去理解那个 **PARL（Parallel-Agent Reinforcement Learning）**  框架背后的数学——尤其是当 100 个子代理并行执行时，如何避免"串行崩溃"（Serial Collapse），以及 Critical Steps 作为优化目标到底在最小化什么。
 
 这篇博客把我啃技术报告、复现 PARL 奖励函数、以及推导 MoE 路由算法的笔记整理出来。有些公式官方没给细节，我是从实现反推的，如果推导有误，欢迎指正。
 

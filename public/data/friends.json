@@ -167,7 +167,6 @@
       "description": "05后，高中生，内容偏技术向，希望能对你有用QwQ",
       "category": "blogs",
       "featured": true,
-      "unidirectional": true,
       "status": "online"
     },
     {
@@ -235,7 +234,6 @@
       "description": "此情可待成追忆，只是当时已惘然",
       "category": "blogs",
       "featured": true,
-      "unidirectional": true,
       "status": "online"
     },
     {
