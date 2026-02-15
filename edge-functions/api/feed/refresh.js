@@ -10,14 +10,14 @@
  * - 将更新时间改为本次调用接口的时间
  *
  * 速率限制:
- * - 每IP每60秒只能调用一次
+ * - 每IP每60秒只能调用一次（针对每个URL独立限制）
  */
 
 const FORCE_REFRESH_COOLDOWN = 60 * 1000; // 60 秒强制刷新冷却
 
 // 检查强制刷新冷却时间
-async function checkForceRefreshLimit(ip) {
-  const key = `feed:force:${ip}`;
+async function checkForceRefreshLimit(ip, feedUrl) {
+  const key = `feed:force:${ip}:${feedUrl}`;
   const data = await FEED_KV.get(key);
 
   if (!data) {
@@ -40,8 +40,8 @@ async function checkForceRefreshLimit(ip) {
 }
 
 // 记录强制刷新时间
-async function recordForceRefresh(ip) {
-  const key = `feed:force:${ip}`;
+async function recordForceRefresh(ip, feedUrl) {
+  const key = `feed:force:${ip}:${feedUrl}`;
   await FEED_KV.put(key, Date.now().toString(), {
     expirationTtl: Math.ceil(FORCE_REFRESH_COOLDOWN / 1000) + 60,
   });
@@ -110,8 +110,8 @@ export async function onRequestGet(context) {
       });
     }
 
-    // 检查强制刷新冷却时间
-    const forceLimit = await checkForceRefreshLimit(clientIP);
+    // 检查强制刷新冷却时间（针对每个URL独立限制）
+    const forceLimit = await checkForceRefreshLimit(clientIP, feedUrl);
     if (!forceLimit.allowed) {
       return new Response(
         JSON.stringify({
@@ -173,8 +173,8 @@ export async function onRequestGet(context) {
       }
     }
 
-    // 记录强制刷新时间
-    await recordForceRefresh(clientIP);
+    // 记录强制刷新时间（针对每个URL独立记录）
+    await recordForceRefresh(clientIP, feedUrl);
 
     return new Response(content, {
       headers: {
