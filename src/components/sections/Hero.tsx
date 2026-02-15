@@ -37,7 +37,6 @@ interface HeroProps {
   data: SiteData['hero'];
 }
 
-// 使用 CSS 动画替代 JS 动画 - 性能更好
 const CodeDecoration = memo(({ className }: { className?: string }) => {
   return (
     <div
@@ -53,7 +52,6 @@ const CodeDecoration = memo(({ className }: { className?: string }) => {
 
 CodeDecoration.displayName = 'CodeDecoration';
 
-// 简化浮动图标 - 纯 CSS 动画
 const FloatingIcon = memo(({
   icon: Icon,
   className,
@@ -82,7 +80,6 @@ const FloatingIcon = memo(({
 
 FloatingIcon.displayName = 'FloatingIcon';
 
-// 统计卡片 - 带光效
 const StatCard = memo(({
   stat,
   index,
@@ -145,7 +142,6 @@ const StatCard = memo(({
           transform: isHovered ? 'translateY(-2px)' : 'none',
         }}
       >
-        {/* Glow background - 顶部径向渐变 */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -155,7 +151,6 @@ const StatCard = memo(({
           transition={{ duration: 0.3 }}
         />
 
-        {/* Shine effect - 斜向光泽 */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -166,7 +161,6 @@ const StatCard = memo(({
           transition={{ duration: 0.6 }}
         />
 
-        {/* 内容 */}
         <div
           className="font-primary text-3xl sm:text-4xl font-extrabold mb-2 transition-all duration-300 relative z-10"
           style={{
@@ -190,7 +184,6 @@ const StatCard = memo(({
 
 StatCard.displayName = 'StatCard';
 
-// 主按钮 - 带光效
 const PrimaryButton = memo(({
   children,
   onClick,
@@ -219,7 +212,6 @@ const PrimaryButton = memo(({
         transform: isHovered ? 'translateY(-2px)' : 'none',
       }}
     >
-      {/* 光效背景 */}
       <div
         className="absolute inset-0 transition-transform duration-600"
         style={{
@@ -240,7 +232,6 @@ const PrimaryButton = memo(({
 
 PrimaryButton.displayName = 'PrimaryButton';
 
-// 次要按钮 - 带光效
 const SecondaryButton = memo(({
   children,
   onClick,
@@ -270,7 +261,6 @@ const SecondaryButton = memo(({
         transform: isHovered ? 'translateY(-2px)' : 'none',
       }}
     >
-      {/* 悬停光晕 */}
       <div
         className="absolute inset-0 rounded-xl transition-opacity duration-300"
         style={{
@@ -285,7 +275,6 @@ const SecondaryButton = memo(({
 
 SecondaryButton.displayName = 'SecondaryButton';
 
-// 发光徽章
 const GlowBadge = memo(({ text }: { text: string }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
@@ -322,7 +311,6 @@ const GlowBadge = memo(({ text }: { text: string }) => {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="inline-flex items-center gap-2 mb-6 sm:mb-8 relative"
     >
-      {/* 外发光 */}
       <div
         className="absolute -inset-2 rounded-xl animate-pulse-glow"
         style={{
@@ -340,7 +328,6 @@ const GlowBadge = memo(({ text }: { text: string }) => {
           boxShadow: '0 0 20px var(--accent-glow), inset 0 0 10px var(--accent-primary)10',
         }}
       >
-        {/* 内部光效 */}
         <div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{
@@ -367,7 +354,6 @@ const GlowBadge = memo(({ text }: { text: string }) => {
 
 GlowBadge.displayName = 'GlowBadge';
 
-// 发光标题
 const GlowTitle = memo(({ children }: { children: React.ReactNode }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
@@ -393,7 +379,6 @@ const GlowTitle = memo(({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="overflow-hidden mb-6 sm:mb-8 relative">
-      {/* 多层光晕 */}
       <div
         className="absolute inset-0 pointer-events-none animate-pulse-slow"
         style={{
@@ -440,7 +425,6 @@ const GlowTitle = memo(({ children }: { children: React.ReactNode }) => {
 
 GlowTitle.displayName = 'GlowTitle';
 
-// 发光滚动指示器
 const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
@@ -469,7 +453,6 @@ const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
       className="absolute bottom-8 left-1/2 -translate-x-1/2 cursor-pointer group"
       onClick={onClick}
     >
-      {/* 发光底座 */}
       <div
         className="absolute inset-0 -m-4 rounded-full transition-opacity duration-300 opacity-0 group-hover:opacity-100"
         style={{
@@ -498,7 +481,6 @@ const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
 
 GlowScrollIndicator.displayName = 'GlowScrollIndicator';
 
-// 演示内容渲染 - 懒加载方式，手动触发加载
 const DemoContent = ({ demo, isDark, isLoaded, onLoad }: { demo: { type: DemoType; isFullscreen: boolean; onFullscreenToggle: () => void }; isDark: boolean; isLoaded: boolean; onLoad: () => void }) => {
   const isCesium = demo.type === 'cesium';
   const isChinaMap = demo.type === 'chinamap';
@@ -506,7 +488,6 @@ const DemoContent = ({ demo, isDark, isLoaded, onLoad }: { demo: { type: DemoTyp
 
   return (
     <div className="relative w-full h-full">
-      {/* 未加载状态 - 显示加载按钮 */}
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center">
           <motion.div
@@ -532,7 +513,6 @@ const DemoContent = ({ demo, isDark, isLoaded, onLoad }: { demo: { type: DemoTyp
         </div>
       )}
 
-      {/* Cesium 地球 - 使用 CSS 过渡实现淡入淡出 */}
       {isLoaded && (
         <div
           className="absolute inset-0 transition-opacity duration-500 ease-in-out"
@@ -548,7 +528,6 @@ const DemoContent = ({ demo, isDark, isLoaded, onLoad }: { demo: { type: DemoTyp
         </div>
       )}
 
-      {/* Three.js 中国地图 */}
       {isLoaded && (
         <div
           className="absolute inset-0 transition-opacity duration-500 ease-in-out"
@@ -564,7 +543,6 @@ const DemoContent = ({ demo, isDark, isLoaded, onLoad }: { demo: { type: DemoTyp
         </div>
       )}
 
-      {/* Web 终端 */}
       <div
         className="absolute inset-0 transition-opacity duration-500 ease-in-out"
         style={{
@@ -579,19 +557,16 @@ const DemoContent = ({ demo, isDark, isLoaded, onLoad }: { demo: { type: DemoTyp
   );
 };
 
-// 获取演示配置
 const getDemoConfig = (demo: DemoType): DemoConfig => {
   return DEMOS.find(d => d.id === demo) || DEMOS[0];
 };
 
-// 获取下一个演示
 const getNextDemo = (current: DemoType): DemoType => {
   const currentIndex = DEMOS.findIndex(d => d.id === current);
   const nextIndex = (currentIndex + 1) % DEMOS.length;
   return DEMOS[nextIndex].id as DemoType;
 };
 
-// 地球展示卡片
 const GlobeShowcase = memo(() => {
   const [isHovered, setIsHovered] = useState(false);
   const [currentDemo, setCurrentDemo] = useState<DemoType>('cesium');
@@ -608,7 +583,6 @@ const GlobeShowcase = memo(() => {
     setIsLoaded(true);
   }, []);
 
-  // 进入全屏
   const enterFullscreen = useCallback(async () => {
     const container = containerRef.current;
     if (!container) return;
@@ -626,7 +600,6 @@ const GlobeShowcase = memo(() => {
     }
   }, []);
 
-  // 退出全屏
   const exitFullscreen = useCallback(async () => {
     try {
       if (document.exitFullscreen) {
@@ -641,7 +614,6 @@ const GlobeShowcase = memo(() => {
     }
   }, []);
 
-  // 监听全屏变化
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isFs = !!(
@@ -666,20 +638,17 @@ const GlobeShowcase = memo(() => {
     };
   }, []);
 
-  // 切换下一个演示
   const handleSwitchDemo = useCallback(() => {
     setIsLoaded(false);
     setCurrentDemo(prev => getNextDemo(prev));
   }, []);
 
-  // 选择特定演示
   const handleSelectDemo = useCallback((demoId: DemoType) => {
     setIsLoaded(false);
     setCurrentDemo(demoId);
     setShowDropdown(false);
   }, []);
 
-  // 监听打开地球Online事件
   useEffect(() => {
     const handleOpenEarthOnline = () => {
       enterFullscreen();
@@ -702,7 +671,6 @@ const GlobeShowcase = memo(() => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* 双击全屏悬浮提示 - 放在最外层避免被裁剪 */}
       {!isFullscreen && isHovered && (
         <motion.div
           initial={{ opacity: 0, y: 5 }}
@@ -719,7 +687,6 @@ const GlobeShowcase = memo(() => {
           <span className="text-xs font-medium whitespace-nowrap" style={{ color: 'var(--accent-primary)' }}>
             双击全屏体验
           </span>
-          {/* 小三角箭头 */}
           <div
             className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45"
             style={{
@@ -731,7 +698,6 @@ const GlobeShowcase = memo(() => {
         </motion.div>
       )}
 
-      {/* 外发光边框 */}
       {!isFullscreen && (
         <div
           className="absolute -inset-4 rounded-3xl transition-all duration-500"
@@ -747,7 +713,6 @@ const GlobeShowcase = memo(() => {
         />
       )}
 
-      {/* 主容器 */}
       <div
         className={`relative rounded-2xl overflow-hidden transition-all duration-500 ${
           isFullscreen ? 'w-full h-full rounded-none' : 'w-[500px] h-[500px]'
@@ -761,7 +726,6 @@ const GlobeShowcase = memo(() => {
             : '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         }}
       >
-        {/* 顶部标签栏 */}
         <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Globe className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
@@ -776,9 +740,7 @@ const GlobeShowcase = memo(() => {
             </span>
           </div>
 
-          {/* 右侧按钮组 */}
           <div className="flex items-center gap-1.5">
-            {/* 切换按钮 - 在非全屏时显示 */}
             {!isFullscreen && (
               <button
                 onClick={handleSwitchDemo}
@@ -794,7 +756,6 @@ const GlobeShowcase = memo(() => {
               </button>
             )}
 
-            {/* 全屏/退出按钮 */}
             <button
               onClick={isFullscreen ? exitFullscreen : enterFullscreen}
               className="flex items-center justify-center w-7 h-7 rounded-md transition-all duration-200 hover:bg-white/10"
@@ -812,7 +773,6 @@ const GlobeShowcase = memo(() => {
               )}
             </button>
 
-            {/* 运行中状态 */}
             <div className="flex items-center gap-1.5 ml-1">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
               <span className="text-xs" style={{ color: 'var(--text-muted)' }}>运行中</span>
@@ -820,11 +780,9 @@ const GlobeShowcase = memo(() => {
           </div>
         </div>
 
-        {/* 全屏模式下的控制栏 */}
         <AnimatePresence>
           {isFullscreen && (
             <>
-              {/* 左上方 - 渲染器信息 */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -846,14 +804,12 @@ const GlobeShowcase = memo(() => {
                 </div>
               </motion.div>
 
-              {/* 中间控制栏 - 切换按钮和下拉选择 */}
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 className="absolute top-14 left-4 right-4 z-30 flex items-center justify-center gap-4"
               >
-                {/* 切换按钮 */}
                 <button
                   onClick={handleSwitchDemo}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 hover:bg-white/10"
@@ -867,7 +823,6 @@ const GlobeShowcase = memo(() => {
                   <span className="text-sm font-medium" style={{ color: '#60a5fa' }}>切换特效</span>
                 </button>
 
-                {/* 下拉选择 */}
                 <div className="relative">
                   <button
                     onClick={() => setShowDropdown(!showDropdown)}
@@ -883,7 +838,6 @@ const GlobeShowcase = memo(() => {
                     <ChevronDown className="w-4 h-4" style={{ color: '#60a5fa' }} />
                   </button>
 
-                  {/* 下拉菜单 */}
                   <AnimatePresence>
                     {showDropdown && (
                       <motion.div
@@ -931,7 +885,6 @@ const GlobeShowcase = memo(() => {
           )}
         </AnimatePresence>
 
-        {/* WebGL 演示内容 */}
         <div
           className={`absolute inset-0 ${isFullscreen ? 'pt-24' : 'pt-8'}`}
           style={{ cursor: 'default' }}
@@ -949,7 +902,6 @@ const GlobeShowcase = memo(() => {
           />
         </div>
 
-        {/* 底部信息 - 只在地球Online页显示 */}
         {currentDemo === 'cesium' && (
           <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center text-xs">
             <div className="flex items-center gap-1.5">
@@ -962,7 +914,6 @@ const GlobeShowcase = memo(() => {
           </div>
         )}
 
-        {/* 角落装饰 */}
         <div className="absolute top-0 right-0 w-20 h-20 opacity-30">
           <div className="absolute top-3 right-3 w-8 h-px" style={{ background: 'var(--accent-primary)' }} />
           <div className="absolute top-3 right-3 w-px h-8" style={{ background: 'var(--accent-primary)' }} />
@@ -984,7 +935,27 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
   const { scrollY } = useThrottledScroll(16);
   const { effectiveQuality, enableBackgroundAnimations } = usePerformance();
 
-  // 计算滚动动画值
+  const [animationPhase, setAnimationPhase] = useState(0);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setAnimationPhase(4);
+      return;
+    }
+
+    const phase1Timer = setTimeout(() => setAnimationPhase(1), 0);
+    const phase2Timer = setTimeout(() => setAnimationPhase(2), 200);
+    const phase3Timer = setTimeout(() => setAnimationPhase(3), 400);
+    const phase4Timer = setTimeout(() => setAnimationPhase(4), 600);
+
+    return () => {
+      clearTimeout(phase1Timer);
+      clearTimeout(phase2Timer);
+      clearTimeout(phase3Timer);
+      clearTimeout(phase4Timer);
+    };
+  }, [prefersReducedMotion]);
+
   const scrollProgress = Math.min(scrollY / 300, 1);
   const opacity = prefersReducedMotion ? 1 : 1 - scrollProgress;
   const scale = prefersReducedMotion ? 1 : 1 - scrollProgress * 0.1;
@@ -999,13 +970,11 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
   const primaryCta = data.cta.find(c => c.primary);
   const secondaryCta = data.cta.find(c => !c.primary);
 
-  // 根据性能级别调整背景特效
   const showAmbientGlow = !isMobile && effectiveQuality !== 'low';
   const starCount = effectiveQuality === 'low' ? 10 : effectiveQuality === 'medium' ? 15 : 20;
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* 静态网格背景 - 低性能模式下简化 */}
       <div
         className="absolute inset-0 -z-20 pointer-events-none"
         style={{
@@ -1018,7 +987,6 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
         }}
       />
 
-      {/* 环境光效 - 根据性能级别显示 */}
       {showAmbientGlow && (
         <>
           <AmbientGlow 
@@ -1034,7 +1002,6 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
             opacity={effectiveQuality === 'medium' ? 0.08 : 0.1} 
           />
 
-          {/* 闪烁星星 */}
           {enableBackgroundAnimations && (
             <div className="absolute inset-0">
               <TwinklingStars 
@@ -1048,7 +1015,6 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
         </>
       )}
 
-      {/* 径向渐变遮罩 */}
       <div
         className="absolute inset-0 pointer-events-none -z-10"
         style={{
@@ -1056,33 +1022,38 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
         }}
       />
 
-      {/* 浮动代码装饰 */}
-      <CodeDecoration className="top-20 left-4 sm:left-10 hidden sm:block" />
-      <CodeDecoration className="bottom-32 right-4 sm:right-10 hidden sm:block" />
+      {animationPhase >= 3 && (
+        <>
+          <CodeDecoration className="top-20 left-4 sm:left-10 hidden sm:block" />
+          <CodeDecoration className="bottom-32 right-4 sm:right-10 hidden sm:block" />
+        </>
+      )}
 
-      {/* 浮动图标 */}
-      <FloatingIcon
-        icon={Terminal}
-        className="top-1/4 left-[5%] hidden lg:block"
-        color="var(--accent-primary)"
-      />
-      <FloatingIcon
-        icon={Cpu}
-        className="top-1/3 right-[8%] hidden lg:block"
-        color="var(--accent-secondary)"
-      />
-      <FloatingIcon
-        icon={Code2}
-        className="bottom-1/4 left-[10%] hidden lg:block"
-        color="var(--accent-tertiary)"
-      />
-      <FloatingIcon
-        icon={Sparkles}
-        className="bottom-1/3 right-[5%] hidden lg:block"
-        color="var(--mc-gold)"
-      />
+      {animationPhase >= 3 && (
+        <>
+          <FloatingIcon
+            icon={Terminal}
+            className="top-1/4 left-[5%] hidden lg:block"
+            color="var(--accent-primary)"
+          />
+          <FloatingIcon
+            icon={Cpu}
+            className="top-1/3 right-[8%] hidden lg:block"
+            color="var(--accent-secondary)"
+          />
+          <FloatingIcon
+            icon={Code2}
+            className="bottom-1/4 left-[10%] hidden lg:block"
+            color="var(--accent-tertiary)"
+          />
+          <FloatingIcon
+            icon={Sparkles}
+            className="bottom-1/3 right-[5%] hidden lg:block"
+            color="var(--mc-gold)"
+          />
+        </>
+      )}
 
-      {/* 主内容 - 左右布局 */}
       <div
         className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32"
         style={{
@@ -1092,146 +1063,259 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
         }}
       >
         <div className="flex items-center justify-between gap-8">
-          {/* 左侧内容 */}
           <div className="flex-1 text-center xl:text-left">
-            {/* 发光徽章 */}
-            <GlowBadge text={data.badge} />
-
-            {/* 发光标题 */}
-            <GlowTitle>
-              {data.title.split('竞争优势')[0]}
-              <span className="relative">
-                <GradientText animate={!prefersReducedMotion}>竞争优势</GradientText>
-              </span>
-            </GlowTitle>
-
-            {/* 副标题 */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.6,
-                ease: [0.16, 1, 0.3, 1],
-                delay: 0.3,
-              }}
-              className="mb-4 font-primary"
-              style={{
-                fontSize: 'clamp(1.125rem, 3vw, 1.5rem)',
-                fontWeight: 600,
-                color: 'var(--accent-secondary)',
-                letterSpacing: '0.01em',
-              }}
-            >
-              {data.subtitle}
-            </motion.p>
-
-            {/* 描述 */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.6,
-                ease: [0.16, 1, 0.3, 1],
-                delay: 0.4,
-              }}
-              className="max-w-xl mx-auto xl:mx-0 mb-8 sm:mb-12 font-primary"
-              style={{
-                fontSize: 'var(--text-lg)',
-                fontWeight: 400,
-                color: 'var(--text-muted)',
-                lineHeight: 1.7,
-              }}
-            >
-              {data.description}
-            </motion.p>
-
-            {/* CTA 按钮 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.6,
-                ease: [0.16, 1, 0.3, 1],
-                delay: 0.5,
-              }}
-              className="flex flex-col sm:flex-row items-center justify-center xl:justify-start gap-4 mb-12"
-            >
-              {primaryCta && (
-                <PrimaryButton onClick={() => scrollToSection(primaryCta.link)}>
-                  {primaryCta.text}
-                </PrimaryButton>
-              )}
-              {secondaryCta && (
-                <SecondaryButton onClick={() => scrollToSection(secondaryCta.link)}>
-                  {secondaryCta.text}
-                </SecondaryButton>
-              )}
-            </motion.div>
-
-            {/* 统计网格 */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-2xl mx-auto xl:mx-0 relative">
-              {/* 统计区域背景光晕 - 桌面端显示 */}
-              {!isMobile && (
+            {animationPhase >= 1 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-flex items-center gap-2 mb-6 sm:mb-8 relative"
+              >
                 <div
-                  className="absolute inset-0 -z-10 rounded-3xl animate-pulse-slow"
+                  className="absolute -inset-2 rounded-xl animate-pulse-glow"
                   style={{
-                    background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
-                    filter: 'blur(40px)',
+                    background: `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary))`,
+                    filter: 'blur(15px)',
+                    opacity: 0.4,
+                    zIndex: -1,
                   }}
                 />
-              )}
-              {data.stats.map((stat, index) => (
-                <StatCard key={stat.label} stat={stat} index={index} />
-              ))}
-            </div>
+                <div
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 relative overflow-hidden group"
+                  style={{
+                    background: 'var(--bg-card)',
+                    border: '2px solid color-mix(in srgb, var(--accent-primary) 80%, transparent)',
+                    boxShadow: '0 0 20px var(--accent-glow), inset 0 0 10px var(--accent-primary)10',
+                  }}
+                >
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{
+                      background: `linear-gradient(90deg, transparent, var(--accent-primary)20, transparent)`,
+                    }}
+                  />
+                  <span
+                    className="w-2 h-2 rounded-full animate-pulse"
+                    style={{
+                      background: 'var(--accent-primary)',
+                      boxShadow: '0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary)',
+                    }}
+                  />
+                  <span
+                    className="font-primary text-sm font-bold uppercase tracking-wider relative z-10"
+                    style={{ color: 'var(--accent-primary)' }}
+                  >
+                    {data.badge}
+                  </span>
+                </div>
+              </motion.div>
+            )}
+
+            {animationPhase >= 1 && (
+              <div className="overflow-hidden mb-6 sm:mb-8 relative">
+                <div
+                  className="absolute inset-0 pointer-events-none animate-pulse-slow"
+                  style={{
+                    background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
+                    filter: 'blur(60px)',
+                  }}
+                />
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: 'radial-gradient(ellipse at center, var(--accent-primary)20 0%, transparent 50%)',
+                    filter: 'blur(40px)',
+                    animation: 'pulse-glow 3s ease-in-out infinite',
+                  }}
+                />
+                <motion.h1
+                  initial={{ y: '100%' }}
+                  animate={{ y: 0 }}
+                  transition={{
+                    duration: 0.8,
+                    ease: [0.16, 1, 0.3, 1],
+                    delay: 0.1,
+                  }}
+                  className="font-primary relative"
+                  style={{
+                    fontSize: 'clamp(2.5rem, 8vw, 4.5rem)',
+                    fontWeight: 800,
+                    color: 'var(--text-primary)',
+                    textShadow: `
+                      4px 4px 0 color-mix(in srgb, var(--bg-secondary) 50%, black),
+                      0 0 40px var(--accent-glow),
+                      0 0 80px var(--accent-glow),
+                      0 0 120px var(--accent-primary)40
+                    `,
+                    letterSpacing: '-0.02em',
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {data.title.split('竞争优势')[0]}
+                  <span className="relative">
+                    <GradientText animate={!prefersReducedMotion}>竞争优势</GradientText>
+                  </span>
+                </motion.h1>
+              </div>
+            )}
+
+            {animationPhase >= 1 && (
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.16, 1, 0.3, 1],
+                  delay: 0.3,
+                }}
+                className="mb-4 font-primary"
+                style={{
+                  fontSize: 'clamp(1.125rem, 3vw, 1.5rem)',
+                  fontWeight: 600,
+                  color: 'var(--accent-secondary)',
+                  letterSpacing: '0.01em',
+                }}
+              >
+                {data.subtitle}
+              </motion.p>
+            )}
+
+            {animationPhase >= 1 && (
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.16, 1, 0.3, 1],
+                  delay: 0.4,
+                }}
+                className="max-w-xl mx-auto xl:mx-0 mb-8 sm:mb-12 font-primary"
+                style={{
+                  fontSize: 'var(--text-lg)',
+                  fontWeight: 400,
+                  color: 'var(--text-muted)',
+                  lineHeight: 1.7,
+                }}
+              >
+                {data.description}
+              </motion.p>
+            )}
+
+            {animationPhase >= 2 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.16, 1, 0.3, 1],
+                  delay: 0.5,
+                }}
+                className="flex flex-col sm:flex-row items-center justify-center xl:justify-start gap-4 mb-12"
+              >
+                {primaryCta && (
+                  <PrimaryButton onClick={() => scrollToSection(primaryCta.link)}>
+                    {primaryCta.text}
+                  </PrimaryButton>
+                )}
+                {secondaryCta && (
+                  <SecondaryButton onClick={() => scrollToSection(secondaryCta.link)}>
+                    {secondaryCta.text}
+                  </SecondaryButton>
+                )}
+              </motion.div>
+            )}
+
+            {animationPhase >= 2 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-2xl mx-auto xl:mx-0 relative">
+                {!isMobile && (
+                  <div
+                    className="absolute inset-0 -z-10 rounded-3xl animate-pulse-slow"
+                    style={{
+                      background: 'radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%)',
+                      filter: 'blur(40px)',
+                    }}
+                  />
+                )}
+                {data.stats.map((stat, index) => (
+                  <StatCard key={stat.label} stat={stat} index={index} />
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* 右侧地球展示 */}
-          <GlobeShowcase />
+          {animationPhase >= 4 && <GlobeShowcase />}
         </div>
-
       </div>
 
-      {/* 发光滚动指示器 */}
-      <GlowScrollIndicator onClick={() => scrollToSection('#services')} />
-
-      {/* 底部提示 - 固定在浏览器底部 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 1 }}
-        className="fixed bottom-4 left-0 right-0 flex justify-center z-50"
-      >
+      {animationPhase >= 3 && (
         <motion.div
-          className="relative px"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2, duration: 0.6 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 cursor-pointer group"
+          onClick={() => scrollToSection('#services')}
         >
-          {/* 边缘荧光效果 */}
           <div
-            className="absolute -inset-[2px] rounded-lg pointer-events-none"
+            className="absolute inset-0 -m-4 rounded-full transition-opacity duration-300 opacity-0 group-hover:opacity-100"
             style={{
-              background: 'linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))',
-              backgroundSize: '300% 300%',
-              animation: 'gradient-shift 3s ease infinite',
-              filter: 'blur(4px)',
-              opacity: 0.3,
+              background: `radial-gradient(circle, var(--accent-primary)30, transparent 70%)`,
+              filter: 'blur(10px)',
             }}
           />
-          <p
-            className="text-xs font-medium relative z-10"
-            style={{
-              color: 'var(--text-muted)',
-              letterSpacing: '0.02em',
-            }}
-          >
-            本页面仅作效果演示，不提供商业服务
-          </p>
+          <div className="flex flex-col items-center gap-2 animate-bounce-slow relative">
+            <span
+              className="font-primary text-xs uppercase tracking-widest transition-colors duration-300"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              向下滚动
+            </span>
+            <ChevronDown
+              className="w-6 h-6 transition-all duration-300 group-hover:scale-125"
+              style={{
+                color: 'var(--accent-primary)',
+                filter: 'drop-shadow(0 0 10px var(--accent-primary))',
+              }}
+            />
+          </div>
         </motion.div>
-      </motion.div>
+      )}
 
-      {/* 底部渐变 */}
+      {animationPhase >= 2 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1 }}
+          className="fixed bottom-4 left-0 right-0 flex justify-center z-50"
+        >
+          <motion.div
+            className="relative px"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          >
+            <div
+              className="absolute -inset-[2px] rounded-lg pointer-events-none"
+              style={{
+                background: 'linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))',
+                backgroundSize: '300% 300%',
+                animation: 'gradient-shift 3s ease infinite',
+                filter: 'blur(4px)',
+                opacity: 0.3,
+              }}
+            />
+            <p
+              className="text-xs font-medium relative z-10"
+              style={{
+                color: 'var(--text-muted)',
+                letterSpacing: '0.02em',
+              }}
+            >
+              本页面仅作效果演示，不提供商业服务
+            </p>
+          </motion.div>
+        </motion.div>
+      )}
+
       <div
         className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
         style={{
