@@ -190,7 +190,7 @@ function PageLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {siteData && (
+      {siteData?.navigation && (
         <Navigation
           data={siteData.navigation}
           theme={theme}

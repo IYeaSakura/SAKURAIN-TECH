@@ -20,13 +20,23 @@ export function SecurityProtection({ config }: SecurityProtectionProps) {
       try {
         const response = await fetch(`/config/security-config.json?v=${Date.now()}`, { cache: 'no-store' });
         const data = await response.json();
-        return data.security;
+        const security = data.security || data.debugProtection;
+        if (security) {
+          return {
+            disableCopy: security.disableCopy ?? security.disableContextMenu ?? true,
+            disableF12: security.disableF12 ?? false,
+            disableDevTools: security.detectDevTools ?? false,
+            disableDebug: security.detectDevTools ?? false,
+          };
+        }
+        throw new Error('Invalid security config format');
       } catch (error) {
+        console.warn('Failed to load security config, using defaults:', error);
         return {
           disableCopy: true,
           disableF12: true,
-          disableDevTools: true,
-          disableDebug: true,
+          disableDevTools: false,
+          disableDebug: false,
         };
       }
     };
@@ -34,19 +44,19 @@ export function SecurityProtection({ config }: SecurityProtectionProps) {
     const initSecurity = async () => {
       const securityConfig = await loadSecurityConfig();
 
-      if (securityConfig.disableCopy) {
+      if (securityConfig?.disableCopy) {
         disableCopy();
       }
 
-      if (securityConfig.disableF12) {
+      if (securityConfig?.disableF12) {
         disableF12();
       }
 
-      if (securityConfig.disableDevTools) {
+      if (securityConfig?.disableDevTools) {
         disableDevTools();
       }
 
-      if (securityConfig.disableDebug) {
+      if (securityConfig?.disableDebug) {
         disableDebug();
       }
     };

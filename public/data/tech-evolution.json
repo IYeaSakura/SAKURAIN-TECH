@@ -1,4 +1,257 @@
 {
+  "title": "技术演进",
+  "subtitle": "从初一开始的编程之旅，技术栈随时间不断演化",
+  "description": "每个阶段都有不同的侧重点，但始终保持着对技术的热情",
+  "periods": [
+    "2016下",
+    "2017上",
+    "2017下",
+    "2018上",
+    "2018下",
+    "2019上",
+    "2019下",
+    "2020上",
+    "2020下",
+    "2021上",
+    "2021下",
+    "2022上",
+    "2022下",
+    "2023上",
+    "2023下",
+    "2024上",
+    "2024下",
+    "2025上",
+    "2025下",
+    "2026上"
+  ],
+  "categories": [
+    {
+      "key": "ai",
+      "label": "机器学习/深度学习",
+      "color": "#8b5cf6",
+      "description": "人工智能与数据科学"
+    },
+    {
+      "key": "algo",
+      "label": "传统算法/机器博弈",
+      "color": "#3b82f6",
+      "description": "算法设计与博弈优化"
+    },
+    {
+      "key": "backend_api",
+      "label": "后端/分布式",
+      "color": "#10b981",
+      "description": "服务端开发与系统设计"
+    },
+    {
+      "key": "frontend",
+      "label": "前端/工程化",
+      "color": "#ec4899",
+      "description": "Web前端与工具链"
+    },
+    {
+      "key": "data_infra",
+      "label": "数据库/运维",
+      "color": "#f59e0b",
+      "description": "数据库、缓存与DevOps"
+    },
+    {
+      "key": "system_lang",
+      "label": "系统底层开发",
+      "color": "#06b6d4",
+      "description": "底层与高性能计算"
+    }
+  ],
+  "data": [
+    {
+      "period": "2016下",
+      "ai": 0,
+      "algo": 0,
+      "backend_api": 0,
+      "frontend": 100,
+      "data_infra": 0,
+      "system_lang": 0
+    },
+    {
+      "period": "2017上",
+      "ai": 0,
+      "algo": 0,
+      "backend_api": 0,
+      "frontend": 100,
+      "data_infra": 0,
+      "system_lang": 0
+    },
+    {
+      "period": "2017下",
+      "ai": 0,
+      "algo": 0,
+      "backend_api": 0,
+      "frontend": 100,
+      "data_infra": 0,
+      "system_lang": 0
+    },
+    {
+      "period": "2018上",
+      "ai": 0,
+      "algo": 0,
+      "backend_api": 0,
+      "frontend": 100,
+      "data_infra": 0,
+      "system_lang": 0
+    },
+    {
+      "period": "2018下",
+      "ai": 0,
+      "algo": 0,
+      "backend_api": 40,
+      "frontend": 35,
+      "data_infra": 15,
+      "system_lang": 10
+    },
+    {
+      "period": "2019上",
+      "ai": 0,
+      "algo": 0,
+      "backend_api": 42,
+      "frontend": 30,
+      "data_infra": 18,
+      "system_lang": 10
+    },
+    {
+      "period": "2019下",
+      "ai": 0,
+      "algo": 0,
+      "backend_api": 45,
+      "frontend": 25,
+      "data_infra": 20,
+      "system_lang": 10
+    },
+    {
+      "period": "2020上",
+      "ai": 0,
+      "algo": 0,
+      "backend_api": 40,
+      "frontend": 25,
+      "data_infra": 20,
+      "system_lang": 15
+    },
+    {
+      "period": "2020下",
+      "ai": 0,
+      "algo": 0,
+      "backend_api": 35,
+      "frontend": 40,
+      "data_infra": 15,
+      "system_lang": 10
+    },
+    {
+      "period": "2021上",
+      "ai": 0,
+      "algo": 0,
+      "backend_api": 35,
+      "frontend": 35,
+      "data_infra": 20,
+      "system_lang": 10
+    },
+    {
+      "period": "2021下",
+      "ai": 0,
+      "algo": 0,
+      "backend_api": 30,
+      "frontend": 30,
+      "data_infra": 25,
+      "system_lang": 15
+    },
+    {
+      "period": "2022上",
+      "ai": 0,
+      "algo": 0,
+      "backend_api": 30,
+      "frontend": 25,
+      "data_infra": 25,
+      "system_lang": 20
+    },
+    {
+      "period": "2022下",
+      "ai": 0,
+      "algo": 5,
+      "backend_api": 35,
+      "frontend": 10,
+      "data_infra": 20,
+      "system_lang": 30
+    },
+    {
+      "period": "2023上",
+      "ai": 5,
+      "algo": 30,
+      "backend_api": 25,
+      "frontend": 8,
+      "data_infra": 17,
+      "system_lang": 15
+    },
+    {
+      "period": "2023下",
+      "ai": 10,
+      "algo": 40,
+      "backend_api": 20,
+      "frontend": 5,
+      "data_infra": 15,
+      "system_lang": 10
+    },
+    {
+      "period": "2024上",
+      "ai": 25,
+      "algo": 40,
+      "backend_api": 10,
+      "frontend": 5,
+      "data_infra": 15,
+      "system_lang": 5
+    },
+    {
+      "period": "2024下",
+      "ai": 30,
+      "algo": 35,
+      "backend_api": 10,
+      "frontend": 5,
+      "data_infra": 15,
+      "system_lang": 5
+    },
+    {
+      "period": "2025上",
+      "ai": 30,
+      "algo": 35,
+      "backend_api": 15,
+      "frontend": 5,
+      "data_infra": 10,
+      "system_lang": 5
+    },
+    {
+      "period": "2025下",
+      "ai": 25,
+      "algo": 40,
+      "backend_api": 18,
+      "frontend": 5,
+      "data_infra": 8,
+      "system_lang": 4
+    },
+    {
+      "period": "2026上",
+      "ai": 30,
+      "algo": 35,
+      "backend_api": 20,
+      "frontend": 5,
+      "data_infra": 7,
+      "system_lang": 3
+    }
+  ],
+  "milestones": [
+    { "period": "2016年", "label": "Web基础入门", "color": "#ec4899" },
+    { "period": "2018年", "label": "PHP/WordPress时代", "color": "#10b981" },
+    { "period": "2022年", "label": "计算机基础补习", "color": "#06b6d4" },
+    { "period": "2023年", "label": "机器博弈启蒙", "color": "#3b82f6" },
+    { "period": "2024年", "label": "算法与AI融合", "color": "#8b5cf6" },
+    { "period": "2025年", "label": "多智能体演化博弈", "color": "#f59e0b" }
+  ],
   "tooltips": {
     "2016下": {
       "frontend": {

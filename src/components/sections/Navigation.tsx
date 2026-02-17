@@ -163,7 +163,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
 
             {/* 桌面端导航链接 */}
             <div className="hidden lg:flex items-center gap-6 xl:gap-8">
-              {data.links.map((link) => {
+              {data?.links?.map((link) => {
                 const Icon = getIcon(link.icon);
                 const handleClick = () => {
                   if (link.href === '/docs') handleDocsClick();

@@ -388,8 +388,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
 
           {/* 内容区域 */}
           <div
-            className="absolute inset-0 pt-24"
-            style={{ cursor: 'default' }}
+            className="absolute inset-0 pt-24 cursor-grab active:cursor-grabbing"
           >
             <DemoContent
               demo={{
@@ -656,8 +655,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
         </AnimatePresence>
 
         <div
-          className={`absolute inset-0 ${isFullscreen ? 'pt-24' : 'pt-8'}`}
-          style={{ cursor: 'default' }}
+          className={`absolute inset-0 ${isFullscreen ? 'pt-24' : 'pt-8'} cursor-grab active:cursor-grabbing`}
           onDoubleClick={isFullscreen ? undefined : enterFullscreen}
         >
           <DemoContent
