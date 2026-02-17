@@ -10,6 +10,7 @@
  * @author SAKURAIN
  */
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowRight,
@@ -23,10 +24,8 @@ import {
   Code2,
   Terminal,
   Cpu,
-  Rocket,
   Sparkles,
   MessageCircle,
-  Satellite,
 } from 'lucide-react';
 import {
   ScrollProgress,
@@ -128,10 +127,10 @@ interface TechEvolutionData {
     label: string;
     color: string;
   }[];
-  tooltips: Record<string, {
+  tooltips: Record<string, Record<string, {
     main: string[];
     learning: string[];
-  }>;
+  }>>;
 }
 
 // 生成平滑贝塞尔曲线路径
@@ -199,26 +198,64 @@ const TechStackChart = () => {
     return { tickCount, totalTicks, plotWidth };
   };
 
-  // 生成堆叠面积路径 - 数据点显示在刻度区间之间，带左右边距
+  // 生成堆叠面积路径 - 数据点显示在刻度区间之间，带左右边距，并延伸到边距区域
   const generateAreaPath = (data: Record<string, number | string>[], categories: { key: string }[], dataIndex: number) => {
     const categoryKeys = categories.map(c => c.key);
     const { totalTicks, plotWidth } = getPlotWidth(data.length);
     
-    // 计算上边界点 - 数据点位于两个刻度之间，加上左边距偏移
-    const topPoints = data.map((d, i) => {
+    // 计算上边界点 - 包含延伸到左右边距的点
+    const topPoints = [] as { x: number; y: number }[];
+    
+    // 左边界延伸点（使用第一个数据点的值）
+    const firstData = data[0];
+    let firstCumulative = 0;
+    for (let j = 0; j <= dataIndex; j++) {
+      firstCumulative += firstData[categoryKeys[j]] as number;
+    }
+    topPoints.push({
+      x: padding.left, // 最左侧
+      y: padding.top + innerHeight - (firstCumulative / 100) * innerHeight
+    });
+    
+    // 中间数据点
+    data.forEach((d, i) => {
       let cumulative = 0;
       for (let j = 0; j <= dataIndex; j++) {
         cumulative += d[categoryKeys[j]] as number;
       }
-      // 数据点i位于刻度i和刻度i+1之间，加上左边距偏移
       const tickPos = (edgeTicks + i + 0.5) / totalTicks;
       const x = padding.left + tickPos * plotWidth;
       const y = padding.top + innerHeight - (cumulative / 100) * innerHeight;
-      return { x, y };
+      topPoints.push({ x, y });
+    });
+    
+    // 右边界延伸点（使用最后一个数据点的值）
+    const lastData = data[data.length - 1];
+    let lastCumulative = 0;
+    for (let j = 0; j <= dataIndex; j++) {
+      lastCumulative += lastData[categoryKeys[j]] as number;
+    }
+    topPoints.push({
+      x: chartWidth - padding.right, // 最右侧
+      y: padding.top + innerHeight - (lastCumulative / 100) * innerHeight
     });
 
-    // 计算下边界点
-    const bottomPoints = data.map((d, i) => {
+    // 计算下边界点（反向）
+    const bottomPoints = [] as { x: number; y: number }[];
+    
+    // 右边界延伸点
+    let lastBottomCumulative = 0;
+    for (let j = 0; j < dataIndex; j++) {
+      lastBottomCumulative += lastData[categoryKeys[j]] as number;
+    }
+    bottomPoints.push({
+      x: chartWidth - padding.right,
+      y: padding.top + innerHeight - (lastBottomCumulative / 100) * innerHeight
+    });
+    
+    // 中间数据点（反向）
+    for (let i = data.length - 1; i >= 0; i--) {
+      const d = data[i];
       let cumulative = 0;
       for (let j = 0; j < dataIndex; j++) {
         cumulative += d[categoryKeys[j]] as number;
@@ -226,8 +263,18 @@ const TechStackChart = () => {
       const tickPos = (edgeTicks + i + 0.5) / totalTicks;
       const x = padding.left + tickPos * plotWidth;
       const y = padding.top + innerHeight - (cumulative / 100) * innerHeight;
-      return { x, y };
-    }).reverse();
+      bottomPoints.push({ x, y });
+    }
+    
+    // 左边界延伸点
+    let firstBottomCumulative = 0;
+    for (let j = 0; j < dataIndex; j++) {
+      firstBottomCumulative += firstData[categoryKeys[j]] as number;
+    }
+    bottomPoints.push({
+      x: padding.left,
+      y: padding.top + innerHeight - (firstBottomCumulative / 100) * innerHeight
+    });
 
     // 构建平滑曲线路径
     const topPath = smoothPath(topPoints);
@@ -294,6 +341,10 @@ const TechStackChart = () => {
     setMousePos({ x: e.clientX, y: e.clientY });
     
     if (hoveredCategory) {
+      // 获取当前时间段中该类别的技术栈
+      const periodTooltips = techData.tooltips?.[periodKey] || {};
+      const categoryTooltip = periodTooltips[hoveredCategory.key] || { main: [], learning: [] };
+      
       setHoveredData({
         period: periodKey,
         periodIndex: periodIndex,
@@ -303,7 +354,7 @@ const TechStackChart = () => {
         x: periodX,
         y: y,
         color: hoveredCategory.color,
-        tooltip: techData.tooltips?.[periodKey] || null,
+        tooltip: categoryTooltip,
       });
     } else {
       setHoveredData(null);
@@ -504,32 +555,7 @@ const TechStackChart = () => {
             });
           })()}
           
-          {/* 半年标签（上/下）- 显示在每个区间上方（带边距）*/}
-          {techData.data.map((d, i) => {
-            const { totalTicks, plotWidth } = getPlotWidth(techData.data.length);
-            // 区间中点（带边距）
-            const tickPos = (edgeTicks + i + 0.5) / totalTicks;
-            const x = padding.left + tickPos * plotWidth;
-            const period = d.period as string;
-            const halfLabel = period.endsWith('上') ? '上' : '下';
-            const isHovered = hoveredData?.period === period;
-            
-            return (
-              <text
-                key={`label-${period}`}
-                x={x}
-                y={chartHeight - padding.bottom - 8}
-                textAnchor="middle"
-                fontSize="10"
-                fill={isHovered ? 'var(--accent-primary)' : 'var(--text-muted)'}
-                fontFamily="monospace"
-                opacity={isHovered ? 1 : 0.6}
-                fontWeight={isHovered ? 'bold' : 'normal'}
-              >
-                {halfLabel}
-              </text>
-            );
-          })}
+          {/* 半年标签 - 已移除显示 */}
         </svg>
 
         {/* 图例 */}
@@ -564,10 +590,10 @@ const TechStackChart = () => {
         </div>
       </div>
 
-      {/* 悬浮提示框 - 显示主力和在学技术 */}
-      {hoveredData && hoveredData.tooltip && (
+      {/* 悬浮提示框 - 使用 Portal 渲染到 body，避免被父容器裁剪 */}
+      {hoveredData && hoveredData.tooltip && createPortal(
         <motion.div
-          className="fixed z-50 pointer-events-none"
+          className="fixed z-[9999] pointer-events-none"
           style={{
             left: Math.min(mousePos.x + 15, window.innerWidth - 250),
             top: mousePos.y - 10,
@@ -584,7 +610,7 @@ const TechStackChart = () => {
               border: `2px solid ${hoveredData.color}40`,
               boxShadow: `0 8px 32px ${hoveredData.color}30`,
               minWidth: '200px',
-              maxWidth: '260px',
+              maxWidth: '280px',
             }}
           >
             {/* 时间段标题 */}
@@ -602,7 +628,12 @@ const TechStackChart = () => {
               </span>
             </div>
             
-            {/* 主力技术 */}
+            {/* 类别名称 */}
+            <div className="text-sm font-bold mb-2" style={{ color: hoveredData.color }}>
+              {hoveredData.category}
+            </div>
+            
+            {/* 该类别的技术栈 */}
             {hoveredData.tooltip.main.length > 0 && (
               <div className="mb-3">
                 <div className="text-xs mb-1.5 font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -626,7 +657,7 @@ const TechStackChart = () => {
               </div>
             )}
             
-            {/* 在学技术 */}
+            {/* 该类别的在学技术 */}
             {hoveredData.tooltip.learning.length > 0 && (
               <div>
                 <div className="text-xs mb-1.5" style={{ color: 'var(--text-muted)' }}>
@@ -660,13 +691,14 @@ const TechStackChart = () => {
               borderBottom: `2px solid ${hoveredData.color}40`,
             }}
           />
-        </motion.div>
+        </motion.div>,
+        document.body
       )}
     </div>
   );
 };
 
-// Hero 区域 - 新布局：左侧ASCII艺术，右侧LOGO，下方导航引导
+// Hero 区域 - 非对称布局：左侧LOGO+ASCII艺术，右侧探索卡片
 const HeroSection = () => {
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 500], [0, 200]);
@@ -682,7 +714,7 @@ const HeroSection = () => {
       href: '/blog', 
       icon: BookOpen,
       color: '#3b82f6',
-      gradient: 'from-blue-500 to-cyan-400'
+      gradient: 'from-blue-500/20 to-cyan-500/20',
     },
     { 
       title: '关于我', 
@@ -690,7 +722,7 @@ const HeroSection = () => {
       href: '/about', 
       icon: User,
       color: '#10b981',
-      gradient: 'from-emerald-500 to-teal-400'
+      gradient: 'from-emerald-500/20 to-teal-500/20',
     },
     { 
       title: '地球Online', 
@@ -699,8 +731,15 @@ const HeroSection = () => {
       icon: Globe,
       highlight: true,
       color: '#8b5cf6',
-      gradient: 'from-violet-500 to-purple-400'
+      gradient: 'from-violet-500/20 to-purple-500/20',
     },
+  ];
+  
+  // 次要导航
+  const subNavs = [
+    { title: '朋友圈', href: '/friends-circle', icon: MessageCircle },
+    { title: '友链', href: '/friends', icon: Heart },
+    { title: '工作室', href: '/studio', icon: Briefcase },
   ];
   
   return (
@@ -727,35 +766,70 @@ const HeroSection = () => {
       
       {/* 主内容区域 */}
       <div className="relative z-10 flex-1 flex items-center">
-        <div className="w-full max-w-7xl mx-auto px-6 lg:px-12 pt-32 pb-20">
-          <div className="grid lg:grid-cols-12 gap-12 items-center">
-            {/* 左侧：ASCII艺术 + 文字介绍 - 占7列 */}
+        <div className="w-full max-w-6xl mx-auto px-6 lg:px-12 pt-24 pb-12">
+          
+          {/* 上方：LOGO + ASCII艺术 - 居中 */}
+          <motion.div 
+            className="flex flex-col items-center mb-12"
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {/* LOGO */}
             <motion.div 
-              className="lg:col-span-7"
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="relative mb-6"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             >
-              {/* 3D ASCII艺术字 */}
-              <div className="mb-8">
-                <AsciiLogo3D />
+              <div className="relative">
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)',
+                    filter: 'blur(30px)',
+                  }}
+                  animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.15, 1] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.img
+                  src="/image/logo.webp"
+                  alt="SAKURAIN"
+                  className="relative w-20 h-20 md:w-28 md:h-28 object-contain"
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ filter: 'drop-shadow(0 0 20px var(--accent-glow))' }}
+                />
               </div>
-
-              {/* 终端风格标签 */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-6"
+            </motion.div>
+            
+            {/* ASCII艺术 */}
+            <AsciiLogo3D />
+          </motion.div>
+          
+          {/* 中间区域：左右分栏 */}
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            
+            {/* 左侧：标题和简介 */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {/* 标签 */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium mb-6"
                 style={{
                   background: 'rgba(59, 130, 246, 0.1)',
                   border: '1px solid rgba(59, 130, 246, 0.3)',
-                  clipPath: clipPathRounded(4),
+                  color: 'var(--accent-primary)',
                 }}
               >
-                <Terminal className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                <span className="text-sm font-medium font-mono" style={{ color: 'var(--accent-primary)' }}>
-                  ~/welcome
-                </span>
+                <Terminal className="w-3.5 h-3.5" />
+                <span className="font-mono">~/welcome</span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] mb-6">
+              {/* 标题 */}
+              <h1 className="text-4xl md:text-5xl font-bold leading-[1.1] mb-6">
                 <span className="block" style={{ color: 'var(--text-primary)' }}>
                   代码即艺术
                 </span>
@@ -764,207 +838,169 @@ const HeroSection = () => {
                 </span>
               </h1>
               
-              <AsciiDecoration className="mb-6" />
+              {/* 分隔线 */}
+              <div className="w-16 h-0.5 mb-6" 
+                style={{ background: 'linear-gradient(90deg, var(--accent-primary), transparent)' }}
+              />
               
-              <p className="text-lg md:text-xl leading-relaxed mb-8 max-w-xl"
+              {/* 简介 */}
+              <p className="text-base md:text-lg leading-relaxed mb-8 max-w-lg"
                 style={{ color: 'var(--text-muted)' }}
               >
                 从2016年初一开始编程之旅，历经Web开发、算法竞赛、AI研究到博弈算法。
                 这里记录着我的技术演进与创作历程。
               </p>
+              
+              {/* 次要导航 */}
+              <motion.div 
+                className="flex flex-wrap gap-3"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+              >
+                {subNavs.map((item) => (
+                  <button
+                    key={item.title}
+                    onClick={() => navigateTo(item.href)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all hover:scale-105 cursor-pointer"
+                    style={{
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-subtle)',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    {item.title}
+                  </button>
+                ))}
+              </motion.div>
             </motion.div>
             
-            {/* 右侧：LOGO图标 - 占5列 */}
+            {/* 右侧：导航卡片 - 垂直堆叠 */}
             <motion.div 
-              className="lg:col-span-5 hidden lg:flex items-center justify-center"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-4"
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="relative">
-                {/* 发光背景 */}
+              {mainNavs.map((nav, index) => (
                 <motion.div
-                  className="absolute inset-0 rounded-full"
+                  key={nav.title}
+                  onClick={() => navigateTo(nav.href)}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
+                  whileHover={{ x: 8, scale: 1.01 }}
+                  className={`group relative p-5 rounded-xl cursor-pointer transition-all duration-300 ${
+                    nav.highlight ? 'ring-1 ring-violet-500/50' : ''
+                  }`}
                   style={{
-                    background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)',
-                    filter: 'blur(40px)',
+                    background: 'var(--bg-card)',
+                    border: `1px solid ${nav.highlight ? nav.color : 'var(--border-subtle)'}`,
                   }}
-                  animate={{
-                    opacity: [0.3, 0.6, 0.3],
-                    scale: [1, 1.1, 1],
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-                
-                {/* LOGO图片 */}
-                <motion.img
-                  src="/image/logo.webp"
-                  alt="SAKURAIN"
-                  className="relative w-64 h-64 object-contain"
-                  animate={{
-                    y: [0, -10, 0],
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  style={{
-                    filter: 'drop-shadow(0 0 30px var(--accent-glow))',
-                  }}
-                />
-              </div>
+                >
+                  {/* 悬停渐变背景 */}
+                  <div 
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl"
+                    style={{
+                      background: `linear-gradient(135deg, ${nav.color}08, transparent)`,
+                    }}
+                  />
+                  
+                  <div className="relative flex items-center gap-4">
+                    {/* 图标 */}
+                    <div 
+                      className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110"
+                      style={{ background: `${nav.color}15` }}
+                    >
+                      <nav.icon className="w-6 h-6" style={{ color: nav.color }} />
+                    </div>
+                    
+                    {/* 内容 */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+                          {nav.title}
+                        </h3>
+                        {nav.highlight && (
+                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                            style={{ background: `${nav.color}20`, color: nav.color }}
+                          >
+                            <Sparkles className="w-3 h-3" />
+                            推荐
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                        {nav.desc}
+                      </p>
+                    </div>
+                    
+                    {/* 箭头 */}
+                    <ArrowRight 
+                      className="w-5 h-5 flex-shrink-0 transition-all duration-300 group-hover:translate-x-1"
+                      style={{ color: nav.color, opacity: 0.6 }}
+                    />
+                  </div>
+                </motion.div>
+              ))}
             </motion.div>
           </div>
         </div>
       </div>
       
-      {/* 底部导航引导区域 */}
+      {/* 移动端导航卡片 - 垂直堆叠 */}
       <motion.div 
-        className="relative z-10 pb-12"
-        initial={{ opacity: 0, y: 50 }}
+        className="lg:hidden relative z-10 px-6 pb-8 -mt-4"
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, duration: 0.6 }}
+        transition={{ delay: 0.6, duration: 0.5 }}
       >
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          {/* 标题 */}
-          <div className="text-center mb-8">
+        <div className="space-y-3 max-w-md mx-auto">
+          {mainNavs.map((nav, index) => (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4"
+              key={nav.title}
+              onClick={() => navigateTo(nav.href)}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 + index * 0.1, duration: 0.4 }}
+              whileTap={{ scale: 0.98 }}
+              className={`group p-4 rounded-xl cursor-pointer ${
+                nav.highlight ? 'ring-1 ring-violet-500/50' : ''
+              }`}
               style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'var(--bg-card)',
+                border: `1px solid ${nav.highlight ? nav.color : 'var(--border-subtle)'}`,
               }}
             >
-              <Rocket className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-              <span className="text-sm font-mono" style={{ color: 'var(--text-muted)' }}>
-                {'>'} 探索更多
-              </span>
-            </motion.div>
-          </div>
-          
-          {/* 三个主要导航卡片 */}
-          <div className="grid md:grid-cols-3 gap-6">
-            {mainNavs.map((nav, index) => (
-              <motion.div
-                key={nav.title}
-                onClick={() => navigateTo(nav.href)}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 + index * 0.15, duration: 0.5 }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className={`group relative p-6 rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer ${
-                  nav.highlight ? 'md:scale-105 ring-2 ring-purple-500/50' : ''
-                }`}
-                style={{
-                  background: 'var(--bg-card)',
-                  border: `2px solid ${nav.highlight ? nav.color : 'var(--border-subtle)'}`,
-                }}
-              >
-                {/* 高亮标签 */}
-                {nav.highlight && (
-                  <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold"
-                    style={{
-                      background: `${nav.color}20`,
-                      color: nav.color,
-                    }}
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    <span>推荐</span>
-                  </div>
-                )}
-                
-                {/* 背景渐变 */}
+              <div className="flex items-center gap-3">
                 <div 
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{
-                    background: `linear-gradient(135deg, ${nav.color}10, transparent)`,
-                  }}
-                />
-                
-                {/* 内容 */}
-                <div className="relative z-10">
-                  <div 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
-                    style={{ background: `${nav.color}15` }}
-                  >
-                    <nav.icon className="w-6 h-6" style={{ color: nav.color }} />
+                  className="w-10 h-10 rounded-lg flex items-center justify-center"
+                  style={{ background: `${nav.color}15` }}
+                >
+                  <nav.icon className="w-5 h-5" style={{ color: nav.color }} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                      {nav.title}
+                    </h3>
+                    {nav.highlight && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold"
+                        style={{ background: `${nav.color}20`, color: nav.color }}
+                      >
+                        推荐
+                      </span>
+                    )}
                   </div>
-                  
-                  <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-                    {nav.title}
-                  </h3>
-                  
-                  <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
+                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
                     {nav.desc}
                   </p>
-                  
-                  {/* 特殊提示 - 地球Online的弹幕功能 */}
-                  {nav.highlight && (
-                    <div className="flex items-center gap-2 text-xs mb-3 px-3 py-2 rounded-lg"
-                      style={{
-                        background: 'rgba(139, 92, 246, 0.1)',
-                        border: '1px solid rgba(139, 92, 246, 0.2)',
-                      }}
-                    >
-                      <Satellite className="w-3.5 h-3.5 text-purple-400" />
-                      <span className="text-purple-400">支持弹幕卫星留言</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex items-center gap-2 text-sm font-mono"
-                    style={{ color: nav.color }}
-                  >
-                    <span>{'>'} 进入</span>
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-2" />
-                  </div>
                 </div>
-                
-                {/* 扫光效果 */}
-                <div 
-                  className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"
-                  style={{
-                    background: `linear-gradient(90deg, transparent, ${nav.color}20, transparent)`,
-                  }}
-                />
-              </motion.div>
-            ))}
-          </div>
-          
-          {/* 次要导航 */}
-          <motion.div 
-            className="flex flex-wrap justify-center gap-4 mt-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5 }}
-          >
-            {[
-              { title: '朋友圈', href: '/friends-circle', icon: MessageCircle },
-              { title: '友链', href: '/friends', icon: Heart },
-              { title: '工作室', href: '/studio', icon: Briefcase },
-            ].map((item) => (
-              <button
-                key={item.title}
-                onClick={() => navigateTo(item.href)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all hover:scale-105 cursor-pointer"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-muted)',
-                }}
-              >
-                <item.icon className="w-4 h-4" />
-                {item.title}
-              </button>
-            ))}
-          </motion.div>
+                <ArrowRight className="w-4 h-4" style={{ color: nav.color, opacity: 0.5 }} />
+              </div>
+            </motion.div>
+          ))}
         </div>
       </motion.div>
       
