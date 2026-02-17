@@ -186,23 +186,33 @@ const TechStackChart = () => {
   const chartHeight = 340;
   const chartWidth = 800;
   const padding = { top: 30, right: 40, bottom: 60, left: 60 };
-  const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
+  
+  // 边距刻度：左右各0.5刻度，让第一个和最后一个数据点完整显示
+  const edgeTicks = 0.5;
+  
+  // 计算绘图区域宽度（包含边距刻度）
+  const getPlotWidth = (dataLength: number) => {
+    const tickCount = dataLength + 1; // 实际刻度数量
+    const totalTicks = tickCount - 1 + edgeTicks * 2; // 包含边距的总刻度数
+    const plotWidth = chartWidth - padding.left - padding.right;
+    return { tickCount, totalTicks, plotWidth };
+  };
 
-  // 生成堆叠面积路径 - 数据点显示在刻度区间之间
+  // 生成堆叠面积路径 - 数据点显示在刻度区间之间，带左右边距
   const generateAreaPath = (data: Record<string, number | string>[], categories: { key: string }[], dataIndex: number) => {
     const categoryKeys = categories.map(c => c.key);
-    const tickCount = data.length + 1; // 刻度点数量 = 数据点数量 + 1
+    const { totalTicks, plotWidth } = getPlotWidth(data.length);
     
-    // 计算上边界点 - 数据点位于两个刻度之间
+    // 计算上边界点 - 数据点位于两个刻度之间，加上左边距偏移
     const topPoints = data.map((d, i) => {
       let cumulative = 0;
       for (let j = 0; j <= dataIndex; j++) {
         cumulative += d[categoryKeys[j]] as number;
       }
-      // 数据点i位于刻度i和刻度i+1之间，取中点
-      const tickPos = (i + 0.5) / (tickCount - 1);
-      const x = padding.left + tickPos * innerWidth;
+      // 数据点i位于刻度i和刻度i+1之间，加上左边距偏移
+      const tickPos = (edgeTicks + i + 0.5) / totalTicks;
+      const x = padding.left + tickPos * plotWidth;
       const y = padding.top + innerHeight - (cumulative / 100) * innerHeight;
       return { x, y };
     });
@@ -213,8 +223,8 @@ const TechStackChart = () => {
       for (let j = 0; j < dataIndex; j++) {
         cumulative += d[categoryKeys[j]] as number;
       }
-      const tickPos = (i + 0.5) / (tickCount - 1);
-      const x = padding.left + tickPos * innerWidth;
+      const tickPos = (edgeTicks + i + 0.5) / totalTicks;
+      const x = padding.left + tickPos * plotWidth;
       const y = padding.top + innerHeight - (cumulative / 100) * innerHeight;
       return { x, y };
     }).reverse();
@@ -228,7 +238,7 @@ const TechStackChart = () => {
     return `${topPath} L ${bottomPoints[0].x} ${bottomPoints[0].y} ${bottomPath.replace(/^M[^C]+/, '')} Z`;
   };
 
-  // 处理鼠标移动 - 基于刻度区间计算
+  // 处理鼠标移动 - 基于刻度区间计算（带左右边距）
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!techData) return;
     
@@ -247,11 +257,11 @@ const TechStackChart = () => {
       return;
     }
     
-    // 计算最近的时间段索引 - 基于刻度区间
-    const tickCount = techData.data.length + 1;
+    // 计算最近的时间段索引 - 基于刻度区间（带边距）
+    const { totalTicks, plotWidth } = getPlotWidth(techData.data.length);
     const relativeX = x - padding.left;
-    const tickWidth = innerWidth / (tickCount - 1);
-    const tickIndex = relativeX / tickWidth;
+    const tickWidth = plotWidth / totalTicks;
+    const tickIndex = relativeX / tickWidth - edgeTicks;
     
     // 找到对应的区间索引（数据点索引）
     let periodIndex = Math.floor(tickIndex);
@@ -260,7 +270,7 @@ const TechStackChart = () => {
     
     const periodData = techData.data[periodIndex];
     // 数据点显示在区间中点
-    const periodX = padding.left + ((periodIndex + 0.5) / (tickCount - 1)) * innerWidth;
+    const periodX = padding.left + ((edgeTicks + periodIndex + 0.5) / totalTicks) * plotWidth;
     const periodKey = periodData.period as string;
     
     // 计算鼠标位置的Y值对应的分类
@@ -302,9 +312,6 @@ const TechStackChart = () => {
 
   // 生成渐变ID
   const getGradientId = (key: string) => `gradient-${key}`;
-  
-  // 刻度点数量 = 数据点数量 + 1
-  const tickCount = techData?.data ? techData.data.length + 1 : 0;
 
   if (loading || !techData) {
     return (
@@ -393,16 +400,16 @@ const TechStackChart = () => {
             />
           ))}
 
-          {/* 悬浮时间段高亮区域 - 高亮两个刻度线之间的区间 */}
+          {/* 悬浮时间段高亮区域 - 高亮两个刻度线之间的区间（带边距）*/}
           {hoveredData && (
             <g>
               {/* 计算时间段区域 - 基于刻度区间 */}
               {(() => {
-                const tickCount = techData.data.length + 1;
-                const tickWidth = innerWidth / (tickCount - 1);
-                // 数据点i位于刻度i和刻度i+1之间
-                const regionStart = padding.left + hoveredData.periodIndex * tickWidth;
-                const regionEnd = padding.left + (hoveredData.periodIndex + 1) * tickWidth;
+                const { totalTicks, plotWidth } = getPlotWidth(techData.data.length);
+                const tickWidth = plotWidth / totalTicks;
+                // 数据点i位于刻度(edgeTicks+i)和刻度(edgeTicks+i+1)之间
+                const regionStart = padding.left + (edgeTicks + hoveredData.periodIndex) * tickWidth;
+                const regionEnd = padding.left + (edgeTicks + hoveredData.periodIndex + 1) * tickWidth;
                 
                 return (
                   <>
@@ -454,50 +461,55 @@ const TechStackChart = () => {
             opacity="0.5"
           />
 
-          {/* X轴刻度线 - tickCount个刻度点（数据点数量+1）*/}
-          {Array.from({ length: tickCount }, (_, i) => {
-            const x = padding.left + (i / (tickCount - 1)) * innerWidth;
-            // 刻度0=2016.5, 刻度1=2017.0, 刻度2=2017.5, 刻度3=2018.0...
-            const isYearStart = i % 2 === 1; // 奇数索引是整数年份（2017.0, 2018.0...）
-            const year = 2016 + Math.floor((i + 1) / 2);
-            
-            return (
-              <g key={`tick-${i}`}>
-                {/* 刻度线 */}
-                <line
-                  x1={x}
-                  y1={chartHeight - padding.bottom}
-                  x2={x}
-                  y2={chartHeight - padding.bottom + (isYearStart ? 10 : 6)}
-                  stroke="var(--text-muted)"
-                  strokeWidth={isYearStart ? 2 : 1}
-                  opacity={0.5}
-                />
-                
-                {/* 年份标签 - 只在整数年份刻度显示 */}
-                {isYearStart && (
-                  <text
-                    x={x}
-                    y={chartHeight - padding.bottom + 22}
-                    textAnchor="middle"
-                    fontSize="12"
-                    fill={hoveredData?.period?.startsWith(String(year)) ? 'var(--accent-primary)' : 'var(--text-muted)'}
-                    fontFamily="monospace"
-                    fontWeight={hoveredData?.period?.startsWith(String(year)) ? 'bold' : 'normal'}
-                  >
-                    {year}
-                  </text>
-                )}
-              </g>
-            );
-          })}
+          {/* X轴刻度线 - 实际刻度点（带边距）*/}
+          {(() => {
+            const { tickCount, totalTicks, plotWidth } = getPlotWidth(techData.data.length);
+            return Array.from({ length: tickCount }, (_, i) => {
+              // 实际刻度位置（加上左边距）
+              const tickPos = (edgeTicks + i) / totalTicks;
+              const x = padding.left + tickPos * plotWidth;
+              // 刻度0=2016.5, 刻度1=2017.0, 刻度2=2017.5, 刻度3=2018.0...
+              const isYearStart = i % 2 === 1; // 奇数索引是整数年份（2017.0, 2018.0...）
+              const year = 2016 + Math.floor((i + 1) / 2);
+              
+              return (
+                <g key={`tick-${i}`}>
+                  {/* 刻度线 */}
+                  <line
+                    x1={x}
+                    y1={chartHeight - padding.bottom}
+                    x2={x}
+                    y2={chartHeight - padding.bottom + (isYearStart ? 10 : 6)}
+                    stroke="var(--text-muted)"
+                    strokeWidth={isYearStart ? 2 : 1}
+                    opacity={0.5}
+                  />
+                  
+                  {/* 年份标签 - 只在整数年份刻度显示 */}
+                  {isYearStart && (
+                    <text
+                      x={x}
+                      y={chartHeight - padding.bottom + 22}
+                      textAnchor="middle"
+                      fontSize="12"
+                      fill={hoveredData?.period?.startsWith(String(year)) ? 'var(--accent-primary)' : 'var(--text-muted)'}
+                      fontFamily="monospace"
+                      fontWeight={hoveredData?.period?.startsWith(String(year)) ? 'bold' : 'normal'}
+                    >
+                      {year}
+                    </text>
+                  )}
+                </g>
+              );
+            });
+          })()}
           
-          {/* 半年标签（上/下）- 显示在每个区间上方 */}
+          {/* 半年标签（上/下）- 显示在每个区间上方（带边距）*/}
           {techData.data.map((d, i) => {
-            const tickCount = techData.data.length + 1;
-            const tickWidth = innerWidth / (tickCount - 1);
-            // 区间中点
-            const x = padding.left + (i + 0.5) * tickWidth;
+            const { totalTicks, plotWidth } = getPlotWidth(techData.data.length);
+            // 区间中点（带边距）
+            const tickPos = (edgeTicks + i + 0.5) / totalTicks;
+            const x = padding.left + tickPos * plotWidth;
             const period = d.period as string;
             const halfLabel = period.endsWith('上') ? '上' : '下';
             const isHovered = hoveredData?.period === period;
