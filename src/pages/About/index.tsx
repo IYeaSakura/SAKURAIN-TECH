@@ -1189,12 +1189,13 @@ export default function AboutPage() {
             <h2 className="text-3xl font-bold mb-8">联系我</h2>
             <div className="flex justify-center gap-4">
               {[
-                { icon: Github, href: 'https://github.com/IYeaSakura', color: '#ffffff', label: 'GitHub' },
+                { icon: Github, href: 'https://github.com/IYeaSakura', color: '#333333', label: 'GitHub' },
                 { icon: Mail, href: 'mailto:Yae_SakuRain@outlook.com', color: '#fbbf24', label: 'Email' },
+                { type: 'qq' as const, qq: '2059511844', color: '#12B7F5', label: 'QQ' },
               ].map((link, index) => (
                 <motion.a
                   key={index}
-                  href={link.href}
+                  href={'type' in link && link.type === 'qq' ? `https://wpa.qq.com/msgrd?v=3&uin=${link.qq}&site=qq&menu=yes` : link.href}
                   target="_blank"
                   rel="noopener noreferrer"
                   whileHover={{ scale: 1.15, y: -6 }}
@@ -1230,7 +1231,13 @@ export default function AboutPage() {
                       background: `linear-gradient(90deg, transparent, ${link.color}40, transparent)`,
                     }}
                   />
-                  <link.icon className="w-6 h-6 relative z-10" />
+                  {'type' in link && link.type === 'qq' ? (
+                    <svg className="w-6 h-6 relative z-10" viewBox="0 0 1024 1024" fill="currentColor">
+                      <path d="M824.8 613.2c-16-51.4-34.4-94.6-62.7-165.3C766.5 262.2 689.3 112 511.5 112 331.5 112 256.2 265.2 261 447.9c-28.4 70.8-46.7 113.9-62.7 165.3-34 109.5-23 154.8-14.6 155.8 18 2.2 70.1-82.4 70.1-82.4 0 49 25.2 112.9 79.8 159-26.4 8.1-85.7 29.9-71.6 53.8 11.4 19.3 174.3 108.3 265.4 108.3 91.1 0 254-89 265.4-108.3 14.1-23.9-45.2-45.6-71.6-53.8 54.6-46.1 79.8-110.1 79.8-159 0 0 52.1 84.6 70.1 82.4 8.5-1.1 19.5-46.4-14.5-155.8z"/>
+                    </svg>
+                  ) : (
+                    <link.icon className="w-6 h-6 relative z-10" />
+                  )}
                 </motion.a>
               ))}
             </div>

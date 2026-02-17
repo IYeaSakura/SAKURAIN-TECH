@@ -16,10 +16,10 @@
     "links": [
       { "label": "首页", "href": "/", "icon": "Home" },
       { "label": "博客", "href": "/blog", "icon": "BookOpen" },
-      { "label": "日志", "href": "/notes", "icon": "MessageCircle" },
       { "label": "友链", "href": "/friends", "icon": "Heart" },
       { "label": "朋友圈", "href": "/friends-circle", "icon": "Rss" },
-      { "label": "文档", "href": "/docs", "icon": "FileText" },
+      { "label": "地球Online", "href": "/earth-online", "icon": "Globe" },
+      { "label": "工作室", "href": "/studio", "icon": "Briefcase" },
       { "label": "关于", "href": "/about", "icon": "User" }
     ]
   },

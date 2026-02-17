@@ -4,13 +4,30 @@
   <subtitle>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。</subtitle>
   <link href="https://sakurain.net/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://sakurain.net" rel="alternate" type="text/html"/>
-  <updated>2026-02-12T00:00:00.000Z</updated>
+  <updated>2026-02-15T00:00:00.000Z</updated>
   <id>https://sakurain.net/</id>
   <author>
     <name>SAKURAIN</name>
     <email>Yae_SakuRain@outlook.com</email>
   </author>
   <rights>© 2026 SAKURAIN 技术工作室</rights>
+  <entry>
+    <title>Kimi K2.5 的数学骨架：MoE、MLA 与 PARL 推导</title>
+    <link href="https://sakurain.net/blog/kimi-k25-moe-mla-parl-derivation"/>
+    <id>https://sakurain.net/blog/kimi-k25-moe-mla-parl-derivation</id>
+    <published>2026-02-15T00:00:00.000Z</published>
+    <updated>2026-02-15T00:00:00.000Z</updated>
+    <author>
+      <name>SAKURAIN</name>
+      <email>Yae_SakuRain@outlook.com</email>
+    </author>
+    <summary>深入解析 Kimi K2.5 的核心技术架构，包括万亿参数 MoE 路由算法、MLA 注意力机制以及 PARL 多代理强化学习框架的数学推导。</summary>
+    <category term="深度学习"/>
+    <category term="机器学习理论"/>
+    <category term="优化算法"/>
+    <category term="数值稳定性"/>
+  </entry>
+
   <entry>
     <title>从单线程到纳秒级分布式：实现一个工业级MCTS系统的完整数学 journey</title>
     <link href="https://sakurain.net/blog/mcts-distributed-implementation-mathematics"/>

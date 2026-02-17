@@ -1,5 +1,22 @@
 [
   {
+    "slug": "kimi-k25-moe-mla-parl-derivation",
+    "title": "Kimi K2.5 的数学骨架：MoE、MLA 与 PARL 推导",
+    "description": "深入解析 Kimi K2.5 的核心技术架构，包括万亿参数 MoE 路由算法、MLA 注意力机制以及 PARL 多代理强化学习框架的数学推导。",
+    "date": "2026-02-15",
+    "author": "SAKURAIN",
+    "tags": [
+      "深度学习",
+      "机器学习理论",
+      "优化算法",
+      "数值稳定性"
+    ],
+    "cover": "/image/logo.webp",
+    "featured": false,
+    "wordCount": 5791,
+    "readingTime": "10 分钟阅读"
+  },
+  {
     "slug": "mcts-distributed-implementation-mathematics",
     "title": "从单线程到纳秒级分布式：实现一个工业级MCTS系统的完整数学 journey",
     "description": "深入探讨MCTS系统的数学原理和工程实现，从单线程到分布式系统的完整实现过程，包括置信区间、并行计算、实时约束等方面的数学推导和代码实现。",
@@ -15,7 +32,7 @@
     ],
     "cover": "/image/logo.webp",
     "featured": false,
-    "wordCount": 8055,
+    "wordCount": 8042,
     "readingTime": "13 分钟阅读"
   },
   {
@@ -31,7 +48,7 @@
     ],
     "cover": "/image/logo.webp",
     "featured": true,
-    "wordCount": 8155,
+    "wordCount": 8147,
     "readingTime": "16 分钟阅读"
   },
   {
@@ -48,7 +65,7 @@
     ],
     "cover": "/image/logo.webp",
     "featured": false,
-    "wordCount": 3136,
+    "wordCount": 3130,
     "readingTime": "7 分钟阅读"
   }
 ]
