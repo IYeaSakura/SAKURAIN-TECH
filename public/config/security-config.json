@@ -7,6 +7,6 @@
     "disableContextMenu": true,
     "disableDrag": true,
     "disableSelect": false,
-    "detectDevTools": true
+    "detectDevTools": false
   }
 }

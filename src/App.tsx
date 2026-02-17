@@ -1,12 +1,12 @@
 /**
  * 新主页 - 个人门户
- * 
+ *
  * 设计理念：
  * - 不对称布局，视觉张力
  * - ASCII艺术字效果
  * - 个人编程技术爱好堆叠面积图
  * - 使用子页相同Footer
- * 
+ *
  * @author SAKURAIN
  */
 import { useState, useEffect, useRef } from 'react';
@@ -40,7 +40,7 @@ import { useTheme, useNavigation } from '@/hooks';
 import { usePrefersReducedMotion } from '@/lib/performance';
 import type { SiteData } from '@/types';
 
-const clipPathRounded = (r: number) => 
+const clipPathRounded = (r: number) =>
   `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
 
 // 3D ASCII艺术字组件 - 带动态渐变效果
@@ -94,14 +94,14 @@ const ParallaxContainer = ({ children, speed = 0.5 }: { children: React.ReactNod
     target: ref,
     offset: ["start end", "end start"]
   });
-  
+
   const y = useTransform(scrollYProgress, [0, 1], [0, -100 * speed]);
   const prefersReducedMotion = usePrefersReducedMotion();
-  
+
   if (prefersReducedMotion) {
     return <div ref={ref}>{children}</div>;
   }
-  
+
   return (
     <motion.div ref={ref} style={{ y }}>
       {children}
@@ -136,9 +136,9 @@ interface TechEvolutionData {
 // 生成平滑贝塞尔曲线路径
 const smoothPath = (points: { x: number; y: number }[]) => {
   if (points.length < 2) return '';
-  
+
   let path = `M ${points[0].x} ${points[0].y}`;
-  
+
   for (let i = 1; i < points.length; i++) {
     const prev = points[i - 1];
     const curr = points[i];
@@ -148,14 +148,18 @@ const smoothPath = (points: { x: number; y: number }[]) => {
     const cp2y = curr.y;
     path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${curr.x} ${curr.y}`;
   }
-  
+
   return path;
 };
+
+// 图表类型
+type ChartType = 'area' | 'line' | 'bar';
 
 // 技术爱好堆叠面积图 - 从JSON配置加载
 const TechStackChart = () => {
   const [techData, setTechData] = useState<TechEvolutionData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [chartType, setChartType] = useState<ChartType>('area');
   const [hoveredData, setHoveredData] = useState<{
     period: string;
     periodIndex: number;
@@ -168,6 +172,7 @@ const TechStackChart = () => {
     tooltip: { main: string[]; learning: string[] } | null;
   } | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/data/tech-evolution.json?v=${Date.now()}`, { cache: 'no-store' })
@@ -186,10 +191,10 @@ const TechStackChart = () => {
   const chartWidth = 800;
   const padding = { top: 30, right: 40, bottom: 60, left: 60 };
   const innerHeight = chartHeight - padding.top - padding.bottom;
-  
+
   // 边距刻度：左右各0.5刻度，让第一个和最后一个数据点完整显示
   const edgeTicks = 0.5;
-  
+
   // 计算绘图区域宽度（包含边距刻度）
   const getPlotWidth = (dataLength: number) => {
     const tickCount = dataLength + 1; // 实际刻度数量
@@ -202,10 +207,10 @@ const TechStackChart = () => {
   const generateAreaPath = (data: Record<string, number | string>[], categories: { key: string }[], dataIndex: number) => {
     const categoryKeys = categories.map(c => c.key);
     const { totalTicks, plotWidth } = getPlotWidth(data.length);
-    
+
     // 计算上边界点 - 包含延伸到左右边距的点
     const topPoints = [] as { x: number; y: number }[];
-    
+
     // 左边界延伸点（使用第一个数据点的值）
     const firstData = data[0];
     let firstCumulative = 0;
@@ -216,7 +221,7 @@ const TechStackChart = () => {
       x: padding.left, // 最左侧
       y: padding.top + innerHeight - (firstCumulative / 100) * innerHeight
     });
-    
+
     // 中间数据点
     data.forEach((d, i) => {
       let cumulative = 0;
@@ -228,7 +233,7 @@ const TechStackChart = () => {
       const y = padding.top + innerHeight - (cumulative / 100) * innerHeight;
       topPoints.push({ x, y });
     });
-    
+
     // 右边界延伸点（使用最后一个数据点的值）
     const lastData = data[data.length - 1];
     let lastCumulative = 0;
@@ -242,7 +247,7 @@ const TechStackChart = () => {
 
     // 计算下边界点（反向）
     const bottomPoints = [] as { x: number; y: number }[];
-    
+
     // 右边界延伸点
     let lastBottomCumulative = 0;
     for (let j = 0; j < dataIndex; j++) {
@@ -252,7 +257,7 @@ const TechStackChart = () => {
       x: chartWidth - padding.right,
       y: padding.top + innerHeight - (lastBottomCumulative / 100) * innerHeight
     });
-    
+
     // 中间数据点（反向）
     for (let i = data.length - 1; i >= 0; i--) {
       const d = data[i];
@@ -265,7 +270,7 @@ const TechStackChart = () => {
       const y = padding.top + innerHeight - (cumulative / 100) * innerHeight;
       bottomPoints.push({ x, y });
     }
-    
+
     // 左边界延伸点
     let firstBottomCumulative = 0;
     for (let j = 0; j < dataIndex; j++) {
@@ -279,16 +284,48 @@ const TechStackChart = () => {
     // 构建平滑曲线路径
     const topPath = smoothPath(topPoints);
     const bottomPath = smoothPath(bottomPoints);
-    
+
     if (!topPath || !bottomPath) return '';
-    
+
     return `${topPath} L ${bottomPoints[0].x} ${bottomPoints[0].y} ${bottomPath.replace(/^M[^C]+/, '')} Z`;
+  };
+
+  // 生成折线路径（非堆叠，显示百分比）
+  const generateLinePath = (data: Record<string, number | string>[], categoryKey: string) => {
+    const { totalTicks, plotWidth } = getPlotWidth(data.length);
+
+    const points = [] as { x: number; y: number }[];
+
+    // 左边界点
+    const firstValue = data[0][categoryKey] as number;
+    points.push({
+      x: padding.left,
+      y: padding.top + innerHeight - (firstValue / 100) * innerHeight
+    });
+
+    // 数据点
+    data.forEach((d, i) => {
+      const value = d[categoryKey] as number;
+      const tickPos = (edgeTicks + i + 0.5) / totalTicks;
+      const x = padding.left + tickPos * plotWidth;
+      const y = padding.top + innerHeight - (value / 100) * innerHeight;
+      points.push({ x, y });
+    });
+
+    // 右边界点
+    const lastValue = data[data.length - 1][categoryKey] as number;
+    points.push({
+      x: chartWidth - padding.right,
+      y: padding.top + innerHeight - (lastValue / 100) * innerHeight
+    });
+
+    return smoothPath(points);
   };
 
   // 处理鼠标移动 - 基于刻度区间计算（带左右边距）
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!techData) return;
-    
+
     const svg = e.currentTarget;
     const pt = svg.createSVGPoint();
     pt.x = e.clientX;
@@ -296,38 +333,38 @@ const TechStackChart = () => {
     const svgP = pt.matrixTransform(svg.getScreenCTM()?.inverse());
     const x = svgP.x;
     const y = svgP.y;
-    
+
     // 检查是否在图表区域内
-    if (x < padding.left || x > chartWidth - padding.right || 
+    if (x < padding.left || x > chartWidth - padding.right ||
         y < padding.top || y > chartHeight - padding.bottom) {
       setHoveredData(null);
       return;
     }
-    
+
     // 计算最近的时间段索引 - 基于刻度区间（带边距）
     const { totalTicks, plotWidth } = getPlotWidth(techData.data.length);
     const relativeX = x - padding.left;
     const tickWidth = plotWidth / totalTicks;
     const tickIndex = relativeX / tickWidth - edgeTicks;
-    
+
     // 找到对应的区间索引（数据点索引）
     let periodIndex = Math.floor(tickIndex);
     // 限制范围
     periodIndex = Math.max(0, Math.min(periodIndex, techData.data.length - 1));
-    
+
     const periodData = techData.data[periodIndex];
     // 数据点显示在区间中点
     const periodX = padding.left + ((edgeTicks + periodIndex + 0.5) / totalTicks) * plotWidth;
     const periodKey = periodData.period as string;
-    
+
     // 计算鼠标位置的Y值对应的分类
     const relativeY = chartHeight - padding.bottom - y;
     const percentageAtY = (relativeY / innerHeight) * 100;
-    
+
     let cumulative = 0;
     let hoveredCategory = null;
     let categoryValue = 0;
-    
+
     for (const cat of techData.categories) {
       const value = periodData[cat.key] as number;
       if (percentageAtY >= cumulative && percentageAtY < cumulative + value) {
@@ -337,14 +374,14 @@ const TechStackChart = () => {
       }
       cumulative += value;
     }
-    
+
     setMousePos({ x: e.clientX, y: e.clientY });
-    
+
     if (hoveredCategory) {
       // 获取当前时间段中该类别的技术栈
       const periodTooltips = techData.tooltips?.[periodKey] || {};
       const categoryTooltip = periodTooltips[hoveredCategory.key] || { main: [], learning: [] };
-      
+
       setHoveredData({
         period: periodKey,
         periodIndex: periodIndex,
@@ -374,11 +411,51 @@ const TechStackChart = () => {
     );
   }
 
+  const chartButtons: { type: ChartType; label: string; icon: string }[] = [
+    { type: 'area', label: '面积图', icon: '▨' },
+    { type: 'line', label: '折线图', icon: '〰' },
+    { type: 'bar', label: '柱状图', icon: '▮' },
+  ];
+
   return (
-    <div className="w-full overflow-x-auto relative">
-      <div className="min-w-[700px]">
-        <svg 
-          viewBox={`0 0 ${chartWidth} ${chartHeight}`} 
+    <div className="w-full">
+      {/* 图表控制栏 */}
+      <div className="flex items-center justify-between mb-4 px-2">
+        <div className="flex items-center gap-2">
+          <Cpu className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+          <span className="font-mono text-sm" style={{ color: 'var(--text-muted)' }}>
+            tech_stack_evolution.py
+          </span>
+        </div>
+
+        {/* 图表类型切换 */}
+        <div className="flex items-center gap-1 p-1 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
+          {chartButtons.map(({ type, label, icon }) => (
+            <button
+              key={type}
+              onClick={() => setChartType(type)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                chartType === type
+                  ? 'shadow-sm'
+                  : 'hover:opacity-80'
+              }`}
+              style={{
+                background: chartType === type ? 'var(--bg-card)' : 'transparent',
+                color: chartType === type ? 'var(--accent-primary)' : 'var(--text-muted)',
+                border: chartType === type ? '1px solid var(--border-subtle)' : '1px solid transparent',
+              }}
+            >
+              <span className="font-mono">{icon}</span>
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="w-full overflow-x-auto relative">
+        <div className="min-w-[700px]">
+          <svg
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
           className="w-full cursor-crosshair"
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHoveredData(null)}
@@ -391,7 +468,7 @@ const TechStackChart = () => {
                 <stop offset="100%" stopColor={cat.color} stopOpacity="0.5" />
               </linearGradient>
             ))}
-            
+
             {/* 发光滤镜 */}
             <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="3" result="blur" />
@@ -437,7 +514,7 @@ const TechStackChart = () => {
           </text>
 
           {/* 面积图 */}
-          {techData.categories.map((cat, index) => (
+          {chartType === 'area' && techData.categories.map((cat, index) => (
             <motion.path
               key={cat.key}
               d={generateAreaPath(techData.data, techData.categories, index)}
@@ -445,11 +522,117 @@ const TechStackChart = () => {
               stroke={cat.color}
               strokeWidth="1.5"
               initial={{ opacity: 0, scaleY: 0 }}
-              animate={{ opacity: 1, scaleY: 1 }}
-              transition={{ duration: 0.8, delay: index * 0.1, ease: "easeOut" }}
+              animate={{
+                opacity: hoveredCategory && hoveredCategory !== cat.key ? 0.3 : 0.9,
+                scaleY: 1
+              }}
+              transition={{ duration: 0.6, delay: index * 0.08, ease: "easeOut" }}
               style={{ transformOrigin: 'bottom' }}
             />
           ))}
+
+          {/* 折线图 */}
+          {chartType === 'line' && techData.categories.map((cat, index) => (
+            <g key={cat.key}>
+              {/* 阴影线 */}
+              <motion.path
+                d={generateLinePath(techData.data, cat.key)}
+                fill="none"
+                stroke={cat.color}
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                opacity={0.1}
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1, delay: index * 0.1 }}
+              />
+              {/* 主线 */}
+              <motion.path
+                d={generateLinePath(techData.data, cat.key)}
+                fill="none"
+                stroke={cat.color}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={{ pathLength: 0 }}
+                animate={{
+                  pathLength: 1,
+                  opacity: hoveredCategory && hoveredCategory !== cat.key ? 0.2 : 1
+                }}
+                transition={{ duration: 1, delay: index * 0.1 }}
+                filter={hoveredCategory === cat.key ? 'url(#glow)' : undefined}
+              />
+              {/* 数据点 */}
+              {(() => {
+                const { totalTicks, plotWidth } = getPlotWidth(techData.data.length);
+                return techData.data.map((d, i) => {
+                  const value = d[cat.key] as number;
+                  const tickPos = (edgeTicks + i + 0.5) / totalTicks;
+                  const x = padding.left + tickPos * plotWidth;
+                  const y = padding.top + innerHeight - (value / 100) * innerHeight;
+                  const isHovered = hoveredData?.categoryKey === cat.key && hoveredData?.periodIndex === i;
+
+                  return (
+                    <motion.circle
+                      key={i}
+                      cx={x}
+                      cy={y}
+                      r={isHovered ? 6 : 4}
+                      fill="var(--bg-card)"
+                      stroke={cat.color}
+                      strokeWidth="2"
+                      initial={{ scale: 0 }}
+                      animate={{
+                        scale: isHovered ? 1.2 : 1,
+                        opacity: hoveredCategory && hoveredCategory !== cat.key ? 0.2 : 1
+                      }}
+                      transition={{ delay: 0.5 + i * 0.02 }}
+                    />
+                  );
+                });
+              })()}
+            </g>
+          ))}
+
+          {/* 柱状图 */}
+          {chartType === 'bar' && (() => {
+            const { totalTicks, plotWidth } = getPlotWidth(techData.data.length);
+            const tickWidth = plotWidth / totalTicks;
+            const barWidth = tickWidth * 0.7 / techData.categories.length;
+
+            return techData.data.map((d, i) => {
+              const tickPos = (edgeTicks + i + 0.5) / totalTicks;
+              const x = padding.left + tickPos * plotWidth;
+
+              return techData.categories.map((cat, catIndex) => {
+                const value = d[cat.key] as number;
+                const barX = x - (techData.categories.length * barWidth) / 2 + catIndex * barWidth;
+                const barHeight = (value / 100) * innerHeight;
+                const barY = padding.top + innerHeight - barHeight;
+                const isHovered = hoveredData?.categoryKey === cat.key && hoveredData?.periodIndex === i;
+
+                return (
+                  <motion.rect
+                    key={`${i}-${cat.key}`}
+                    x={barX}
+                    y={barY}
+                    width={barWidth - 2}
+                    height={barHeight}
+                    rx={3}
+                    fill={cat.color}
+                    initial={{ scaleY: 0 }}
+                    animate={{
+                      scaleY: 1,
+                      opacity: hoveredCategory && hoveredCategory !== cat.key ? 0.2 : (isHovered ? 1 : 0.8)
+                    }}
+                    transition={{ delay: i * 0.02 + catIndex * 0.01, duration: 0.4 }}
+                    style={{ transformOrigin: `${barX + barWidth/2}px ${padding.top + innerHeight}px` }}
+                  />
+                );
+              });
+            });
+          })()}
 
           {/* 悬浮时间段高亮区域 - 高亮两个刻度线之间的区间（带边距）*/}
           {hoveredData && (
@@ -461,7 +644,7 @@ const TechStackChart = () => {
                 // 数据点i位于刻度(edgeTicks+i)和刻度(edgeTicks+i+1)之间
                 const regionStart = padding.left + (edgeTicks + hoveredData.periodIndex) * tickWidth;
                 const regionEnd = padding.left + (edgeTicks + hoveredData.periodIndex + 1) * tickWidth;
-                
+
                 return (
                   <>
                     {/* 时间段背景高亮 */}
@@ -522,7 +705,7 @@ const TechStackChart = () => {
               // 刻度0=2016.5, 刻度1=2017.0, 刻度2=2017.5, 刻度3=2018.0...
               const isYearStart = i % 2 === 1; // 奇数索引是整数年份（2017.0, 2018.0...）
               const year = 2016 + Math.floor((i + 1) / 2);
-              
+
               return (
                 <g key={`tick-${i}`}>
                   {/* 刻度线 */}
@@ -535,7 +718,7 @@ const TechStackChart = () => {
                     strokeWidth={isYearStart ? 2 : 1}
                     opacity={0.5}
                   />
-                  
+
                   {/* 年份标签 - 只在整数年份刻度显示 */}
                   {isYearStart && (
                     <text
@@ -554,33 +737,41 @@ const TechStackChart = () => {
               );
             });
           })()}
-          
+
           {/* 半年标签 - 已移除显示 */}
         </svg>
 
         {/* 图例 */}
-        <div className="flex flex-wrap justify-center gap-3 mt-6">
+        <div className="flex flex-wrap justify-center gap-2 mt-6">
           {techData.categories.map((cat) => (
-            <motion.div 
-              key={cat.key} 
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer transition-all hover:scale-105"
-              style={{ 
-                background: hoveredData?.categoryKey === cat.key 
-                  ? `${cat.color}30` 
+            <motion.div
+              key={cat.key}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full cursor-pointer transition-all"
+              style={{
+                background: hoveredCategory === cat.key || hoveredData?.categoryKey === cat.key
+                  ? `${cat.color}25`
                   : 'var(--bg-secondary)',
-                border: `1px solid ${hoveredData?.categoryKey === cat.key ? cat.color : 'var(--border-subtle)'}`,
+                border: `1px solid ${hoveredCategory === cat.key || hoveredData?.categoryKey === cat.key ? cat.color : 'var(--border-subtle)'}`,
               }}
-              whileHover={{ y: -2 }}
+              whileHover={{ y: -2, scale: 1.02 }}
+              onMouseEnter={() => setHoveredCategory(cat.key)}
+              onMouseLeave={() => setHoveredCategory(null)}
               title={cat.description}
             >
               <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: cat.color, boxShadow: `0 0 8px ${cat.color}80` }}
+                className="w-2.5 h-2.5 rounded-full"
+                style={{
+                  backgroundColor: cat.color,
+                  boxShadow: `0 0 10px ${cat.color}60`,
+                  opacity: hoveredCategory && hoveredCategory !== cat.key ? 0.4 : 1
+                }}
               />
-              <span 
-                className="text-sm font-medium" 
-                style={{ 
-                  color: hoveredData?.categoryKey === cat.key ? cat.color : 'var(--text-muted)'
+              <span
+                className="text-xs font-medium"
+                style={{
+                  color: hoveredCategory === cat.key || hoveredData?.categoryKey === cat.key
+                    ? cat.color
+                    : 'var(--text-muted)'
                 }}
               >
                 {cat.label}
@@ -588,6 +779,7 @@ const TechStackChart = () => {
             </motion.div>
           ))}
         </div>
+      </div>
       </div>
 
       {/* 悬浮提示框 - 使用 Portal 渲染到 body，避免被父容器裁剪 */}
@@ -603,7 +795,7 @@ const TechStackChart = () => {
           exit={{ opacity: 0, y: 10, scale: 0.95 }}
           transition={{ duration: 0.15 }}
         >
-          <div 
+          <div
             className="px-4 py-3 rounded-xl shadow-xl backdrop-blur-md"
             style={{
               background: 'var(--bg-card)',
@@ -614,9 +806,9 @@ const TechStackChart = () => {
             }}
           >
             {/* 时间段标题 */}
-            <div 
+            <div
               className="flex items-center gap-2 text-xs font-mono mb-3 pb-2 border-b"
-              style={{ 
+              style={{
                 color: 'var(--text-muted)',
                 borderColor: 'var(--border-subtle)'
               }}
@@ -627,14 +819,14 @@ const TechStackChart = () => {
                 {hoveredData.value}%
               </span>
             </div>
-            
+
             {/* 类别名称 */}
             <div className="text-sm font-bold mb-2" style={{ color: hoveredData.color }}>
               {hoveredData.category}
             </div>
-            
+
             {/* 该类别的技术栈 */}
-            {hoveredData.tooltip.main.length > 0 && (
+            {hoveredData.tooltip?.main && hoveredData.tooltip.main.length > 0 && (
               <div className="mb-3">
                 <div className="text-xs mb-1.5 font-medium" style={{ color: 'var(--text-primary)' }}>
                   [主力] 技术栈
@@ -656,9 +848,9 @@ const TechStackChart = () => {
                 </div>
               </div>
             )}
-            
+
             {/* 该类别的在学技术 */}
-            {hoveredData.tooltip.learning.length > 0 && (
+            {hoveredData.tooltip?.learning && hoveredData.tooltip.learning.length > 0 && (
               <div>
                 <div className="text-xs mb-1.5" style={{ color: 'var(--text-muted)' }}>
                   [探索] 学习中
@@ -681,9 +873,9 @@ const TechStackChart = () => {
               </div>
             )}
           </div>
-          
+
           {/* 小箭头 */}
-          <div 
+          <div
             className="absolute w-3 h-3 -left-1.5 top-4 rotate-45"
             style={{
               background: 'var(--bg-card)',
@@ -705,78 +897,78 @@ const HeroSection = () => {
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
   const prefersReducedMotion = usePrefersReducedMotion();
   const { navigateTo } = useNavigation();
-  
+
   // 主要导航项
   const mainNavs = [
-    { 
-      title: '阅读博客', 
+    {
+      title: '阅读博客',
       desc: '技术文章与思考',
-      href: '/blog', 
+      href: '/blog',
       icon: BookOpen,
       color: '#3b82f6',
       gradient: 'from-blue-500/20 to-cyan-500/20',
     },
-    { 
-      title: '关于我', 
+    {
+      title: '关于我',
       desc: '了解更多',
-      href: '/about', 
+      href: '/about',
       icon: User,
       color: '#10b981',
       gradient: 'from-emerald-500/20 to-teal-500/20',
     },
-    { 
-      title: '地球Online', 
+    {
+      title: '地球Online',
       desc: '弹幕卫星留言',
-      href: '/earth-online', 
+      href: '/earth-online',
       icon: Globe,
       highlight: true,
       color: '#8b5cf6',
       gradient: 'from-violet-500/20 to-purple-500/20',
     },
   ];
-  
+
   // 次要导航
   const subNavs = [
     { title: '朋友圈', href: '/friends-circle', icon: MessageCircle },
     { title: '友链', href: '/friends', icon: Heart },
     { title: '工作室', href: '/studio', icon: Briefcase },
   ];
-  
+
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden">
       {/* 背景视差层 */}
       {!prefersReducedMotion && (
-        <motion.div 
+        <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{ y: y1, opacity }}
         >
           <div className="absolute top-20 right-[5%] w-[500px] h-[500px] rounded-full opacity-20"
-            style={{ 
+            style={{
               background: 'radial-gradient(circle, var(--accent-primary) 0%, transparent 70%)',
               filter: 'blur(60px)'
             }}
           />
         </motion.div>
       )}
-      
+
       {/* 星星背景 */}
       <div className="absolute inset-0 pointer-events-none">
         <TwinklingStars count={30} color="var(--accent-primary)" shootingStars={true} />
       </div>
-      
+
       {/* 主内容区域 */}
       <div className="relative z-10 flex-1 flex items-center">
         <div className="w-full max-w-6xl mx-auto px-6 lg:px-12 pt-24 pb-12">
-          
+
           {/* 上方：LOGO + ASCII艺术 - 居中 */}
-          <motion.div 
+          <motion.div
             className="flex flex-col items-center mb-12"
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
             {/* LOGO */}
-            <motion.div 
+            <motion.div
               className="relative mb-6"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -802,14 +994,14 @@ const HeroSection = () => {
                 />
               </div>
             </motion.div>
-            
+
             {/* ASCII艺术 */}
             <AsciiLogo3D />
           </motion.div>
-          
+
           {/* 中间区域：左右分栏 */}
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            
+
             {/* 左侧：标题和简介 */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -827,32 +1019,32 @@ const HeroSection = () => {
                 <Terminal className="w-3.5 h-3.5" />
                 <span className="font-mono">~/welcome</span>
               </div>
-              
+
               {/* 标题 */}
               <h1 className="text-4xl md:text-5xl font-bold leading-[1.1] mb-6">
                 <span className="block" style={{ color: 'var(--text-primary)' }}>
-                  代码即艺术
+                  代码构建未来
                 </span>
                 <span className="block mt-2">
-                  <GradientText animate={true}>创造即思考</GradientText>
+                  <GradientText animate={true}>技术赋能社会</GradientText>
                 </span>
               </h1>
-              
+
               {/* 分隔线 */}
-              <div className="w-16 h-0.5 mb-6" 
+              <div className="w-16 h-0.5 mb-6"
                 style={{ background: 'linear-gradient(90deg, var(--accent-primary), transparent)' }}
               />
-              
+
               {/* 简介 */}
               <p className="text-base md:text-lg leading-relaxed mb-8 max-w-lg"
                 style={{ color: 'var(--text-muted)' }}
               >
-                从2016年初一开始编程之旅，历经Web开发、算法竞赛、AI研究到博弈算法。
+                从2016年初一开始编程之旅，历经Web开发、数据科学、博弈算法到AI研究。
                 这里记录着我的技术演进与创作历程。
               </p>
-              
+
               {/* 次要导航 */}
-              <motion.div 
+              <motion.div
                 className="flex flex-wrap gap-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -875,9 +1067,9 @@ const HeroSection = () => {
                 ))}
               </motion.div>
             </motion.div>
-            
+
             {/* 右侧：导航卡片 - 垂直堆叠 */}
-            <motion.div 
+            <motion.div
               className="space-y-4"
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
@@ -900,22 +1092,22 @@ const HeroSection = () => {
                   }}
                 >
                   {/* 悬停渐变背景 */}
-                  <div 
+                  <div
                     className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl"
                     style={{
                       background: `linear-gradient(135deg, ${nav.color}08, transparent)`,
                     }}
                   />
-                  
+
                   <div className="relative flex items-center gap-4">
                     {/* 图标 */}
-                    <div 
+                    <div
                       className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110"
                       style={{ background: `${nav.color}15` }}
                     >
                       <nav.icon className="w-6 h-6" style={{ color: nav.color }} />
                     </div>
-                    
+
                     {/* 内容 */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
@@ -935,9 +1127,9 @@ const HeroSection = () => {
                         {nav.desc}
                       </p>
                     </div>
-                    
+
                     {/* 箭头 */}
-                    <ArrowRight 
+                    <ArrowRight
                       className="w-5 h-5 flex-shrink-0 transition-all duration-300 group-hover:translate-x-1"
                       style={{ color: nav.color, opacity: 0.6 }}
                     />
@@ -948,9 +1140,9 @@ const HeroSection = () => {
           </div>
         </div>
       </div>
-      
+
       {/* 移动端导航卡片 - 垂直堆叠 */}
-      <motion.div 
+      <motion.div
         className="lg:hidden relative z-10 px-6 pb-8 -mt-4"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -974,7 +1166,7 @@ const HeroSection = () => {
               }}
             >
               <div className="flex items-center gap-3">
-                <div 
+                <div
                   className="w-10 h-10 rounded-lg flex items-center justify-center"
                   style={{ background: `${nav.color}15` }}
                 >
@@ -1003,9 +1195,9 @@ const HeroSection = () => {
           ))}
         </div>
       </motion.div>
-      
+
       {/* 滚动提示 */}
-      <motion.div 
+      <motion.div
         className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1059,7 +1251,7 @@ const JourneySection = () => {
             {techData?.description || '从初一开始的编程之旅，技术栈随时间不断演化。'}
           </p>
         </motion.div>
-        
+
         {/* 时间线标记 */}
         <motion.div
           className="flex flex-wrap justify-center gap-6 mb-12"
@@ -1081,15 +1273,15 @@ const JourneySection = () => {
             </div>
           ))}
         </motion.div>
-        
+
         {/* 图表容器 */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <div 
+          <div
             className="p-8 rounded-2xl"
             style={{
               background: 'var(--bg-card)',
@@ -1097,13 +1289,6 @@ const JourneySection = () => {
               clipPath: clipPathRounded(16),
             }}
           >
-            <div className="flex items-center gap-3 mb-6">
-              <Cpu className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-              <h3 className="font-mono text-sm" style={{ color: 'var(--text-muted)' }}>
-                tech_stack_evolution.py
-              </h3>
-            </div>
-            
             <TechStackChart />
           </div>
         </motion.div>
@@ -1152,7 +1337,7 @@ const QuickLinksSection = () => {
       <div className="absolute inset-0 pointer-events-none">
         <AmbientGlow color="var(--accent-secondary)" opacity={0.08} position="bottom-left" size={500} />
       </div>
-      
+
       <div className="max-w-6xl mx-auto px-6 lg:px-12">
         <ParallaxContainer speed={0.3}>
           <div className="text-center mb-12">
@@ -1165,11 +1350,11 @@ const QuickLinksSection = () => {
             </p>
           </div>
         </ParallaxContainer>
-        
+
         {/* 网格 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {links.map((card, index) => (
-            <motion.div 
+            <motion.div
               key={card.title}
               onClick={() => navigateTo(card.href)}
               className="group block cursor-pointer"
@@ -1178,7 +1363,7 @@ const QuickLinksSection = () => {
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
             >
-              <div 
+              <div
                 className="relative p-5 rounded-xl overflow-hidden transition-all duration-300 h-full"
                 style={{
                   background: 'var(--bg-card)',
@@ -1186,34 +1371,34 @@ const QuickLinksSection = () => {
                 }}
               >
                 {/* 背景渐变 */}
-                <div 
+                <div
                   className="absolute inset-0 transition-opacity duration-500"
                   style={{
                     background: `linear-gradient(135deg, ${card.color} 0%, transparent 100%)`,
                     opacity: 0.05,
                   }}
                 />
-                
+
                 {/* 内容 */}
                 <div className="relative z-10">
-                  <div 
+                  <div
                     className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-transform group-hover:scale-110"
                     style={{ background: `${card.color}15` }}
                   >
                     <card.icon className="w-5 h-5" style={{ color: card.color }} />
                   </div>
-                  
+
                   <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
                     {card.title}
                   </h3>
-                  
+
                   <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
                     {card.desc}
                   </p>
                 </div>
-                
+
                 {/* 悬停边框 */}
-                <div 
+                <div
                   className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
                   style={{
                     border: `2px solid ${card.color}`,
@@ -1264,7 +1449,7 @@ function App() {
     <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <SecurityProtection />
       <ScrollProgress />
-      
+
       {siteData && (
         <Navigation
           data={siteData.navigation}
@@ -1273,13 +1458,13 @@ function App() {
           isThemeTransitioning={isTransitioning}
         />
       )}
-      
+
       <main>
         <HeroSection />
         <JourneySection />
         <QuickLinksSection />
       </main>
-      
+
       {/* 使用子页相同的Footer */}
       {siteData && <Footer data={siteData.footer} />}
     </div>

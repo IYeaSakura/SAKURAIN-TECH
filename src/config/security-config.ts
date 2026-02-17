@@ -11,6 +11,6 @@ export const securityConfig = {
     disableContextMenu: true,
     disableDrag: true,
     disableSelect: false,
-    detectDevTools: true
+    detectDevTools: false
   }
 } as const;
