@@ -181,6 +181,17 @@
       "status": "online"
     },
     {
+      "id": "imshimao",
+      "name": "石猫博客",
+      "url": "https://imshimao.com",
+      "icon": "https://www.vidlii.net/usfi/avt/1HH5cpvb235.jpg",
+      "feed": "https://imshimao.com/?feed=rss2",
+      "description": "一只石头做的猫",
+      "category": "blogs",
+      "featured": true,
+      "status": "online"
+    },
+    {
       "id": "woolyun",
       "name": "天海博客",
       "url": "https://woolyun.com/",
@@ -235,18 +246,7 @@
       "featured": true,
       "unidirectional": true,
       "status": "online"
-    },
-    {
-      "id": "imshimao",
-      "name": "石猫博客",
-      "url": "https://imshimao.com",
-      "icon": "https://www.vidlii.net/usfi/avt/1HH5cpvb235.jpg",
-      "description": "一只石头做的猫",
-      "category": "blogs",
-      "featured": true,
-      "unidirectional": true,
-      "status": "online"
     }
   ],
-  "lastUpdated": "2026-02-17T11:01:22.144Z"
+  "lastUpdated": "2026-02-17T12:50:09.169Z"
 }

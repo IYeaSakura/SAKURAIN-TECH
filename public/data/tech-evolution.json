@@ -1,159 +1,376 @@
 {
-  "title": "技术演进",
-  "subtitle": "从初一开始的编程之旅，技术栈随时间不断演化",
-  "description": "每个阶段都有不同的侧重点，但始终保持着对技术的热情",
-  "periods": [
-    "2016下", "2017上", "2017下", "2018上", "2018下",
-    "2019上", "2019下", "2020上", "2020下", "2021上", "2021下",
-    "2022上", "2022下", "2023上", "2023下", "2024上", "2024下",
-    "2025上", "2025下", "2026上"
-  ],
-  "categories": [
-    {
-      "key": "ml_dl",
-      "label": "机器学习/深度学习",
-      "color": "#8b5cf6",
-      "description": "AI模型研发与应用"
-    },
-    {
-      "key": "algo_rl",
-      "label": "算法/强化学习",
-      "color": "#3b82f6",
-      "description": "算法设计与博弈优化"
-    },
-    {
-      "key": "backend_api",
-      "label": "后端/分布式",
-      "color": "#10b981",
-      "description": "服务端开发与系统设计"
-    },
-    {
-      "key": "frontend",
-      "label": "前端/工程化",
-      "color": "#ec4899",
-      "description": "Web前端与工具链"
-    },
-    {
-      "key": "data_infra",
-      "label": "数据/基础设施",
-      "color": "#f59e0b",
-      "description": "数据库、缓存与DevOps"
-    },
-    {
-      "key": "system_lang",
-      "label": "系统级开发",
-      "color": "#06b6d4",
-      "description": "底层与高性能计算"
-    }
-  ],
-  "data": [
-    { "period": "2016下", "ml_dl": 0, "algo_rl": 0, "backend_api": 10, "frontend": 75, "data_infra": 0, "system_lang": 15 },
-    { "period": "2017上", "ml_dl": 0, "algo_rl": 0, "backend_api": 12, "frontend": 70, "data_infra": 5, "system_lang": 13 },
-    { "period": "2017下", "ml_dl": 0, "algo_rl": 0, "backend_api": 18, "frontend": 62, "data_infra": 10, "system_lang": 10 },
-    { "period": "2018上", "ml_dl": 0, "algo_rl": 0, "backend_api": 22, "frontend": 55, "data_infra": 13, "system_lang": 10 },
-    { "period": "2018下", "ml_dl": 0, "algo_rl": 0, "backend_api": 25, "frontend": 48, "data_infra": 17, "system_lang": 10 },
-    { "period": "2019上", "ml_dl": 0, "algo_rl": 10, "backend_api": 28, "frontend": 40, "data_infra": 12, "system_lang": 10 },
-    { "period": "2019下", "ml_dl": 0, "algo_rl": 25, "backend_api": 22, "frontend": 25, "data_infra": 13, "system_lang": 15 },
-    { "period": "2020上", "ml_dl": 0, "algo_rl": 22, "backend_api": 26, "frontend": 24, "data_infra": 16, "system_lang": 12 },
-    { "period": "2020下", "ml_dl": 2, "algo_rl": 20, "backend_api": 28, "frontend": 18, "data_infra": 18, "system_lang": 14 },
-    { "period": "2021上", "ml_dl": 8, "algo_rl": 22, "backend_api": 24, "frontend": 22, "data_infra": 16, "system_lang": 8 },
-    { "period": "2021下", "ml_dl": 15, "algo_rl": 20, "backend_api": 22, "frontend": 18, "data_infra": 15, "system_lang": 10 },
-    { "period": "2022上", "ml_dl": 22, "algo_rl": 20, "backend_api": 18, "frontend": 15, "data_infra": 13, "system_lang": 12 },
-    { "period": "2022下", "ml_dl": 28, "algo_rl": 18, "backend_api": 15, "frontend": 10, "data_infra": 14, "system_lang": 15 },
-    { "period": "2023上", "ml_dl": 35, "algo_rl": 15, "backend_api": 15, "frontend": 8, "data_infra": 14, "system_lang": 13 },
-    { "period": "2023下", "ml_dl": 38, "algo_rl": 12, "backend_api": 15, "frontend": 6, "data_infra": 17, "system_lang": 12 },
-    { "period": "2024上", "ml_dl": 32, "algo_rl": 22, "backend_api": 15, "frontend": 5, "data_infra": 14, "system_lang": 12 },
-    { "period": "2024下", "ml_dl": 28, "algo_rl": 30, "backend_api": 12, "frontend": 4, "data_infra": 14, "system_lang": 12 },
-    { "period": "2025上", "ml_dl": 25, "algo_rl": 25, "backend_api": 18, "frontend": 5, "data_infra": 14, "system_lang": 13 },
-    { "period": "2025下", "ml_dl": 22, "algo_rl": 22, "backend_api": 23, "frontend": 5, "data_infra": 15, "system_lang": 13 },
-    { "period": "2026上", "ml_dl": 25, "algo_rl": 20, "backend_api": 25, "frontend": 4, "data_infra": 14, "system_lang": 12 }
-  ],
-  "milestones": [
-    { "period": "2016下", "label": "Web入门", "color": "#ec4899" },
-    { "period": "2019下", "label": "算法竞赛", "color": "#3b82f6" },
-    { "period": "2022上", "label": "AI转型", "color": "#8b5cf6" },
-    { "period": "2024下", "label": "博弈算法", "color": "#f59e0b" }
-  ],
   "tooltips": {
     "2016下": {
-      "main": ["HTML5/CSS3", "基础JS"],
-      "learning": ["网页布局", "DOM操作"]
+      "frontend": {
+        "main": ["HTML5基础", "CSS3入门"],
+        "learning": ["标签语义化", "盒模型", "选择器"]
+      }
     },
     "2017上": {
-      "main": ["响应式布局", "jQuery"],
-      "learning": ["ES6语法", "AJAX"]
+      "frontend": {
+        "main": ["CSS布局", "JavaScript基础"],
+        "learning": ["浮动布局", "定位", "基础DOM操作"]
+      }
     },
     "2017下": {
-      "main": ["PHP/MySQL", "WordPress"],
-      "learning": ["RESTful设计", "Bootstrap"]
+      "frontend": {
+        "main": ["JavaScript进阶", "DOM操作"],
+        "learning": ["事件处理", "表单验证", "AJAX初步"]
+      }
     },
     "2018上": {
-      "main": ["Vue.js", "前后端分离"],
-      "learning": ["Webpack", "Node.js基础"]
+      "frontend": {
+        "main": ["响应式设计", "jQuery"],
+        "learning": ["媒体查询", "Flexbox布局", "Bootstrap"]
+      }
     },
     "2018下": {
-      "main": ["全栈Web开发", "Nginx部署"],
-      "learning": ["Linux运维", "Redis缓存"]
+      "backend_api": {
+        "main": ["PHP基础语法", "WordPress主题开发"],
+        "learning": ["模板标签", "插件机制", "Hooks"]
+      },
+      "frontend": {
+        "main": ["WordPress前端", "PHP混编"],
+        "learning": ["主题定制", "响应式适配"]
+      },
+      "data_infra": {
+        "main": ["Linux基础", "LAMP环境"],
+        "learning": ["Ubuntu/CentOS", "Apache配置"]
+      },
+      "system_lang": {
+        "main": ["Linux命令行", "Shell基础"],
+        "learning": ["文件权限", "进程管理"]
+      }
     },
     "2019上": {
-      "main": ["算法入门", "数据结构"],
-      "learning": ["C语言", "复杂度分析"]
+      "backend_api": {
+        "main": ["PHP面向对象", "MySQL数据库"],
+        "learning": ["PDO", "SQL优化", "事务处理"]
+      },
+      "frontend": {
+        "main": ["jQuery插件开发", "WordPress前端优化"],
+        "learning": ["Ajax交互", "页面性能优化", "SEO基础"]
+      },
+      "data_infra": {
+        "main": ["MySQL管理", "phpMyAdmin"],
+        "learning": ["索引设计", "备份恢复"]
+      },
+      "system_lang": {
+        "main": ["Linux运维"],
+        "learning": ["Cron定时任务", "日志分析"]
+      }
     },
     "2019下": {
-      "main": ["算法竞赛", "C++", "STL"],
-      "learning": ["动态规划", "图论算法"]
+      "backend_api": {
+        "main": ["WordPress高级开发", "自定义文章类型"],
+        "learning": ["REST API", "Gutenberg区块"]
+      },
+      "frontend": {
+        "main": ["主题深度定制", "前端缓存策略"],
+        "learning": ["懒加载", "CDN接入", "PWA初步"]
+      },
+      "data_infra": {
+        "main": ["服务器部署", "SSL证书"],
+        "learning": ["Nginx基础", "HTTPS配置"]
+      },
+      "system_lang": {
+        "main": ["Python运维脚本"],
+        "learning": ["自动化备份", "日志分析脚本"]
+      }
     },
     "2020上": {
-      "main": ["Docker", "CI/CD", "Web项目"],
-      "learning": ["容器编排", "DevOps"]
+      "backend_api": {
+        "main": ["PHP框架探索", "CodeIgniter"],
+        "learning": ["MVC模式", "路由设计"]
+      },
+      "frontend": {
+        "main": ["ES6语法", "原生JavaScript强化"],
+        "learning": ["模块化开发", "Webpack初识", "Vue概念"]
+      },
+      "data_infra": {
+        "main": ["Redis缓存", "对象存储"],
+        "learning": ["CDN加速", "图片处理"]
+      },
+      "system_lang": {
+        "main": ["Python脚本"],
+        "learning": ["自动化运维", "爬虫入门"]
+      }
     },
     "2020下": {
-      "main": ["微服务架构", "消息队列", "Python入门"],
-      "learning": ["Kubernetes", "机器学习基础"]
+      "frontend": {
+        "main": ["React入门", "ES6+", "组件化"],
+        "learning": ["Hooks", "Redux", "Webpack"]
+      },
+      "backend_api": {
+        "main": ["WordPress维护"],
+        "learning": ["Headless CMS", "REST API调用"]
+      },
+      "data_infra": {
+        "main": ["Redis应用", "数据库优化"],
+        "learning": ["缓存策略", "查询优化", "主从复制"]
+      },
+      "system_lang": {
+        "main": ["Python自动化"],
+        "learning": ["Selenium自动化", "数据处理脚本"]
+      }
     },
     "2021上": {
-      "main": ["React生态", "TypeScript"],
-      "learning": ["前端工程化", "PyTorch入门"]
+      "frontend": {
+        "main": ["React生态", "React Router"],
+        "learning": ["TypeScript基础", "Styled Components"]
+      },
+      "backend_api": {
+        "main": ["Node.js基础"],
+        "learning": ["Express", "npm生态"]
+      },
+      "data_infra": {
+        "main": ["Docker容器化", "持续集成"],
+        "learning": ["Dockerfile编写", "镜像优化", "Jenkins"]
+      },
+      "system_lang": {
+        "main": ["Linux深入", "Shell编程"],
+        "learning": ["进程管理", "网络配置", "安全加固"]
+      }
     },
     "2021下": {
-      "main": ["Python", "NumPy/Pandas", "深度学习入门"],
-      "learning": ["神经网络", "模型训练"]
+      "frontend": {
+        "main": ["前端工程化"],
+        "learning": ["Babel", "ESLint", "Prettier"]
+      },
+      "backend_api": {
+        "main": ["Node.js全栈", "API设计"],
+        "learning": ["JWT认证", "中间件开发", "性能监控"]
+      },
+      "data_infra": {
+        "main": ["Docker Compose", "容器编排"],
+        "learning": ["多容器管理", "网络配置", "数据持久化"]
+      },
+      "system_lang": {
+        "main": ["Git版本控制"],
+        "learning": ["分支策略", "CI/CD概念"]
+      }
     },
     "2022上": {
-      "main": ["深度学习", "CNN/RNN", "Java后端"],
-      "learning": ["Transformer", "SpringBoot"]
+      "backend_api": {
+        "main": ["PHP项目维护"],
+        "learning": ["性能优化", " legacy代码重构"]
+      },
+      "frontend": {
+        "main": ["Vue 3入门", "现代前端回顾"],
+        "learning": ["Composition API", "Vite构建工具"]
+      },
+      "data_infra": {
+        "main": ["Linux服务器管理"],
+        "learning": ["监控告警", "日志系统"]
+      },
+      "system_lang": {
+        "main": ["计算机网络基础"],
+        "learning": ["TCP/IP", "HTTP协议"]
+      }
     },
     "2022下": {
-      "main": ["PyTorch", "模型训练", "模型部署"],
-      "learning": ["BERT", "GPT", "MLOps"]
+      "system_lang": {
+        "main": ["C语言基础", "C++入门", "Java基础"],
+        "learning": ["指针与内存", "面向对象", "JVM"]
+      },
+      "backend_api": {
+        "main": ["Python Web", "FastAPI", "Flask"],
+        "learning": ["异步编程", "Pydantic", "依赖注入"]
+      },
+      "algo": {
+        "main": ["数据结构与算法入门"],
+        "learning": ["时间复杂度", "数组链表", "栈队列"]
+      },
+      "frontend": {
+        "main": ["前端基础复习", "HTML/CSS/JS强化"],
+        "learning": ["DOM操作深入", "事件机制", "闭包"]
+      },
+      "data_infra": {
+        "main": ["数据库基础", "MySQL/PostgreSQL"],
+        "learning": ["SQL进阶", "事务隔离", "锁机制"]
+      }
     },
     "2023上": {
-      "main": ["Diffusion模型", "多模态", "FastAPI"],
-      "learning": ["CUDA编程", "TensorRT优化"]
+      "algo": {
+        "main": ["机器博弈入门", "Minimax算法", "Alpha-Beta剪枝"],
+        "learning": ["棋类游戏AI", "评估函数设计"]
+      },
+      "backend_api": {
+        "main": ["Django", "SpringBoot"],
+        "learning": ["ORM", "依赖注入", "AOP"]
+      },
+      "system_lang": {
+        "main": ["Python进阶", "Java进阶"],
+        "learning": ["装饰器", "多线程", "JUC包"]
+      },
+      "ai": {
+        "main": ["机器学习基础"],
+        "learning": ["NumPy", "Pandas", "Scikit-learn"]
+      },
+      "frontend": {
+        "main": ["现代前端速览", "React/Vue基础"],
+        "learning": ["组件化思维", "状态管理概念"]
+      },
+      "data_infra": {
+        "main": ["数据库设计", "Redis应用"],
+        "learning": ["索引优化", "缓存穿透/雪崩", "连接池"]
+      }
     },
     "2023下": {
-      "main": ["LLM微调", "Prompt工程", "RAG"],
-      "learning": ["向量数据库", "Agent设计"]
+      "algo": {
+        "main": ["蒙特卡洛树搜索", "博弈树搜索"],
+        "learning": ["UCB1", "UCT", "RAVE"]
+      },
+      "ai": {
+        "main": ["深度学习基础", "PyTorch入门"],
+        "learning": ["神经网络", "反向传播", "CNN初步"]
+      },
+      "backend_api": {
+        "main": ["微服务架构"],
+        "learning": ["服务拆分", "API网关"]
+      },
+      "frontend": {
+        "main": ["前端框架概念"],
+        "learning": ["虚拟DOM", "响应式原理", "组件通信"]
+      },
+      "data_infra": {
+        "main": ["数据库集群", "Redis哨兵"],
+        "learning": ["主从复制", "高可用架构", "分片策略"]
+      },
+      "system_lang": {
+        "main": ["C++算法实现"],
+        "learning": ["STL容器", "算法优化", "内存管理"]
+      }
     },
     "2024上": {
-      "main": ["博弈算法", "MCTS", "对抗搜索"],
-      "learning": ["博弈论", "不完全信息博弈"]
+      "algo": {
+        "main": ["强化学习", "Q-Learning", "DQN"],
+        "learning": ["策略梯度", "Actor-Critic"]
+      },
+      "ai": {
+        "main": ["RNN/LSTM", "Transformer", "BERT"],
+        "learning": ["注意力机制", "自回归模型"]
+      },
+      "data_infra": {
+        "main": ["消息队列", "Kafka"],
+        "learning": ["发布订阅", "流处理"]
+      },
+      "frontend": {
+        "main": ["Vue.js 3", "Composition API"],
+        "learning": ["Pinia", "Vue Router 4"]
+      },
+      "backend_api": {
+        "main": ["API服务开发", "FastAPI进阶"],
+        "learning": ["异步IO", "依赖注入", "API文档"]
+      },
+      "system_lang": {
+        "main": ["C++性能优化"],
+        "learning": ["智能指针", "移动语义", "并发基础"]
+      }
     },
     "2024下": {
-      "main": ["强化学习", "多智能体系统"],
-      "learning": ["PPO算法", "MARL"]
+      "algo": {
+        "main": ["博弈论基础", "纳什均衡"],
+        "learning": ["囚徒困境", "拍卖理论"]
+      },
+      "ai": {
+        "main": ["Diffusion模型", "Stable Diffusion"],
+        "learning": ["噪声预测", "条件生成", "LoRA微调"]
+      },
+      "data_infra": {
+        "main": ["Redis集群", "Elasticsearch"],
+        "learning": ["倒排索引", "分片策略"]
+      },
+      "backend_api": {
+        "main": ["微服务实践", "服务治理"],
+        "learning": ["注册中心", "负载均衡", "熔断降级"]
+      },
+      "frontend": {
+        "main": ["Vue3项目实践"],
+        "learning": ["TypeScript集成", "组件库使用", "Vite优化"]
+      },
+      "system_lang": {
+        "main": ["系统编程基础"],
+        "learning": ["Linux系统调用", "进程通信", "文件IO"]
+      }
     },
     "2025上": {
-      "main": ["Go/Gin", "微服务", "云原生"],
-      "learning": ["Service Mesh", "DDD"]
+      "algo": {
+        "main": ["多智能体系统", "演化博弈论"],
+        "learning": ["复制动态", "演化稳定策略", "群体智能"]
+      },
+      "ai": {
+        "main": ["大模型应用", "RAG系统"],
+        "learning": ["LangChain", "向量数据库", "Prompt工程"]
+      },
+      "backend_api": {
+        "main": ["分布式系统"],
+        "learning": ["一致性算法", "分布式事务"]
+      },
+      "frontend": {
+        "main": ["管理后台开发", "React/Vue管理端"],
+        "learning": ["Ant Design", "权限管理", "数据可视化"]
+      },
+      "data_infra": {
+        "main": ["分布式存储", "分库分表"],
+        "learning": ["ShardingSphere", "分布式ID", "分布式锁"]
+      },
+      "system_lang": {
+        "main": ["高性能语言入门"],
+        "learning": ["Go/Rust基础", "并发模型", "内存安全"]
+      }
     },
     "2025下": {
-      "main": ["Next.js", "全栈开发"],
-      "learning": ["WebAssembly", "边缘计算"]
+      "algo": {
+        "main": ["复杂网络博弈", "图博弈"],
+        "learning": ["网络演化", "级联效应"]
+      },
+      "ai": {
+        "main": ["多模态AI", "Agent架构"],
+        "learning": ["ReAct", "多Agent协作"]
+      },
+      "backend_api": {
+        "main": ["分布式后端", "微服务深化"],
+        "learning": ["Service Mesh", "云原生", "Kubernetes"]
+      },
+      "frontend": {
+        "main": ["可视化界面", "ECharts/D3.js"],
+        "learning": ["博弈可视化", "实时数据展示", "Canvas/SVG"]
+      },
+      "data_infra": {
+        "main": ["大数据生态", "实时计算"],
+        "learning": ["Flink/Spark", "数据湖", "湖仓一体"]
+      },
+      "system_lang": {
+        "main": ["并发编程", "性能优化"],
+        "learning": ["锁优化", "无锁数据结构", "CPU缓存"]
+      }
     },
     "2026上": {
-      "main": ["AI系统架构", "LLM应用"],
-      "learning": ["多模态Agent", "具身智能"]
+      "algo": {
+        "main": ["前沿博弈论", "机制设计"],
+        "learning": ["激励相容", "拍卖设计"]
+      },
+      "ai": {
+        "main": ["具身智能", "世界模型"],
+        "learning": ["机器人学习", "仿真环境"]
+      },
+      "backend_api": {
+        "main": ["AI系统架构"],
+        "learning": ["模型服务化", "推理优化"]
+      },
+      "frontend": {
+        "main": ["AI交互界面", "Gradio/Streamlit"],
+        "learning": ["LLM前端集成", "实时推理展示", "WebSocket"]
+      },
+      "data_infra": {
+        "main": ["向量数据库", "AI数据管道"],
+        "learning": ["Milvus/Pinecone", "Embedding管理", "RAG优化"]
+      },
+      "system_lang": {
+        "main": ["AI基础设施", "高性能计算"],
+        "learning": ["CUDA编程", "模型编译优化", "异构计算"]
+      }
     }
   }
 }
