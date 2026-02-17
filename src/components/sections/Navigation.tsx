@@ -20,12 +20,8 @@ interface NavigationProps {
 const dockItems = [
   { label: '首页', href: '/', icon: Home },
   { label: '博客', href: '/blog', icon: FileText },
-  { label: '日志', href: '/notes', icon: MessageCircle },
+  { label: '朋友圈', href: '/friends-circle', icon: Rss },
   { label: '友链', href: '/friends', icon: Heart },
-  { label: '朋友圈', href: '/feed', icon: Rss },
-  { label: '地球', href: '/earth-online', icon: Globe },
-  { label: '工作室', href: '/studio', icon: Briefcase },
-  { label: '文档', href: '/docs', icon: BookOpen },
   { label: '关于', href: '/about', icon: User, isCustom: true },
 ];
 

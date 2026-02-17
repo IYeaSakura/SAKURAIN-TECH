@@ -516,9 +516,9 @@ export default function AboutPage() {
       <StarryBackground />
 
       {/* Hero 区域 - 不对称布局 */}
-      <section id="about" className="relative pt-28 pb-20 overflow-hidden">
+      <section id="about" className="relative pt-24 sm:pt-28 pb-16 sm:pb-20 overflow-hidden">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-5 gap-8 items-end">
+          <div className="grid lg:grid-cols-5 gap-8 lg:gap-8 items-end">
             {/* 左侧：头像和标签 - 占2列，底部对齐 */}
             <motion.div
               initial={animationEnabled ? { opacity: 0, x: -30 } : undefined}
@@ -557,7 +557,7 @@ export default function AboutPage() {
                   )}
 
                   <div
-                    className="relative w-72 h-72 rounded-full p-1"
+                    className="relative w-48 h-48 sm:w-56 sm:h-56 lg:w-72 lg:h-72 rounded-full p-1"
                     style={{
                       background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
                     }}
@@ -566,7 +566,7 @@ export default function AboutPage() {
                       className="w-full h-full rounded-full overflow-hidden"
                       style={{
                         background: 'var(--bg-card)',
-                        border: '4px solid var(--bg-primary)',
+                        border: '4px solid transparent',
                       }}
                     >
                       <img src="/image/about/head.jpg" alt="Yuyang" className="w-full h-full object-cover" />
@@ -597,9 +597,9 @@ export default function AboutPage() {
               </div>
 
               {/* 标签信息 - 下移与右侧卡片底部对齐 */}
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="flex flex-wrap justify-center gap-2 px-2">
                 {[
-                  { icon: Briefcase, text: "中国移动通讯集团工业互联网创新研究院" },
+                  { icon: Briefcase, text: "中国移动工业互联网研究院" },
                   { icon: Calendar, text: "大四在读" },
                   { icon: Star, text: "中共党员" },
                   { icon: GraduationCap, text: "软件工程" },
@@ -609,35 +609,35 @@ export default function AboutPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 + index * 0.1 }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm"
+                    className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm"
                     style={{
                       background: 'rgba(59, 130, 246, 0.08)',
                       border: '1px solid rgba(59, 130, 246, 0.15)',
                       color: '#60a5fa'
                     }}
                   >
-                    <item.icon className="w-3.5 h-3.5" />
-                    {item.text}
+                    <item.icon className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
+                    <span className="truncate max-w-[140px] sm:max-w-none">{item.text}</span>
                   </motion.div>
                 ))}
               </div>
             </motion.div>
 
             {/* 右侧：文字内容 - 占3列 */}
-            <div className="lg:col-span-3">
-              <div className="flex justify-end mb-6">
+            <div className="lg:col-span-3 mt-8 lg:mt-0">
+              <div className="flex justify-center lg:justify-end mb-4 sm:mb-6">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full"
+                  className="inline-flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full"
                   style={{
                     background: 'rgba(59, 130, 246, 0.1)',
                     border: '1px solid rgba(59, 130, 246, 0.2)'
                   }}
                 >
-                  <Sparkles className="w-5 h-5 text-blue-400" />
-                  <span className="text-base font-medium text-blue-400">全栈开发 · 博弈算法 · AI 研究</span>
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
+                  <span className="text-sm sm:text-base font-medium text-blue-400">全栈开发 · 博弈算法 · AI 研究</span>
                 </motion.div>
               </div>
 
@@ -645,7 +645,7 @@ export default function AboutPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
-                className="text-6xl lg:text-7xl font-bold mb-5 text-right"
+                className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-4 sm:mb-5 text-center lg:text-right"
               >
                 <GradientText>
                   Yuyang
@@ -656,13 +656,13 @@ export default function AboutPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
-                className="text-xl text-gray-400 mb-10 text-right"
+                className="text-base sm:text-xl text-gray-400 mb-6 sm:mb-10 text-center lg:text-right"
               >
                 00后 | 大四在读 | 软件工程专业
               </motion.p>
 
               {/* 双栏介绍 */}
-              <div className="grid sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <InfoCard
                   icon={BookOpen}
                   title="关于我"
@@ -692,7 +692,7 @@ export default function AboutPage() {
       </section>
 
       {/* 词云图区域 */}
-      <section id="tech-cloud" className="relative py-20">
+      <section id="tech-cloud" className="relative py-16 sm:py-20">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -715,7 +715,7 @@ export default function AboutPage() {
       </section>
 
       {/* 关于本项目 - 详细版 Bento Grid */}
-      <section id="project" className="relative py-20">
+      <section id="project" className="relative py-16 sm:py-20">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -728,10 +728,10 @@ export default function AboutPage() {
           </motion.div>
 
           {/* Bento Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-min">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 auto-rows-min">
             {/* 大卡片 - 3D地球 */}
             <GlassCard
-              className="md:col-span-2 md:row-span-2 p-6 rounded-3xl relative overflow-hidden"
+              className="md:col-span-2 md:row-span-2 p-4 sm:p-6 rounded-2xl sm:rounded-3xl relative overflow-hidden"
               accentColor="#3b82f6"
               hoverScale={1.01}
             >
@@ -739,14 +739,14 @@ export default function AboutPage() {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="h-full p-5 rounded-xl"
+                className="h-full p-4 sm:p-5 rounded-xl"
                 style={{
                   background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1))',
-                  minHeight: '280px'
+                  minHeight: '200px'
                 }}
               >
-                <Globe className="w-10 h-10 text-blue-400 mb-4" />
-                <h3 className="text-2xl font-bold mb-3">3D 地球可视化</h3>
+                <Globe className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 mb-3 sm:mb-4" />
+                <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">3D 地球可视化</h3>
                 <p className="text-sm text-gray-400 leading-relaxed">
                   集成 Cesium 地球引擎，支持卫星轨道模拟、实时弹幕交互、多轨道类型展示。
                   支持 TLE 数据解析、SGP4 轨道预测算法，可实时计算卫星位置并展示在 3D 地球上。
@@ -762,7 +762,7 @@ export default function AboutPage() {
 
             {/* 架构设计卡片 */}
             <GlassCard
-              className="p-5 rounded-2xl"
+              className="p-4 sm:p-5 rounded-2xl"
               accentColor="#a855f7"
               hoverScale={1.03}
             >
@@ -771,14 +771,14 @@ export default function AboutPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
-                className="p-4 rounded-xl"
+                className="p-3 sm:p-4 rounded-xl"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
+                  background: 'var(--bg-secondary)',
                 }}
               >
-                <Server className="w-8 h-8 text-purple-400 mb-3" />
-                <h4 className="font-bold mb-2">前端架构</h4>
-                <p className="text-xs text-gray-500 leading-relaxed">
+                <Server className="w-7 h-7 sm:w-8 sm:h-8 text-purple-400 mb-2 sm:mb-3" />
+                <h4 className="font-bold text-sm sm:text-base mb-1 sm:mb-2">前端架构</h4>
+                <p className="text-[10px] sm:text-xs text-gray-500 leading-relaxed">
                   React 19 + TypeScript + Vite 构建，采用模块化设计，支持代码分割和懒加载。
                 </p>
               </motion.div>
@@ -786,7 +786,7 @@ export default function AboutPage() {
 
             {/* 性能优化卡片 */}
             <GlassCard
-              className="p-5 rounded-2xl"
+              className="p-4 sm:p-5 rounded-2xl"
               accentColor="#10b981"
               hoverScale={1.03}
             >
@@ -795,11 +795,11 @@ export default function AboutPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.15 }}
-                className="p-4 rounded-xl"
+                className="p-3 sm:p-4 rounded-xl"
               >
-                <Gauge className="w-8 h-8 text-emerald-400 mb-3" />
-                <h4 className="font-bold mb-2">性能优化</h4>
-                <p className="text-xs text-gray-500 leading-relaxed">
+                <Gauge className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-400 mb-2 sm:mb-3" />
+                <h4 className="font-bold text-sm sm:text-base mb-1 sm:mb-2">性能优化</h4>
+                <p className="text-[10px] sm:text-xs text-gray-500 leading-relaxed">
                   虚拟滚动、图片懒加载、组件懒加载、CDN 加速，首屏加载时间 &lt; 5s。
                 </p>
               </motion.div>
@@ -809,7 +809,7 @@ export default function AboutPage() {
             {projectStats.map((stat, index) => (
               <GlassCard
                 key={stat.label}
-                className="p-5 rounded-2xl flex flex-col justify-between"
+                className="p-4 sm:p-5 rounded-2xl flex flex-col justify-between"
                 accentColor={stat.color}
                 hoverScale={1.05}
               >
@@ -933,21 +933,21 @@ export default function AboutPage() {
       </section>
 
       {/* AI 时代思考 */}
-      <section id="ai-insights" className="relative py-20">
+      <section id="ai-insights" className="relative py-16 sm:py-20">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
             <SectionTitle>AI 时代的思考与实践</SectionTitle>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* AI 理解 */}
             <GlassCard
-              className="p-8 rounded-3xl"
+              className="p-5 sm:p-8 rounded-2xl sm:rounded-3xl"
               accentColor="#a855f7"
               hoverScale={1.02}
             >
@@ -955,14 +955,14 @@ export default function AboutPage() {
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className="p-5 rounded-xl"
+                className="p-4 sm:p-5 rounded-xl"
                 style={{
                   background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.08), rgba(96, 165, 250, 0.08))',
                 }}
               >
-                <BrainCircuit className="w-10 h-10 text-purple-400 mb-4" />
-                <h3 className="text-xl font-bold mb-4">我对 AI 技术的理解</h3>
-                <div className="space-y-3 text-sm text-gray-400">
+                <BrainCircuit className="w-8 h-8 sm:w-10 sm:h-10 text-purple-400 mb-3 sm:mb-4" />
+                <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">我对 AI 技术的理解</h3>
+                <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-gray-400">
                   <p>
                     <strong className="text-purple-400">AI 是放大人类创造力的杠杆</strong>，而非替代工具。
                     大语言模型让编程从"写代码"转变为"设计 AI 工作流"。
@@ -976,7 +976,7 @@ export default function AboutPage() {
 
             {/* AI 实践 */}
             <GlassCard
-              className="p-8 rounded-3xl"
+              className="p-5 sm:p-8 rounded-2xl sm:rounded-3xl"
               accentColor="#3b82f6"
               hoverScale={1.02}
             >
@@ -984,14 +984,14 @@ export default function AboutPage() {
                 initial={{ opacity: 0, x: 30 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                className="p-5 rounded-xl"
+                className="p-4 sm:p-5 rounded-xl"
                 style={{
                   background: 'linear-gradient(135deg, rgba(96, 165, 250, 0.08), rgba(52, 211, 153, 0.08))',
                 }}
               >
-                <Workflow className="w-10 h-10 text-blue-400 mb-4" />
-                <h3 className="text-xl font-bold mb-4">AI 实践探索</h3>
-                <div className="space-y-2 text-sm text-gray-400">
+                <Workflow className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 mb-3 sm:mb-4" />
+                <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">AI 实践探索</h3>
+                <div className="space-y-2 text-xs sm:text-sm text-gray-400">
                   {[
                     "多智能体博弈研究 - SCI 论文",
                     "AI 辅助开发 workflow - 效率提升 300%",
@@ -1010,7 +1010,7 @@ export default function AboutPage() {
 
           {/* 价值理念 */}
           <GlassCard
-            className="mt-6 p-8 rounded-3xl"
+            className="mt-4 sm:mt-6 p-5 sm:p-8 rounded-2xl sm:rounded-3xl"
             accentColor="#f59e0b"
             hoverScale={1.01}
           >
@@ -1018,12 +1018,12 @@ export default function AboutPage() {
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="p-5 rounded-xl"
+              className="p-4 sm:p-5 rounded-xl"
               style={{
                 background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(245, 158, 11, 0.08))',
               }}
             >
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-4 sm:mb-6">
                 <Target className="w-8 h-8 text-amber-400" />
                 <h3 className="text-xl font-bold">在 AI 时代创造价值的理念</h3>
               </div>
@@ -1045,21 +1045,21 @@ export default function AboutPage() {
       </section>
 
       {/* 荣誉成就 - 图片轮播 */}
-      <section id="achievements" className="relative py-20">
+      <section id="achievements" className="relative py-16 sm:py-20">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
             <SectionTitle>荣誉成就</SectionTitle>
-            <p className="text-gray-500 mt-2">竞赛获奖与学术成果</p>
+            <p className="text-gray-500 mt-2 text-sm sm:text-base">竞赛获奖与学术成果</p>
           </motion.div>
 
           {/* 轮播容器 */}
           <GlassCard
-            className="relative rounded-3xl overflow-hidden"
+            className="relative rounded-2xl sm:rounded-3xl overflow-hidden"
             accentColor="#fbbf24"
             hoverScale={1.005}
           >
@@ -1078,11 +1078,11 @@ export default function AboutPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.05 }}
                 transition={{ duration: 0.5 }}
-                className="grid lg:grid-cols-2"
+                className="grid grid-cols-1 lg:grid-cols-2"
               >
                 {/* 图片区域 - 固定尺寸容器 */}
                 <div
-                  className="relative h-[300px] sm:h-[350px] lg:h-[400px] overflow-hidden group"
+                  className="relative h-[200px] sm:h-[300px] lg:h-[400px] overflow-hidden group"
                   style={{
                     background: `linear-gradient(135deg, ${achievementSlides[currentSlide].color}15, ${achievementSlides[currentSlide].color}05)`,
                   }}
@@ -1092,34 +1092,34 @@ export default function AboutPage() {
                 </div>
 
                 {/* 文字内容 */}
-                <div className="p-8 lg:p-12 flex flex-col justify-center">
+                <div className="p-5 sm:p-8 lg:p-12 flex flex-col justify-center">
                   <span
-                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium mb-4 w-fit"
+                    className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4 w-fit"
                     style={{
                       background: `${achievementSlides[currentSlide].color}20`,
                       color: achievementSlides[currentSlide].color
                     }}
                   >
-                    <Calendar className="w-4 h-4" />
+                    <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     {achievementSlides[currentSlide].year}
                   </span>
 
-                  <h3 className="text-3xl lg:text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                  <h3 className="text-xl sm:text-3xl lg:text-4xl font-bold mb-1.5 sm:mb-2" style={{ color: 'var(--text-primary)' }}>
                     {achievementSlides[currentSlide].subtitle}
                   </h3>
 
-                  <p className="text-xl mb-4" style={{ color: 'var(--text-secondary)' }}>
+                  <p className="text-base sm:text-xl mb-3 sm:mb-4" style={{ color: 'var(--text-secondary)' }}>
                     {achievementSlides[currentSlide].title}
                   </p>
 
-                  <p className="leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                  <p className="text-sm sm:text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                     {achievementSlides[currentSlide].description}
                   </p>
 
                   {/* 奖杯图标装饰 */}
-                  <div className="mt-6 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
-                    <Trophy className="w-5 h-5" style={{ color: achievementSlides[currentSlide].color }} />
-                    <span className="text-sm">国家/省级奖项</span>
+                  <div className="mt-4 sm:mt-6 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: achievementSlides[currentSlide].color }} />
+                    <span className="text-xs sm:text-sm">国家/省级奖项</span>
                   </div>
                 </div>
               </motion.div>
@@ -1163,14 +1163,14 @@ export default function AboutPage() {
       </section>
 
       {/* GitHub 贡献 */}
-      <section className="relative py-20">
+      <section className="relative py-16 sm:py-20">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <GlassCard accentColor="#10b981" hoverScale={1.005} className="rounded-3xl">
+            <GlassCard accentColor="#10b981" hoverScale={1.005} className="rounded-2xl sm:rounded-3xl">
               <GitHubHeatmap username="IYeaSakura" />
             </GlassCard>
           </motion.div>
@@ -1178,7 +1178,7 @@ export default function AboutPage() {
       </section>
 
       {/* 联系方式 */}
-      <section className="relative py-20">
+      <section className="relative py-16 sm:py-20">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -1186,8 +1186,8 @@ export default function AboutPage() {
             viewport={{ once: true }}
             className="text-center"
           >
-            <h2 className="text-3xl font-bold mb-8">联系我</h2>
-            <div className="flex justify-center gap-4">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">联系我</h2>
+            <div className="flex justify-center gap-3 sm:gap-4">
               {[
                 { icon: Github, href: 'https://github.com/IYeaSakura', color: '#333333', label: 'GitHub' },
                 { icon: Mail, href: 'mailto:Yae_SakuRain@outlook.com', color: '#fbbf24', label: 'Email' },
@@ -1199,7 +1199,7 @@ export default function AboutPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   whileHover={{ scale: 1.15, y: -6 }}
-                  className="relative w-14 h-14 rounded-2xl flex items-center justify-center group overflow-hidden"
+                  className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center group overflow-hidden"
                   style={{
                     background: `${link.color}10`,
                     border: `1px solid ${link.color}30`,
@@ -1232,11 +1232,11 @@ export default function AboutPage() {
                     }}
                   />
                   {'type' in link && link.type === 'qq' ? (
-                    <svg className="w-6 h-6 relative z-10" viewBox="0 0 1024 1024" fill="currentColor">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" viewBox="0 0 1024 1024" fill="currentColor">
                       <path d="M824.8 613.2c-16-51.4-34.4-94.6-62.7-165.3C766.5 262.2 689.3 112 511.5 112 331.5 112 256.2 265.2 261 447.9c-28.4 70.8-46.7 113.9-62.7 165.3-34 109.5-23 154.8-14.6 155.8 18 2.2 70.1-82.4 70.1-82.4 0 49 25.2 112.9 79.8 159-26.4 8.1-85.7 29.9-71.6 53.8 11.4 19.3 174.3 108.3 265.4 108.3 91.1 0 254-89 265.4-108.3 14.1-23.9-45.2-45.6-71.6-53.8 54.6-46.1 79.8-110.1 79.8-159 0 0 52.1 84.6 70.1 82.4 8.5-1.1 19.5-46.4-14.5-155.8z"/>
                     </svg>
                   ) : (
-                    <link.icon className="w-6 h-6 relative z-10" />
+                    <link.icon className="w-5 h-5 sm:w-6 sm:h-6 relative z-10" />
                   )}
                 </motion.a>
               ))}
@@ -1462,22 +1462,24 @@ interface InfoCardProps {
 function InfoCard({ icon: Icon, title, color, delay, children }: InfoCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
+  const isMobile = useMobile();
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
-      className="relative p-6 rounded-xl overflow-hidden cursor-pointer group"
-      onMouseEnter={() => setIsHovered(true)}
+      className="relative p-4 sm:p-6 rounded-xl overflow-hidden cursor-pointer group"
+      onMouseEnter={() => !isMobile && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: `1px solid ${isHovered ? color + '40' : 'rgba(255, 255, 255, 0.08)'}`,
+        background: 'var(--bg-card)',
+        border: `1px solid ${isHovered ? color + '40' : 'var(--border-subtle)'}`,
       }}
-      whileHover={{
+      whileHover={!isMobile ? {
         y: -8,
         transition: { type: "spring", stiffness: 300, damping: 20 }
-      }}
+      } : undefined}
     >
       {/* 悬浮发光边框 */}
       <motion.div
@@ -1525,14 +1527,14 @@ function InfoCard({ icon: Icon, title, color, delay, children }: InfoCardProps) 
             <Icon className="w-5 h-5" style={{ color }} />
           </motion.div>
           <motion.span
-            className="font-medium text-lg"
+            className="font-medium text-base sm:text-lg"
             style={{ color: isHovered ? color : 'inherit' }}
             transition={{ duration: 0.3 }}
           >
             {title}
           </motion.span>
         </motion.div>
-        <p className="text-base leading-relaxed text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
+        <p className="text-sm sm:text-base leading-relaxed text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
           {children}
         </p>
       </div>

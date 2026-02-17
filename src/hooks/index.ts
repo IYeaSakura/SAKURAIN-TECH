@@ -1,5 +1,6 @@
 // 配置相关 hooks
 export { useConfig } from './useConfig';
+export { useNavigation } from './useNavigation';
 
 // 滚动相关 hooks
 export { useScrollProgress, useInView } from './useScrollProgress';

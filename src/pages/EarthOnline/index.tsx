@@ -11,8 +11,6 @@ import { motion } from 'framer-motion';
 import { 
   Globe, 
   Map, 
-  Users, 
-  Activity,
   Sparkles,
   ChevronRight
 } from 'lucide-react';
@@ -110,30 +108,6 @@ const FeatureCard = ({ icon: Icon, title, description, isActive, onClick, delay 
     </motion.button>
   );
 };
-
-// 统计项组件
-const StatItem = ({ label, value, icon: Icon, delay }: { label: string; value: string; icon: typeof Users; delay: number }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay, ease: [0.25, 0.1, 0.25, 1] }}
-    className="flex items-center gap-3"
-  >
-    <div
-      className="w-10 h-10 flex items-center justify-center"
-      style={{
-        background: 'rgba(59, 130, 246, 0.1)',
-        clipPath: clipPathRounded(4),
-      }}
-    >
-      <Icon className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-    </div>
-    <div>
-      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{label}</div>
-      <div className="text-sm font-bold font-mono" style={{ color: 'var(--text-primary)' }}>{value}</div>
-    </div>
-  </motion.div>
-);
 
 // 信息面板组件
 const InfoPanel = ({ 
@@ -242,22 +216,7 @@ const InfoPanel = ({
         ))}
       </div>
 
-      {/* 统计信息 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="pt-6 border-t"
-        style={{ borderColor: 'rgba(255, 255, 255, 0.08)' }}
-      >
-        <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>
-          实时数据
-        </h3>
-        <div className="grid grid-cols-2 gap-4">
-          <StatItem label="全球玩家" value="80.45亿" icon={Users} delay={0.8} />
-          <StatItem label="国服玩家" value="14.12亿" icon={Activity} delay={0.85} />
-        </div>
-      </motion.div>
+
     </div>
   );
 };
@@ -310,10 +269,9 @@ export default function EarthOnlinePage() {
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full lg:w-[400px] xl:w-[450px] flex-shrink-0 p-6 lg:p-8 lg:border-r overflow-y-auto"
+            className="w-full lg:w-[400px] xl:w-[450px] flex-shrink-0 p-6 lg:p-8 lg:border-r"
             style={{ 
               borderColor: 'rgba(255, 255, 255, 0.08)',
-              maxHeight: 'calc(100vh - 64px)',
             }}
           >
             <InfoPanel 
@@ -327,9 +285,9 @@ export default function EarthOnlinePage() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 p-4 lg:p-8 min-h-[500px] lg:min-h-0"
+            className="flex-1 p-4 lg:p-8"
           >
-            <div className="w-full h-full min-h-[400px] lg:min-h-0">
+            <div className="w-full h-[500px] lg:h-[calc(100vh-140px)]">
               <GlobeShowcase 
                 pageMode={true} 
                 initialDemo={selectedDemo}
