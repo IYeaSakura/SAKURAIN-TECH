@@ -328,7 +328,7 @@ const HeroSection = () => {
       
       {/* 主内容区域 */}
       <div className="relative z-10 flex-1 flex items-center">
-        <div className="w-full max-w-7xl mx-auto px-6 lg:px-12 py-20">
+        <div className="w-full max-w-7xl mx-auto px-6 lg:px-12 pt-32 pb-20">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             {/* 左侧：ASCII艺术 + 文字介绍 - 占7列 */}
             <motion.div 
@@ -597,57 +597,71 @@ const JourneySection = () => {
   return (
     <section id="journey" className="relative py-32 overflow-hidden">
       <div className="max-w-6xl mx-auto px-6 lg:px-12">
-        <div className="grid lg:grid-cols-12 gap-12">
-          {/* 左侧标题 - 占4列 */}
-          <ParallaxContainer speed={0.2}>
-            <div className="lg:col-span-4 lg:sticky lg:top-32">
-              <AsciiDecoration className="mb-4" />
-              
-              <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                <GradientText animate={true}>技术演进</GradientText>
-              </h2>
-              
-              <p className="text-lg mb-6" style={{ color: 'var(--text-muted)' }}>
-                从初一开始的编程之旅，技术栈随时间不断演化。
-                每个阶段都有不同的侧重点，但始终保持着对技术的热情。
-              </p>
-              
-              <div className="font-mono text-sm space-y-2" style={{ color: 'var(--accent-secondary)' }}>
-                <div>{'>'} 2016: Web入门</div>
-                <div>{'>'} 2019: 算法竞赛</div>
-                <div>{'>'} 2022: AI研究</div>
-                <div>{'>'} 2024: 博弈算法</div>
-              </div>
+        {/* 区域标题 */}
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <AsciiDecoration className="mb-4 mx-auto" />
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            <GradientText animate={true}>技术演进</GradientText>
+          </h2>
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-muted)' }}>
+            从初一开始的编程之旅，技术栈随时间不断演化。
+            每个阶段都有不同的侧重点，但始终保持着对技术的热情。
+          </p>
+        </motion.div>
+        
+        {/* 时间线标记 */}
+        <motion.div
+          className="flex flex-wrap justify-center gap-6 mb-12"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.3 }}
+        >
+          {[
+            { year: '2016', label: 'Web入门', color: '#ec4899' },
+            { year: '2019', label: '算法竞赛', color: '#f59e0b' },
+            { year: '2022', label: 'AI研究', color: '#10b981' },
+            { year: '2024', label: '博弈算法', color: '#a855f7' },
+          ].map((item) => (
+            <div key={item.year} className="flex items-center gap-2 px-4 py-2 rounded-lg" style={{ background: `${item.color}15`, border: `1px solid ${item.color}30` }}>
+              <div className="w-2 h-2 rounded-full" style={{ background: item.color }} />
+              <span className="font-mono text-sm font-bold" style={{ color: item.color }}>{'>'} {item.year}</span>
+              <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{item.label}</span>
             </div>
-          </ParallaxContainer>
-          
-          {/* 右侧图表 - 占8列 */}
-          <motion.div 
-            className="lg:col-span-8"
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+          ))}
+        </motion.div>
+        
+        {/* 图表容器 */}
+        <motion.div 
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+        >
+          <div 
+            className="p-8 rounded-2xl"
+            style={{
+              background: 'var(--bg-card)',
+              border: '2px solid var(--border-subtle)',
+              clipPath: clipPathRounded(16),
+            }}
           >
-            <div 
-              className="p-8 rounded-2xl"
-              style={{
-                background: 'var(--bg-card)',
-                border: '2px solid var(--border-subtle)',
-                clipPath: clipPathRounded(16),
-              }}
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <Cpu className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-                <h3 className="font-mono text-sm" style={{ color: 'var(--text-muted)' }}>
-                  tech_stack_evolution.py
-                </h3>
-              </div>
-              
-              <TechStackChart />
+            <div className="flex items-center gap-3 mb-6">
+              <Cpu className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+              <h3 className="font-mono text-sm" style={{ color: 'var(--text-muted)' }}>
+                tech_stack_evolution.py
+              </h3>
             </div>
-          </motion.div>
-        </div>
+            
+            <TechStackChart />
+          </div>
+        </motion.div>
       </div>
     </section>
   );
