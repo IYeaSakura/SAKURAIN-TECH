@@ -142,14 +142,14 @@ const PixelCard = memo(function PixelCard({
       <div
         className="relative h-full transition-all duration-300"
         style={{
-          background: isHovered ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)',
-          border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.1)'}`,
+          background: isHovered ? 'var(--bg-secondary)' : 'var(--bg-card)',
+          border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
           clipPath: clipPathRounded(8),
           transform: isHovered ? 'translateY(-4px)' : 'none',
         }}
       >
         {/* 内容容器 - 使用 padding 而不是 margin，确保边框完整显示 */}
-        <div className="relative p-6 h-full flex flex-col">
+        <div className="relative p-4 sm:p-6 h-full flex flex-col">
         {!isMobile && (
           <>
             <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
@@ -256,15 +256,15 @@ const PixelCard = memo(function PixelCard({
         )}
 
         {/* Content - 使用 flex-1 确保内容区填满剩余空间 */}
-        <div className="flex items-start gap-4 relative z-10 flex-1">
+        <div className="flex items-start gap-3 sm:gap-4 relative z-10 flex-1">
           {/* Icon with pixel border */}
           <motion.div
-            animate={animationEnabled ? { rotateX: currentRotateX, rotateY: currentRotateY } : undefined}
+            animate={animationEnabled && !isMobile ? { rotateX: currentRotateX, rotateY: currentRotateY } : undefined}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="flex-shrink-0 w-16 h-16 flex items-center justify-center overflow-hidden relative"
+            className="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center overflow-hidden relative"
             style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.1)'}`,
+              background: 'var(--bg-secondary)',
+              border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
               clipPath: clipPathRounded(4),
             }}
           >
@@ -272,11 +272,11 @@ const PixelCard = memo(function PixelCard({
               <img
                 src={friend.icon}
                 alt={friend.name}
-                className="w-10 h-10 object-contain"
+                className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
                 onError={() => setImageError(true)}
               />
             ) : (
-              <Globe className="w-10 h-10" style={{ color: 'var(--accent-primary)' }} />
+              <Globe className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--accent-primary)' }} />
             )}
 
             {!isMobile && (
@@ -292,13 +292,13 @@ const PixelCard = memo(function PixelCard({
           {/* Content */}
           <div className="flex-1 min-w-0 overflow-visible">
             {/* Name row with status - 使用 flex-wrap 允许换行，标签固定不换行 */}
-            <div className="flex items-start gap-2 mb-2 flex-wrap">
+            <div className="flex items-start gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 flex-wrap">
               {/* 标题容器 - 设置最大宽度，悬浮时显示完整名称 */}
               <div className="relative group/title flex-1 min-w-0">
                 <motion.h3
-                  animate={animationEnabled ? { scale: isHovered ? 1.02 : 1 } : undefined}
+                  animate={animationEnabled && !isMobile ? { scale: isHovered ? 1.02 : 1 } : undefined}
                   transition={{ duration: 0.2 }}
-                  className="font-bold text-lg truncate"
+                  className="font-bold text-base sm:text-lg truncate"
                   style={{
                     color: 'var(--text-primary)',
                     textShadow: !isMobile && isHovered ? '0 0 10px var(--accent-glow)' : 'none',
@@ -374,7 +374,7 @@ const PixelCard = memo(function PixelCard({
               )}
             </div>
 
-            <p className="text-sm line-clamp-2" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-xs sm:text-sm line-clamp-2" style={{ color: 'var(--text-secondary)' }}>
               {friend.description}
             </p>
 
@@ -395,14 +395,17 @@ const PixelCard = memo(function PixelCard({
             )}
           </div>
 
-          {/* External link icon */}
+          {/* External link icon - 移动端始终显示 */}
           <motion.div
             initial={animationEnabled ? { opacity: 0, x: -10 } : undefined}
-            animate={animationEnabled ? { opacity: isHovered ? 1 : 0, x: isHovered ? 0 : -10 } : undefined}
+            animate={{ 
+              opacity: isMobile ? 0.6 : (isHovered ? 1 : 0), 
+              x: isMobile ? 0 : (isHovered ? 0 : -10) 
+            }}
             transition={{ duration: 0.3 }}
             className="flex-shrink-0 self-center"
           >
-            <ExternalLink className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+            <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'var(--accent-primary)' }} />
           </motion.div>
         </div>
         </div>
@@ -449,8 +452,8 @@ const CategorySection = memo(function CategorySection({
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="flex items-center justify-center w-14 h-14 relative overflow-hidden"
           style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '2px solid rgba(255, 255, 255, 0.1)',
+            background: 'var(--bg-secondary)',
+            border: '2px solid var(--border-subtle)',
             clipPath: clipPathRounded(6),
           }}
         >
@@ -531,7 +534,7 @@ const HeroSection = memo(function HeroSection({
       )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left: Title and description */}
           <motion.div
             initial={animationEnabled ? { opacity: 0, x: -50 } : undefined}
@@ -573,8 +576,8 @@ const HeroSection = memo(function HeroSection({
                 transition={{ delay: 0.6, duration: 0.5 }}
                 className="mt-4 inline-flex items-center gap-2 px-3 py-1.5"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-subtle)',
                   clipPath: clipPathRounded(3),
                 }}
               >
@@ -596,7 +599,7 @@ const HeroSection = memo(function HeroSection({
             initial={animationEnabled ? { opacity: 0, x: 50 } : undefined}
             animate={animationEnabled ? { opacity: 1, x: 0 } : undefined}
             transition={{ duration: 0.8, delay: 0.2, type: 'spring', stiffness: 100 }}
-            className="grid grid-cols-3 gap-4"
+            className="grid grid-cols-3 gap-2 sm:gap-4"
           >
             {[
               { icon: Users, value: stats.friends, label: '友链站点' },
@@ -608,11 +611,11 @@ const HeroSection = memo(function HeroSection({
                 initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
                 animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
                 transition={{ delay: 0.4 + index * 0.1, duration: 0.5 }}
-                whileHover={animationEnabled ? { scale: 1.05, y: -4 } : undefined}
-                className="relative p-6 text-center cursor-default group"
+                whileHover={animationEnabled && !isMobile ? { scale: 1.05, y: -4 } : undefined}
+                className="relative p-3 sm:p-6 text-center cursor-default group"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  border: '2px solid rgba(255, 255, 255, 0.08)',
+                  background: 'var(--bg-secondary)',
+                  border: '2px solid var(--border-subtle)',
                   clipPath: clipPathRounded(6),
                 }}
               >
@@ -626,11 +629,11 @@ const HeroSection = memo(function HeroSection({
                   />
                 )}
 
-                <stat.icon className="w-6 h-6 mx-auto mb-3" style={{ color: 'var(--accent-primary)' }} />
-                <div className="font-sans font-bold text-3xl mb-1" style={{ color: 'var(--text-primary)' }}>
+                <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 mx-auto mb-2 sm:mb-3" style={{ color: 'var(--accent-primary)' }} />
+                <div className="font-sans font-bold text-xl sm:text-3xl mb-0.5 sm:mb-1" style={{ color: 'var(--text-primary)' }}>
                   {stat.value}
                 </div>
-                <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                <div className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>
                   {stat.label}
                 </div>
               </motion.div>
@@ -700,8 +703,8 @@ const MailtoModal = memo(function MailtoModal({
           <div
             className="flex items-center justify-center w-12 h-12"
             style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '2px solid rgba(255, 255, 255, 0.1)',
+              background: 'var(--bg-secondary)',
+              border: '2px solid var(--border-subtle)',
               clipPath: clipPathRounded(4),
             }}
           >
@@ -761,8 +764,8 @@ const MailtoModal = memo(function MailtoModal({
         <div
           className="mb-4 p-4"
           style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-subtle)',
             clipPath: clipPathRounded(4),
           }}
         >
@@ -846,8 +849,8 @@ const ApplySection = memo(function ApplySection({
       transition={{ duration: 0.6, delay: 0.4, type: 'spring', stiffness: 100 }}
       className="mt-12 mb-8 relative overflow-hidden"
       style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '2px solid rgba(255, 255, 255, 0.08)',
+        background: 'var(--bg-card)',
+        border: '2px solid var(--border-subtle)',
         clipPath: clipPathRounded(12),
       }}
     >
@@ -860,8 +863,8 @@ const ApplySection = memo(function ApplySection({
         />
       )}
 
-      <div className="p-8 md:p-12 relative z-10">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+      <div className="p-5 sm:p-8 md:p-12 relative z-10">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 sm:gap-8">
           <div className="flex-1">
             <motion.div
               initial={animationEnabled ? { opacity: 0, x: -20 } : undefined}
@@ -876,8 +879,8 @@ const ApplySection = memo(function ApplySection({
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 className="flex items-center justify-center w-12 h-12 relative overflow-hidden"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '2px solid rgba(255, 255, 255, 0.1)',
+                  background: 'var(--bg-secondary)',
+                  border: '2px solid var(--border-subtle)',
                   clipPath: clipPathRounded(4),
                 }}
               >
@@ -949,7 +952,7 @@ const ApplySection = memo(function ApplySection({
             transition={{ delay: 0.5, type: 'spring' }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="relative flex items-center gap-2 px-8 py-4 font-bold transition-all duration-300 overflow-hidden"
+            className="relative flex items-center gap-2 px-5 sm:px-8 py-3 sm:py-4 font-bold transition-all duration-300 overflow-hidden w-full sm:w-auto justify-center"
             style={{
               background: isHovered ? 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' : 'var(--accent-primary)',
               color: 'white',
@@ -1055,8 +1058,8 @@ const RedirectModal = memo(function RedirectModal({
           <div
             className="flex items-center justify-center w-12 h-12"
             style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '2px solid rgba(255, 255, 255, 0.1)',
+              background: 'var(--bg-secondary)',
+              border: '2px solid var(--border-subtle)',
               clipPath: clipPathRounded(4),
             }}
           >
@@ -1075,8 +1078,8 @@ const RedirectModal = memo(function RedirectModal({
         <div
           className="mb-4 p-4"
           style={{
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-subtle)',
             clipPath: clipPathRounded(4),
           }}
         >
@@ -1117,7 +1120,7 @@ const RedirectModal = memo(function RedirectModal({
           <div
             className="h-2 overflow-hidden"
             style={{
-              background: 'rgba(255, 255, 255, 0.1)',
+              background: 'var(--border-subtle)',
               clipPath: clipPathRounded(2),
             }}
           >
@@ -1137,8 +1140,8 @@ const RedirectModal = memo(function RedirectModal({
             whileTap={{ scale: 0.98 }}
             className="flex-1 px-4 py-2 font-medium transition-all"
             style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-subtle)',
               color: 'var(--text-primary)',
               clipPath: clipPathRounded(4),
             }}
@@ -1327,8 +1330,8 @@ export default function FriendsPage() {
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   className="flex items-center justify-center w-12 h-12 relative overflow-hidden"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '2px solid rgba(255, 255, 255, 0.1)',
+                    background: 'var(--bg-secondary)',
+                    border: '2px solid var(--border-subtle)',
                     clipPath: clipPathRounded(4),
                   }}
                 >

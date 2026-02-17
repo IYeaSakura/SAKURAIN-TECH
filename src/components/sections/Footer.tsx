@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import { Heart, FileText, MessageCircle } from 'lucide-react';
 import { FloatingBubbles, TwinklingStars } from '@/components/effects';
+import { useNavigation } from '@/hooks';
 import type { SiteData } from '@/types';
 
 interface FooterProps {
@@ -11,6 +12,7 @@ interface FooterProps {
 
 export const Footer = memo(function Footer({ data }: FooterProps) {
   const currentYear = new Date().getFullYear();
+  const { navigateTo } = useNavigation();
 
   return (
     <footer
@@ -78,22 +80,22 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
 
           {/* 中间：导航链接 */}
           <div className="flex items-center gap-6">
-            <a
-              href="/docs"
-              className="flex items-center gap-2 text-sm transition-colors hover:text-[var(--accent-primary)]"
+            <button
+              onClick={() => navigateTo('/docs')}
+              className="flex items-center gap-2 text-sm transition-colors hover:text-[var(--accent-primary)] cursor-pointer"
               style={{ color: 'var(--text-muted)' }}
             >
               <FileText className="w-4 h-4" />
               <span>文档</span>
-            </a>
-            <a
-              href="/notes"
-              className="flex items-center gap-2 text-sm transition-colors hover:text-[var(--accent-primary)]"
+            </button>
+            <button
+              onClick={() => navigateTo('/notes')}
+              className="flex items-center gap-2 text-sm transition-colors hover:text-[var(--accent-primary)] cursor-pointer"
               style={{ color: 'var(--text-muted)' }}
             >
               <MessageCircle className="w-4 h-4" />
               <span>日志</span>
-            </a>
+            </button>
           </div>
 
           {/* 右侧：版权和备案 */}

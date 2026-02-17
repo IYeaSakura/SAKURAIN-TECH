@@ -1,5 +1,6 @@
 import { useState, useEffect, memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router';
 import { ArrowLeft, Home, Ghost, Search, ArrowRight, Sparkles, Heart, RefreshCw } from 'lucide-react';
 import { 
   MagneticCursor, VelocityCursor,
@@ -187,11 +188,20 @@ const ActionButton = memo(function ActionButton({
 
 // Suggestion List Component
 const SuggestionList = memo(function SuggestionList() {
+  const navigate = useNavigate();
   const suggestions = [
     { icon: Home, label: '返回首页', path: '/' },
     { icon: Search, label: '搜索文档', path: '/docs' },
     { icon: Heart, label: '友情链接', path: '/friends' },
   ];
+  
+  const handleNavigate = (path: string) => {
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = path;
+    } else {
+      navigate(path);
+    }
+  };
   
   return (
     <motion.div
@@ -217,7 +227,7 @@ const SuggestionList = memo(function SuggestionList() {
               delay: 0.9 + index * 0.1,
               type: 'spring',
             }}
-            onClick={() => window.location.href = suggestion.path}
+            onClick={() => handleNavigate(suggestion.path)}
             className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300"
             style={{
               background: 'var(--bg-card)',
@@ -279,9 +289,15 @@ export default function NotFoundPage() {
     document.documentElement.setAttribute('data-theme', newTheme);
   };
   
+  const navigate = useNavigate();
+  
   const handleGoHome = useCallback(() => {
-    window.location.href = '/';
-  }, []);
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = '/';
+    } else {
+      navigate('/');
+    }
+  }, [navigate]);
   
   const handleRefresh = useCallback(() => {
     window.location.reload();

@@ -140,8 +140,8 @@ function StatCard({
       onClick={onClick}
       className={`relative p-6 text-center cursor-default group ${onClick ? 'cursor-pointer' : ''}`}
       style={{
-        background: active ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255, 255, 255, 0.02)',
-        border: `2px solid ${active ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.08)'}`,
+        background: active ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-card)',
+        border: `2px solid ${active ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
         clipPath: clipPathRounded(6),
       }}
     >
@@ -214,8 +214,8 @@ function StatsPanel({
       <div 
         className="p-6"
         style={{
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '2px solid rgba(255, 255, 255, 0.08)',
+          background: 'var(--bg-card)',
+          border: '2px solid var(--border-subtle)',
           clipPath: clipPathRounded(12),
         }}
       >
@@ -244,7 +244,7 @@ function StatsPanel({
                   key={source}
                   className="flex items-center justify-between p-3"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
+                    background: 'var(--bg-secondary)',
                     clipPath: clipPathRounded(4),
                   }}
                 >
@@ -277,7 +277,7 @@ function StatsPanel({
                   <span className="text-sm w-24" style={{ color: 'var(--text-muted)' }}>
                     {date.slice(5)}
                   </span>
-                  <div className="flex-1 h-6 bg-white/5 overflow-hidden" style={{ clipPath: clipPathRounded(2) }}>
+                  <div className="flex-1 h-6 overflow-hidden" style={{ background: 'var(--bg-secondary)', clipPath: clipPathRounded(2) }}>
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: count > 0 ? `${Math.max((count / Math.max(...Object.values(stats.dateStats))) * 100, 1)}%` : '0%' }}
@@ -365,8 +365,8 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             <div
               className="flex items-center justify-center w-12 h-12"
               style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '2px solid rgba(255, 255, 255, 0.1)',
+                background: 'var(--bg-secondary)',
+                border: '2px solid var(--border-subtle)',
                 clipPath: clipPathRounded(4),
               }}
             >
@@ -397,11 +397,11 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
               key={option.name}
               className="p-4 transition-colors hover:bg-white/5"
               style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-subtle)',
                 clipPath: clipPathRounded(6),
               }}
-            >
+    >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span
@@ -615,8 +615,8 @@ const FeedCard = memo(function FeedCard({
         <div
           className="relative h-full transition-all duration-300"
           style={{
-            background: isHovered ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)',
-            border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.1)'}`,
+            background: isHovered ? 'var(--bg-secondary)' : 'var(--bg-card)',
+            border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
             clipPath: clipPathRounded(8),
             transform: isHovered ? 'translateY(-4px)' : 'none',
           }}
@@ -727,8 +727,8 @@ const FeedCard = memo(function FeedCard({
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   className="w-10 h-10 flex-shrink-0 flex items-center justify-center overflow-hidden"
                   style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.1)'}`,
+                    background: 'var(--bg-secondary)',
+                    border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
                     clipPath: clipPathRounded(4),
                   }}
                 >
@@ -877,8 +877,8 @@ const Pagination = memo(function Pagination({
         disabled={currentPage === 1}
         className="p-2 transition-all disabled:opacity-30"
         style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-subtle)',
           clipPath: clipPathRounded(4),
           color: 'var(--text-primary)',
         }}
@@ -897,8 +897,8 @@ const Pagination = memo(function Pagination({
           style={{
             background: page === currentPage 
               ? 'var(--accent-primary)' 
-              : 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+              : 'var(--bg-secondary)',
+            border: '1px solid var(--border-subtle)',
             clipPath: clipPathRounded(4),
             color: page === currentPage ? 'white' : 'var(--text-primary)',
           }}
@@ -914,8 +914,8 @@ const Pagination = memo(function Pagination({
         disabled={currentPage === totalPages}
         className="p-2 transition-all disabled:opacity-30"
         style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--bg-secondary)',
+          border: '1px solid var(--border-subtle)',
           clipPath: clipPathRounded(4),
           color: 'var(--text-primary)',
         }}
@@ -1265,7 +1265,7 @@ export default function FeedPage() {
                 disabled={refreshing || refreshCooldown > 0}
                 className="flex items-center gap-2 px-3 py-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed relative"
                 style={{
-                  background: refreshCooldown > 0 ? 'rgba(255, 255, 255, 0.05)' : 'var(--bg-secondary)',
+                  background: 'var(--bg-secondary)',
                   border: '1px solid var(--border-subtle)',
                   clipPath: clipPathRounded(4),
                   color: refreshCooldown > 0 ? 'var(--text-muted)' : 'var(--text-primary)',
@@ -1423,8 +1423,8 @@ export default function FeedPage() {
             <div
               className="inline-flex items-center justify-center w-20 h-20 mb-6"
               style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '2px solid rgba(255, 255, 255, 0.1)',
+                background: 'var(--bg-secondary)',
+                border: '2px solid var(--border-subtle)',
                 clipPath: clipPathRounded(8),
               }}
             >

@@ -230,6 +230,15 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
     }
   };
 
+  const handleDocsClick = () => {
+    setIsOpen(false);
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = '/docs';
+    } else {
+      navigate('/docs');
+    }
+  };
+
   const loadMarkdown = async () => {
     setIsMarkdownLoading(true);
     try {
@@ -477,7 +486,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
                                   <span>访问博客</span>
                                 </motion.button>
                                 <motion.button
-                                  onClick={() => { setIsOpen(false); window.location.href = '/docs'; }}
+                                  onClick={handleDocsClick}
                                   className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium transition-all duration-300"
                                   style={{
                                     backgroundColor: 'var(--bg-card)',
