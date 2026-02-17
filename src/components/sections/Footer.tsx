@@ -1,7 +1,7 @@
 "use client"
 
 import { memo } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, FileText, MessageCircle } from 'lucide-react';
 import { FloatingBubbles, TwinklingStars } from '@/components/effects';
 import type { SiteData } from '@/types';
 
@@ -40,9 +40,9 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
         <TwinklingStars count={20} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
       </div>
 
-      <div className="relative z-10 max-w-3xl mx-auto pb-12 px-4 sm:px-6 lg:px-8">
-        {/* 单层布局：左侧 LOGO，右侧版权备案，整体居中 */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-12 sm:gap-32">
+      <div className="relative z-10 max-w-5xl mx-auto pb-12 px-4 sm:px-6 lg:px-8">
+        {/* 三层布局：左侧 LOGO，中间导航链接，右侧版权备案 */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
           {/* 左侧：Logo & Slogan */}
           <div className="flex items-center gap-3">
             <img
@@ -74,6 +74,26 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
                 {data.slogan}
               </span>
             </div>
+          </div>
+
+          {/* 中间：导航链接 */}
+          <div className="flex items-center gap-6">
+            <a
+              href="/docs"
+              className="flex items-center gap-2 text-sm transition-colors hover:text-[var(--accent-primary)]"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <FileText className="w-4 h-4" />
+              <span>文档</span>
+            </a>
+            <a
+              href="/notes"
+              className="flex items-center gap-2 text-sm transition-colors hover:text-[var(--accent-primary)]"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>日志</span>
+            </a>
           </div>
 
           {/* 右侧：版权和备案 */}

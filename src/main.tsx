@@ -43,6 +43,8 @@ const BlogPage = lazy(() => import('./pages/Blog/index'));
 const BlogPostPage = lazy(() => import('./pages/Blog/[slug]'));
 const NotesPage = lazy(() => import('./pages/Notes/index'));
 const AboutPage = lazy(() => import('./pages/About/index'));
+const EarthOnlinePage = lazy(() => import('./pages/EarthOnline/index'));
+const StudioPage = lazy(() => import('./pages/Studio/index'));
 const NotFoundPage = lazy(() => import('./pages/NotFound/index'));
 
 // 预加载函数
@@ -173,8 +175,8 @@ function PageLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isReady]);
 
-  // 只在以下路径显示导航：首页、博客列表、文档列表、友链、朋友圈、关于、说说
-  const showNavPaths = ['/', '/blog', '/docs', '/friends', '/friends-circle', '/about', '/notes'];
+  // 只在以下路径显示导航：首页、博客列表、文档列表、友链、朋友圈、关于、说说、地球Online、工作室
+  const showNavPaths = ['/', '/blog', '/docs', '/friends', '/friends-circle', '/about', '/notes', '/earth-online', '/studio'];
   const shouldShowNav = showNavPaths.includes(location.pathname);
 
   // 首屏加载期间显示加载占位符
@@ -326,6 +328,16 @@ createRoot(document.getElementById('root')!).render(
               <Route path="/about" element={
                 <Suspense fallback={<RouteLoader />}>
                   <AboutPage />
+                </Suspense>
+              } />
+              <Route path="/earth-online" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <EarthOnlinePage />
+                </Suspense>
+              } />
+              <Route path="/studio" element={
+                <Suspense fallback={<RouteLoader />}>
+                  <StudioPage />
                 </Suspense>
               } />
               <Route path="*" element={
