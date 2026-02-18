@@ -8,6 +8,7 @@
  * - 默认缓存 24 小时
  * - 如果缓存过期或不存在，自动触发刷新
  * - 缓存键包含 URL，不同 URL 独立缓存
+ * - 如果源被标记为失败（通过refresh接口），跳过自动刷新
  *
  * 返回:
  * - content: RSS/Atom feed 内容
@@ -16,6 +17,55 @@
  */
 
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 小时，单位毫秒
+
+// Check if source is marked as failed
+async function checkFailedSource(kv, feedUrl) {
+  if (!kv) return { failed: false };
+  
+  const failedKey = `feed:failed:${feedUrl}`;
+  try {
+    const failedData = await kv.get(failedKey);
+    if (failedData) {
+      const data = JSON.parse(failedData);
+      return { 
+        failed: true, 
+        error: data.error, 
+        timestamp: data.timestamp,
+        attempts: data.attempts || 1 
+      };
+    }
+  } catch (e) {
+    console.error('KV get failed source error:', e);
+  }
+  return { failed: false };
+}
+
+// Build realistic browser request headers
+function buildBrowserHeaders() {
+  const userAgents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
+  ];
+  
+  const userAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+  
+  return {
+    'User-Agent': userAgent,
+    'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, application/json, text/html, */*',
+    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-US;q=0.7',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+    'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+  };
+}
 
 // 获取客户端 IP
 function getClientIP(request) {
@@ -41,10 +91,7 @@ function getClientIP(request) {
 async function fetchFeedData(feedUrl) {
   const feedResponse = await fetch(feedUrl, {
     method: 'GET',
-    headers: {
-      'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, application/json, */*',
-      'User-Agent': 'SAKURAIN-Feed-Proxy/1.0',
-    },
+    headers: buildBrowserHeaders(),
   });
 
   if (!feedResponse.ok) {
@@ -122,6 +169,52 @@ export async function onRequestGet(context) {
     const kv = FEED_KV;
     const cacheKey = `feed:${feedUrl}`;
     const now = Date.now();
+
+    // Check if source is marked as failed
+    const failedStatus = await checkFailedSource(kv, feedUrl);
+    if (failedStatus.failed) {
+      console.log(`[Feed Get] Source marked as failed, skipping auto-refresh: ${feedUrl}`);
+      
+      // Try to return stale cache if available
+      if (kv) {
+        try {
+          const cached = await kv.get(cacheKey);
+          if (cached) {
+            const data = JSON.parse(cached);
+            return new Response(data.content, {
+              headers: {
+                'Content-Type': data.contentType || 'application/xml',
+                'Access-Control-Allow-Origin': '*',
+                'X-Cache': 'STALE',
+                'X-Feed-Timestamp': data.timestamp.toString(),
+                'X-Feed-Failed': 'true',
+                'X-Feed-Failed-Reason': failedStatus.error || 'Unknown error',
+                'X-Feed-Failed-Attempts': String(failedStatus.attempts),
+              },
+            });
+          }
+        } catch (e) {
+          console.error('KV get stale cache error:', e);
+        }
+      }
+      
+      // No cache available, return error with failed info
+      return new Response(JSON.stringify({
+        error: 'Source marked as inaccessible',
+        message: failedStatus.error || 'This feed source has been marked as failed',
+        failedSince: failedStatus.timestamp,
+        attempts: failedStatus.attempts,
+        hint: 'Use refresh API to retry and potentially clear the failed mark',
+      }), {
+        status: 502,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'X-Feed-Failed': 'true',
+          'X-Feed-Failed-Attempts': String(failedStatus.attempts),
+        },
+      });
+    }
 
     // 尝试从缓存获取
     if (kv) {
