@@ -1165,21 +1165,41 @@ export default function FeedPage() {
       const timestampHeader = response.headers.get('X-Feed-Timestamp');
       const timestamp = timestampHeader ? parseInt(timestampHeader, 10) : Date.now();
       
+      // Check if source is marked as failed
+      const isMarkedFailed = response.headers.get('X-Feed-Failed') === 'true';
+      const failedReason = response.headers.get('X-Feed-Failed-Reason');
+      const failedAttempts = response.headers.get('X-Feed-Failed-Attempts');
+      
       // Handle HTTP error responses
       if (!response.ok) {
         let errorMsg = `HTTP ${response.status}`;
-        try {
-          const errorData = JSON.parse(content);
-          if (errorData.error) {
-            errorMsg = errorData.error;
-            if (errorData.message) {
-              errorMsg += `: ${errorData.message}`;
-            }
+        
+        // If marked as failed, show more specific info
+        if (isMarkedFailed) {
+          errorMsg = '该订阅源已被标记为不可访问';
+          if (failedReason) {
+            errorMsg += ` (${failedReason})`;
           }
-        } catch {
-          // Response is not JSON, use raw content snippet
-          if (content && content.length < 200) {
-            errorMsg += ` - ${content}`;
+          if (failedAttempts) {
+            errorMsg += ` [已尝试 ${failedAttempts} 次]`;
+          }
+        } else {
+          try {
+            const errorData = JSON.parse(content);
+            if (errorData.error) {
+              errorMsg = errorData.error;
+              if (errorData.message) {
+                errorMsg += `: ${errorData.message}`;
+              }
+              if (errorData.hint) {
+                errorMsg += ` | 提示: ${errorData.hint}`;
+              }
+            }
+          } catch {
+            // Response is not JSON, use raw content snippet
+            if (content && content.length < 200) {
+              errorMsg += ` - ${content}`;
+            }
           }
         }
         throw new Error(errorMsg);
