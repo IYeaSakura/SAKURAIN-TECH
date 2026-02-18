@@ -73,6 +73,8 @@ export async function onRequestGet(context) {
     const url = new URL(request.url);
     const feedUrl = url.searchParams.get('url');
     const clientIP = getClientIP(request);
+    
+    console.log(`[Feed Refresh] Force refresh request for: ${feedUrl} from IP: ${clientIP}`);
 
     // 验证 URL 参数
     if (!feedUrl) {
@@ -132,6 +134,7 @@ export async function onRequestGet(context) {
     }
 
     // 获取 feed 数据
+    console.log(`[Feed Refresh] Fetching from source: ${feedUrl}`);
     const feedResponse = await fetch(feedUrl, {
       method: 'GET',
       headers: {
@@ -155,6 +158,7 @@ export async function onRequestGet(context) {
 
     const content = await feedResponse.text();
     const contentType = feedResponse.headers.get('content-type') || 'application/xml';
+    console.log(`[Feed Refresh] Fetched ${content.length} bytes, Content-Type: ${contentType}`);
 
     // 保存到 KV 缓存
     const kv = FEED_KV;
@@ -168,9 +172,12 @@ export async function onRequestGet(context) {
           contentType,
           timestamp: currentTimestamp,
         }));
+        console.log(`[Feed Refresh] Successfully saved to KV: ${cacheKey}`);
       } catch (e) {
-        console.error('KV put error:', e);
+        console.error(`[Feed Refresh] KV put error for ${cacheKey}:`, e);
       }
+    } else {
+      console.warn(`[Feed Refresh] KV not available, cache not saved`);
     }
 
     // 记录强制刷新时间（针对每个URL独立记录）

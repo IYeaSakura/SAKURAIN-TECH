@@ -15,7 +15,11 @@ import {
   Clock,
   X,
   Check,
-  Copy
+  Copy,
+  Bug,
+  AlertCircle,
+  CheckCircle2,
+  Loader2
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { AmbientGlow, LightBeam } from '@/components/effects';
@@ -52,7 +56,7 @@ interface FeedItem {
 const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
 
 const POSTS_PER_PAGE = 9;
-const FETCH_TIMEOUT = 8000;
+const FETCH_TIMEOUT = 15000; // 增加到15秒，给新建站点更多时间
 
 // Format date helper
 const formatDate = (dateStr: string): string => {
@@ -478,6 +482,141 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         </div>
       </motion.div>
     </div>
+  );
+}
+
+// 调试面板组件
+function DebugPanel({ 
+  sources, 
+  onClose 
+}: { 
+  sources: FeedSourceStatus[]; 
+  onClose: () => void;
+}) {
+  const successCount = sources.filter(s => s.status === 'success').length;
+  const errorCount = sources.filter(s => s.status === 'error').length;
+  const timeoutCount = sources.filter(s => s.status === 'timeout').length;
+  const pendingCount = sources.filter(s => s.status === 'pending').length;
+
+  const getStatusIcon = (status: FeedSourceStatus['status']) => {
+    switch (status) {
+      case 'success':
+        return <CheckCircle2 className="w-4 h-4 text-green-500" />;
+      case 'error':
+        return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'timeout':
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+      case 'pending':
+        return <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />;
+    }
+  };
+
+  const getStatusText = (status: FeedSourceStatus['status']) => {
+    switch (status) {
+      case 'success':
+        return '成功';
+      case 'error':
+        return '失败';
+      case 'timeout':
+        return '超时';
+      case 'pending':
+        return '加载中';
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      className="mb-8 overflow-hidden"
+    >
+      <div 
+        className="p-6"
+        style={{
+          background: 'var(--bg-card)',
+          border: '2px solid var(--border-subtle)',
+          clipPath: clipPathRounded(12),
+        }}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Bug className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+            <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+              订阅源调试
+            </h3>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 text-green-500" /> {successCount}</span>
+              {errorCount > 0 && <span className="flex items-center gap-1"><AlertCircle className="w-4 h-4 text-red-500" /> {errorCount}</span>}
+              {timeoutCount > 0 && <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-yellow-500" /> {timeoutCount}</span>}
+              {pendingCount > 0 && <span className="flex items-center gap-1"><Loader2 className="w-4 h-4 text-blue-500 animate-spin" /> {pendingCount}</span>}
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 transition-colors hover:bg-white/5"
+              style={{ clipPath: clipPathRounded(4) }}
+            >
+              <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+            </button>
+          </div>
+        </div>
+        
+        <div className="space-y-2 max-h-80 overflow-y-auto">
+          {sources.map((source, index) => (
+            <div 
+              key={source.name}
+              className="flex items-center gap-3 p-3"
+              style={{
+                background: 'var(--bg-secondary)',
+                clipPath: clipPathRounded(4),
+              }}
+            >
+              <div className="flex-shrink-0">
+                {getStatusIcon(source.status)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                    {source.name}
+                  </span>
+                  <span 
+                    className="text-xs px-2 py-0.5"
+                    style={{
+                      background: source.status === 'success' ? 'rgba(34, 197, 94, 0.2)' : 
+                                  source.status === 'error' ? 'rgba(239, 68, 68, 0.2)' :
+                                  source.status === 'timeout' ? 'rgba(234, 179, 8, 0.2)' : 
+                                  'rgba(59, 130, 246, 0.2)',
+                      color: source.status === 'success' ? '#22c55e' : 
+                             source.status === 'error' ? '#ef4444' :
+                             source.status === 'timeout' ? '#eab308' : 
+                             '#3b82f6',
+                      clipPath: clipPathRounded(2),
+                    }}
+                  >
+                    {getStatusText(source.status)}
+                  </span>
+                  {source.itemCount > 0 && (
+                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {source.itemCount} 篇文章
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs mt-1 truncate" style={{ color: 'var(--text-muted)' }}>
+                  {source.url}
+                </div>
+                {source.error && (
+                  <div className="text-xs mt-1" style={{ color: '#ef4444' }}>
+                    错误: {source.error}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -952,6 +1091,14 @@ function LoadingProgress({ loaded, total }: { loaded: number; total: number }) {
 const REFRESH_COOLDOWN_MS = 60 * 1000; // 60秒
 
 // Main Feed Page Component
+interface FeedSourceStatus {
+  name: string;
+  url: string;
+  status: 'pending' | 'success' | 'error' | 'timeout';
+  itemCount: number;
+  error?: string;
+}
+
 export default function FeedPage() {
   const [, setFriends] = useState<Friend[]>([]);
   const [allItems, setAllItems] = useState<FeedItem[]>([]);
@@ -962,6 +1109,8 @@ export default function FeedPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showSubscribe, setShowSubscribe] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const [sourceStatus, setSourceStatus] = useState<FeedSourceStatus[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshCooldown, _setRefreshCooldown] = useState(0);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
@@ -981,9 +1130,9 @@ export default function FeedPage() {
     friend: Friend, 
     forceRefresh = false,
     signal?: AbortSignal
-  ): Promise<{ items: FeedItem[], timestamp: number }> => {
+  ): Promise<{ items: FeedItem[], timestamp: number, status: FeedSourceStatus }> => {
+    const feedUrl = getFeedUrl(friend);
     try {
-      const feedUrl = getFeedUrl(friend);
       // 根据forceRefresh参数选择不同的接口
       const apiUrl = forceRefresh 
         ? `/api/feed/refresh?url=${encodeURIComponent(feedUrl)}`
@@ -1015,15 +1164,36 @@ export default function FeedPage() {
       
       return {
         items,
-        timestamp
+        timestamp,
+        status: {
+          name: friend.name,
+          url: feedUrl,
+          status: items.length > 0 ? 'success' : 'error',
+          itemCount: items.length,
+        }
       };
     } catch (err) {
-      if ((err as Error).name === 'AbortError') {
-        console.warn(`Feed fetch aborted for ${friend.name}`);
+      const errorMsg = (err as Error).message || String(err);
+      const isTimeout = errorMsg.includes('Timeout');
+      const isAbort = (err as Error).name === 'AbortError';
+      
+      if (isAbort) {
+        console.warn(`[Feed] Fetch aborted for ${friend.name} (${feedUrl})`);
       } else {
-        console.warn(`Failed to fetch feed for ${friend.name}:`, err);
+        console.warn(`[Feed] Failed to fetch feed for ${friend.name} (${feedUrl}):`, err);
       }
-      return { items: [], timestamp: Date.now() };
+      
+      return { 
+        items: [], 
+        timestamp: Date.now(),
+        status: {
+          name: friend.name,
+          url: feedUrl,
+          status: isTimeout ? 'timeout' : isAbort ? 'error' : 'error',
+          itemCount: 0,
+          error: errorMsg,
+        }
+      };
     }
   }, [getFeedUrl]);
 
@@ -1037,6 +1207,7 @@ export default function FeedPage() {
     try {
       setLoading(true);
       setLoadingProgress({ loaded: 0, total: 0 });
+      setSourceStatus([]);
       
       const [friendsRes, siteRes] = await Promise.all([
         fetch(`/data/friends.json?v=${Date.now()}`, { cache: 'no-store', signal }),
@@ -1052,19 +1223,37 @@ export default function FeedPage() {
         (f: Friend) => f.feed && f.feed.trim() !== ''
       ) || [];
       
+      // 初始化状态
+      setSourceStatus(eligibleFriends.map((f: Friend) => ({
+        name: f.name,
+        url: f.feed || '',
+        status: 'pending' as const,
+        itemCount: 0,
+      })));
+      
       setFriends(eligibleFriends);
       setFooterData(siteData.footer);
       setLoadingProgress({ loaded: 0, total: eligibleFriends.length });
       
       const allFeeds: FeedItem[] = [];
+      const statusList: FeedSourceStatus[] = [];
       let latestTimestamp = 0;
       
       for (let i = 0; i < eligibleFriends.length; i++) {
         if (signal.aborted) break;
         
         const friend = eligibleFriends[i];
-        const { items, timestamp } = await fetchFriendFeed(friend, forceRefresh, signal);
+        const { items, timestamp, status } = await fetchFriendFeed(friend, forceRefresh, signal);
         allFeeds.push(...items);
+        statusList.push(status);
+        
+        // 实时更新状态
+        setSourceStatus([...statusList, ...eligibleFriends.slice(i + 1).map((f: Friend) => ({
+          name: f.name,
+          url: f.feed || '',
+          status: 'pending' as const,
+          itemCount: 0,
+        }))]);
         
         // 更新最新时间戳
         if (timestamp > latestTimestamp) {
@@ -1242,6 +1431,22 @@ export default function FeedPage() {
             <div className="flex-1" />
 
             <div className="flex items-center gap-2">
+              {/* 调试按钮 */}
+              <button
+                onClick={() => setShowDebug(!showDebug)}
+                className="flex items-center gap-2 px-3 py-2 transition-all duration-200"
+                style={{
+                  background: showDebug ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                  border: '1px solid var(--border-subtle)',
+                  color: showDebug ? 'white' : 'var(--text-primary)',
+                  clipPath: clipPathRounded(4),
+                }}
+                title="调试面板"
+              >
+                <Bug className="w-4 h-4" />
+                <span className="text-sm font-medium hidden sm:block">调试</span>
+              </button>
+
               {/* 统计按钮 */}
               <button
                 onClick={() => setShowStats(!showStats)}
@@ -1387,6 +1592,13 @@ export default function FeedPage() {
         <AnimatePresence>
           {showStats && (
             <StatsPanel items={allItems} onClose={() => setShowStats(false)} />
+          )}
+        </AnimatePresence>
+
+        {/* 调试面板 */}
+        <AnimatePresence>
+          {showDebug && (
+            <DebugPanel sources={sourceStatus} onClose={() => setShowDebug(false)} />
           )}
         </AnimatePresence>
 
