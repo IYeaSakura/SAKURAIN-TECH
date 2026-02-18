@@ -607,8 +607,17 @@ function DebugPanel({
                   {source.url}
                 </div>
                 {source.error && (
-                  <div className="text-xs mt-1" style={{ color: '#ef4444' }}>
-                    错误: {source.error}
+                  <div 
+                    className="text-xs mt-2 p-2 break-all"
+                    style={{ 
+                      background: 'rgba(239, 68, 68, 0.1)', 
+                      color: '#f87171',
+                      borderLeft: '2px solid #ef4444',
+                      clipPath: clipPathRounded(2),
+                    }}
+                  >
+                    <span className="font-medium">失败原因: </span>
+                    {source.error}
                   </div>
                 )}
               </div>
@@ -1152,15 +1161,57 @@ export default function FeedPage() {
       
       const response = await Promise.race([fetchPromise, timeoutPromise]);
       
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
       const content = await response.text();
       const timestampHeader = response.headers.get('X-Feed-Timestamp');
       const timestamp = timestampHeader ? parseInt(timestampHeader, 10) : Date.now();
       
+      // Handle HTTP error responses
+      if (!response.ok) {
+        let errorMsg = `HTTP ${response.status}`;
+        try {
+          const errorData = JSON.parse(content);
+          if (errorData.error) {
+            errorMsg = errorData.error;
+            if (errorData.message) {
+              errorMsg += `: ${errorData.message}`;
+            }
+          }
+        } catch {
+          // Response is not JSON, use raw content snippet
+          if (content && content.length < 200) {
+            errorMsg += ` - ${content}`;
+          }
+        }
+        throw new Error(errorMsg);
+      }
+      
+      // Detect JavaScript challenge/anti-bot protection
+      if (content.includes('__test=') || 
+          (content.includes('<script') && content.includes('slowAES.decrypt') && content.includes('location.href'))) {
+        throw new Error('JavaScript Challenge: 该站点启用了反爬虫保护，无法获取RSS');
+      }
+      
+      // Detect generic HTML error pages
+      if (content.includes('<html') && !content.includes('<rss') && !content.includes('<feed') && !content.includes('<?xml')) {
+        const titleMatch = content.match(/<title>([^<]*)<\/title>/i);
+        const title = titleMatch ? titleMatch[1] : '未知错误';
+        throw new Error(`返回HTML页面: ${title.slice(0, 50)}`);
+      }
+      
       const items = await parseFeed(content, friend);
+      
+      // If parsing succeeded but no items found, check if content looks valid
+      if (items.length === 0 && content.trim()) {
+        // Content exists but no items parsed - might be malformed feed
+        const hasXmlDecl = content.includes('<?xml');
+        const hasRssTag = content.includes('<rss');
+        const hasFeedTag = content.includes('<feed');
+        const hasJsonItems = content.includes('"items"') || content.includes('"entries"');
+        
+        if (!hasXmlDecl && !hasRssTag && !hasFeedTag && !hasJsonItems) {
+          throw new Error('RSS格式无效: 无法解析订阅内容');
+        }
+      }
       
       return {
         items,
@@ -1170,6 +1221,7 @@ export default function FeedPage() {
           url: feedUrl,
           status: items.length > 0 ? 'success' : 'error',
           itemCount: items.length,
+          error: items.length === 0 ? '订阅源无文章内容' : undefined,
         }
       };
     } catch (err) {

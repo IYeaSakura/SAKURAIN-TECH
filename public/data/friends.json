@@ -241,6 +241,7 @@
       "name": "麻辣工夫茶博客网",
       "url": "https://amvc.top",
       "icon": "https://amvc.top/touxiang.webp",
+      "feed": "https://amvc.top/feed/",
       "description": "天气晴朗，万物可爱~",
       "category": "blogs",
       "featured": true,
