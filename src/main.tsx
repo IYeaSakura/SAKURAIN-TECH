@@ -6,6 +6,7 @@ import './styles/globals.css';
 import App from './App.tsx';
 import { GlobalContextMenu } from '@/components/CustomContextMenu';
 import { DebugProtection } from '@/components/DebugProtection';
+import { MusicPlayer } from '@/components/MusicPlayer';
 import { Navigation } from '@/components/sections/Navigation';
 import { useTheme, useIsMobile } from '@/hooks';
 import { PerformanceProvider, usePerformance } from '@/contexts/PerformanceContext';
@@ -200,6 +201,9 @@ function PageLayout({ children }: { children: React.ReactNode }) {
         />
       )}
       {children}
+      
+      {/* 全局音乐播放器 - 切换页面不会中断 */}
+      <MusicPlayer />
     </>
   );
 }
