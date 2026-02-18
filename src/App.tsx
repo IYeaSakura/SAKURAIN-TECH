@@ -40,8 +40,204 @@ import { useTheme, useNavigation } from '@/hooks';
 import { usePrefersReducedMotion } from '@/lib/performance';
 import type { SiteData } from '@/types';
 
-const clipPathRounded = (r: number) =>
-  `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
+// 像素风格 clip-path 辅助函数
+const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
+
+// 卡片按钮组件 - 像素风格
+const CardButton = ({ 
+  children, 
+  onClick, 
+  color = 'var(--accent-primary)',
+  highlight = false,
+  className = '',
+  delay = 0,
+}: { 
+  children: React.ReactNode;
+  onClick: () => void;
+  color?: string;
+  highlight?: boolean;
+  className?: string;
+  delay?: number;
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const animationEnabled = usePrefersReducedMotion() === false;
+  
+  return (
+    <motion.div
+      initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.5 }}
+      whileHover={animationEnabled ? { x: 4 } : undefined}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      onClick={onClick}
+      className={`group relative cursor-pointer ${className}`}
+    >
+      {/* 像素风格边框 */}
+      <div
+        className="relative transition-all duration-300"
+        style={{
+          background: isHovered ? 'var(--bg-secondary)' : 'var(--bg-card)',
+          border: `2px solid ${highlight ? color : isHovered ? color : 'var(--border-subtle)'}`,
+          clipPath: clipPathRounded(8),
+          transform: isHovered ? 'translateY(-4px)' : 'none',
+        }}
+      >
+        {/* 悬停渐变背景 */}
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+          style={{
+            background: `linear-gradient(135deg, ${color}15, transparent)`,
+          }}
+        />
+        
+        {/* Hover glow background - 顶部反光 */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+        />
+        
+        {/* 四角光效动画 */}
+        <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
+          <motion.div
+            key={`tl-h-${isHovered}`}
+            className="absolute top-0 left-0 w-full h-[2px]"
+            style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
+            animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+          />
+          {isHovered && (
+            <motion.div
+              key={`tl-v-${isHovered}`}
+              className="absolute top-0 left-0 w-[2px] h-full"
+              style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
+              animate={animationEnabled ? { opacity: 1 } : undefined}
+              transition={{ duration: 0.3 }}
+            />
+          )}
+        </div>
+        <div className="absolute top-0 right-0 w-4 h-4 pointer-events-none">
+          <motion.div
+            key={`tr-h-${isHovered}`}
+            className="absolute top-0 right-0 w-full h-[2px]"
+            style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
+            animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+          />
+          {isHovered && (
+            <motion.div
+              key={`tr-v-${isHovered}`}
+              className="absolute top-0 right-0 w-[2px] h-full"
+              style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
+              animate={animationEnabled ? { opacity: 1 } : undefined}
+              transition={{ duration: 0.3 }}
+            />
+          )}
+        </div>
+        <div className="absolute bottom-0 left-0 w-4 h-4 pointer-events-none">
+          <motion.div
+            key={`bl-h-${isHovered}`}
+            className="absolute bottom-0 left-0 w-full h-[2px]"
+            style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
+            animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+          />
+          {isHovered && (
+            <motion.div
+              key={`bl-v-${isHovered}`}
+              className="absolute bottom-0 left-0 w-[2px] h-full"
+              style={{ background: 'linear-gradient(to top, var(--accent-secondary), transparent)' }}
+              animate={animationEnabled ? { opacity: 1 } : undefined}
+              transition={{ duration: 0.3 }}
+            />
+          )}
+        </div>
+        <div className="absolute bottom-0 right-0 w-4 h-4 pointer-events-none">
+          <motion.div
+            key={`br-h-${isHovered}`}
+            className="absolute bottom-0 right-0 w-full h-[2px]"
+            style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
+            animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+          />
+          {isHovered && (
+            <motion.div
+              key={`br-v-${isHovered}`}
+              className="absolute bottom-0 right-0 w-[2px] h-full"
+              style={{ background: 'linear-gradient(to top, var(--accent-primary), transparent)' }}
+              animate={animationEnabled ? { opacity: 1 } : undefined}
+              transition={{ duration: 0.3 }}
+            />
+          )}
+        </div>
+        
+        {/* 内容 */}
+        <div className="relative p-5">
+          {children}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// 次要导航按钮组件 - 像素风格
+const NavButton = ({ 
+  children, 
+  onClick, 
+  icon: Icon,
+  delay = 0,
+}: { 
+  children: React.ReactNode;
+  onClick: () => void;
+  icon: React.ComponentType<{ className?: string }>;
+  delay?: number;
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const animationEnabled = usePrefersReducedMotion() === false;
+  
+  return (
+    <motion.button
+      initial={animationEnabled ? { opacity: 0, scale: 0.9 } : undefined}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay, duration: 0.4 }}
+      whileHover={animationEnabled ? { y: -2 } : undefined}
+      whileTap={{ scale: 0.95 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      onClick={onClick}
+      className="group relative flex items-center gap-2 px-4 py-2.5 transition-all cursor-pointer overflow-hidden"
+      style={{
+        background: isHovered ? 'var(--bg-secondary)' : 'var(--bg-card)',
+        border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
+        color: isHovered ? 'var(--accent-primary)' : 'var(--text-muted)',
+        clipPath: clipPathRounded(6),
+      }}
+    >
+      {/* 悬停渐变背景 */}
+      <div
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{
+          background: 'linear-gradient(135deg, var(--accent-primary)10, transparent)',
+        }}
+      />
+      
+      {/* 左上流光 */}
+      <div className="absolute top-0 left-0 w-3 h-3 pointer-events-none overflow-hidden">
+        <motion.div
+          className="absolute top-0 left-0 w-full h-[2px]"
+          style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
+          animate={isHovered ? { opacity: 1, x: [-12, 12] } : { opacity: 0, x: 0 }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
+        />
+      </div>
+      
+      <Icon className="w-4 h-4 relative z-10" />
+      <span className="text-sm font-medium relative z-10">{children}</span>
+    </motion.button>
+  );
+};
 
 // 3D ASCII艺术字组件 - 带动态渐变效果
 const AsciiLogo3D = () => {
@@ -1043,67 +1239,38 @@ const HeroSection = () => {
                 这里记录着我的技术演进与创作历程。
               </p>
 
-              {/* 次要导航 */}
-              <motion.div
-                className="flex flex-wrap gap-3"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-              >
-                {subNavs.map((item) => (
-                  <button
+              {/* 次要导航 - 像素风格 */}
+              <div className="flex flex-wrap gap-3">
+                {subNavs.map((item, index) => (
+                  <NavButton
                     key={item.title}
                     onClick={() => navigateTo(item.href)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all hover:scale-105 cursor-pointer"
-                    style={{
-                      background: 'var(--bg-secondary)',
-                      border: '1px solid var(--border-subtle)',
-                      color: 'var(--text-muted)',
-                    }}
+                    icon={item.icon}
+                    delay={0.6 + index * 0.1}
                   >
-                    <item.icon className="w-4 h-4" />
                     {item.title}
-                  </button>
+                  </NavButton>
                 ))}
-              </motion.div>
+              </div>
             </motion.div>
 
-            {/* 右侧：导航卡片 - 垂直堆叠 */}
-            <motion.div
-              className="space-y-4"
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            >
+            {/* 右侧：导航卡片 - 像素风格 */}
+            <div className="space-y-4">
               {mainNavs.map((nav, index) => (
-                <motion.div
+                <CardButton
                   key={nav.title}
                   onClick={() => navigateTo(nav.href)}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
-                  whileHover={{ x: 8, scale: 1.01 }}
-                  className={`group relative p-5 rounded-xl cursor-pointer transition-all duration-300 ${
-                    nav.highlight ? 'ring-1 ring-violet-500/50' : ''
-                  }`}
-                  style={{
-                    background: 'var(--bg-card)',
-                    border: `1px solid ${nav.highlight ? nav.color : 'var(--border-subtle)'}`,
-                  }}
+                  color={nav.color}
+                  highlight={nav.highlight}
+                  delay={0.4 + index * 0.1}
                 >
-                  {/* 悬停渐变背景 */}
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl"
-                    style={{
-                      background: `linear-gradient(135deg, ${nav.color}08, transparent)`,
-                    }}
-                  />
-
-                  <div className="relative flex items-center gap-4">
+                  <div className="flex items-center gap-4">
                     {/* 图标 */}
                     <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110"
-                      style={{ background: `${nav.color}15` }}
+                      className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110"
+                      style={{ 
+                        background: `${nav.color}15`,
+                      }}
                     >
                       <nav.icon className="w-6 h-6" style={{ color: nav.color }} />
                     </div>
@@ -1115,8 +1282,12 @@ const HeroSection = () => {
                           {nav.title}
                         </h3>
                         {nav.highlight && (
-                          <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
-                            style={{ background: `${nav.color}20`, color: nav.color }}
+                          <span 
+                            className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold"
+                            style={{ 
+                              background: `${nav.color}20`, 
+                              color: nav.color,
+                            }}
                           >
                             <Sparkles className="w-3 h-3" />
                             推荐
@@ -1134,41 +1305,31 @@ const HeroSection = () => {
                       style={{ color: nav.color, opacity: 0.6 }}
                     />
                   </div>
-                </motion.div>
+                </CardButton>
               ))}
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 移动端导航卡片 - 垂直堆叠 */}
-      <motion.div
-        className="lg:hidden relative z-10 px-6 pb-8 -mt-4"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, duration: 0.5 }}
-      >
+      {/* 移动端导航卡片 - 像素风格 */}
+      <div className="lg:hidden relative z-10 px-6 pb-8 -mt-4">
         <div className="space-y-3 max-w-md mx-auto">
           {mainNavs.map((nav, index) => (
-            <motion.div
+            <CardButton
               key={nav.title}
               onClick={() => navigateTo(nav.href)}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 + index * 0.1, duration: 0.4 }}
-              whileTap={{ scale: 0.98 }}
-              className={`group p-4 rounded-xl cursor-pointer ${
-                nav.highlight ? 'ring-1 ring-violet-500/50' : ''
-              }`}
-              style={{
-                background: 'var(--bg-card)',
-                border: `1px solid ${nav.highlight ? nav.color : 'var(--border-subtle)'}`,
-              }}
+              color={nav.color}
+              highlight={nav.highlight}
+              delay={0.6 + index * 0.1}
+              className="touch-manipulation"
             >
               <div className="flex items-center gap-3">
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center"
-                  style={{ background: `${nav.color}15` }}
+                  className="w-10 h-10 rounded flex items-center justify-center"
+                  style={{ 
+                    background: `${nav.color}15`,
+                  }}
                 >
                   <nav.icon className="w-5 h-5" style={{ color: nav.color }} />
                 </div>
@@ -1178,8 +1339,12 @@ const HeroSection = () => {
                       {nav.title}
                     </h3>
                     {nav.highlight && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold"
-                        style={{ background: `${nav.color}20`, color: nav.color }}
+                      <span 
+                        className="px-1.5 py-0.5 rounded text-[9px] font-bold"
+                        style={{ 
+                          background: `${nav.color}20`, 
+                          color: nav.color,
+                        }}
                       >
                         推荐
                       </span>
@@ -1191,10 +1356,10 @@ const HeroSection = () => {
                 </div>
                 <ArrowRight className="w-4 h-4" style={{ color: nav.color, opacity: 0.5 }} />
               </div>
-            </motion.div>
+            </CardButton>
           ))}
         </div>
-      </motion.div>
+      </div>
 
       {/* 滚动提示 */}
       <motion.div
@@ -1282,11 +1447,10 @@ const JourneySection = () => {
           transition={{ duration: 0.8 }}
         >
           <div
-            className="p-8 rounded-2xl"
+            className="p-8 rounded-2xl overflow-hidden"
             style={{
               background: 'var(--bg-card)',
               border: '2px solid var(--border-subtle)',
-              clipPath: clipPathRounded(16),
             }}
           >
             <TechStackChart />
