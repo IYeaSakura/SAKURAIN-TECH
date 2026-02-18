@@ -235,6 +235,17 @@
       "featured": true,
       "unidirectional": true,
       "status": "online"
+    },
+    {
+      "id": "amvc",
+      "name": "麻辣工夫茶博客网",
+      "url": "https://amvc.top",
+      "icon": "https://amvc.top/touxiang.webp",
+      "description": "天气晴朗，万物可爱~",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true,
+      "status": "online"
     }
   ],
   "lastUpdated": "2026-02-17T13:40:07.174Z"
