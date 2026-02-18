@@ -21,17 +21,17 @@ const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 小时，单位毫秒
 // Check if source is marked as failed
 async function checkFailedSource(kv, feedUrl) {
   if (!kv) return { failed: false };
-  
+
   const failedKey = `feed:failed:${feedUrl}`;
   try {
     const failedData = await kv.get(failedKey);
     if (failedData) {
       const data = JSON.parse(failedData);
-      return { 
-        failed: true, 
-        error: data.error, 
+      return {
+        failed: true,
+        error: data.error,
         timestamp: data.timestamp,
-        attempts: data.attempts || 1 
+        attempts: data.attempts || 1
       };
     }
   } catch (e) {
@@ -47,9 +47,9 @@ function buildBrowserHeaders() {
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
   ];
-  
+
   const userAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
-  
+
   return {
     'User-Agent': userAgent,
     'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, application/json, text/html, */*',
@@ -127,7 +127,7 @@ export async function onRequestGet(context) {
     const { request } = context;
     const url = new URL(request.url);
     const feedUrl = url.searchParams.get('url');
-    
+
     console.log(`[Feed Get] Request received for URL: ${feedUrl}`);
 
     // 验证 URL 参数
@@ -174,7 +174,7 @@ export async function onRequestGet(context) {
     const failedStatus = await checkFailedSource(kv, feedUrl);
     if (failedStatus.failed) {
       console.log(`[Feed Get] Source marked as failed, skipping auto-refresh: ${feedUrl}`);
-      
+
       // Try to return stale cache if available
       if (kv) {
         try {
@@ -197,7 +197,7 @@ export async function onRequestGet(context) {
           console.error('KV get stale cache error:', e);
         }
       }
-      
+
       // No cache available, return error with failed info
       return new Response(JSON.stringify({
         error: 'Source marked as inaccessible',

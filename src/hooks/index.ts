@@ -9,10 +9,12 @@ export { useScrollProgress, useInView } from './useScrollProgress';
 export { useMagnetic } from './useMagnetic';
 export { useLenis, scrollTo } from './useLenis';
 
-// 响应式 hooks
-export { useWindowSize, useIsMobile, useIsTablet, useIsDesktop } from './useWindowSize';
-// use-mobile hook 导出的是 useIsMobile
-export { useIsMobile as useMobile } from './use-mobile';
+// 响应式 hooks - 统一从 MobileContext 导出
+export { useIsMobile, useIsTablet, useIsDesktop, useScreenSize, useMobileContext } from '@/contexts/MobileContext';
+// Legacy alias for backwards compatibility
+export { useIsMobile as useMobile } from '@/contexts/MobileContext';
+// useWindowSize alias for backwards compatibility
+export { useScreenSize as useWindowSize } from '@/contexts/MobileContext';
 
 // 动画控制 hook
 export { useAnimationEnabled } from './useAnimationEnabled';

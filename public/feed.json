@@ -13,6 +13,23 @@
   ],
   "items": [
     {
+      "id": "https://sakurain.net/blog/rss-serverless-boundary-exploration",
+      "url": "https://sakurain.net/blog/rss-serverless-boundary-exploration",
+      "title": "RSS 抓取的迷雾：一次 Serverless 架构的边界探索",
+      "content_text": "记录在开发朋友圈 RSS 聚合功能时遇到的反爬机制问题，以及 Serverless 架构下的工程权衡与优雅降级策略。",
+      "date_published": "2026-02-18T00:00:00.000Z",
+      "author": {
+        "name": "SAKURAIN"
+      },
+      "tags": [
+        "RSS",
+        "Serverless",
+        "系统架构",
+        "边缘函数",
+        "反爬虫"
+      ]
+    },
+    {
       "id": "https://sakurain.net/blog/kimi-k25-moe-mla-parl-derivation",
       "url": "https://sakurain.net/blog/kimi-k25-moe-mla-parl-derivation",
       "title": "Kimi K2.5 的数学骨架：MoE、MLA 与 PARL 推导",

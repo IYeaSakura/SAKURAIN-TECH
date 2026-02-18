@@ -20,6 +20,12 @@
       "description": "我们的演示项目和示例网站"
     },
     {
+      "id": "personal",
+      "name": "与我相关",
+      "icon": "User",
+      "description": "与我相关的网站"
+    },
+    {
       "id": "tech",
       "name": "技术社区",
       "icon": "Code",
@@ -52,6 +58,36 @@
       "icon": "https://sakurain.net/image/logo.webp",
       "description": "Minecraft 服务器网站演示项目，展示服务器信息和玩家社区功能",
       "category": "demo",
+      "featured": false,
+      "status": "online"
+    },
+    {
+      "id": "dut",
+      "name": "大连理工大学",
+      "url": "https://www.dlut.edu.cn/",
+      "icon": "https://www.dlut.edu.cn/images/favicon.ico",
+      "description": "教育部直属的985、双一流理工强校",
+      "category": "personal",
+      "featured": false,
+      "status": "online"
+    },
+    {
+      "id": "caai",
+      "name": "中国人工智能学会",
+      "url": "https://www.caai.cn/",
+      "icon": "https://www.caai.cn/favicon.ico",
+      "description": "我国智能科学技术领域唯一的国家级学会",
+      "category": "personal",
+      "featured": false,
+      "status": "online"
+    },
+    {
+      "id": "12371",
+      "name": "共产党员网",
+      "url": "https://www.12371.cn/",
+      "icon": "https://p4.img.cctvpic.com/photoAlbum/templet/common/DEPA1356314678315297/sy_dyw377_0504.png",
+      "description": "中央组织部主管、中组部党员教育中心主办、央视网承办的党员教育平台。",
+      "category": "personal",
       "featured": false,
       "status": "online"
     },
@@ -249,5 +285,5 @@
       "status": "online"
     }
   ],
-  "lastUpdated": "2026-02-17T13:40:07.174Z"
+  "lastUpdated": "2026-02-18T11:42:30.372Z"
 }

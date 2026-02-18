@@ -4,13 +4,31 @@
   <subtitle>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。</subtitle>
   <link href="https://sakurain.net/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://sakurain.net" rel="alternate" type="text/html"/>
-  <updated>2026-02-15T00:00:00.000Z</updated>
+  <updated>2026-02-18T00:00:00.000Z</updated>
   <id>https://sakurain.net/</id>
   <author>
     <name>SAKURAIN</name>
     <email>Yae_SakuRain@outlook.com</email>
   </author>
   <rights>© 2026 SAKURAIN 技术工作室</rights>
+  <entry>
+    <title>RSS 抓取的迷雾：一次 Serverless 架构的边界探索</title>
+    <link href="https://sakurain.net/blog/rss-serverless-boundary-exploration"/>
+    <id>https://sakurain.net/blog/rss-serverless-boundary-exploration</id>
+    <published>2026-02-18T00:00:00.000Z</published>
+    <updated>2026-02-18T00:00:00.000Z</updated>
+    <author>
+      <name>SAKURAIN</name>
+      <email>Yae_SakuRain@outlook.com</email>
+    </author>
+    <summary>记录在开发朋友圈 RSS 聚合功能时遇到的反爬机制问题，以及 Serverless 架构下的工程权衡与优雅降级策略。</summary>
+    <category term="RSS"/>
+    <category term="Serverless"/>
+    <category term="系统架构"/>
+    <category term="边缘函数"/>
+    <category term="反爬虫"/>
+  </entry>
+
   <entry>
     <title>Kimi K2.5 的数学骨架：MoE、MLA 与 PARL 推导</title>
     <link href="https://sakurain.net/blog/kimi-k25-moe-mla-parl-derivation"/>

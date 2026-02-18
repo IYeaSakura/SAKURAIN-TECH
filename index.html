@@ -2,7 +2,7 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#000000" />
     <meta name="color-scheme" content="dark" />
     <!-- Cache Control -->
@@ -26,7 +26,56 @@
       html, body { background-color: #000000; }
       /* Fallback while fonts load */
       .font-pixel { font-family: 'VT323', 'Courier New', monospace; }
+      
+      /* Critical mobile styles - prevent flash of incorrect layout */
+      @media (max-width: 767px) {
+        .desktop-only { display: none !important; }
+        .mobile-optimize { 
+          padding-left: 16px !important; 
+          padding-right: 16px !important; 
+        }
+        /* Disable complex animations on mobile */
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.1s !important;
+        }
+      }
+      
+      @media (min-width: 768px) {
+        .mobile-only { display: none !important; }
+      }
+      
+      /* Prevent horizontal scroll */
+      html, body {
+        overflow-x: hidden;
+        max-width: 100vw;
+      }
+      
+      /* Safe area insets for notched devices */
+      @supports (padding: max(0px)) {
+        body {
+          padding-left: max(0px, env(safe-area-inset-left));
+          padding-right: max(0px, env(safe-area-inset-right));
+        }
+      }
     </style>
+    <script>
+      // Critical: Set mobile state before React loads to prevent FOIC
+      (function() {
+        var width = window.innerWidth;
+        var isMobile = width < 768;
+        window.__MOBILE_STATE__ = {
+          isMobile: isMobile,
+          isTablet: width >= 768 && width < 1024,
+          isDesktop: width >= 1024,
+          screenWidth: width,
+          screenHeight: window.innerHeight
+        };
+        // Add class to html for CSS targeting
+        document.documentElement.classList.add(isMobile ? 'is-mobile' : 'is-desktop');
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
