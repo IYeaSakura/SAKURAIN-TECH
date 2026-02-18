@@ -52,11 +52,63 @@ interface FeedItem {
   sourceIcon: string;
 }
 
+interface FeedSourceStatus {
+  name: string;
+  url: string;
+  status: 'pending' | 'success' | 'error' | 'timeout';
+  itemCount: number;
+  error?: string;
+}
+
 // CSS clip-path helpers
 const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
 
 const POSTS_PER_PAGE = 9;
 const FETCH_TIMEOUT = 15000; // 增加到15秒，给新建站点更多时间
+const FEED_CACHE_KEY = 'sakurain_feed_cache';
+const FEED_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+interface FeedCache {
+  items: FeedItem[];
+  timestamp: number;
+  sourceStatus: FeedSourceStatus[];
+}
+
+const getFeedCache = (): FeedCache | null => {
+  try {
+    const cached = localStorage.getItem(FEED_CACHE_KEY);
+    if (!cached) return null;
+    const data = JSON.parse(cached) as FeedCache;
+    if (Date.now() - data.timestamp > FEED_CACHE_TTL) {
+      localStorage.removeItem(FEED_CACHE_KEY);
+      return null;
+    }
+    return data;
+  } catch {
+    return null;
+  }
+};
+
+const setFeedCache = (items: FeedItem[], sourceStatus: FeedSourceStatus[]): void => {
+  try {
+    const cache: FeedCache = {
+      items,
+      timestamp: Date.now(),
+      sourceStatus,
+    };
+    localStorage.setItem(FEED_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // localStorage might be full or disabled
+  }
+};
+
+const clearFeedCache = (): void => {
+  try {
+    localStorage.removeItem(FEED_CACHE_KEY);
+  } catch {
+    // ignore
+  }
+};
 
 // Format date helper
 const formatDate = (dateStr: string): string => {
@@ -1100,14 +1152,6 @@ function LoadingProgress({ loaded, total }: { loaded: number; total: number }) {
 const REFRESH_COOLDOWN_MS = 60 * 1000; // 60秒
 
 // Main Feed Page Component
-interface FeedSourceStatus {
-  name: string;
-  url: string;
-  status: 'pending' | 'success' | 'error' | 'timeout';
-  itemCount: number;
-  error?: string;
-}
-
 export default function FeedPage() {
   const [, setFriends] = useState<Friend[]>([]);
   const [allItems, setAllItems] = useState<FeedItem[]>([]);
@@ -1269,17 +1313,34 @@ export default function FeedPage() {
     }
   }, [getFeedUrl]);
 
-  const loadData = useCallback(async (forceRefresh = false) => {
+  const loadData = useCallback(async (forceRefresh = false, isBackgroundRefresh = false) => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     abortControllerRef.current = new AbortController();
     const { signal } = abortControllerRef.current;
 
+    // Try to load from cache first (only on initial load, not force refresh)
+    if (!forceRefresh && !isBackgroundRefresh) {
+      const cached = getFeedCache();
+      if (cached) {
+        setAllItems(cached.items);
+        setDisplayItems(cached.items.slice(0, POSTS_PER_PAGE));
+        setSourceStatus(cached.sourceStatus);
+        setLastRefreshTime(new Date(cached.timestamp));
+        setLoading(false);
+        // Continue to fetch fresh data in background
+        setTimeout(() => loadData(false, true), 0);
+        return;
+      }
+    }
+
     try {
-      setLoading(true);
-      setLoadingProgress({ loaded: 0, total: 0 });
-      setSourceStatus([]);
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+        setLoadingProgress({ loaded: 0, total: 0 });
+        setSourceStatus([]);
+      }
       
       const [friendsRes, siteRes] = await Promise.all([
         fetch(`/data/friends.json?v=${Date.now()}`, { cache: 'no-store', signal }),
@@ -1296,12 +1357,14 @@ export default function FeedPage() {
       ) || [];
       
       // 初始化状态
-      setSourceStatus(eligibleFriends.map((f: Friend) => ({
-        name: f.name,
-        url: f.feed || '',
-        status: 'pending' as const,
-        itemCount: 0,
-      })));
+      if (!isBackgroundRefresh) {
+        setSourceStatus(eligibleFriends.map((f: Friend) => ({
+          name: f.name,
+          url: f.feed || '',
+          status: 'pending' as const,
+          itemCount: 0,
+        })));
+      }
       
       setFriends(eligibleFriends);
       setFooterData(siteData.footer);
@@ -1355,6 +1418,9 @@ export default function FeedPage() {
         setCurrentPage(1);
         updateDisplayItems(sorted, 1);
         
+        // Save to cache
+        setFeedCache(sorted, statusList);
+        
         // 使用KV存储中的最新时间戳更新lastRefreshTime
         if (latestTimestamp > 0) {
           setLastRefreshTime(new Date(latestTimestamp));
@@ -1367,7 +1433,9 @@ export default function FeedPage() {
         console.error('Failed to load feed data:', err);
       }
     } finally {
-      setLoading(false);
+      if (!isBackgroundRefresh) {
+        setLoading(false);
+      }
     }
   }, [fetchFriendFeed]);
 
@@ -1401,6 +1469,9 @@ export default function FeedPage() {
     setRefreshing(true);
     setShowStats(false);
     _setRefreshCooldown(60);
+    
+    // Clear cache before force refresh
+    clearFeedCache();
     
     // 启动冷却倒计时
     if (cooldownTimerRef.current) {

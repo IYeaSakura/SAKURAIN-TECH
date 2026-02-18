@@ -14,6 +14,9 @@ import {
   Palette,
   Wrench,
   Heart,
+  User,
+  FileText,
+  Send,
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { AmbientGlow, LightBeam } from '@/components/effects';
@@ -64,6 +67,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; style?: 
   Palette,
   Wrench,
   Globe,
+  User,
 };
 
 // CSS clip-path helpers
@@ -513,12 +517,14 @@ const HeroSection = memo(function HeroSection({
   title,
   description,
   stats,
-  lastUpdated
+  lastUpdated,
+  onApplyClick
 }: {
   title: string;
   description: string;
   stats: { friends: number; categories: number; online: number };
   lastUpdated?: string;
+  onApplyClick: () => void;
 }) {
   const animationEnabled = useAnimationEnabled();
   const isMobile = useMobile();
@@ -566,9 +572,29 @@ const HeroSection = memo(function HeroSection({
             >
               {title}
             </h1>
-            <p className="text-lg md:text-xl leading-relaxed max-w-xl" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-lg md:text-xl leading-relaxed max-w-xl mb-6" style={{ color: 'var(--text-muted)' }}>
               {description}
             </p>
+            
+            {/* Apply Button - Prominent position */}
+            <motion.button
+              initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+              animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              whileHover={animationEnabled ? { scale: 1.02 } : undefined}
+              whileTap={{ scale: 0.98 }}
+              onClick={onApplyClick}
+              className="inline-flex items-center gap-2 px-6 py-3 font-semibold text-white transition-all"
+              style={{
+                background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                clipPath: clipPathRounded(6),
+                boxShadow: '0 4px 20px rgba(86, 156, 214, 0.3)',
+              }}
+            >
+              <Mail className="w-5 h-5" />
+              申请友链
+            </motion.button>
+            
             {lastUpdated && (
               <motion.div
                 initial={animationEnabled ? { opacity: 0 } : undefined}
@@ -645,8 +671,8 @@ const HeroSection = memo(function HeroSection({
   );
 });
 
-// Mailto Modal Component
-const MailtoModal = memo(function MailtoModal({
+// Apply Modal Component - 申请友链弹窗
+const ApplyModal = memo(function ApplyModal({
   isOpen,
   onClose,
   contact,
@@ -657,6 +683,27 @@ const MailtoModal = memo(function MailtoModal({
 }) {
   const animationEnabled = useAnimationEnabled();
   const [copied, setCopied] = useState(false);
+  const [siteInfoCopied, setSiteInfoCopied] = useState(false);
+
+  // Site info for reference
+  const siteInfo = {
+    name: 'SAKURAIN TEAM',
+    url: 'https://sakurain.net',
+    icon: 'https://sakurain.net/favicon',
+    rss: 'https://sakurain.net/feed',
+    description: '用代码构建未来',
+  };
+
+  const emailTemplate = `此邮件用于申请添加友链。
+
+网站名称：${siteInfo.name}
+网站链接：${siteInfo.url}
+网站图标：${siteInfo.icon}
+RSS订阅（可选）：${siteInfo.rss}
+网站描述：${siteInfo.description}
+
+已添加到友链列表中，并替换为自己的站点信息。
+发送本邮件即代表承诺网站内容健康、合法、无恶意代码。`;
 
   useEffect(() => {
     if (isOpen) {
@@ -676,6 +723,33 @@ const MailtoModal = memo(function MailtoModal({
     }
   };
 
+  const handleCopySiteInfo = async () => {
+    try {
+      const siteInfoText = `网站名称：${siteInfo.name}
+网站链接：${siteInfo.url}
+网站图标：${siteInfo.icon}
+RSS订阅：${siteInfo.rss}
+网站描述：${siteInfo.description}`;
+      await navigator.clipboard.writeText(siteInfoText);
+      setSiteInfoCopied(true);
+      setTimeout(() => setSiteInfoCopied(false), 2000);
+    } catch (err) {
+      console.error('复制失败:', err);
+    }
+  };
+
+  // Open default email client
+  const handleOpenMailto = () => {
+    const subject = '申请友链 - SAKURAIN';
+    const mailtoLink = `mailto:${contact}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailTemplate)}`;
+    window.location.href = mailtoLink;
+  };
+
+  // Open WPS form
+  const handleOpenForm = () => {
+    window.open('https://f.wps.cn/g/oEZK9Vpu/', '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <motion.div
@@ -691,7 +765,7 @@ const MailtoModal = memo(function MailtoModal({
         animate={animationEnabled ? { opacity: 1, scale: 1, y: 0 } : undefined}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        className="relative w-full max-w-md p-6"
+        className="relative w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto"
         style={{
           background: 'var(--bg-secondary)',
           border: '2px solid var(--border-color)',
@@ -699,6 +773,7 @@ const MailtoModal = memo(function MailtoModal({
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
         }}
       >
+        {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <div
             className="flex items-center justify-center w-12 h-12"
@@ -715,11 +790,12 @@ const MailtoModal = memo(function MailtoModal({
               申请友链
             </h3>
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              已尝试唤起邮箱程序
+              请先添加本站友链，再提交申请
             </p>
           </div>
         </div>
 
+        {/* Important Notice */}
         <div
           className="mb-4 p-4"
           style={{
@@ -732,16 +808,16 @@ const MailtoModal = memo(function MailtoModal({
             <span className="text-lg" style={{ color: '#fbbf24' }}>⚠️</span>
             <div>
               <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-                提示
+                重要提示
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                如果邮箱程序未自动启动，请手动发送邮件至下方邮箱地址
+                请在发送申请邮件之前，先在自己的站点上添加本站友链信息
               </p>
             </div>
           </div>
         </div>
 
-        {/* 友链格式信息 */}
+        {/* Site Info */}
         <div
           className="mb-4 p-4"
           style={{
@@ -750,17 +826,34 @@ const MailtoModal = memo(function MailtoModal({
             clipPath: clipPathRounded(4),
           }}
         >
-          <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>
-            友链格式（请按此格式发送）
-          </p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-medium" style={{ color: 'var(--accent-primary)' }}>
+              本站友链信息（请添加到您的友链页面）
+            </p>
+            <motion.button
+              onClick={handleCopySiteInfo}
+              whileHover={animationEnabled ? { scale: 1.02 } : undefined}
+              whileTap={{ scale: 0.98 }}
+              className="px-2 py-1 text-xs font-medium transition-all"
+              style={{
+                background: siteInfoCopied ? 'rgba(34, 197, 94, 0.2)' : 'var(--accent-primary)',
+                color: siteInfoCopied ? '#22c55e' : 'white',
+                clipPath: clipPathRounded(2),
+              }}
+            >
+              {siteInfoCopied ? '已复制' : '复制'}
+            </motion.button>
+          </div>
           <div className="space-y-1.5 text-sm" style={{ color: 'var(--text-primary)' }}>
-            <p><span style={{ color: 'var(--text-muted)' }}>网站名称：</span>SAKURAIN TEAM</p>
-            <p><span style={{ color: 'var(--text-muted)' }}>网站链接：</span>https://sakurain.net/</p>
-            <p><span style={{ color: 'var(--text-muted)' }}>头像链接：</span>https://sakurain.net/favicon</p>
-            <p><span style={{ color: 'var(--text-muted)' }}>网站描述：</span>用代码构建未来</p>
+            <p><span style={{ color: 'var(--text-muted)' }}>网站名称：</span>{siteInfo.name}</p>
+            <p><span style={{ color: 'var(--text-muted)' }}>网站链接：</span>{siteInfo.url}</p>
+            <p><span style={{ color: 'var(--text-muted)' }}>网站图标：</span>{siteInfo.icon}</p>
+            <p><span style={{ color: 'var(--text-muted)' }}>RSS订阅：</span>{siteInfo.rss}</p>
+            <p><span style={{ color: 'var(--text-muted)' }}>网站描述：</span>{siteInfo.description}</p>
           </div>
         </div>
 
+        {/* Contact Email */}
         <div
           className="mb-4 p-4"
           style={{
@@ -798,21 +891,59 @@ const MailtoModal = memo(function MailtoModal({
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <motion.button
-            onClick={onClose}
-            whileHover={animationEnabled ? { scale: 1.02 } : undefined}
-            whileTap={{ scale: 0.98 }}
-            className="flex-1 px-4 py-2 font-medium transition-all"
-            style={{
-              background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))',
-              color: 'white',
-              clipPath: clipPathRounded(4),
-            }}
-          >
-            知道了
-          </motion.button>
+        {/* Action Buttons */}
+        <div className="space-y-3">
+          <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+            选择申请方式
+          </p>
+          <div className="flex gap-3">
+            <motion.button
+              onClick={handleOpenMailto}
+              whileHover={animationEnabled ? { scale: 1.02 } : undefined}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 font-medium transition-all"
+              style={{
+                background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                color: 'white',
+                clipPath: clipPathRounded(6),
+              }}
+            >
+              <Send className="w-4 h-4" />
+              邮箱申请
+            </motion.button>
+            <motion.button
+              onClick={handleOpenForm}
+              whileHover={animationEnabled ? { scale: 1.02 } : undefined}
+              whileTap={{ scale: 0.98 }}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 font-medium transition-all"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '2px solid var(--accent-primary)',
+                color: 'var(--accent-primary)',
+                clipPath: clipPathRounded(6),
+              }}
+            >
+              <FileText className="w-4 h-4" />
+              表单申请
+            </motion.button>
+          </div>
         </div>
+
+        {/* Close Button */}
+        <motion.button
+          onClick={onClose}
+          whileHover={animationEnabled ? { scale: 1.02 } : undefined}
+          whileTap={{ scale: 0.98 }}
+          className="w-full mt-4 px-4 py-2 font-medium transition-all"
+          style={{
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-subtle)',
+            color: 'var(--text-muted)',
+            clipPath: clipPathRounded(4),
+          }}
+        >
+          关闭
+        </motion.button>
       </motion.div>
     </div>
   );
@@ -829,17 +960,6 @@ const ApplySection = memo(function ApplySection({
   const animationEnabled = useAnimationEnabled();
   const isMobile = useMobile();
   const [isHovered, setIsHovered] = useState(false);
-
-  const handleApplyClick = useCallback(() => {
-    const subject = '申请友链 - SAKURAIN';
-    const body = `此邮件用于申请添加友链。\n\n以下是站点信息：\n\n{\n  "id": "sakurain",\n  "name": "SAKURAIN TEAM",\n  "url": "https://sakurain.net",\n  "icon": "https://sakurain.net/image/logo.webp",\n  "description": "用代码构建世界",\n  "category": "blogs",\n  "featured": true\n},\n\n字段说明：\n- id: 非必填，站点唯一标识符，用于存储索引，建议使用短域名或拼音缩写，只支持字母和数字。\n- name: 必填，站点名称。\n- url: 必填，站点链接。\n- icon: 必填，站点图标链接。\n- description: 必填，站点描述。\n- category: 非必填，站点分类，默认值为 "blogs"，可选值为 "blogs"（个人博客）、"tech"（技术社区）、"design"（设计资源）、"tools"（开发工具）。\n- featured: 非必填，是否作为推荐站点置顶显示，默认值为 true。\n\n已添加到友链列表中，并替换为自己的站点信息。\n发送本邮件即代表承诺网站内容健康、合法、无恶意代码。\n\n---\n此邮件由 SAKURAIN 网站友链申请自动生成`;
-
-    const mailtoLink = `mailto:${applyInfo.contact}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoLink;
-
-    // 通知父组件显示弹窗
-    onApplyClick();
-  }, [applyInfo.contact, onApplyClick]);
 
   return (
     <motion.section
@@ -945,7 +1065,7 @@ const ApplySection = memo(function ApplySection({
           </div>
 
           <motion.button
-            onClick={handleApplyClick}
+            onClick={onApplyClick}
             initial={animationEnabled ? { opacity: 0, scale: 0.9 } : undefined}
             whileInView={animationEnabled ? { opacity: 1, scale: 1 } : undefined}
             viewport={{ margin: '-50px' }}
@@ -1225,28 +1345,47 @@ export default function FriendsPage() {
       });
   }, []);
 
-  // 只显示 demo 分类（featured 是布尔字段，不是分类，已在上方单独显示）
-  const VISIBLE_CATEGORIES = ['demo'];
+  // Display order: personal > featured (middle) > demo (bottom)
+  // demo is rendered separately at the bottom
+  const VISIBLE_CATEGORIES = ['personal'];
 
-  // Group friends by category (只包含可见分类)
+  // Demo category for bottom display
+  const DEMO_CATEGORY_ID = 'demo';
+
+  // Group friends by category (只包含可见分类，按指定顺序)
   const friendsByCategory = useMemo(() => {
     if (!data) return [];
-    return data.categories
-      .filter(category => VISIBLE_CATEGORIES.includes(category.id))
-      .map(category => ({
-        category,
-        friends: data.friends.filter(friend => friend.category === category.id)
-      }));
+    return VISIBLE_CATEGORIES
+      .map(catId => {
+        const category = data.categories.find(c => c.id === catId);
+        if (!category) return null;
+        return {
+          category,
+          friends: data.friends.filter(friend => friend.category === catId)
+        };
+      })
+      .filter((item): item is { category: FriendCategory; friends: Friend[] } => item !== null && item.friends.length > 0);
   }, [data]);
 
-  // Calculate stats - 统计 featured 友链 + demo 分类友链
+  // Demo category friends for bottom section
+  const demoFriends = useMemo(() => {
+    if (!data) return [];
+    return data.friends.filter(friend => friend.category === DEMO_CATEGORY_ID);
+  }, [data]);
+
+  const demoCategory = useMemo(() => {
+    if (!data) return null;
+    return data.categories.find(c => c.id === DEMO_CATEGORY_ID) || null;
+  }, [data]);
+
+  // Calculate stats - 只统计标记为 featured（友链推荐）的站点
   const stats = useMemo(() => {
     if (!data) return { friends: 0, categories: 0, online: 0 };
-    const visibleFriends = data.friends.filter(f => f.featured || VISIBLE_CATEGORIES.includes(f.category));
+    const featuredFriends = data.friends.filter(f => f.featured);
     return {
-      friends: visibleFriends.length,
-      categories: 2, // 友链推荐 + 演示完整
-      online: visibleFriends.filter(f => f.status === 'online').length
+      friends: featuredFriends.length,
+      categories: 3, // 与我相关 + 友链推荐 + 演示站点
+      online: featuredFriends.filter(f => f.status === 'online').length
     };
   }, [data]);
 
@@ -1305,9 +1444,23 @@ export default function FriendsPage() {
           description={data.description}
           stats={stats}
           lastUpdated={data.lastUpdated}
+          onApplyClick={handleApplyClick}
         />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+          {/* Categories - 与我相关 */}
+          {friendsByCategory.map(({ category, friends }, index) => (
+            friends.length > 0 && (
+              <CategorySection
+                key={category.id}
+                category={category}
+                friends={friends}
+                index={index + 1}
+                onClick={handleFriendClick}
+              />
+            )
+          ))}
+
           {/* Featured Friends - 显示 featured=true 的友链 */}
           {data.friends.some(f => f.featured) && (
             <motion.section
@@ -1371,18 +1524,15 @@ export default function FriendsPage() {
             </motion.section>
           )}
 
-          {/* Categories */}
-          {friendsByCategory.map(({ category, friends }, index) => (
-            friends.length > 0 && (
-              <CategorySection
-                key={category.id}
-                category={category}
-                friends={friends}
-                index={index + 2}
-                onClick={handleFriendClick}
-              />
-            )
-          ))}
+          {/* Demo Sites - 演示站点放底部 */}
+          {demoFriends.length > 0 && demoCategory && (
+            <CategorySection
+              category={demoCategory}
+              friends={demoFriends}
+              index={3}
+              onClick={handleFriendClick}
+            />
+          )}
 
           {/* Apply Section */}
           <ApplySection applyInfo={data.applyInfo} onApplyClick={handleApplyClick} />
@@ -1402,9 +1552,9 @@ export default function FriendsPage() {
         onCancel={handleCancelRedirect}
       />
 
-      {/* Mailto Modal - 页面根级别渲染，避免被遮罩 */}
+      {/* Apply Modal - 页面根级别渲染，避免被遮罩 */}
       {data && (
-        <MailtoModal
+        <ApplyModal
           isOpen={mailtoModalOpen}
           onClose={handleCloseMailtoModal}
           contact={data.applyInfo.contact}

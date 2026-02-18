@@ -7,8 +7,9 @@ import App from './App.tsx';
 import { GlobalContextMenu } from '@/components/CustomContextMenu';
 import { DebugProtection } from '@/components/DebugProtection';
 import { Navigation } from '@/components/sections/Navigation';
-import { useTheme, useMobile } from '@/hooks';
+import { useTheme, useIsMobile } from '@/hooks';
 import { PerformanceProvider, usePerformance } from '@/contexts/PerformanceContext';
+import { MobileProvider } from '@/contexts/MobileContext';
 import { RouteLoader } from '@/components/RouterTransition';
 import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
 import type { SiteData } from '@/types';
@@ -206,7 +207,7 @@ function PageLayout({ children }: { children: React.ReactNode }) {
 function GlobalLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const { enableMouseEffects, effectiveQuality } = usePerformance();
   const { isReady } = useInitialLoad();
   const phases = useStaggeredLoad(isReady);
@@ -273,82 +274,84 @@ function GlobalLayout({ children }: { children: React.ReactNode }) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <PerformanceProvider>
-      <BrowserRouter>
-        <RedirectHandler />
-        <GlobalLayout>
-          <PageLayout>
-            <Routes>
-              <Route path="/" element={<App />} />
-              <Route path="/docs" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <DocsPage />
-                </Suspense>
-              } />
-              <Route path="/docs/:categoryId" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <DocsPage />
-                </Suspense>
-              } />
-              <Route path="/docs/:categoryId/:itemId" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <DocsPage />
-                </Suspense>
-              } />
-              <Route path="/docs/:categoryId/:itemId/:chapterId" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <DocsPage />
-                </Suspense>
-              } />
-              <Route path="/friends" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <FriendsPage />
-                </Suspense>
-              } />
-              <Route path="/friends-circle" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <FeedPage />
-                </Suspense>
-              } />
-              <Route path="/blog" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <BlogPage />
-                </Suspense>
-              } />
-              <Route path="/blog/:slug" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <BlogPostPage />
-                </Suspense>
-              } />
-              <Route path="/notes" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <NotesPage />
-                </Suspense>
-              } />
-              <Route path="/about" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <AboutPage />
-                </Suspense>
-              } />
-              <Route path="/earth-online" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <EarthOnlinePage />
-                </Suspense>
-              } />
-              <Route path="/studio" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <StudioPage />
-                </Suspense>
-              } />
-              <Route path="*" element={
-                <Suspense fallback={<RouteLoader />}>
-                  <NotFoundPage />
-                </Suspense>
-              } />
-            </Routes>
-          </PageLayout>
-        </GlobalLayout>
-      </BrowserRouter>
-    </PerformanceProvider>
+    <MobileProvider>
+      <PerformanceProvider>
+        <BrowserRouter>
+          <RedirectHandler />
+          <GlobalLayout>
+            <PageLayout>
+              <Routes>
+                <Route path="/" element={<App />} />
+                <Route path="/docs" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <DocsPage />
+                  </Suspense>
+                } />
+                <Route path="/docs/:categoryId" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <DocsPage />
+                  </Suspense>
+                } />
+                <Route path="/docs/:categoryId/:itemId" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <DocsPage />
+                  </Suspense>
+                } />
+                <Route path="/docs/:categoryId/:itemId/:chapterId" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <DocsPage />
+                  </Suspense>
+                } />
+                <Route path="/friends" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <FriendsPage />
+                  </Suspense>
+                } />
+                <Route path="/friends-circle" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <FeedPage />
+                  </Suspense>
+                } />
+                <Route path="/blog" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <BlogPage />
+                  </Suspense>
+                } />
+                <Route path="/blog/:slug" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <BlogPostPage />
+                  </Suspense>
+                } />
+                <Route path="/notes" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <NotesPage />
+                  </Suspense>
+                } />
+                <Route path="/about" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <AboutPage />
+                  </Suspense>
+                } />
+                <Route path="/earth-online" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <EarthOnlinePage />
+                  </Suspense>
+                } />
+                <Route path="/studio" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <StudioPage />
+                  </Suspense>
+                } />
+                <Route path="*" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <NotFoundPage />
+                  </Suspense>
+                } />
+              </Routes>
+            </PageLayout>
+          </GlobalLayout>
+        </BrowserRouter>
+      </PerformanceProvider>
+    </MobileProvider>
   </StrictMode>,
 );

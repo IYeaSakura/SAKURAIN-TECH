@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useWindowSize } from '@/hooks';
+import { useScreenSize } from '@/hooks';
 import { usePerformance } from '@/contexts/PerformanceContext';
 import { usePrefersReducedMotion } from '@/lib/performance';
 
@@ -21,7 +21,7 @@ export function ParticleBackground() {
   const isVisibleRef = useRef(true);
   const lastFrameTimeRef = useRef(0);
   
-  const { width, height } = useWindowSize();
+  const { width, height } = useScreenSize();
   const { effectiveQuality, targetFrameRate, getParticleCount, canvasDPR } = usePerformance();
   const prefersReducedMotion = usePrefersReducedMotion();
 
