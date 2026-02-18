@@ -564,7 +564,7 @@ function DebugPanel({
         </div>
         
         <div className="space-y-2 max-h-80 overflow-y-auto">
-          {sources.map((source, index) => (
+          {sources.map((source) => (
             <div 
               key={source.name}
               className="flex items-center gap-3 p-3"
