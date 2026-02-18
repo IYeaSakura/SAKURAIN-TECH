@@ -80,6 +80,8 @@ export async function onRequestGet(context) {
     const { request } = context;
     const url = new URL(request.url);
     const feedUrl = url.searchParams.get('url');
+    
+    console.log(`[Feed Get] Request received for URL: ${feedUrl}`);
 
     // 验证 URL 参数
     if (!feedUrl) {
@@ -125,6 +127,7 @@ export async function onRequestGet(context) {
     if (kv) {
       try {
         const cached = await kv.get(cacheKey);
+        console.log(`[Feed Get] KV lookup for ${cacheKey}: ${cached ? 'HIT' : 'MISS'}`);
         if (cached) {
           const data = JSON.parse(cached);
 
@@ -148,11 +151,14 @@ export async function onRequestGet(context) {
     }
 
     // 缓存过期或不存在，自动刷新
+    console.log(`[Feed Get] Fetching fresh data for: ${feedUrl}`);
     try {
       const { content, contentType } = await fetchFeedData(feedUrl);
+      console.log(`[Feed Get] Successfully fetched ${content.length} bytes from ${feedUrl}`);
 
       // 保存到缓存
       await saveToCache(kv, cacheKey, content, contentType);
+      console.log(`[Feed Get] Saved to KV cache: ${cacheKey}`);
 
       const currentTimestamp = Date.now();
       return new Response(content, {
@@ -165,7 +171,7 @@ export async function onRequestGet(context) {
         },
       });
     } catch (err) {
-      console.error('Auto refresh error:', err);
+      console.error(`[Feed Get] Auto refresh error for ${feedUrl}:`, err);
 
       // 如果自动刷新失败，尝试返回过期的缓存（如果存在）
       if (kv) {
