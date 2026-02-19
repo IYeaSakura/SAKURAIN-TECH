@@ -483,6 +483,11 @@ export default function AboutPage() {
   const [footerData, setFooterData] = useState<SiteData['footer'] | null>(null);
   const animationEnabled = useAnimationEnabled();
 
+  // 页面加载时滚动到顶部
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, []);
+
   // 加载 footer 数据
   useEffect(() => {
     fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' })
