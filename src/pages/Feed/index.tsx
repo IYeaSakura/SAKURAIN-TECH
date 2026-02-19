@@ -52,6 +52,28 @@ interface FeedItem {
   sourceIcon: string;
 }
 
+interface BatchFeedRequest {
+  url: string;
+  name: string;
+}
+
+interface BatchFeedResult {
+  cached: BatchFeedItem[];
+  missing: BatchFeedRequest[];
+  expired: BatchFeedRequest[];
+  failed: { url: string; name: string; error: string; timestamp?: number; attempts?: number }[];
+}
+
+interface BatchFeedItem {
+  url: string;
+  name: string;
+  content: string;
+  contentType: string;
+  timestamp: number;
+  fromCache: boolean;
+  isExpired: boolean;
+}
+
 interface FeedSourceStatus {
   name: string;
   url: string;
@@ -1313,6 +1335,34 @@ export default function FeedPage() {
     }
   }, [getFeedUrl]);
 
+  const fetchBatchFeeds = useCallback(async (
+    feeds: { url: string; name: string }[],
+    signal?: AbortSignal
+  ): Promise<BatchFeedResult> => {
+    try {
+      const response = await fetch(`/api/feed/batch-get?feeds=${encodeURIComponent(JSON.stringify(feeds))}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Batch fetch failed: HTTP ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') {
+        throw err;
+      }
+      console.error('[Feed] Batch fetch error:', err);
+      // 如果批量获取失败，返回空结果让所有feed都走单独获取
+      return { cached: [], missing: feeds, expired: [], failed: [] };
+    }
+  }, []);
+
   const loadData = useCallback(async (forceRefresh = false, isBackgroundRefresh = false) => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -1368,22 +1418,110 @@ export default function FeedPage() {
       
       setFriends(eligibleFriends);
       setFooterData(siteData.footer);
-      setLoadingProgress({ loaded: 0, total: eligibleFriends.length });
       
       const allFeeds: FeedItem[] = [];
       const statusList: FeedSourceStatus[] = [];
       let latestTimestamp = 0;
       
-      for (let i = 0; i < eligibleFriends.length; i++) {
+      // 如果不是强制刷新，先尝试批量获取
+      let feedsToFetchIndividually: Friend[] = [];
+      
+      if (!forceRefresh && !isBackgroundRefresh) {
+        try {
+          const feedRequests = eligibleFriends.map((f: Friend) => ({
+            url: getFeedUrl(f),
+            name: f.name,
+          }));
+          
+          const batchResult = await fetchBatchFeeds(feedRequests, signal);
+          
+          // 处理已缓存的内容（包括过期缓存）
+          const cachedAndExpired = [...batchResult.cached, ...(batchResult.expired || [])];
+          
+          for (const batchItem of cachedAndExpired) {
+            if (signal.aborted) break;
+            
+            const friend = eligibleFriends.find((f: Friend) => f.name === batchItem.name);
+            if (!friend) continue;
+            
+            try {
+              const items = await parseFeed(batchItem.content, friend);
+              allFeeds.push(...items);
+              
+              const status: FeedSourceStatus = {
+                name: friend.name,
+                url: batchItem.url,
+                status: items.length > 0 ? 'success' : 'error',
+                itemCount: items.length,
+                error: items.length === 0 ? '订阅源无文章内容' : undefined,
+              };
+              statusList.push(status);
+              
+              if (batchItem.timestamp > latestTimestamp) {
+                latestTimestamp = batchItem.timestamp;
+              }
+            } catch (parseErr) {
+              console.error(`[Feed] Failed to parse cached feed for ${friend.name}:`, parseErr);
+              // 解析失败，加入单独获取列表
+              feedsToFetchIndividually.push(friend);
+            }
+          }
+          
+          // 处理失败的feed
+          for (const failed of batchResult.failed || []) {
+            const friend = eligibleFriends.find((f: Friend) => f.name === failed.name);
+            if (!friend) continue;
+            
+            statusList.push({
+              name: friend.name,
+              url: failed.url,
+              status: 'error',
+              itemCount: 0,
+              error: failed.error,
+            });
+          }
+          
+          // 收集需要单独获取的feed
+          const missingNames = new Set(batchResult.missing.map(m => m.name));
+          const expiredNames = new Set((batchResult.expired || []).map(e => e.name));
+          
+          feedsToFetchIndividually = eligibleFriends.filter((f: Friend) => 
+            missingNames.has(f.name) || expiredNames.has(f.name)
+          );
+          
+          // 更新已缓存feed的状态
+          setSourceStatus([...statusList, ...feedsToFetchIndividually.map((f: Friend) => ({
+            name: f.name,
+            url: f.feed || '',
+            status: 'pending' as const,
+            itemCount: 0,
+          }))]);
+          
+        } catch (batchErr) {
+          console.error('[Feed] Batch fetch failed, falling back to individual fetch:', batchErr);
+          feedsToFetchIndividually = eligibleFriends;
+        }
+      } else {
+        // 强制刷新或后台刷新，全部单独获取
+        feedsToFetchIndividually = eligibleFriends;
+      }
+      
+      // 设置进度总数量
+      const totalFeedsToFetch = feedsToFetchIndividually.length;
+      let fetchedCount = 0;
+      setLoadingProgress({ loaded: fetchedCount, total: totalFeedsToFetch });
+      
+      // 单独获取剩余的feed
+      for (let i = 0; i < feedsToFetchIndividually.length; i++) {
         if (signal.aborted) break;
         
-        const friend = eligibleFriends[i];
+        const friend = feedsToFetchIndividually[i];
         const { items, timestamp, status } = await fetchFriendFeed(friend, forceRefresh, signal);
         allFeeds.push(...items);
         statusList.push(status);
         
         // 实时更新状态
-        setSourceStatus([...statusList, ...eligibleFriends.slice(i + 1).map((f: Friend) => ({
+        setSourceStatus([...statusList, ...feedsToFetchIndividually.slice(i + 1).map((f: Friend) => ({
           name: f.name,
           url: f.feed || '',
           status: 'pending' as const,
@@ -1395,7 +1533,8 @@ export default function FeedPage() {
           latestTimestamp = timestamp;
         }
         
-        setLoadingProgress({ loaded: i + 1, total: eligibleFriends.length });
+        fetchedCount++;
+        setLoadingProgress({ loaded: fetchedCount, total: totalFeedsToFetch });
         
         if (i < 3 || allFeeds.length <= POSTS_PER_PAGE) {
           const sorted = [...allFeeds].sort((a, b) => {
@@ -1437,7 +1576,7 @@ export default function FeedPage() {
         setLoading(false);
       }
     }
-  }, [fetchFriendFeed]);
+  }, [fetchFriendFeed, fetchBatchFeeds, getFeedUrl]);
 
   const updateDisplayItems = useCallback((items: FeedItem[], page: number) => {
     const start = (page - 1) * POSTS_PER_PAGE;
