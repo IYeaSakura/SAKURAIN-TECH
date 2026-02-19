@@ -327,7 +327,7 @@
       "status": "online"
     },
     {
-      "id": "jsoftstudio",
+      "id": "longdahuasheng",
       "name": "我的技术成长笔记",
       "url": "https://blog.longdahuasheng.top",
       "icon": "https://blog.longdahuasheng.top/logo.png",
@@ -337,7 +337,19 @@
       "featured": true,
       "unidirectional": true,
       "status": "online"
+    },
+    {
+      "id": "starssr",
+      "name": "云云星羽",
+      "url": "https://starssr.com",
+      "icon": "https://q1.qlogo.cn/g?b=qq&nk=521001121&s=640",
+      "feed": "https://starssr.com/rss.xml",
+      "description": "陌让流年盼繁华，颜容依旧似繁花",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true,
+      "status": "online"
     }
   ],
-  "lastUpdated": "2026-02-19T13:32:59.521Z"
+  "lastUpdated": "2026-02-19T13:38:09.272Z"
 }
