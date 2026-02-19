@@ -1,0 +1,46 @@
+{
+  "songs": [
+    {
+      "id": "1",
+      "title": "予你成歌",
+      "artist": "IRiS七叶、叶里、佑可猫、檀烧",
+      "src": "/music/yunichengge.mp3"
+    },
+    {
+      "id": "2",
+      "title": "万古如今",
+      "artist": "镜予歌、袁雨桐、不馋、塔塔Anita、刘小寒、林易笙",
+      "src": "/music/wangurujin.mp3"
+    },
+    {
+      "id": "3",
+      "title": "万山载雪",
+      "artist": "漆柚、椒椒JMJ",
+      "src": "/music/wanshanzaixue.mp3"
+    },
+    {
+      "id": "4",
+      "title": "一路生花",
+      "artist": "温奕心",
+      "src": "/music/yilushenghua.mp3"
+    },
+    {
+      "id": "5",
+      "title": "最后一页",
+      "artist": "洛尘鞅_",
+      "src": "/music/zuihouyiye.mp3"
+    },
+    {
+      "id": "6",
+      "title": "鸢飞入梦",
+      "artist": "漆柚、椒椒JMJ",
+      "src": "/music/yuanfeirumeng.mp3"
+    },
+    {
+      "id": "7",
+      "title": "10年",
+      "artist": "奥華子",
+      "src": "/music/10nian.mp3"
+    }
+  ]
+}

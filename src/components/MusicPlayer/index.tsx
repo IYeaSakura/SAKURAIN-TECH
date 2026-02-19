@@ -18,36 +18,20 @@ import {
   Waves,
   Grid3X3,
 } from 'lucide-react';
-import { useAnimationEnabled } from '@/hooks';
+import { useAnimationEnabled, useConfig } from '@/hooks';
 import { AudioVisualizer } from './AudioVisualizer';
 
-// 播放列表配置
-export const PLAYLIST = [
-  {
-    id: '1',
-    title: '予你成歌',
-    artist: 'IRiS七叶、叶里、佑可猫、檀烧',
-    src: '/music/yunichengge.mp3',
-  },
-  {
-    id: '2',
-    title: '万古如今',
-    artist: '镜予歌、袁雨桐、不馋、塔塔Anita、刘小寒、林易笙',
-    src: '/music/wangurujin.mp3',
-  },
-  {
-    id: '3',
-    title: '万山载雪',
-    artist: '漆柚、椒椒JMJ',
-    src: '/music/wanshanzaixue.mp3',
-  },
-  {
-    id: '4',
-    title: '一路生花',
-    artist: '温奕心',
-    src: '/music/yilushenghua.mp3',
-  },
-] as const;
+// 播放列表类型定义
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  src: string;
+}
+
+interface PlaylistConfig {
+  songs: Song[];
+}
 
 // Fisher-Yates 洗牌算法
 const shuffleArray = (length: number): number[] => {
@@ -65,7 +49,9 @@ interface MusicPlayerProps {
 
 export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
   const animationEnabled = useAnimationEnabled();
-  
+  const { data: playlistConfig, loading: playlistLoading } = useConfig<PlaylistConfig>('/data/playlist.json');
+  const playlist = playlistConfig?.songs || [];
+
   // 使用状态来控制是否显示，而不是直接返回 null
   const [isVisible, setIsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -77,7 +63,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [buffered, setBuffered] = useState(0);
-  const [shuffledOrder, setShuffledOrder] = useState<number[]>(() => shuffleArray(PLAYLIST.length));
+  const [shuffledOrder, setShuffledOrder] = useState<number[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [visualizerMode, setVisualizerMode] = useState<'bars' | 'wave' | 'heatmap'>('bars');
 
@@ -85,19 +71,26 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
   const progressRef = useRef<HTMLDivElement>(null);
   const handleNextRef = useRef<() => void>(() => {});
 
-  const currentIndex = shuffledOrder[currentPosition];
-  const currentSong = PLAYLIST[currentIndex];
+  // Initialize shuffled order when playlist is loaded
+  useEffect(() => {
+    if (playlist.length > 0 && shuffledOrder.length === 0) {
+      setShuffledOrder(shuffleArray(playlist.length));
+    }
+  }, [playlist.length, shuffledOrder.length]);
+
+  const currentIndex = shuffledOrder[currentPosition] ?? 0;
+  const currentSong = playlist[currentIndex] || { title: '', artist: '', src: '' };
   const currentNumber = currentPosition + 1;
-  const totalSongs = PLAYLIST.length;
+  const totalSongs = playlist.length;
 
   // 检测移动端并设置可见性
   useEffect(() => {
     const checkMobile = () => {
-      const isMobileDevice = window.innerWidth < 768 || 
+      const isMobileDevice = window.innerWidth < 768 ||
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       setIsVisible(!isMobileDevice);
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -191,7 +184,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
     if (!audioRef.current || !isVisible) return;
 
     const audio = audioRef.current;
-    
+
     if (isPlaying) {
       const playPromise = audio.play();
       if (playPromise !== undefined) {
@@ -228,16 +221,17 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
 
   // 下一首
   const handleNext = useCallback(() => {
+    if (playlist.length === 0) return;
     setCurrentPosition(prev => {
       const nextPosition = prev + 1;
       if (nextPosition >= shuffledOrder.length) {
-        const newOrder = shuffleArray(PLAYLIST.length);
+        const newOrder = shuffleArray(playlist.length);
         setShuffledOrder(newOrder);
         return 0;
       }
       return nextPosition;
     });
-  }, [shuffledOrder.length]);
+  }, [shuffledOrder.length, playlist.length]);
 
   // 更新 ref 以确保事件处理器总是使用最新版本
   useEffect(() => {
@@ -282,8 +276,8 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
   const progressPercent = duration ? (currentTime / duration) * 100 : 0;
   const bufferedPercent = duration ? (buffered / duration) * 100 : 0;
 
-  // 移动端不渲染
-  if (!isVisible) return null;
+  // 移动端不渲染或播放列表未加载
+  if (!isVisible || playlistLoading || playlist.length === 0) return null;
 
   return (
     <>
@@ -303,8 +297,8 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
             style={{
               background: 'var(--bg-card)',
               borderColor: isPlaying ? 'var(--accent-primary)' : 'var(--border-subtle)',
-              boxShadow: isPlaying 
-                ? '0 4px 20px var(--accent-glow), 0 0 30px var(--accent-glow)' 
+              boxShadow: isPlaying
+                ? '0 4px 20px var(--accent-glow), 0 0 30px var(--accent-glow)'
                 : '0 4px 20px rgba(0, 0, 0, 0.3)',
             }}
             animate={{
@@ -337,7 +331,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
                 }}
               />
               {/* 遮罩成圆形光晕效果 - 更柔和 */}
-              <div 
+              <div
                 className="absolute inset-0"
                 style={{
                   background: 'radial-gradient(circle at 50% 50%, transparent 30%, var(--bg-card) 80%)',
@@ -391,9 +385,9 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
               <span className="text-xs font-medium max-w-[80px] truncate" style={{ color: 'var(--text-primary)' }}>
                 {currentSong.title}
               </span>
-              <motion.span 
+              <motion.span
                 className="text-[10px] max-w-[80px] truncate"
-                animate={{ 
+                animate={{
                   color: isPlaying ? 'var(--accent-primary)' : 'var(--text-muted)',
                 }}
                 transition={{ duration: 0.3 }}
@@ -403,10 +397,10 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
             </div>
 
             {/* 迷你频谱指示器 - 带发光效果 */}
-            <motion.div 
+            <motion.div
               className="flex items-end gap-[3px] h-4 relative z-10"
               initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ 
+              animate={{
                 opacity: isPlaying && !isLoading ? 1 : 0,
                 scale: isPlaying && !isLoading ? 1 : 0.8,
               }}
@@ -416,7 +410,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
                 <motion.div
                   key={i}
                   className="w-1 rounded-full"
-                  style={{ 
+                  style={{
                     background: 'var(--accent-primary)',
                     boxShadow: '0 0 6px var(--accent-primary), 0 0 12px var(--accent-secondary)',
                   }}
@@ -438,7 +432,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
             {/* 加载状态 - 带淡入淡出 */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ 
+              animate={{
                 opacity: isLoading ? 1 : 0,
                 scale: isLoading ? 1 : 0.8,
               }}
@@ -453,7 +447,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
             {/* 暂停状态图标 - 带淡入淡出 */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ 
+              animate={{
                 opacity: !isPlaying && !isLoading ? 1 : 0,
                 scale: !isPlaying && !isLoading ? 1 : 0.8,
               }}
