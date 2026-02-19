@@ -10,12 +10,13 @@ interface BlogCardProps {
   post: BlogPost;
   index: number;
   featured?: boolean;
+  featuredLarge?: boolean;
 }
 
 // CSS clip-path helpers - 像素风格
 const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
 
-export const BlogCard = memo(function BlogCard({ post, index, featured = false }: BlogCardProps) {
+export const BlogCard = memo(function BlogCard({ post, index, featured = false, featuredLarge = false }: BlogCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
 
@@ -148,7 +149,7 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false }
           />
 
           {/* Content */}
-          <div className={`flex relative z-10 flex-1 ${featured ? 'flex-col md:flex-row gap-6' : 'flex-col gap-4'}`}>
+          <div className={`flex relative z-10 flex-1 ${featuredLarge ? 'flex-col md:flex-row gap-6' : 'flex-col gap-4'}`}>
             {/* Icon/Image */}
             <motion.div
               animate={{
@@ -157,7 +158,7 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false }
               }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               className={`flex-shrink-0 flex items-center justify-center overflow-hidden relative ${
-                featured ? 'w-full md:w-24 h-32 md:h-24' : 'w-full h-32'
+                featuredLarge ? 'w-full md:w-24 h-32 md:h-24' : 'w-full h-32'
               }`}
               style={{
                 background: 'rgba(255, 255, 255, 0.03)',
@@ -168,7 +169,7 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false }
               <img
                 src={post.cover}
                 alt={post.title}
-                className={`object-contain ${featured ? 'w-16 h-16 md:w-12 md:h-12' : 'w-16 h-16'}`}
+                className={`object-contain ${featuredLarge ? 'w-16 h-16 md:w-12 md:h-12' : 'w-16 h-16'}`}
               />
               {/* Icon glow */}
               <motion.div
@@ -186,7 +187,7 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false }
                   <motion.h3
                     animate={{ scale: isHovered ? 1.02 : 1 }}
                     transition={{ duration: 0.2 }}
-                    className={`font-bold truncate ${featured ? 'text-xl md:text-2xl' : 'text-lg'}`}
+                    className={`font-bold truncate ${featuredLarge ? 'text-xl md:text-2xl' : featured ? 'text-lg' : 'text-lg'}`}
                     style={{
                       color: 'var(--text-primary)',
                       textShadow: isHovered ? '0 0 10px var(--accent-glow)' : 'none',
@@ -259,7 +260,7 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false }
 
                 {post.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {post.tags.slice(0, featured ? 3 : 2).map((tag) => (
+                    {post.tags.slice(0, featuredLarge ? 3 : 2).map((tag) => (
                       <motion.span
                         key={tag}
                         whileHover={{ scale: 1.1 }}

@@ -28,8 +28,6 @@ export default defineConfig({
           'utils': ['clsx', 'tailwind-merge', 'class-variance-authority'],
           // 图表
           'charts': ['recharts'],
-          // 粒子效果
-          'particles': ['@tsparticles/react', '@tsparticles/slim'],
           // 3D 库 - 分开打包以减小单个 chunk 大小
           'three-core': ['three'],
           'react-three': ['@react-three/fiber', '@react-three/drei'],

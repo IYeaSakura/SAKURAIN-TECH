@@ -512,7 +512,8 @@ export default function BlogIndex() {
               `}>
                 {featuredPosts.map((post, index) => {
                   let spanClass = '';
-                  if (featuredPosts.length >= 3 && index === 0) {
+                  const isLarge = featuredPosts.length >= 3 && index === 0;
+                  if (isLarge) {
                     spanClass = 'md:col-span-2 md:row-span-2';
                   }
                   return (
@@ -524,7 +525,7 @@ export default function BlogIndex() {
                     >
                       <div className="h-full">
                         {viewMode === 'grid' ? (
-                          <BlogCard post={post} index={index} featured={true} />
+                          <BlogCard post={post} index={index} featured={true} featuredLarge={isLarge} />
                         ) : (
                           <BlogListItem post={post} index={index} featured={true} />
                         )}
