@@ -282,6 +282,17 @@
       "category": "blogs",
       "featured": true,
       "status": "online"
+    },
+    {
+      "id": "jsoftstudio",
+      "name": "manyJ'sBlog",
+      "url": "https://blog.jsoftstudio.top/",
+      "icon": "https://blog.jsoftstudio.top/css/all/favicon.ico",
+      "description": "manyJ'sBlog - 个人博客",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true,
+      "status": "online"
     }
   ],
   "lastUpdated": "2026-02-18T14:25:06.566Z"

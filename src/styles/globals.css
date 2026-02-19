@@ -24,26 +24,26 @@
 @tailwind utilities;
 
 :root {
-  /* Dark Theme - VSCode High Contrast Dark (Default) */
-  --bg-primary: #000000;
-  --bg-secondary: #0C0C0C;
-  --bg-tertiary: #1A1A1A;
-  --bg-card: #0D0D0D;
+  /* Light Theme - VSCode High Contrast Inspired (Default) */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F3F3F3;
+  --bg-tertiary: #E8E8E8;
+  --bg-card: #FAFAFA;
 
-  /* VSCode High Contrast Dark Colors */
-  --accent-primary: #569CD6;
-  --accent-secondary: #4EC9B0;
-  --accent-tertiary: #CE9178;
-  --accent-glow: rgba(86, 156, 214, 0.4);
+  /* VSCode High Contrast Light Colors */
+  --accent-primary: #0E639C;
+  --accent-secondary: #6A9955;
+  --accent-tertiary: #569CD6;
+  --accent-glow: rgba(14, 99, 156, 0.3);
 
-  --text-primary: #FFFFFF;
-  --text-secondary: #D4D4D4;
+  --text-primary: #1A1A1A;
+  --text-secondary: #4A4A4A;
   --text-muted: #808080;
 
-  --border-subtle: #3C3C3C;
-  --border-glow: #569CD6;
+  --border-subtle: #E0E0E0;
+  --border-glow: #0E639C;
 
-  --success: #4EC9B0;
+  --success: #6A9955;
   --warning: #B5CEA8;
   --error: #F44747;
 
@@ -54,26 +54,26 @@
   --mc-redstone: #FF4444;
   --mc-lapis: #4169E1;
 
-  /* Shadcn/UI Dark Theme */
-  --background: 0 0% 0%;
-  --foreground: 0 0% 100%;
-  --card: 0 0% 5%;
-  --card-foreground: 0 0% 100%;
-  --popover: 0 0% 5%;
-  --popover-foreground: 0 0% 100%;
-  --primary: 217 91% 60%;
-  --primary-foreground: 0 0% 0%;
-  --secondary: 0 0% 10%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 0 0% 10%;
-  --muted-foreground: 0 0% 50%;
-  --accent: 217 91% 60%;
-  --accent-foreground: 0 0% 0%;
+  /* Shadcn/UI Light Theme */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 10%;
+  --card: 0 0% 98%;
+  --card-foreground: 0 0% 10%;
+  --popover: 0 0% 98%;
+  --popover-foreground: 0 0% 10%;
+  --primary: 207 85% 34%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 96%;
+  --secondary-foreground: 0 0% 10%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 45%;
+  --accent: 207 85% 34%;
+  --accent-foreground: 0 0% 100%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 24%;
-  --input: 0 0% 24%;
-  --ring: 211 100% 35%;
+  --border: 0 0% 90%;
+  --input: 0 0% 90%;
+  --ring: 207 85% 34%;
   --radius: 0;
 
   /* ============================================
@@ -126,41 +126,41 @@
   --tracking-widest: 0.1em;
 }
 
-[data-theme="light"] {
-  /* Light Theme - VSCode High Contrast Inspired */
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F3F3F3;
-  --bg-tertiary: #E8E8E8;
-  --bg-card: #FAFAFA;
+[data-theme="dark"] {
+  /* Dark Theme - VSCode High Contrast Dark */
+  --bg-primary: #000000;
+  --bg-secondary: #0C0C0C;
+  --bg-tertiary: #1A1A1A;
+  --bg-card: #0D0D0D;
 
-  --accent-primary: #0E639C;
-  --accent-secondary: #6A9955;
-  --accent-tertiary: #569CD6;
-  --accent-glow: rgba(14, 99, 156, 0.3);
+  --accent-primary: #569CD6;
+  --accent-secondary: #4EC9B0;
+  --accent-tertiary: #CE9178;
+  --accent-glow: rgba(86, 156, 214, 0.4);
 
-  --text-primary: #000000;
-  --text-secondary: #3C3C3C;
-  --text-muted: #6E6E6E;
+  --text-primary: #FFFFFF;
+  --text-secondary: #D4D4D4;
+  --text-muted: #808080;
 
   --border-subtle: #3C3C3C;
-  --border-glow: #0E639C;
+  --border-glow: #569CD6;
 
-  /* Shadcn/UI Light Theme */
-  --background: 0 0% 100%;
-  --foreground: 0 0% 0%;
-  --card: 0 0% 98%;
-  --card-foreground: 0 0% 0%;
-  --popover: 0 0% 98%;
-  --popover-foreground: 0 0% 0%;
-  --primary: 211 100% 35%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 95%;
-  --secondary-foreground: 0 0% 0%;
-  --muted: 0 0% 95%;
-  --muted-foreground: 0 0% 43%;
-  --accent: 211 100% 35%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 47%;
+  /* Shadcn/UI Dark Theme */
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 5%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 5%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 0 0% 10%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 10%;
+  --muted-foreground: 0 0% 50%;
+  --accent: 217 91% 60%;
+  --accent-foreground: 0 0% 0%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   --border: 0 0% 24%;
   --input: 0 0% 24%;

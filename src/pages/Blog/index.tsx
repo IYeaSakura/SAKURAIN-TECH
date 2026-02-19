@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Grid, List, X, ChevronLeft, ChevronRight, BarChart3, BookOpen, Calendar, Tag, Sparkles } from 'lucide-react';
-import { AmbientGlow, GradientText, LightBeam } from '@/components/effects';
+import { GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
 import { useMobile, useAnimationEnabled } from '@/hooks';
 import type { SiteData } from '@/types';
@@ -279,10 +279,6 @@ export default function BlogIndex() {
       <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
         {/* 统一背景特效 */}
         <div className="fixed inset-0 pointer-events-none">
-          <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
-          <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
-          <AmbientGlow color="var(--accent-primary)" opacity={0.08} position="center" size={600} />
-
           {/* 网格背景 */}
           <div
             className="absolute inset-0 opacity-[0.02]"

@@ -34,7 +34,7 @@ import {
   AmbientGlow,
 } from '@/components/effects';
 import { GradientText } from '@/components/effects/TextEffects';
-import { Navigation } from '@/components/sections/Navigation';
+
 import { Footer } from '@/components/sections/Footer';
 import { useTheme, useNavigation } from '@/hooks';
 import { usePrefersReducedMotion } from '@/lib/performance';
@@ -1154,7 +1154,7 @@ const HeroSection = () => {
 
       {/* 主内容区域 */}
       <div className="relative z-10 flex-1 flex items-center">
-        <div className="w-full max-w-6xl mx-auto px-6 lg:px-12 pt-24 pb-12">
+        <div className="w-full max-w-6xl mx-auto px-6 lg:px-12 pt-16 sm:pt-20 lg:pt-24 pb-12">
 
           {/* 上方：LOGO + ASCII艺术 - 居中 */}
           <motion.div
@@ -1361,9 +1361,9 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* 滚动提示 */}
+      {/* 滚动提示 - 桌面端显示，移动端隐藏 */}
       <motion.div
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
+        className="hidden lg:flex absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 2, duration: 0.6 }}
@@ -1581,7 +1581,7 @@ const QuickLinksSection = () => {
 function App() {
   const [siteData, setSiteData] = useState<SiteData | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
-  const { theme, isTransitioning, toggleTheme } = useTheme();
+  useTheme();
 
   useEffect(() => {
     fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' })
@@ -1613,15 +1613,6 @@ function App() {
     <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <SecurityProtection />
       <ScrollProgress />
-
-      {siteData && (
-        <Navigation
-          data={siteData.navigation}
-          theme={theme}
-          onThemeToggle={toggleTheme}
-          isThemeTransitioning={isTransitioning}
-        />
-      )}
 
       <main>
         <HeroSection />
