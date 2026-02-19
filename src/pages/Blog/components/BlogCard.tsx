@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router';
 import type { BlogPost } from '../types';
 import { formatDateCard, getReadingTime } from '../utils';
 import { deploymentConfig } from '@/config/deployment-config';
+import { useAnimationEnabled, useMobile } from '@/hooks';
 
 interface BlogCardProps {
   post: BlogPost;
@@ -19,8 +20,11 @@ const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 
 export const BlogCard = memo(function BlogCard({ post, index, featured = false, featuredLarge = false }: BlogCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
+  const animationEnabled = useAnimationEnabled();
+  const isMobile = useMobile();
 
   const handleClick = () => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     if (deploymentConfig.useWindowLocation) {
       window.location.href = `/blog/${post.slug}`;
     } else {
@@ -31,11 +35,11 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false, 
   return (
     <motion.div
       onClick={handleClick}
-      initial={{ opacity: 0, y: 30, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={animationEnabled ? { opacity: 0, y: 30, scale: 0.9 } : undefined}
+      animate={animationEnabled ? { opacity: 1, y: 0, scale: 1 } : undefined}
       transition={{
         duration: 0.6,
-        delay: index * 0.05,
+        delay: animationEnabled ? index * 0.05 : 0,
         type: 'spring',
         stiffness: 100,
       }}
@@ -55,98 +59,108 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false, 
         }}
       >
         <div className="relative p-6 h-full flex flex-col">
-          {/* 四角光效动画 */}
-          <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
-            <motion.div
-              className="absolute top-0 left-0 w-full h-[2px]"
-              style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
-              animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-            />
-            {isHovered && (
-              <motion.div
-                className="absolute top-0 left-0 w-[2px] h-full"
-                style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              />
-            )}
-          </div>
-          <div className="absolute top-0 right-0 w-4 h-4 pointer-events-none">
-            <motion.div
-              className="absolute top-0 right-0 w-full h-[2px]"
-              style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
-              animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-            />
-            {isHovered && (
-              <motion.div
-                className="absolute top-0 right-0 w-[2px] h-full"
-                style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              />
-            )}
-          </div>
-          <div className="absolute bottom-0 left-0 w-4 h-4 pointer-events-none">
-            <motion.div
-              className="absolute bottom-0 left-0 w-full h-[2px]"
-              style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
-              animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-            />
-            {isHovered && (
-              <motion.div
-                className="absolute bottom-0 left-0 w-[2px] h-full"
-                style={{ background: 'linear-gradient(to top, var(--accent-secondary), transparent)' }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              />
-            )}
-          </div>
-          <div className="absolute bottom-0 right-0 w-4 h-4 pointer-events-none">
-            <motion.div
-              className="absolute bottom-0 right-0 w-full h-[2px]"
-              style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
-              animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-            />
-            {isHovered && (
-              <motion.div
-                className="absolute bottom-0 right-0 w-[2px] h-full"
-                style={{ background: 'linear-gradient(to top, var(--accent-primary), transparent)' }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              />
-            )}
-          </div>
+          {/* 四角光效动画 - 仅桌面端显示 */}
+          {!isMobile && (
+            <>
+              <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
+                <motion.div
+                  className="absolute top-0 left-0 w-full h-[2px]"
+                  style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
+                  animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                />
+                {isHovered && (
+                  <motion.div
+                    className="absolute top-0 left-0 w-[2px] h-full"
+                    style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
+              </div>
+              <div className="absolute top-0 right-0 w-4 h-4 pointer-events-none">
+                <motion.div
+                  className="absolute top-0 right-0 w-full h-[2px]"
+                  style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
+                  animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                />
+                {isHovered && (
+                  <motion.div
+                    className="absolute top-0 right-0 w-[2px] h-full"
+                    style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
+              </div>
+              <div className="absolute bottom-0 left-0 w-4 h-4 pointer-events-none">
+                <motion.div
+                  className="absolute bottom-0 left-0 w-full h-[2px]"
+                  style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
+                  animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                />
+                {isHovered && (
+                  <motion.div
+                    className="absolute bottom-0 left-0 w-[2px] h-full"
+                    style={{ background: 'linear-gradient(to top, var(--accent-secondary), transparent)' }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
+              </div>
+              <div className="absolute bottom-0 right-0 w-4 h-4 pointer-events-none">
+                <motion.div
+                  className="absolute bottom-0 right-0 w-full h-[2px]"
+                  style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
+                  animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                />
+                {isHovered && (
+                  <motion.div
+                    className="absolute bottom-0 right-0 w-[2px] h-full"
+                    style={{ background: 'linear-gradient(to top, var(--accent-primary), transparent)' }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
+              </div>
+            </>
+          )}
 
-          {/* Hover glow background */}
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
-          />
+          {/* Hover glow background - 仅桌面端显示 */}
+          {!isMobile && (
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
+              animate={{ opacity: isHovered ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+            />
+          )}
 
-          {/* Scanline effect */}
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px)',
-              opacity: isHovered ? 0.5 : 0,
-            }}
-          />
+          {/* Scanline effect - 仅桌面端显示 */}
+          {!isMobile && (
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px)',
+                opacity: isHovered ? 0.5 : 0,
+              }}
+            />
+          )}
 
-          {/* Shine effect */}
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 55%, transparent 60%)',
-            }}
-            animate={isHovered ? { x: '200%' } : { x: '-100%' }}
-            transition={{ duration: 0.8 }}
-          />
+          {/* Shine effect - 仅桌面端显示 */}
+          {!isMobile && (
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 55%, transparent 60%)',
+              }}
+              animate={isHovered ? { x: '200%' } : { x: '-100%' }}
+              transition={{ duration: 0.8 }}
+            />
+          )}
 
           {/* Content */}
           <div className={`flex relative z-10 flex-1 ${featuredLarge ? 'flex-col md:flex-row gap-6' : 'flex-col gap-4'}`}>

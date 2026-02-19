@@ -5,12 +5,22 @@
     <link>https://sakurain.net</link>
     <description>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。</description>
     <language>zh-CN</language>
-    <lastBuildDate>Wed, 18 Feb 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 19 Feb 2026 00:00:00 GMT</lastBuildDate>
     <copyright>© 2026 SAKURAIN 技术工作室</copyright>
     <generator>SAKURAIN Feed Generator</generator>
     <atom:link href="https://sakurain.net/feed.xml" rel="self" type="application/rss+xml"/>
     <atom:link href="https://sakurain.net/atom.xml" rel="alternate" type="application/atom+xml"/>
     
+    <item>
+      <title>解剖X.com推荐算法：当3140亿参数的Grok-1成为你的&quot;数字策展人&quot;</title>
+      <link>https://sakurain.net/blog/x-com-recommendation-algorithm-grok</link>
+      <guid isPermaLink="true">https://sakurain.net/blog/x-com-recommendation-algorithm-grok</guid>
+      <pubDate>Thu, 19 Feb 2026 00:00:00 GMT</pubDate>
+      <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
+      <description>深入剖析X.com开源的&quot;For You&quot;推荐系统技术栈，从双源内容融合机制到Grok-1 Transformer排序模型，探索MoE架构如何实现314B参数容量下的高效推理。</description>
+      <category>深度学习</category><category>神经网络</category><category>推荐系统</category><category>大语言模型</category><category>MoE架构</category>
+    </item>
+
     <item>
       <title>RSS 抓取的迷雾：一次 Serverless 架构的边界探索</title>
       <link>https://sakurain.net/blog/rss-serverless-boundary-exploration</link>

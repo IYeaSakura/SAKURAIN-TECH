@@ -13,6 +13,23 @@
   ],
   "items": [
     {
+      "id": "https://sakurain.net/blog/x-com-recommendation-algorithm-grok",
+      "url": "https://sakurain.net/blog/x-com-recommendation-algorithm-grok",
+      "title": "解剖X.com推荐算法：当3140亿参数的Grok-1成为你的\"数字策展人\"",
+      "content_text": "深入剖析X.com开源的\"For You\"推荐系统技术栈，从双源内容融合机制到Grok-1 Transformer排序模型，探索MoE架构如何实现314B参数容量下的高效推理。",
+      "date_published": "2026-02-19T00:00:00.000Z",
+      "author": {
+        "name": "SAKURAIN"
+      },
+      "tags": [
+        "深度学习",
+        "神经网络",
+        "推荐系统",
+        "大语言模型",
+        "MoE架构"
+      ]
+    },
+    {
       "id": "https://sakurain.net/blog/rss-serverless-boundary-exploration",
       "url": "https://sakurain.net/blog/rss-serverless-boundary-exploration",
       "title": "RSS 抓取的迷雾：一次 Serverless 架构的边界探索",
