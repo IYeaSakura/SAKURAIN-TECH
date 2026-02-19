@@ -86,7 +86,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
               style={{ color: 'var(--text-muted)' }}
             >
               <FileText className="w-4 h-4" />
-              <span>文档</span>
+              <span>技术文档</span>
             </button>
             <button
               onClick={() => navigateTo('/notes')}
@@ -94,7 +94,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
               style={{ color: 'var(--text-muted)' }}
             >
               <MessageCircle className="w-4 h-4" />
-              <span>日志</span>
+              <span>开发日志</span>
             </button>
           </div>
 

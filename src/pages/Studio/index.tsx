@@ -12,7 +12,7 @@ import {
   SecurityProtection,
   LightBeam,
 } from '@/components/effects';
-import { Navigation } from '@/components/sections/Navigation';
+
 import { Hero } from '@/components/sections/Hero';
 import { WelcomeModal } from '@/components/WelcomeModal';
 import { SectionLoadingPlaceholder } from '@/components/ui/loading-placeholder';
@@ -125,7 +125,7 @@ export default function StudioPage() {
   const [timelineData, setTimelineData] = useState<TimelineData | null>(null);
   const [statsChartsData, setStatsChartsData] = useState<StatsChartsData | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
-  const { theme, isTransitioning, toggleTheme } = useTheme();
+  useTheme();
 
   useEffect(() => {
     Promise.all([
@@ -163,13 +163,6 @@ export default function StudioPage() {
       {/* 全局特效 */}
       <ScrollProgress />
 
-      <Navigation
-        data={siteData.navigation}
-        theme={theme}
-        onThemeToggle={toggleTheme}
-        isThemeTransitioning={isTransitioning}
-      />
-      
       <main className="relative z-10">
         {/* Hero 首屏 */}
         <Hero data={siteData.hero} />
