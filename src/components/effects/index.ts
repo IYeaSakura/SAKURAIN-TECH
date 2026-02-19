@@ -2,12 +2,8 @@
 export { ParticleBackground } from './ParticleBackground';
 export { GridBackground } from './GridBackground';
 export { ScrollProgress } from './ScrollProgress';
-export { TechCursor } from './TechCursor';
 export { AnimatedCounter } from './AnimatedCounter';
-export { TextReveal, CharacterReveal, LineReveal } from './TextReveal';
 export { MagneticButton } from './MagneticButton';
-export { SpotlightCard } from './SpotlightCard';
-export { ParallaxWrapper } from './ParallaxWrapper';
 export { Terminal } from './Terminal';
 export { AmbientGlow, FloatingParticles, ScanLine, AnimatedGrid, CursorGlow } from './GlowEffects';
 
@@ -56,17 +52,6 @@ export {
   ParallaxContainer,
   VelocityCursor,
 } from './MouseEffects';
-
-// 3D特效
-export {
-  FlipCard3D,
-  Cube3D,
-  ParallaxLayer,
-  TiltCard3D,
-  Carousel3D,
-  DepthLayers,
-  ScrollReveal3D,
-} from './Advanced3D';
 
 // 3D地球
 export { Globe3D } from './Globe3D';
