@@ -228,6 +228,17 @@
       "status": "online"
     },
     {
+      "id": "amvc",
+      "name": "麻辣工夫茶博客网",
+      "url": "https://amvc.top",
+      "icon": "https://amvc.top/touxiang.webp",
+      "feed": "https://amvc.top/feed/",
+      "description": "天气晴朗，万物可爱~",
+      "category": "blogs",
+      "featured": true,
+      "status": "online"
+    },
+    {
       "id": "woolyun",
       "name": "天海博客",
       "url": "https://woolyun.com/",
@@ -273,17 +284,6 @@
       "status": "online"
     },
     {
-      "id": "amvc",
-      "name": "麻辣工夫茶博客网",
-      "url": "https://amvc.top",
-      "icon": "https://amvc.top/touxiang.webp",
-      "feed": "https://amvc.top/feed/",
-      "description": "天气晴朗，万物可爱~",
-      "category": "blogs",
-      "featured": true,
-      "status": "online"
-    },
-    {
       "id": "jsoftstudio",
       "name": "manyJ'sBlog",
       "url": "https://blog.jsoftstudio.top/",
@@ -295,5 +295,5 @@
       "status": "online"
     }
   ],
-  "lastUpdated": "2026-02-18T14:25:06.566Z"
+  "lastUpdated": "2026-02-19T04:39:09.986Z"
 }
