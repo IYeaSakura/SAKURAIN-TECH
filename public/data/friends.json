@@ -325,7 +325,19 @@
       "featured": true,
       "unidirectional": true,
       "status": "online"
+    },
+    {
+      "id": "jsoftstudio",
+      "name": "我的技术成长笔记",
+      "url": "https://blog.longdahuasheng.top",
+      "icon": "https://blog.longdahuasheng.top/logo.png",
+      "feed": "https://blog.longdahuasheng.top/feed",
+      "description": "零基础入门到进阶实战，记录每一步成长的思考",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true,
+      "status": "online"
     }
   ],
-  "lastUpdated": "2026-02-19T13:03:43.961Z"
+  "lastUpdated": "2026-02-19T13:32:59.521Z"
 }
