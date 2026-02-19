@@ -1,5 +1,5 @@
 /**
- * 全站音乐播放器 - 洗牌播放模式
+ * 全站音乐播放器 - 随机播放模式
  * 固定在页面右下角，切换页面不会中断播放
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -14,7 +14,9 @@ import {
   Music,
   Shuffle,
   Loader2,
-  Repeat,
+  BarChart3,
+  Waves,
+  Grid3X3,
 } from 'lucide-react';
 import { useAnimationEnabled } from '@/hooks';
 import { AudioVisualizer } from './AudioVisualizer';
@@ -77,6 +79,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
   const [buffered, setBuffered] = useState(0);
   const [shuffledOrder, setShuffledOrder] = useState<number[]>(() => shuffleArray(PLAYLIST.length));
   const [currentPosition, setCurrentPosition] = useState(0);
+  const [visualizerMode, setVisualizerMode] = useState<'bars' | 'wave' | 'heatmap'>('bars');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -245,12 +248,13 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
     });
   }, [shuffledOrder.length]);
 
-  // 重新打乱
-  const handleReshuffle = useCallback(() => {
-    const newOrder = shuffleArray(PLAYLIST.length);
-    setShuffledOrder(newOrder);
-    setCurrentPosition(0);
-    setIsPlaying(true);
+  // 切换频谱效果
+  const handleChangeVisualizer = useCallback(() => {
+    setVisualizerMode(prev => {
+      if (prev === 'bars') return 'wave';
+      if (prev === 'wave') return 'heatmap';
+      return 'bars';
+    });
   }, []);
 
   const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -289,41 +293,91 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
             onClick={() => setIsOpen(true)}
             whileHover={animationEnabled ? { scale: 1.05 } : undefined}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-3 py-2 rounded-full shadow-lg backdrop-blur-md relative overflow-hidden"
+            className="flex items-center gap-2 px-3 py-2 rounded-full shadow-lg backdrop-blur-md relative overflow-hidden transition-all duration-500"
             style={{
               background: 'var(--bg-card)',
-              border: `1px solid ${isPlaying ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
-              boxShadow: isPlaying ? '0 4px 20px var(--accent-glow), 0 0 30px var(--accent-glow)' : '0 4px 20px rgba(0, 0, 0, 0.3)',
+              borderColor: isPlaying ? 'var(--accent-primary)' : 'var(--border-subtle)',
+              boxShadow: isPlaying 
+                ? '0 4px 20px var(--accent-glow), 0 0 30px var(--accent-glow)' 
+                : '0 4px 20px rgba(0, 0, 0, 0.3)',
             }}
+            animate={{
+              borderColor: isPlaying ? 'var(--accent-primary)' : 'var(--border-subtle)',
+            }}
+            transition={{ duration: 0.5, ease: 'easeInOut' }}
           >
-            {/* 播放时的背景光效 - 增强深色模式可见性 */}
-            {isPlaying && (
+            {/* 播放时的背景光效 - 柔和呼吸光晕 */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none overflow-hidden rounded-full"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isPlaying ? 1 : 0 }}
+              transition={{ duration: 0.6, ease: 'easeInOut' }}
+            >
+              {/* 柔和流动光带 - 低透明度 */}
               <motion.div
-                className="absolute inset-0 pointer-events-none"
-                animate={{
-                  background: [
-                    'radial-gradient(circle at 20% 50%, var(--accent-primary) 0%, transparent 60%)',
-                    'radial-gradient(circle at 80% 50%, var(--accent-secondary) 0%, transparent 60%)',
-                    'radial-gradient(circle at 20% 50%, var(--accent-primary) 0%, transparent 60%)',
-                  ],
-                  opacity: [0.4, 0.6, 0.4],
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-primary))',
+                  backgroundSize: '200% 100%',
+                  opacity: 0.15,
                 }}
-                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                animate={{
+                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
               />
-            )}
+              {/* 遮罩成圆形光晕效果 - 更柔和 */}
+              <div 
+                className="absolute inset-0"
+                style={{
+                  background: 'radial-gradient(circle at 50% 50%, transparent 30%, var(--bg-card) 80%)',
+                }}
+              />
+              {/* 中心微弱呼吸光 */}
+              <motion.div
+                className="absolute inset-0"
+                style={{
+                  background: 'radial-gradient(circle at 50% 50%, var(--accent-glow) 0%, transparent 40%)',
+                }}
+                animate={{
+                  opacity: [0.1, 0.25, 0.1],
+                  scale: [0.9, 1.05, 0.9],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+              />
+            </motion.div>
 
-            {/* 音乐图标 - 播放时有动画 */}
+            {/* 音乐图标 - 播放时有柔和呼吸 */}
             <motion.div
               animate={isPlaying ? {
-                scale: [1, 1.1, 1],
+                scale: [1, 1.05, 1],
               } : {}}
-              transition={{ duration: 0.5, repeat: Infinity }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 relative z-10"
               style={{
                 background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                boxShadow: isPlaying ? '0 0 15px var(--accent-glow), 0 0 30px var(--accent-primary)' : '0 2px 10px rgba(0,0,0,0.2)',
               }}
             >
+              {/* 柔和外发光 */}
+              <motion.div
+                className="absolute -inset-0.5 rounded-full -z-10"
+                style={{
+                  background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)',
+                }}
+                animate={isPlaying ? {
+                  opacity: [0.3, 0.5, 0.3],
+                  scale: [1, 1.2, 1],
+                } : { opacity: 0 }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              />
               <Music className="w-4 h-4 text-white" />
             </motion.div>
 
@@ -331,43 +385,79 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
               <span className="text-xs font-medium max-w-[80px] truncate" style={{ color: 'var(--text-primary)' }}>
                 {currentSong.title}
               </span>
-              <span className="text-[10px] max-w-[80px] truncate" style={{ color: isPlaying ? 'var(--accent-primary)' : 'var(--text-muted)' }}>
+              <motion.span 
+                className="text-[10px] max-w-[80px] truncate"
+                animate={{ 
+                  color: isPlaying ? 'var(--accent-primary)' : 'var(--text-muted)',
+                }}
+                transition={{ duration: 0.3 }}
+              >
                 {isLoading ? '加载中...' : isPlaying ? '播放中' : `${currentNumber}/${totalSongs}`}
-              </span>
+              </motion.span>
             </div>
 
-            {/* 迷你频谱指示器 - 增强发光效果 */}
-            {isPlaying && !isLoading && (
-              <div className="flex items-end gap-[3px] h-4 relative z-10">
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="w-1 rounded-full"
-                    style={{ 
-                      background: 'var(--accent-primary)',
-                      boxShadow: '0 0 6px var(--accent-primary), 0 0 12px var(--accent-secondary)',
-                    }}
-                    animate={{
-                      height: [4, 14, 6, 12, 4],
-                    }}
-                    transition={{
+            {/* 迷你频谱指示器 - 带发光效果 */}
+            <motion.div 
+              className="flex items-end gap-[3px] h-4 relative z-10"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ 
+                opacity: isPlaying && !isLoading ? 1 : 0,
+                scale: isPlaying && !isLoading ? 1 : 0.8,
+              }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+            >
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-1 rounded-full"
+                  style={{ 
+                    background: 'var(--accent-primary)',
+                    boxShadow: '0 0 6px var(--accent-primary), 0 0 12px var(--accent-secondary)',
+                  }}
+                  animate={isPlaying && !isLoading ? {
+                    height: [4, 14, 6, 12, 4],
+                  } : { height: 4 }}
+                  transition={{
+                    height: {
                       duration: 0.8,
                       repeat: Infinity,
                       delay: i * 0.15,
                       ease: 'easeInOut',
-                    }}
-                  />
-                ))}
-              </div>
-            )}
+                    },
+                  }}
+                />
+              ))}
+            </motion.div>
 
-            {isLoading && (
-              <Loader2 className="w-4 h-4 animate-spin relative z-10" style={{ color: 'var(--accent-primary)' }} />
-            )}
+            {/* 加载状态 - 带淡入淡出 */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ 
+                opacity: isLoading ? 1 : 0,
+                scale: isLoading ? 1 : 0.8,
+              }}
+              transition={{ duration: 0.2 }}
+              className="relative z-10"
+            >
+              {isLoading && (
+                <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--accent-primary)' }} />
+              )}
+            </motion.div>
 
-            {!isPlaying && !isLoading && (
-              <Pause className="w-4 h-4 relative z-10" style={{ color: 'var(--text-muted)' }} />
-            )}
+            {/* 暂停状态图标 - 带淡入淡出 */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ 
+                opacity: !isPlaying && !isLoading ? 1 : 0,
+                scale: !isPlaying && !isLoading ? 1 : 0.8,
+              }}
+              transition={{ duration: 0.2 }}
+              className="relative z-10"
+            >
+              {!isPlaying && !isLoading && (
+                <Pause className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+              )}
+            </motion.div>
           </motion.button>
         </motion.div>
       ) : (
@@ -390,19 +480,21 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
               <div className="flex items-center gap-2">
                 <Shuffle className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
                 <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  洗牌播放
+                  随机播放
                 </span>
               </div>
               <div className="flex items-center gap-1">
                 <motion.button
-                  onClick={handleReshuffle}
+                  onClick={handleChangeVisualizer}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   className="p-1.5 rounded-lg transition-colors hover:bg-accent-primary/10"
                   style={{ color: 'var(--text-muted)' }}
-                  title="重新打乱"
+                  title={`切换效果: ${visualizerMode === 'bars' ? '柱状图' : visualizerMode === 'wave' ? '波形图' : '热力图'}`}
                 >
-                  <Repeat className="w-4 h-4" />
+                  {visualizerMode === 'bars' && <BarChart3 className="w-4 h-4" />}
+                  {visualizerMode === 'wave' && <Waves className="w-4 h-4" />}
+                  {visualizerMode === 'heatmap' && <Grid3X3 className="w-4 h-4" />}
                 </motion.button>
                 <motion.button
                   onClick={() => setIsOpen(false)}
@@ -457,7 +549,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
 
               {/* 音频可视化频谱 */}
               <div className="mt-3">
-                <AudioVisualizer audioRef={audioRef} isPlaying={isPlaying} />
+                <AudioVisualizer audioRef={audioRef} isPlaying={isPlaying} mode={visualizerMode} />
               </div>
 
               {/* 错误提示 */}
@@ -574,7 +666,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
               <div className="flex items-center justify-center gap-1 mt-3 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
                 <Shuffle className="w-3 h-3" style={{ color: 'var(--accent-primary)' }} />
                 <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                  第 {currentNumber} 首 / 共 {totalSongs} 首
+                  第 {currentNumber} 首 / 共 {totalSongs} 首 · {visualizerMode === 'bars' ? '柱状图' : visualizerMode === 'wave' ? '波形图' : '热力图'}
                 </span>
               </div>
             </div>
