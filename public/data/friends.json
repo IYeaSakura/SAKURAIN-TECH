@@ -315,7 +315,6 @@
       "description": "耐心是生活的关键",
       "category": "blogs",
       "featured": true,
-      "unidirectional": true,
       "status": "online"
     }
   ],
