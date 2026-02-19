@@ -387,6 +387,19 @@ strong, b {
   .fullscreen-container [role="button"] {
     cursor: pointer !important;
   }
+  
+  /* Restore default cursor in globe showcase content area */
+  .globe-showcase-content,
+  .globe-showcase-content * {
+    cursor: default !important;
+  }
+  
+  /* But allow pointer cursor on interactive elements in globe showcase */
+  .globe-showcase-content button,
+  .globe-showcase-content a,
+  .globe-showcase-content [role="button"] {
+    cursor: pointer !important;
+  }
 }
 
 /* ============================================
