@@ -1435,10 +1435,8 @@ export default function FeedPage() {
           
           const batchResult = await fetchBatchFeeds(feedRequests, signal);
           
-          // 处理已缓存的内容（包括过期缓存）
-          const cachedAndExpired = [...batchResult.cached, ...(batchResult.expired || [])];
-          
-          for (const batchItem of cachedAndExpired) {
+          // 处理已缓存的内容（包括过期缓存，isExpired=true的已经在cached中）
+          for (const batchItem of batchResult.cached) {
             if (signal.aborted) break;
             
             const friend = eligibleFriends.find((f: Friend) => f.name === batchItem.name);
