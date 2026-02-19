@@ -293,6 +293,18 @@
       "featured": true,
       "unidirectional": true,
       "status": "online"
+    },
+    {
+      "id": "qingfengnb",
+      "name": "轻风blog",
+      "url": "https://www.qingfengnb.cn",
+      "icon": "https://img.qingfengnb.cn/LightPicture/2025/07/bec6eb9625656d60.jpg",
+      "feed": "https://www.qingfengnb.cn/feed/",
+      "description": "茫茫人海，多么幸运才能遇见你！",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true,
+      "status": "online"
     }
   ],
   "lastUpdated": "2026-02-19T04:39:09.986Z"
