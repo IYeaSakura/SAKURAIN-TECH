@@ -316,6 +316,16 @@
       "category": "blogs",
       "featured": true,
       "status": "online"
+    },
+    {
+      "id": "andyjin",
+      "name": "Modern Blog",
+      "url": "https://blog.andyjin.website",
+      "icon": "https://filestorage0.oss-cn-hongkong.aliyuncs.com/avatar.png",
+      "description": "分享技术，记录生活",
+      "category": "blogs",
+      "featured": true,
+      "status": "online"
     }
   ],
   "lastUpdated": "2026-02-19T04:39:09.986Z"
