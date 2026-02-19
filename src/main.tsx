@@ -181,18 +181,20 @@ function PageLayout({ children }: { children: React.ReactNode }) {
   const showNavPaths = ['/', '/blog', '/docs', '/friends', '/friends-circle', '/about', '/notes', '/earth-online', '/studio'];
   const shouldShowNav = showNavPaths.includes(location.pathname);
 
-  // 首屏加载期间显示加载占位符
+  // 首屏加载期间显示加载占位符（保持音乐播放器）
   if (isLoading) {
-    return <LoadingPlaceholder />;
-  }
-
-  if (!shouldShowNav) {
-    return <>{children}</>;
+    return (
+      <>
+        <LoadingPlaceholder />
+        {/* 全局音乐播放器 - 切换页面不会中断 */}
+        <MusicPlayer />
+      </>
+    );
   }
 
   return (
     <>
-      {siteData?.navigation && (
+      {shouldShowNav && siteData?.navigation && (
         <Navigation
           data={siteData.navigation}
           theme={theme}
