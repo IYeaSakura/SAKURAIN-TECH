@@ -1254,8 +1254,8 @@ const HeroSection = () => {
               </div>
             </motion.div>
 
-            {/* 右侧：导航卡片 - 像素风格 */}
-            <div className="space-y-4">
+            {/* 右侧：导航卡片 - 像素风格（仅桌面端显示） */}
+            <div className="space-y-4 hidden lg:block">
               {mainNavs.map((nav, index) => (
                 <CardButton
                   key={nav.title}
