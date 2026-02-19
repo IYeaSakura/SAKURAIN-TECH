@@ -240,6 +240,26 @@
       "status": "online"
     },
     {
+      "id": "lov3u",
+      "name": "Weiwei's blog",
+      "url": "https://www.lov3u.top",
+      "icon": "https://www.lov3u.top/wp-content/uploads/2026/02/TT.jpg",
+      "description": "耐心是生活的关键",
+      "category": "blogs",
+      "featured": true,
+      "status": "online"
+    },
+    {
+      "id": "andyjin",
+      "name": "Modern Blog",
+      "url": "https://blog.andyjin.website",
+      "icon": "https://filestorage0.oss-cn-hongkong.aliyuncs.com/avatar.png",
+      "description": "分享技术，记录生活",
+      "category": "blogs",
+      "featured": true,
+      "status": "online"
+    },
+    {
       "id": "woolyun",
       "name": "天海博客",
       "url": "https://woolyun.com/",
@@ -306,27 +326,7 @@
       "featured": true,
       "unidirectional": true,
       "status": "online"
-    },
-    {
-      "id": "lov3u",
-      "name": "Weiwei's blog",
-      "url": "https://www.lov3u.top",
-      "icon": "https://www.lov3u.top/wp-content/uploads/2026/02/TT.jpg",
-      "description": "耐心是生活的关键",
-      "category": "blogs",
-      "featured": true,
-      "status": "online"
-    },
-    {
-      "id": "andyjin",
-      "name": "Modern Blog",
-      "url": "https://blog.andyjin.website",
-      "icon": "https://filestorage0.oss-cn-hongkong.aliyuncs.com/avatar.png",
-      "description": "分享技术，记录生活",
-      "category": "blogs",
-      "featured": true,
-      "status": "online"
     }
   ],
-  "lastUpdated": "2026-02-19T04:39:09.986Z"
+  "lastUpdated": "2026-02-19T08:49:07.515Z"
 }
