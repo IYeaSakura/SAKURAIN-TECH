@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router';
 import type { BlogPost } from '../types';
 import { formatDateCard, getReadingTime } from '../utils';
 import { deploymentConfig } from '@/config/deployment-config';
+import { useAnimationEnabled, useMobile } from '@/hooks';
 
 interface BlogListItemProps {
   post: BlogPost;
@@ -18,8 +19,11 @@ const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 
 export const BlogListItem = memo(function BlogListItem({ post, index }: BlogListItemProps) {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
+  const animationEnabled = useAnimationEnabled();
+  const isMobile = useMobile();
 
   const handleClick = () => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     if (deploymentConfig.useWindowLocation) {
       window.location.href = `/blog/${post.slug}`;
     } else {
@@ -30,11 +34,11 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
   return (
     <motion.div
       onClick={handleClick}
-      initial={{ opacity: 0, x: -30, scale: 0.95 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
+      initial={animationEnabled ? { opacity: 0, x: -30, scale: 0.95 } : undefined}
+      animate={animationEnabled ? { opacity: 1, x: 0, scale: 1 } : undefined}
       transition={{
         duration: 0.6,
-        delay: index * 0.05,
+        delay: animationEnabled ? index * 0.05 : 0,
         type: 'spring',
         stiffness: 100,
       }}
@@ -53,33 +57,39 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
         }}
       >
         <div className="relative p-5">
-          {/* 左侧光效 */}
-          <div className="absolute top-0 left-0 w-4 h-full pointer-events-none">
+          {/* 左侧光效 - 仅桌面端显示 */}
+          {!isMobile && (
+            <div className="absolute top-0 left-0 w-4 h-full pointer-events-none">
+              <motion.div
+                className="absolute top-0 left-0 w-[2px] h-full"
+                style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
+                animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+          )}
+
+          {/* Hover glow background - 仅桌面端显示 */}
+          {!isMobile && (
             <motion.div
-              className="absolute top-0 left-0 w-[2px] h-full"
-              style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
-              animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: 'radial-gradient(circle at 0% 50%, var(--accent-glow), transparent 60%)' }}
+              animate={{ opacity: isHovered ? 1 : 0 }}
               transition={{ duration: 0.3 }}
             />
-          </div>
+          )}
 
-          {/* Hover glow background */}
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: 'radial-gradient(circle at 0% 50%, var(--accent-glow), transparent 60%)' }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
-          />
-
-          {/* Shine effect */}
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 55%, transparent 60%)',
-            }}
-            animate={isHovered ? { x: '200%' } : { x: '-100%' }}
-            transition={{ duration: 0.8 }}
-          />
+          {/* Shine effect - 仅桌面端显示 */}
+          {!isMobile && (
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 55%, transparent 60%)',
+              }}
+              animate={isHovered ? { x: '200%' } : { x: '-100%' }}
+              transition={{ duration: 0.8 }}
+            />
+          )}
 
           <div className="flex items-start gap-4 relative z-10">
             {/* Icon with pixel border */}

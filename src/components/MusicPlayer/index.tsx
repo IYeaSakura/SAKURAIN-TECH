@@ -83,6 +83,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
+  const handleNextRef = useRef<() => void>(() => {});
 
   const currentIndex = shuffledOrder[currentPosition];
   const currentSong = PLAYLIST[currentIndex];
@@ -116,7 +117,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
       setDuration(audio.duration);
       setIsLoading(false);
     };
-    const handleEnded = () => handleNext();
+    const handleEnded = () => handleNextRef.current();
     const handleError = (e: Event) => {
       console.error('Audio error:', e);
       setError('音频加载失败');
@@ -237,6 +238,11 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
       return nextPosition;
     });
   }, [shuffledOrder.length]);
+
+  // 更新 ref 以确保事件处理器总是使用最新版本
+  useEffect(() => {
+    handleNextRef.current = handleNext;
+  }, [handleNext]);
 
   // 上一首
   const handlePrev = useCallback(() => {

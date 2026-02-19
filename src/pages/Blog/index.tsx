@@ -12,7 +12,7 @@ import { getBlogIndex } from './utils';
 import { BlogTagCloud } from '@/components/BlogTagCloud';
 import { useBlogArchive, useMultipleMonthArchives } from '@/hooks/useBlogArchive';
 import { RouteLoader } from '@/components/RouterTransition';
-import type { BlogIndex } from './types';
+import type { BlogIndex, BlogPost } from './types';
 
 interface TagData {
   name: string;
@@ -31,6 +31,174 @@ const POSTS_PER_PAGE = 9;
 
 // CSS clip-path helpers - 像素风格
 const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
+
+// 精选文章轮播组件
+function FeaturedCarousel({ 
+  posts, 
+  viewMode,
+  animationEnabled 
+}: { 
+  posts: BlogPost[]; 
+  viewMode: ViewMode;
+  animationEnabled: boolean;
+}) {
+  const [currentPage, setCurrentPage] = useState(0);
+  const postsPerPage = 2;
+  const totalPages = Math.ceil(posts.length / postsPerPage);
+  
+  const handlePrev = () => {
+    setCurrentPage((prev) => (prev === 0 ? totalPages - 1 : prev - 1));
+  };
+  
+  const handleNext = () => {
+    setCurrentPage((prev) => (prev === totalPages - 1 ? 0 : prev + 1));
+  };
+  
+  const currentPosts = posts.slice(
+    currentPage * postsPerPage,
+    (currentPage + 1) * postsPerPage
+  );
+  
+  return (
+    <motion.section
+      initial={animationEnabled ? { opacity: 0, y: 30 } : undefined}
+      animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
+      transition={animationEnabled ? { duration: 0.6, delay: 0.4 } : undefined}
+      className="mb-16"
+    >
+      {/* 标题栏 */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <motion.div
+            whileHover={animationEnabled ? { scale: 1.1, rotate: 5 } : undefined}
+            whileTap={animationEnabled ? { scale: 0.95 } : undefined}
+            transition={animationEnabled ? { type: 'spring', stiffness: 300, damping: 20 } : undefined}
+            className="flex items-center justify-center w-12 h-12 relative overflow-hidden"
+            style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '2px solid rgba(255, 255, 255, 0.1)',
+              clipPath: clipPathRounded(6),
+            }}
+          >
+            {animationEnabled && (
+              <motion.div
+                className="absolute inset-0"
+                style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
+                animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            )}
+            <Sparkles className="w-6 h-6 relative z-10" style={{ color: 'var(--accent-primary)' }} />
+          </motion.div>
+          <div>
+            <h2
+              className="font-sans font-bold text-2xl"
+              style={{
+                background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              精选文章
+            </h2>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>编辑推荐的高质量内容</p>
+          </div>
+        </div>
+        
+        {/* 翻页按钮 */}
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrev}
+              className="p-2 transition-all duration-200 hover:scale-110"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-subtle)',
+                clipPath: clipPathRounded(4),
+                color: 'var(--text-primary)',
+              }}
+              title="上一页"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <span 
+              className="text-sm px-3 py-1 min-w-[60px] text-center"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-subtle)',
+                clipPath: clipPathRounded(4),
+                color: 'var(--text-muted)',
+              }}
+            >
+              {currentPage + 1} / {totalPages}
+            </span>
+            <button
+              onClick={handleNext}
+              className="p-2 transition-all duration-200 hover:scale-110"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-subtle)',
+                clipPath: clipPathRounded(4),
+                color: 'var(--text-primary)',
+              }}
+              title="下一页"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 轮播内容 */}
+      <div className="relative py-2 px-1">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentPage}
+            initial={animationEnabled ? { opacity: 0, x: 50 } : undefined}
+            animate={animationEnabled ? { opacity: 1, x: 0 } : undefined}
+            exit={animationEnabled ? { opacity: 0, x: -50 } : undefined}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            {currentPosts.map((post, index) => (
+              <GlassCard
+                key={post.slug}
+                hoverScale={1.02}
+                accentColor="var(--accent-primary)"
+              >
+                <div className="h-full">
+                  {viewMode === 'grid' ? (
+                    <BlogCard post={post} index={index} featured={true} featuredLarge={false} />
+                  ) : (
+                    <BlogListItem post={post} index={index} featured={true} />
+                  )}
+                </div>
+              </GlassCard>
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      
+      {/* 指示器 */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          {Array.from({ length: totalPages }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(index)}
+              className="w-2 h-2 transition-all duration-200"
+              style={{
+                background: index === currentPage ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                clipPath: clipPathRounded(1),
+                transform: index === currentPage ? 'scale(1.2)' : 'scale(1)',
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </motion.section>
+  );
+}
 
 // 玻璃卡片组件
 function GlassCard({
@@ -458,83 +626,13 @@ export default function BlogIndex() {
             </div>
           </section>
 
-          {/* 精选文章 - Bento Grid 风格 */}
+          {/* 精选文章 - 轮播形式 */}
           {featuredPosts.length > 0 && (
-            <motion.section
-              initial={animationEnabled ? { opacity: 0, y: 30 } : undefined}
-              animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
-              transition={animationEnabled ? { duration: 0.6, delay: 0.4 } : undefined}
-              className="mb-16"
-            >
-              <div className="flex items-center gap-4 mb-8">
-                <motion.div
-                  whileHover={animationEnabled ? { scale: 1.1, rotate: 5 } : undefined}
-                  whileTap={animationEnabled ? { scale: 0.95 } : undefined}
-                  transition={animationEnabled ? { type: 'spring', stiffness: 300, damping: 20 } : undefined}
-                  className="flex items-center justify-center w-12 h-12 relative overflow-hidden"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '2px solid rgba(255, 255, 255, 0.1)',
-                    clipPath: clipPathRounded(6),
-                  }}
-                >
-                  {animationEnabled && (
-                    <motion.div
-                      className="absolute inset-0"
-                      style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
-                      animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.1, 1] }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                  )}
-                  <Sparkles className="w-6 h-6 relative z-10" style={{ color: 'var(--accent-primary)' }} />
-                </motion.div>
-                <div>
-                  <h2
-                    className="font-sans font-bold text-2xl"
-                    style={{
-                      background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    精选文章
-                  </h2>
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>编辑推荐的高质量内容</p>
-                </div>
-              </div>
-
-              {/* 动态网格布局 */}
-              <div className={`
-                grid gap-6 auto-rows-min
-                ${featuredPosts.length === 1 ? 'grid-cols-1' : ''}
-                ${featuredPosts.length === 2 ? 'grid-cols-1 md:grid-cols-2' : ''}
-                ${featuredPosts.length >= 3 ? 'grid-cols-1 md:grid-cols-3' : ''}
-              `}>
-                {featuredPosts.map((post, index) => {
-                  let spanClass = '';
-                  const isLarge = featuredPosts.length >= 3 && index === 0;
-                  if (isLarge) {
-                    spanClass = 'md:col-span-2 md:row-span-2';
-                  }
-                  return (
-                    <GlassCard
-                      key={post.slug}
-                      className={spanClass}
-                      hoverScale={1.02}
-                      accentColor="var(--accent-primary)"
-                    >
-                      <div className="h-full">
-                        {viewMode === 'grid' ? (
-                          <BlogCard post={post} index={index} featured={true} featuredLarge={isLarge} />
-                        ) : (
-                          <BlogListItem post={post} index={index} featured={true} />
-                        )}
-                      </div>
-                    </GlassCard>
-                  );
-                })}
-              </div>
-            </motion.section>
+            <FeaturedCarousel 
+              posts={featuredPosts} 
+              viewMode={viewMode}
+              animationEnabled={animationEnabled}
+            />
           )}
 
           {/* 全部文章 */}

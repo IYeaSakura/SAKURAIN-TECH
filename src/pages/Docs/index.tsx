@@ -5,7 +5,7 @@ import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, Chevr
 import type { LucideProps } from 'lucide-react';
 import { MagneticCursor, VelocityCursor, AmbientGlow, GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
-import { useConfig, useMobile } from '@/hooks';
+import { useConfig, useMobile, useAnimationEnabled } from '@/hooks';
 import { deploymentConfig } from '@/config/deployment-config';
 import { DocListView } from './components/DocListView';
 import { SeriesDetailView } from './components/SeriesDetailView';
@@ -102,6 +102,7 @@ export default function DocsPage() {
   }, [config]);
 
   const handleSelectCategory = (category: DocCategory) => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     if (deploymentConfig.useWindowLocation) {
       window.location.href = `/docs/${category.id}`;
     } else {
@@ -110,6 +111,7 @@ export default function DocsPage() {
   };
 
   const handleSelectItem = (category: DocCategory, item: DocItem) => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     if (deploymentConfig.useWindowLocation) {
       window.location.href = `/docs/${category.id}/${item.id}`;
     } else {
@@ -118,6 +120,7 @@ export default function DocsPage() {
   };
 
   const handleSelectChapter = (category: DocCategory, series: DocSeries, chapter: Chapter) => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     if (deploymentConfig.useWindowLocation) {
       window.location.href = `/docs/${category.id}/${series.id}/${chapter.id}`;
     } else {
@@ -126,6 +129,7 @@ export default function DocsPage() {
   };
 
   const handleBack = () => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     if (selectedChapter && selectedItem?.type === 'series') {
       if (deploymentConfig.useWindowLocation) {
         window.location.href = `/docs/${selectedCategory?.id}/${selectedItem.id}`;
@@ -148,6 +152,7 @@ export default function DocsPage() {
   };
 
   const handleBackToHome = () => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
     if (deploymentConfig.useWindowLocation) {
       window.location.href = '/docs';
     } else {
@@ -302,6 +307,8 @@ const CategoryCard = memo(({
   onSelect: (category: DocCategory) => void;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const animationEnabled = useAnimationEnabled();
+  const isMobile = useMobile();
   const Icon = iconMap[category.icon] || Folder;
   const seriesCount = category.items.filter((i: DocItem) => i.type === 'series').length;
   const docCount = category.items.filter((i: DocItem) => i.type === 'doc').length;
@@ -309,9 +316,9 @@ const CategoryCard = memo(({
   return (
     <motion.button
       key={category.id}
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1, ease: [0.25, 0.1, 0.25, 1] }}
+      initial={animationEnabled ? { opacity: 0, y: 30 } : undefined}
+      animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
+      transition={{ duration: 0.5, delay: animationEnabled ? index * 0.1 : 0, ease: [0.25, 0.1, 0.25, 1] }}
       onClick={() => onSelect(category)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -328,52 +335,60 @@ const CategoryCard = memo(({
           transform: isHovered ? 'translateY(-4px)' : 'none',
         }}
       >
-        {/* 四角发光效果 */}
-        <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
+        {/* 四角发光效果 - 仅桌面端显示 */}
+        {!isMobile && (
+          <>
+            <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
+              <motion.div
+                className="absolute top-0 left-0 w-full h-[2px]"
+                style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
+                animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              />
+              <motion.div
+                className="absolute top-0 left-0 w-[2px] h-full"
+                style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
+                animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+            <div className="absolute top-0 right-0 w-4 h-4 pointer-events-none">
+              <motion.div
+                className="absolute top-0 right-0 w-full h-[2px]"
+                style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
+                animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+              />
+              <motion.div
+                className="absolute top-0 right-0 w-[2px] h-full"
+                style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
+                animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+          </>
+        )}
+
+        {/* 顶部渐变光效 - 仅桌面端显示 */}
+        {!isMobile && (
           <motion.div
-            className="absolute top-0 left-0 w-full h-[2px]"
-            style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
-            animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-          />
-          <motion.div
-            className="absolute top-0 left-0 w-[2px] h-full"
-            style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
-            animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
+            animate={{ opacity: isHovered ? 1 : 0.5 }}
             transition={{ duration: 0.3 }}
           />
-        </div>
-        <div className="absolute top-0 right-0 w-4 h-4 pointer-events-none">
-          <motion.div
-            className="absolute top-0 right-0 w-full h-[2px]"
-            style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
-            animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-          />
-          <motion.div
-            className="absolute top-0 right-0 w-[2px] h-full"
-            style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
-            animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          />
-        </div>
+        )}
 
-        {/* 顶部渐变光效 */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
-          animate={{ opacity: isHovered ? 1 : 0.5 }}
-          transition={{ duration: 0.3 }}
-        />
-
-        {/* 光泽扫过效果 */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%)' }}
-          initial={{ x: '-100%' }}
-          animate={{ x: isHovered ? '200%' : '-100%' }}
-          transition={{ duration: 0.6 }}
-        />
+        {/* 光泽扫过效果 - 仅桌面端显示 */}
+        {!isMobile && (
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%)' }}
+            initial={{ x: '-100%' }}
+            animate={{ x: isHovered ? '200%' : '-100%' }}
+            transition={{ duration: 0.6 }}
+          />
+        )}
 
         <div className="flex items-start justify-between mb-4 relative z-10">
           <div
