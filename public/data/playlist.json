@@ -20,9 +20,9 @@
     },
     {
       "id": "4",
-      "title": "一路生花",
-      "artist": "温奕心",
-      "src": "/music/yilushenghua.mp3"
+      "title": "叹云兮",
+      "artist": "鞠婧祎",
+      "src": "/music/tanyunxi.mp3"
     },
     {
       "id": "5",
@@ -41,6 +41,24 @@
       "title": "10年",
       "artist": "奥華子",
       "src": "/music/10nian.mp3"
+    },
+    {
+      "id": "8",
+      "title": "江南春雨夜",
+      "artist": "奡雪",
+      "src": "/music/jiangnanchunyuye.mp3"
+    },
+    {
+      "id": "9",
+      "title": "散场",
+      "artist": "朱彦安、苏伊漫Chency",
+      "src": "/music/sanchang.mp3"
+    },
+    {
+      "id": "10",
+      "title": "裙摆与向日葵花",
+      "artist": "多多poi",
+      "src": "/music/qunbanyuxiangrikuihua.mp3"
     }
   ]
 }

@@ -539,6 +539,11 @@ export function GlobalContextMenu() {
 
     const handleContextMenu = (event: MouseEvent) => {
       try {
+        const isMobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+          return;
+        }
+
         if (isHandlingContextMenu.current) return;
         isHandlingContextMenu.current = true;
 

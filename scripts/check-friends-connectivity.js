@@ -10,21 +10,18 @@ const __dirname = path.dirname(__filename);
 const FRIENDS_FILE = path.join(__dirname, '../public/data/friends.json');
 
 const TIMEOUT = 15000;
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 2;
+const CONCURRENCY_LIMIT = 5;
 
-// 是否允许不安全 HTTPS（自签名证书）
 const ALLOW_UNSAFE_HTTPS = process.env.ALLOW_UNSAFE_HTTPS === 'true';
 
-// 创建自定义的 HTTPS agent，可选跳过证书验证
 function createHttpsAgent() {
   return new https.Agent({
     rejectUnauthorized: !ALLOW_UNSAFE_HTTPS,
-    // 允许过期的证书
     secureOptions: ALLOW_UNSAFE_HTTPS ? require('crypto').constants.SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION : undefined,
   });
 }
 
-// 随机 User-Agent 池
 const USER_AGENTS = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.0 Edg/122.0.0.0',
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
@@ -36,42 +33,32 @@ const USER_AGENTS = [
   'Mozilla/5.0 (X11; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0',
 ];
 
-// 随机获取 User-Agent
 function getRandomUserAgent() {
   return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 }
 
-// 随机延迟（带抖动）
-function getRandomDelay(min = 800, max = 3000) {
+function getRandomDelay(min = 200, max = 800) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// 指数退避延迟
-function getBackoffDelay(attempt, baseDelay = 1000) {
-  const jitter = Math.random() * 1000;
-  return Math.min(baseDelay * Math.pow(2, attempt) + jitter, 10000);
+function getBackoffDelay(attempt, baseDelay = 500) {
+  const jitter = Math.random() * 300;
+  return Math.min(baseDelay * Math.pow(2, attempt) + jitter, 5000);
 }
 
 function getBuildTimestamp() {
-  const now = new Date();
-  return now.toISOString();
+  return new Date().toISOString();
 }
 
 function getTodayDate() {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
 function isDateBefore(date1, date2) {
-  const d1 = new Date(date1);
-  const d2 = new Date(date2);
-  return d1 < d2;
+  return new Date(date1) < new Date(date2);
 }
 
-// 构建真实的浏览器请求头
 function buildHeaders() {
   const userAgent = getRandomUserAgent();
   const isChrome = userAgent.includes('Chrome');
@@ -93,7 +80,6 @@ function buildHeaders() {
     'Cache-Control': 'max-age=0',
   };
 
-  // 浏览器特定的 headers
   if (isChrome || isSafari) {
     headers['sec-ch-ua'] = '"Chromium";v="122", "Not(A:Brand";v="24", "Google Chrome";v="122"';
     headers['sec-ch-ua-mobile'] = '?0';
@@ -110,7 +96,6 @@ function buildHeaders() {
   return headers;
 }
 
-// 解析代理配置（支持 HTTP_PROXY/HTTPS_PROXY 环境变量）
 function getProxyForUrl(url) {
   const proxyUrl = url.startsWith('https') 
     ? process.env.HTTPS_PROXY || process.env.https_proxy 
@@ -130,7 +115,6 @@ function getProxyForUrl(url) {
   }
 }
 
-// 检查是否需要降级到 HTTP
 function getHttpAlternative(url) {
   if (url.startsWith('https://')) {
     return url.replace('https://', 'http://');
@@ -149,17 +133,14 @@ function checkUrl(url, attempt = 0, isFallback = false) {
       method: 'HEAD',
       timeout: TIMEOUT,
       headers,
-      // 跟随重定向
       followRedirect: true,
       maxRedirects: 5,
     };
 
-    // HTTPS 特殊处理：允许不安全证书
     if (isHttps) {
       options.agent = createHttpsAgent();
     }
 
-    // 添加代理支持
     if (proxy) {
       options.host = proxy.host;
       options.port = proxy.port;
@@ -171,11 +152,9 @@ function checkUrl(url, attempt = 0, isFallback = false) {
     }
 
     const req = protocol.request(proxy ? options : new URL(url), options, (res) => {
-      // 处理重定向
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         req.destroy();
         const redirectUrl = new URL(res.headers.location, url).toString();
-        // 递归检查重定向 URL，增加尝试次数限制
         if (attempt < 3) {
           checkUrl(redirectUrl, attempt + 1, isFallback).then(resolve);
           return;
@@ -184,7 +163,6 @@ function checkUrl(url, attempt = 0, isFallback = false) {
 
       req.destroy();
 
-      // 更宽松的成功判定（包括 429  too many requests 视为需要重试）
       const isSuccess = res.statusCode >= 200 && res.statusCode < 400;
       const needRetry = res.statusCode === 429 || res.statusCode === 503 || res.statusCode === 502;
       
@@ -201,14 +179,12 @@ function checkUrl(url, attempt = 0, isFallback = false) {
     req.on('error', (error) => {
       req.destroy();
       
-      // SSL 证书错误，尝试降级到 HTTP
       if (isHttps && !isFallback) {
         const httpUrl = getHttpAlternative(url);
         if (httpUrl) {
-          // 延迟 500ms 后尝试 HTTP
           setTimeout(() => {
             checkUrl(httpUrl, 0, true).then(resolve);
-          }, 500);
+          }, 300);
           return;
         }
       }
@@ -216,7 +192,7 @@ function checkUrl(url, attempt = 0, isFallback = false) {
       resolve({
         success: false,
         error: error.message,
-        needRetry: !error.message.includes('certificate'), // 证书错误不重试
+        needRetry: !error.message.includes('certificate'),
       });
     });
 
@@ -229,14 +205,10 @@ function checkUrl(url, attempt = 0, isFallback = false) {
       });
     });
 
-    // 随机初始延迟，模拟真实用户行为
-    setTimeout(() => {
-      req.end();
-    }, Math.random() * 200);
+    setTimeout(() => req.end(), Math.random() * 100);
   });
 }
 
-// 尝试 GET 请求作为备选（某些服务器会拒绝 HEAD 请求）
 function checkUrlWithGet(url, timeout = TIMEOUT) {
   return new Promise((resolve) => {
     const isHttps = url.startsWith('https');
@@ -254,9 +226,7 @@ function checkUrlWithGet(url, timeout = TIMEOUT) {
     }
 
     const req = protocol.request(new URL(url), options, (res) => {
-      // 只读取部分数据后中断
       res.on('data', () => {
-        // 收到数据即认为成功，中断连接
         req.destroy();
         resolve({
           success: true,
@@ -295,12 +265,10 @@ function checkUrlWithGet(url, timeout = TIMEOUT) {
 }
 
 async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
-  const lastError = null;
   let usedHttpFallback = false;
   
   for (let i = 0; i <= retries; i++) {
     try {
-      // 添加随机延迟，避免请求过于规律
       if (i > 0) {
         const delay = getBackoffDelay(i - 1);
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -308,9 +276,8 @@ async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
 
       let result = await checkUrl(url);
       
-      // 如果 HEAD 请求失败，尝试 GET 请求
       if (!result.success && i === retries - 1) {
-        await new Promise(resolve => setTimeout(resolve, getRandomDelay(300, 800)));
+        await new Promise(resolve => setTimeout(resolve, getRandomDelay(100, 300)));
         result = await checkUrlWithGet(result.usedHttpFallback ? getHttpAlternative(url) || url : url);
         if (result.usedHttpFallback) {
           usedHttpFallback = true;
@@ -327,7 +294,6 @@ async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
         };
       }
 
-      // 如果服务器明确拒绝（非 429/503 等临时错误），提前退出
       if (!result.needRetry && result.statusCode >= 400) {
         return {
           success: false,
@@ -339,7 +305,6 @@ async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
         };
       }
 
-      // 最后一次重试失败
       if (i === retries) {
         return {
           success: false,
@@ -363,7 +328,30 @@ async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
     }
   }
 
-  return { success: false, status: 'offline', error: lastError, attempts: retries + 1, usedHttpFallback };
+  return { success: false, status: 'offline', error: 'Unknown error', attempts: retries + 1, usedHttpFallback };
+}
+
+async function runWithConcurrency(tasks, concurrencyLimit) {
+  const results = [];
+  const executing = new Set();
+  const taskQueue = [...tasks];
+
+  while (taskQueue.length > 0 || executing.size > 0) {
+    while (taskQueue.length > 0 && executing.size < concurrencyLimit) {
+      const task = taskQueue.shift();
+      const promise = task().then(result => {
+        executing.delete(promise);
+        results.push(result);
+      });
+      executing.add(promise);
+    }
+
+    if (executing.size > 0) {
+      await Promise.race(executing);
+    }
+  }
+
+  return results;
 }
 
 async function checkFriendsConnectivity() {
@@ -376,31 +364,31 @@ async function checkFriendsConnectivity() {
       return;
     }
 
-    console.log(`Checking connectivity for ${data.friends.length} friends...`);
+    const friendsToCheck = data.friends.filter(friend => friend.url);
+    console.log(`Checking connectivity for ${friendsToCheck.length} friends (concurrency: ${CONCURRENCY_LIMIT})...`);
+    console.log('');
 
-    const results = [];
-    const unidirectionalFriends = [];
+    const startTime = Date.now();
+    const completedCount = { value: 0 };
+    const total = friendsToCheck.length;
 
-    for (let index = 0; index < data.friends.length; index++) {
-      const friend = data.friends[index];
-      if (!friend.url) {
-        console.warn(`Skipping friend ${friend.id}: no URL`);
-        continue;
-      }
-
-      process.stdout.write(`[${index + 1}/${data.friends.length}] Checking ${friend.id}... `);
-
+    const tasks = friendsToCheck.map((friend, index) => async () => {
       const result = await checkUrlWithRetry(friend.url);
+      
+      completedCount.value++;
+      const progress = Math.round((completedCount.value / total) * 100);
+      const status = result.success 
+        ? `✓ Online (${result.statusCode})${result.usedHttpFallback ? ' [HTTP]' : ''}`
+        : `✗ Offline (${result.error || result.statusCode || 'unknown'})`;
+      
+      console.log(`[${completedCount.value}/${total}] ${progress}% - ${friend.id}: ${status}`);
 
       if (result.success) {
-        const fallbackNote = result.usedHttpFallback ? ' [HTTP]' : '';
-        console.log(`✓ Online (${result.statusCode})${fallbackNote}`);
         friend.status = 'online';
         if (friend.offlineSince) {
           delete friend.offlineSince;
         }
       } else {
-        console.log(`✗ Offline (${result.error || result.statusCode || 'unknown'})`);
         friend.status = 'offline';
         const today = getTodayDate();
         if (!friend.offlineSince) {
@@ -410,43 +398,37 @@ async function checkFriendsConnectivity() {
         }
       }
 
-      results.push({
+      return {
         id: friend.id,
         name: friend.name,
         url: friend.url,
         status: result.success ? 'online' : 'offline',
         attempts: result.attempts,
-      });
+      };
+    });
 
-      if (friend.unidirectional === true) {
-        unidirectionalFriends.push(friend);
-      }
+    const results = await runWithConcurrency(tasks, CONCURRENCY_LIMIT);
 
-      // 随机延迟，避免被识别为爬虫
-      // 最后一个请求不需要延迟
-      if (index < data.friends.length - 1) {
-        const delay = getRandomDelay(500, 2000);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-
+    const unidirectionalFriends = data.friends.filter(friend => friend.unidirectional === true);
     const bidirectionalFriends = data.friends.filter(friend => friend.unidirectional !== true);
     data.friends = [...bidirectionalFriends, ...unidirectionalFriends];
     data.lastUpdated = getBuildTimestamp();
 
-    const updatedContent = JSON.stringify(data, null, 2);
-    fs.writeFileSync(FRIENDS_FILE, updatedContent);
+    fs.writeFileSync(FRIENDS_FILE, JSON.stringify(data, null, 2));
 
-    console.log('\nConnectivity check completed!');
-    console.log(`Updated ${FRIENDS_FILE}`);
-
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     const onlineCount = results.filter(r => r.status === 'online').length;
     const offlineCount = results.filter(r => r.status === 'offline').length;
 
-    console.log(`\nSummary:`);
-    console.log(`  Online: ${onlineCount}`);
+    console.log('');
+    console.log('Connectivity check completed!');
+    console.log(`Time elapsed: ${elapsed}s`);
+    console.log(`Updated ${FRIENDS_FILE}`);
+    console.log('');
+    console.log('Summary:');
+    console.log(`  Online:  ${onlineCount}`);
     console.log(`  Offline: ${offlineCount}`);
-    console.log(`  Total: ${results.length}`);
+    console.log(`  Total:   ${results.length}`);
 
   } catch (error) {
     console.error('Failed to check friends connectivity:', error);
