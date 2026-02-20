@@ -347,6 +347,18 @@
       "featured": true,
       "unidirectional": true,
       "status": "online"
+    },
+    {
+      "id": "aobp",
+      "name": "Serenity's Blog",
+      "url": "https://serenity.aobp.cn/",
+      "icon": "https://serenity.aobp.cn/upload/%E5%A4%B4%E5%83%8F.png",
+      "feed": "https://serenity.aobp.cn/feed.xml",
+      "description": "热爱可抵岁月漫长",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true,
+      "status": "online"
     }
   ],
   "lastUpdated": "2026-02-20T04:30:30.498Z"

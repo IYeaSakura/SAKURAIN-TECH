@@ -1,7 +1,7 @@
 "use client"
 
 import { memo } from 'react';
-import { Heart, FileText, MessageCircle } from 'lucide-react';
+import { Heart, FileText, MessageCircle, Zap } from 'lucide-react';
 import { FloatingBubbles, TwinklingStars } from '@/components/effects';
 import { useNavigation } from '@/hooks';
 import type { SiteData } from '@/types';
@@ -95,6 +95,14 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
             >
               <MessageCircle className="w-4 h-4" />
               <span>开发日志</span>
+            </button>
+            <button
+              onClick={() => navigateTo('/algo-viz')}
+              className="flex items-center gap-2 text-sm transition-colors hover:text-[var(--accent-primary)] cursor-pointer"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <Zap className="w-4 h-4" />
+              <span>算法可视化</span>
             </button>
           </div>
 
