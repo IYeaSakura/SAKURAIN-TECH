@@ -10,18 +10,28 @@
 - **Nonce 验证**：防止请求重复（5 分钟 TTL）
 - **HMAC-SHA256 签名**：验证请求真实性
 - **KV 存储**：存储已使用的 Nonce
+- **速率限制**：防止 API 滥用（60 次/分钟/IP）
 
 ## 📁 文件结构
 
 ```
 edge-functions/
 ├── auth.js                    # 认证核心逻辑
+├── rate-limit.js              # 速率限制逻辑
+├── comments.js                # 评论 API 核心逻辑
 ├── example-api.js             # 示例 API 实现
 └── api/
-    └── danmaku/
-        ├── add.js          # 添加弹幕（需要认证）
-        ├── list.js          # 获取弹幕列表（公开）
-        └── delete.js        # 删除弹幕（需要认证）
+    ├── danmaku/
+    │   ├── add.js             # 添加弹幕（需要认证）
+    │   ├── list.js            # 获取弹幕列表（公开）
+    │   └── delete.js          # 删除弹幕（需要认证）
+    ├── feed/
+    │   ├── batch-get.js       # 批量获取 Feed
+    │   ├── batch-refresh.js   # 批量刷新 Feed
+    │   ├── get.js             # 获取单个 Feed
+    │   └── refresh.js         # 刷新 Feed
+    └── comments/
+        └── index.js           # 评论 API 入口
 ```
 
 ## 🚀 快速开始
@@ -50,6 +60,14 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 4. 绑定到边缘函数：
    - 变量名：`DANMAKU_KV`
    - 命名空间：`danmaku`
+5. 创建速率限制 KV 命名空间（如 `rate-limit`）
+6. 绑定到边缘函数：
+   - 变量名：`RATE_LIMIT_KV`
+   - 命名空间：`rate-limit`
+7. 创建评论 KV 命名空间（如 `comments`）
+8. 绑定到边缘函数：
+   - 变量名：`COMMENTS_KV`
+   - 命名空间：`comments`
 
 ### 4. 部署
 
@@ -210,6 +228,83 @@ Body:
   "success": true
 }
 ```
+
+### 评论 API
+
+#### 获取评论列表（公开）
+
+```
+GET /api/comments?postId=<postId>
+```
+
+**响应示例：**
+```json
+{
+  "success": true,
+  "comments": [
+    {
+      "id": "cmt_1704067200000_abc123",
+      "nickname": "张三",
+      "avatarColor": "#3b82f6",
+      "content": "这是一条评论",
+      "isMarkdown": false,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "parentId": null,
+      "replyTo": null,
+      "replies": []
+    }
+  ],
+  "total": 1,
+  "maxComments": 50
+}
+```
+
+#### 发表评论（需要认证）
+
+```
+POST /api/comments?postId=<postId>
+Headers:
+  X-Timestamp: <timestamp>
+  X-Nonce: <uuid>
+  X-Signature: <hmac-sha256>
+
+Body:
+{
+  "nickname": "张三",
+  "email": "zhangsan@example.com",
+  "content": "这是一条评论",
+  "isMarkdown": false,
+  "parentId": null,
+  "replyTo": null,
+  "verificationToken": "verified_1704067200000"
+}
+```
+
+**响应示例：**
+```json
+{
+  "success": true,
+  "comment": {
+    "id": "cmt_1704067200000_abc123",
+    "nickname": "张三",
+    "avatarColor": "#3b82f6",
+    "content": "这是一条评论",
+    "isMarkdown": false,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "parentId": null,
+    "replyTo": null
+  },
+  "total": 1,
+  "maxComments": 50
+}
+```
+
+**评论限制：**
+- 每篇文章最多 50 条评论
+- 昵称：2-20 字符
+- 内容：最多 2000 字符
+- 支持一层嵌套回复（继续回复使用 @提及）
+- 需要前端滑块验证
 
 ## 🔒 错误处理
 
