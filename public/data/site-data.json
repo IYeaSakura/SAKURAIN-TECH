@@ -800,7 +800,8 @@
       { "label": "技术栈", "href": "#tech-stack" },
       { "label": "定价", "href": "#pricing" },
       { "label": "流程", "href": "#process" },
-      { "label": "联系", "href": "#contact" }
+      { "label": "联系", "href": "#contact" },
+      { "label": "算法可视化", "href": "/algo-viz" }
     ]
   }
 }
