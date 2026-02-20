@@ -47,7 +47,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [emailError, setEmailError] = useState<string | null>(null);
-  const [replyTo, setReplyTo] = useState<{ id: string; nickname: string } | null>(null);
+  const [replyTo, setReplyTo] = useState<{ id: string; nickname: string; parentId: string | null } | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
   const [totalComments, setTotalComments] = useState(0);
   const [maxComments] = useState(50);
@@ -230,7 +230,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
           email: formData.email.trim().toLowerCase(),
           content: formData.content.trim(),
           isMarkdown: formData.isMarkdown,
-          parentId: replyTo?.id || null,
+          parentId: replyTo?.parentId || replyTo?.id || null,
           replyTo: replyTo?.nickname || null,
           verificationToken: `verified_${Date.now()}`,
         }),
@@ -258,8 +258,8 @@ export function CommentSection({ postId }: CommentSectionProps) {
     }
   };
 
-  const handleReply = (commentId: string, nickname: string) => {
-    setReplyTo({ id: commentId, nickname });
+  const handleReply = (commentId: string, nickname: string, parentId: string | null = null) => {
+    setReplyTo({ id: commentId, nickname, parentId });
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
@@ -354,36 +354,34 @@ export function CommentSection({ postId }: CommentSectionProps) {
           {renderContent(comment.content, comment.isMarkdown)}
         </div>
         
-        {!isReply && (
-          <div className="comment-actions">
+        <div className="comment-actions">
+          <button
+            className="comment-action-btn"
+            onClick={() => handleReply(comment.id, comment.nickname, isReply ? comment.parentId : comment.id)}
+          >
+            <Reply size={14} />
+            回复
+          </button>
+          
+          {!isReply && comment.replies.length > 0 && (
             <button
               className="comment-action-btn"
-              onClick={() => handleReply(comment.id, comment.nickname)}
+              onClick={() => toggleReplies(comment.id)}
             >
-              <Reply size={14} />
-              回复
+              {expandedReplies.has(comment.id) ? (
+                <>
+                  <ChevronUp size={14} />
+                  收起回复 ({comment.replies.length})
+                </>
+              ) : (
+                <>
+                  <ChevronDown size={14} />
+                  展开回复 ({comment.replies.length})
+                </>
+              )}
             </button>
-            
-            {comment.replies.length > 0 && (
-              <button
-                className="comment-action-btn"
-                onClick={() => toggleReplies(comment.id)}
-              >
-                {expandedReplies.has(comment.id) ? (
-                  <>
-                    <ChevronUp size={14} />
-                    收起回复 ({comment.replies.length})
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown size={14} />
-                    展开回复 ({comment.replies.length})
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-        )}
+          )}
+        </div>
         
         <AnimatePresence>
           {!isReply && expandedReplies.has(comment.id) && comment.replies.length > 0 && (

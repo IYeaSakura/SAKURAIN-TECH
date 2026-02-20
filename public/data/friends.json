@@ -52,7 +52,7 @@
   ],
   "friends": [
     {
-      "id": "mclans",
+      "id": "7e29d6a6",
       "name": "Mc服务器演示站",
       "url": "https://mclans.sakurain.net",
       "icon": "https://sakurain.net/image/logo.webp",
@@ -61,18 +61,22 @@
       "featured": false,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:42.913Z",
+        "lastChecked": "2026-02-20T15:10:05.652Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 473,
+        "responseTime": 11618,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "dut",
+      "id": "b28698ac",
       "name": "大连理工大学",
       "url": "https://www.dlut.edu.cn/",
       "icon": "https://www.dlut.edu.cn/images/favicon.ico",
@@ -81,18 +85,22 @@
       "featured": false,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:43.018Z",
+        "lastChecked": "2026-02-20T15:10:07.360Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 523,
+        "responseTime": 13300,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "caai",
+      "id": "187a99bb",
       "name": "中国人工智能学会",
       "url": "https://www.caai.cn/",
       "icon": "https://www.caai.cn/favicon.ico",
@@ -101,18 +109,22 @@
       "featured": false,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:42.922Z",
+        "lastChecked": "2026-02-20T15:10:06.537Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 426,
+        "responseTime": 12477,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "12371",
+      "id": "26d79673",
       "name": "共产党员网",
       "url": "https://www.12371.cn/",
       "icon": "https://p4.img.cctvpic.com/photoAlbum/templet/common/DEPA1356314678315297/sy_dyw377_0504.png",
@@ -121,18 +133,22 @@
       "featured": false,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:42.966Z",
+        "lastChecked": "2026-02-20T15:10:05.860Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 470,
+        "responseTime": 11798,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "nektropy",
+      "id": "ae4f0670",
       "name": "熵",
       "url": "https://www.nekt.qzz.io/",
       "icon": "https://www.nekt.qzz.io/head.png",
@@ -141,18 +157,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:44.976Z",
+        "lastChecked": "2026-02-20T15:10:05.905Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 2479,
+        "responseTime": 11844,
         "isAntiBot": false,
-        "hasProtection": "9d0e47b33bf9c3ca-SEA"
+        "hasProtection": "9d0eedc3dfad0713-HKG",
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "mxw2024",
+      "id": "89efd92d",
       "name": "孟轩网",
       "url": "https://www.mxw2024.top/",
       "icon": "https://www.mxw2024.top/favicon.ico",
@@ -161,18 +181,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:43.352Z",
+        "lastChecked": "2026-02-20T15:10:06.016Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 438,
+        "responseTime": 362,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "mxw2024blog",
+      "id": "a48af9ed",
       "name": "孟轩科技's blog",
       "url": "https://blog.mxw2024.top/",
       "icon": "https://blog.mxw2024.top/assets/images/favicon.ico",
@@ -182,18 +206,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:43.342Z",
+        "lastChecked": "2026-02-20T15:10:06.233Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 420,
+        "responseTime": 373,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "iletter",
+      "id": "2b5632db",
       "name": "白荼日记",
       "url": "https://blog.iletter.top/",
       "icon": "https://www.ittoolman.top/images/avatar.png",
@@ -203,18 +231,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:43.752Z",
+        "lastChecked": "2026-02-20T15:10:07.157Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 786,
+        "responseTime": 1252,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "Ayeez",
+      "id": "9ed4e1ee",
       "name": "阿叶Ayeez的小站",
       "url": "https://blog.Ayeez.cn/",
       "icon": "https://blog.ayeez.cn/imgs/photo.jpg",
@@ -223,18 +255,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:43.355Z",
+        "lastChecked": "2026-02-20T15:10:07.029Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 337,
+        "responseTime": 1012,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "ybyq",
+      "id": "44e3b2ff",
       "name": "Xuan's blog",
       "url": "https://blog.ybyq.wang/",
       "icon": "https://blog.ybyq.wang/usr/themes/handsome/assets/img/avatar.png",
@@ -244,18 +280,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:44.935Z",
+        "lastChecked": "2026-02-20T15:10:08.099Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 1592,
+        "responseTime": 1866,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "refact",
+      "id": "73cdea5d",
       "name": "RefactX Project",
       "url": "https://www.refact.cc",
       "icon": "https://refact.cc/avatar.png",
@@ -264,18 +304,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:43.839Z",
+        "lastChecked": "2026-02-20T15:10:06.917Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 487,
+        "responseTime": 380,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "ziyibbs",
+      "id": "2e0a4950",
       "name": "紫血小站",
       "url": "https://blog.ziyibbs.com",
       "icon": "https://blog.ziyibbs.com/favicon/logo.png",
@@ -285,18 +329,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:44.676Z",
+        "lastChecked": "2026-02-20T15:10:14.117Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 1321,
+        "responseTime": 7200,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "9sb",
+      "id": "40a82b54",
       "name": "记录生活，精彩一刻",
       "url": "https://9sb.net",
       "icon": "https://9sb.net/logo.svg",
@@ -306,18 +354,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:44.288Z",
+        "lastChecked": "2026-02-20T15:10:07.651Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 536,
+        "responseTime": 622,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "sumi233",
+      "id": "82774d57",
       "name": "酥米的小站",
       "url": "https://www.sumi233.top/",
       "icon": "https://cdn.sumi233.top/gh/huang233893/blog-image-bed@main/top/huang233893/imgs/blog/usersumi.png",
@@ -326,18 +378,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:44.431Z",
+        "lastChecked": "2026-02-20T15:10:07.513Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 592,
+        "responseTime": 356,
         "isAntiBot": false,
-        "hasProtection": "9cd88a8d3fb6fde6-SIN"
+        "hasProtection": "9cd88a8d3fb6fde6-SIN",
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "mcxiaochen",
+      "id": "13112bf8",
       "name": "辰渊尘の个人博客",
       "url": "https://blog.mcxiaochen.top/",
       "icon": "https://blog.mcxiaochen.top/favicon.ico",
@@ -346,18 +402,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:44.649Z",
+        "lastChecked": "2026-02-20T15:10:07.730Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 361,
+        "responseTime": 370,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "inaline",
+      "id": "7e47987f",
       "name": "Inalineの小站",
       "url": "https://inaline.net",
       "icon": "https://inaline.net/usr/themes/inaline/assets/images/logo/cover.png",
@@ -367,18 +427,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:45.732Z",
+        "lastChecked": "2026-02-20T15:10:08.091Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 1301,
+        "responseTime": 577,
         "isAntiBot": false,
-        "hasProtection": "9d0e47bc4ece75e8-SEA"
+        "hasProtection": "9d0eedd14f08fd0a-SIN",
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "imshimao",
+      "id": "32fab9bc",
       "name": "石猫博客",
       "url": "https://imshimao.com",
       "icon": "https://www.vidlii.net/usfi/avt/1HH5cpvb235.jpg",
@@ -388,18 +452,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:45.536Z",
+        "lastChecked": "2026-02-20T15:10:09.053Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 886,
+        "responseTime": 1402,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "amvc",
+      "id": "9188c57f",
       "name": "麻辣工夫茶博客网",
       "url": "https://amvc.top",
       "icon": "https://amvc.top/touxiang.webp",
@@ -409,18 +477,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:45.010Z",
+        "lastChecked": "2026-02-20T15:10:09.123Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 334,
+        "responseTime": 1393,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "lov3u",
+      "id": "056b84fc",
       "name": "Weiwei's blog",
       "url": "https://www.lov3u.top",
       "icon": "https://www.lov3u.top/wp-content/uploads/2026/02/TT.jpg",
@@ -429,18 +501,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:45.477Z",
+        "lastChecked": "2026-02-20T15:10:08.762Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 541,
+        "responseTime": 671,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "andyjin",
+      "id": "baebcad5",
       "name": "Modern Blog",
       "url": "https://blog.andyjin.website",
       "icon": "https://filestorage0.oss-cn-hongkong.aliyuncs.com/avatar.png",
@@ -449,18 +525,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:45.822Z",
+        "lastChecked": "2026-02-20T15:10:08.735Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 845,
+        "responseTime": 636,
         "isAntiBot": false,
-        "hasProtection": "9d0e47bf6f91a3cb-SEA"
+        "hasProtection": "9d0eedd4fc16448a-SIN",
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "qingfengnb",
+      "id": "dbc2c8d0",
       "name": "轻风blog",
       "url": "https://www.qingfengnb.cn",
       "icon": "https://img.qingfengnb.cn/LightPicture/2025/07/bec6eb9625656d60.jpg",
@@ -470,18 +550,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:45.624Z",
+        "lastChecked": "2026-02-20T15:10:11.284Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 614,
+        "responseTime": 2549,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "starssr",
+      "id": "57f82378",
       "name": "云云星羽",
       "url": "https://starssr.com",
       "icon": "https://q1.qlogo.cn/g?b=qq&nk=521001121&s=640",
@@ -491,18 +575,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:45.774Z",
+        "lastChecked": "2026-02-20T15:10:09.400Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 297,
+        "responseTime": 638,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "longdahuasheng",
+      "id": "f5e8f661",
       "name": "我的技术成长笔记",
       "url": "https://blog.longdahuasheng.top",
       "icon": "https://blog.longdahuasheng.top/logo.png",
@@ -512,18 +600,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:47.393Z",
+        "lastChecked": "2026-02-20T15:10:14.875Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 1856,
+        "responseTime": 5822,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "aobp",
+      "id": "13e729b9",
       "name": "Serenity's Blog",
       "url": "https://serenity.aobp.cn/",
       "icon": "https://serenity.aobp.cn/upload/%E5%A4%B4%E5%83%8F.png",
@@ -531,20 +623,24 @@
       "description": "热爱可抵岁月漫长",
       "category": "blogs",
       "featured": true,
-      "status": "online",
+      "status": "maintenance",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:45.956Z",
-        "statusCode": 404,
+        "lastChecked": "2026-02-20T15:10:24.694Z",
+        "statusCode": 503,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 332,
-        "isAntiBot": true,
-        "hasProtection": false
+        "responseTime": 15570,
+        "isAntiBot": false,
+        "hasProtection": false,
+        "isMaintenance": true,
+        "maintenanceReason": "HTTP 503 with valid content",
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "jsoftstudio",
+      "id": "0cca9c5f",
       "name": "manyJ'sBlog",
       "url": "https://blog.jsoftstudio.top/",
       "icon": "https://blog.jsoftstudio.top/css/all/favicon.ico",
@@ -553,18 +649,22 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:46.519Z",
+        "lastChecked": "2026-02-20T15:10:11.567Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 474,
+        "responseTime": 2166,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "woolyun",
+      "id": "cbf95edd",
       "name": "天海博客",
       "url": "https://woolyun.com/",
       "icon": "https://woolyun.com/wp-content/uploads/2025/05/yyl-e1746698677584.jpg",
@@ -575,18 +675,22 @@
       "unidirectional": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:47.002Z",
+        "lastChecked": "2026-02-20T15:10:23.727Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 1269,
+        "responseTime": 12442,
         "isAntiBot": false,
-        "hasProtection": "9d0e47c418477209-SEA"
+        "hasProtection": "9d0eee30be87108d-HKG",
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "atao",
+      "id": "ca9a1f56",
       "name": "ATao-Blog",
       "url": "https://blog.atao.cyou/",
       "icon": "https://cdn.atao.cyou/Web/Avatar.png",
@@ -596,18 +700,22 @@
       "unidirectional": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:46.045Z",
+        "lastChecked": "2026-02-20T15:10:22.751Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 271,
+        "responseTime": 11184,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "anheyu",
+      "id": "0aa52540",
       "name": "安知鱼",
       "url": "https://blog.anheyu.com/",
       "icon": "https://npm.elemecdn.com/anzhiyu-blog-static@1.0.4/img/avatar.jpg",
@@ -617,18 +725,22 @@
       "unidirectional": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:46.359Z",
+        "lastChecked": "2026-02-20T15:10:23.580Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 536,
+        "responseTime": 9463,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "chengshuo",
+      "id": "73ce5853",
       "name": "成烁BLOG",
       "url": "https://blog.chengshuo.top",
       "icon": "https://blog.chengshuo.top/usr/uploads/2025/08/1293883047.webp",
@@ -638,18 +750,22 @@
       "unidirectional": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:46.561Z",
+        "lastChecked": "2026-02-20T15:10:23.294Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 605,
+        "responseTime": 8418,
         "isAntiBot": false,
-        "hasProtection": false
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     },
     {
-      "id": "5ee",
+      "id": "10ee71f4",
       "name": "5ee博客",
       "url": "https://www.5ee.net",
       "icon": "https://lsky.5ee.net/lsky/2024/12/10/675799c108db1.gif",
@@ -660,16 +776,72 @@
       "unidirectional": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-02-20T13:16:46.671Z",
-        "statusCode": 404,
+        "lastChecked": "2026-02-20T15:10:27.865Z",
+        "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 311,
-        "isAntiBot": true,
-        "hasProtection": false
+        "responseTime": 5114,
+        "isAntiBot": false,
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
+      }
+    },
+    {
+      "id": "0ca78685",
+      "name": "老卡尔的旧纸箱",
+      "url": "https://karlbaey.top",
+      "icon": "https://avatars.githubusercontent.com/u/191684279",
+      "feed": "https://re.karlbaey.top/atom.xml",
+      "description": "这里存着卡尔白的过去、现在和未来",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true,
+      "status": "online",
+      "checkInfo": {
+        "lastChecked": "2026-02-20T15:10:24.580Z",
+        "statusCode": 200,
+        "error": null,
+        "attempts": 1,
+        "usedHttpFallback": false,
+        "responseTime": 1286,
+        "isAntiBot": false,
+        "hasProtection": "9d0eee37edaca027-SIN",
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
+      }
+    },
+    {
+      "id": "c211091a",
+      "name": "云海花瑶",
+      "url": "https://www.moeyao.cn/",
+      "icon": "https://dn-qiniu-avatar.qbox.me/avatar/d00de9fbffe50946b950a3fd0cd1bfdb",
+      "feed": "https://www.moeyao.cn/feed",
+      "description": "白头并非雪可替,相遇已是上上签",
+      "category": "blogs",
+      "featured": true,
+      "unidirectional": true,
+      "status": "online",
+      "checkInfo": {
+        "lastChecked": "2026-02-20T15:10:24.820Z",
+        "statusCode": 200,
+        "error": null,
+        "attempts": 1,
+        "usedHttpFallback": false,
+        "responseTime": 1240,
+        "isAntiBot": false,
+        "hasProtection": false,
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "isJsChallenge": false,
+        "jsChallengeIndicator": null
       }
     }
   ],
-  "lastUpdated": "2026-02-20T13:16:47.393Z"
+  "lastUpdated": "2026-02-20T15:10:27.866Z"
 }

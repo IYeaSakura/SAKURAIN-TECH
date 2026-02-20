@@ -22,6 +22,7 @@ import {
   AlertCircle,
   Clock,
   X,
+  AlertTriangle,
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { AmbientGlow, LightBeam } from '@/components/effects';
@@ -39,6 +40,10 @@ interface CheckInfo {
   responseTime: number | null;
   isAntiBot: boolean;
   hasProtection: boolean;
+  isMaintenance?: boolean;
+  maintenanceReason?: string | null;
+  isJsChallenge?: boolean;
+  jsChallengeIndicator?: string | null;
 }
 
 interface Friend {
@@ -49,7 +54,7 @@ interface Friend {
   description: string;
   category: string;
   featured: boolean;
-  status?: 'online' | 'offline';
+  status?: 'online' | 'offline' | 'maintenance';
   unidirectional?: boolean;
   checkInfo?: CheckInfo;
 }
@@ -91,15 +96,16 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; style?: 
 const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
 
 // Debug Panel Component
-function DebugPanel({ 
-  friends, 
-  onClose 
-}: { 
-  friends: Friend[]; 
+function DebugPanel({
+  friends,
+  onClose
+}: {
+  friends: Friend[];
   onClose: () => void;
 }) {
   const onlineCount = friends.filter(f => f.status === 'online').length;
   const offlineCount = friends.filter(f => f.status === 'offline').length;
+  const maintenanceCount = friends.filter(f => f.status === 'maintenance').length;
   const unknownCount = friends.filter(f => !f.status).length;
 
   const formatDate = (dateStr: string) => {
@@ -129,7 +135,7 @@ function DebugPanel({
       exit={{ opacity: 0, height: 0 }}
       className="mb-8 overflow-hidden"
     >
-      <div 
+      <div
         className="p-6"
         style={{
           background: 'var(--bg-card)',
@@ -149,6 +155,11 @@ function DebugPanel({
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-4 h-4 text-green-500" /> {onlineCount}
               </span>
+              {maintenanceCount > 0 && (
+                <span className="flex items-center gap-1">
+                  <AlertTriangle className="w-4 h-4 text-yellow-500" /> {maintenanceCount}
+                </span>
+              )}
               {offlineCount > 0 && (
                 <span className="flex items-center gap-1">
                   <AlertCircle className="w-4 h-4 text-red-500" /> {offlineCount}
@@ -160,7 +171,7 @@ function DebugPanel({
                 </span>
               )}
             </div>
-            <button 
+            <button
               onClick={onClose}
               className="p-2 transition-colors hover:bg-white/5"
               style={{ clipPath: clipPathRounded(4) }}
@@ -169,10 +180,10 @@ function DebugPanel({
             </button>
           </div>
         </div>
-        
+
         <div className="space-y-2 max-h-96 overflow-y-auto">
           {friends.map((friend) => (
-            <div 
+            <div
               key={friend.id}
               className="flex items-start gap-3 p-3"
               style={{
@@ -183,6 +194,8 @@ function DebugPanel({
               <div className="flex-shrink-0 mt-0.5">
                 {friend.status === 'online' ? (
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
+                ) : friend.status === 'maintenance' ? (
+                  <AlertTriangle className="w-4 h-4 text-yellow-500" />
                 ) : friend.status === 'offline' ? (
                   <AlertCircle className="w-4 h-4 text-red-500" />
                 ) : (
@@ -194,33 +207,40 @@ function DebugPanel({
                   <span className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
                     {friend.name}
                   </span>
-                  <span 
+                  <span
                     className="text-xs px-2 py-0.5"
                     style={{
-                      background: friend.status === 'online' ? 'rgba(34, 197, 94, 0.2)' : 
-                                  friend.status === 'offline' ? 'rgba(239, 68, 68, 0.2)' : 
+                      background: friend.status === 'online' ? 'rgba(34, 197, 94, 0.2)' :
+                                  friend.status === 'maintenance' ? 'rgba(234, 179, 8, 0.2)' :
+                                  friend.status === 'offline' ? 'rgba(239, 68, 68, 0.2)' :
                                   'rgba(156, 163, 175, 0.2)',
-                      color: friend.status === 'online' ? '#22c55e' : 
-                             friend.status === 'offline' ? '#ef4444' : 
+                      color: friend.status === 'online' ? '#22c55e' :
+                             friend.status === 'maintenance' ? '#eab308' :
+                             friend.status === 'offline' ? '#ef4444' :
                              '#9ca3af',
                       clipPath: clipPathRounded(2),
                     }}
                   >
-                    {friend.status === 'online' ? '在线' : 
+                    {friend.status === 'online' ? '在线' :
+                     friend.status === 'maintenance' ? '维护中' :
                      friend.status === 'offline' ? '离线' : '未检测'}
                   </span>
                   {friend.checkInfo && (
                     <>
                       {friend.checkInfo.statusCode && (
-                        <span 
+                        <span
                           className="text-xs px-2 py-0.5"
                           style={{
-                            background: friend.checkInfo.statusCode >= 400 && friend.checkInfo.statusCode < 500
-                              ? 'rgba(234, 179, 8, 0.2)'
-                              : 'rgba(59, 130, 246, 0.2)',
-                            color: friend.checkInfo.statusCode >= 400 && friend.checkInfo.statusCode < 500
-                              ? '#eab308'
-                              : '#3b82f6',
+                            background: friend.checkInfo.statusCode >= 500
+                              ? 'rgba(239, 68, 68, 0.2)'
+                              : friend.checkInfo.statusCode >= 400
+                                ? 'rgba(234, 179, 8, 0.2)'
+                                : 'rgba(59, 130, 246, 0.2)',
+                            color: friend.checkInfo.statusCode >= 500
+                              ? '#ef4444'
+                              : friend.checkInfo.statusCode >= 400
+                                ? '#eab308'
+                                : '#3b82f6',
                             clipPath: clipPathRounded(2),
                           }}
                         >
@@ -228,7 +248,7 @@ function DebugPanel({
                         </span>
                       )}
                       {friend.checkInfo.responseTime !== null && (
-                        <span 
+                        <span
                           className="text-xs px-2 py-0.5"
                           style={{
                             background: 'rgba(168, 85, 247, 0.2)',
@@ -240,7 +260,7 @@ function DebugPanel({
                         </span>
                       )}
                       {friend.checkInfo.usedHttpFallback && (
-                        <span 
+                        <span
                           className="text-xs px-2 py-0.5"
                           style={{
                             background: 'rgba(234, 179, 8, 0.2)',
@@ -251,8 +271,33 @@ function DebugPanel({
                           HTTP降级
                         </span>
                       )}
+                      {friend.checkInfo.isMaintenance && (
+                        <span
+                          className="text-xs px-2 py-0.5"
+                          style={{
+                            background: 'rgba(234, 179, 8, 0.2)',
+                            color: '#eab308',
+                            clipPath: clipPathRounded(2),
+                          }}
+                        >
+                          维护状态
+                        </span>
+                      )}
+                      {friend.checkInfo.isJsChallenge && (
+                        <span
+                          className="text-xs px-2 py-0.5"
+                          style={{
+                            background: 'rgba(249, 115, 22, 0.2)',
+                            color: '#f97316',
+                            clipPath: clipPathRounded(2),
+                          }}
+                          title={friend.checkInfo.jsChallengeIndicator || undefined}
+                        >
+                          JS验证{friend.checkInfo.jsChallengeIndicator ? ` (${friend.checkInfo.jsChallengeIndicator})` : ''}
+                        </span>
+                      )}
                       {friend.checkInfo.isAntiBot && (
-                        <span 
+                        <span
                           className="text-xs px-2 py-0.5"
                           style={{
                             background: 'rgba(249, 115, 22, 0.2)',
@@ -264,7 +309,7 @@ function DebugPanel({
                         </span>
                       )}
                       {friend.checkInfo.hasProtection && (
-                        <span 
+                        <span
                           className="text-xs px-2 py-0.5"
                           style={{
                             background: 'rgba(6, 182, 212, 0.2)',
@@ -288,10 +333,10 @@ function DebugPanel({
                   </div>
                 )}
                 {friend.checkInfo?.error && (
-                  <div 
+                  <div
                     className="text-xs mt-2 p-2 break-all"
-                    style={{ 
-                      background: 'rgba(239, 68, 68, 0.1)', 
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.1)',
                       color: '#f87171',
                       borderLeft: '2px solid #ef4444',
                       clipPath: clipPathRounded(2),
@@ -580,9 +625,21 @@ const PixelCard = memo(function PixelCard({
                 <div
                   className="flex-shrink-0 flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-medium whitespace-nowrap"
                   style={{
-                    background: friend.status === 'online' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                    border: `1px solid ${friend.status === 'online' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
-                    color: friend.status === 'online' ? '#22c55e' : '#ef4444',
+                    background: friend.status === 'online'
+                      ? 'rgba(34, 197, 94, 0.15)'
+                      : friend.status === 'maintenance'
+                        ? 'rgba(234, 179, 8, 0.15)'
+                        : 'rgba(239, 68, 68, 0.15)',
+                    border: `1px solid ${friend.status === 'online'
+                      ? 'rgba(34, 197, 94, 0.4)'
+                      : friend.status === 'maintenance'
+                        ? 'rgba(234, 179, 8, 0.4)'
+                        : 'rgba(239, 68, 68, 0.4)'}`,
+                    color: friend.status === 'online'
+                      ? '#22c55e'
+                      : friend.status === 'maintenance'
+                        ? '#eab308'
+                        : '#ef4444',
                     clipPath: clipPathRounded(2),
                   }}
                 >
@@ -591,11 +648,15 @@ const PixelCard = memo(function PixelCard({
                     transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                     className="w-1 h-1"
                     style={{
-                      background: friend.status === 'online' ? '#22c55e' : '#ef4444',
+                      background: friend.status === 'online'
+                        ? '#22c55e'
+                        : friend.status === 'maintenance'
+                          ? '#eab308'
+                          : '#ef4444',
                       boxShadow: friend.status === 'online' ? '0 0 4px #22c55e' : 'none',
                     }}
                   />
-                  {friend.status === 'online' ? '在线' : '离线'}
+                  {friend.status === 'online' ? '在线' : friend.status === 'maintenance' ? '维护' : '离线'}
                 </div>
               )}
 
@@ -639,9 +700,9 @@ const PixelCard = memo(function PixelCard({
           {/* External link icon - 移动端始终显示 */}
           <motion.div
             initial={animationEnabled ? { opacity: 0, x: -10 } : undefined}
-            animate={{ 
-              opacity: isMobile ? 0.6 : (isHovered ? 1 : 0), 
-              x: isMobile ? 0 : (isHovered ? 0 : -10) 
+            animate={{
+              opacity: isMobile ? 0.6 : (isHovered ? 1 : 0),
+              x: isMobile ? 0 : (isHovered ? 0 : -10)
             }}
             transition={{ duration: 0.3 }}
             className="flex-shrink-0 self-center"
@@ -816,7 +877,7 @@ const HeroSection = memo(function HeroSection({
             <p className="text-lg md:text-xl leading-relaxed max-w-xl mb-6" style={{ color: 'var(--text-muted)' }}>
               {description}
             </p>
-            
+
             {/* Apply Button - Prominent position */}
             <div className="flex items-center gap-3">
               <motion.button
@@ -836,7 +897,7 @@ const HeroSection = memo(function HeroSection({
                 <Mail className="w-5 h-5" />
                 申请友链
               </motion.button>
-              
+
               {/* Debug Button */}
               <motion.button
                 initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
@@ -857,7 +918,7 @@ const HeroSection = memo(function HeroSection({
                 <span className="hidden sm:inline">调试</span>
               </motion.button>
             </div>
-            
+
             {lastUpdated && (
               <motion.div
                 initial={animationEnabled ? { opacity: 0 } : undefined}
@@ -1717,13 +1778,13 @@ export default function FriendsPage() {
           {/* Debug Panel */}
           <AnimatePresence>
             {showDebug && (
-              <DebugPanel 
-                friends={data.friends} 
-                onClose={() => setShowDebug(false)} 
+              <DebugPanel
+                friends={data.friends}
+                onClose={() => setShowDebug(false)}
               />
             )}
           </AnimatePresence>
-          
+
           {/* Categories - 与我相关 */}
           {friendsByCategory.map(({ category, friends }, index) => (
             friends.length > 0 && (

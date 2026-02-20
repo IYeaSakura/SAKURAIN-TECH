@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import https from 'https';
 import http from 'http';
+import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,7 +19,7 @@ const ALLOW_UNSAFE_HTTPS = process.env.ALLOW_UNSAFE_HTTPS === 'true';
 function createHttpsAgent() {
   return new https.Agent({
     rejectUnauthorized: !ALLOW_UNSAFE_HTTPS,
-    secureOptions: ALLOW_UNSAFE_HTTPS ? require('crypto').constants.SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION : undefined,
+    secureOptions: ALLOW_UNSAFE_HTTPS ? crypto.constants.SSL_OP_ALLOW_UNSAFE_LEGACY_RENEGOTIATION : undefined,
   });
 }
 
@@ -59,12 +60,70 @@ function isDateBefore(date1, date2) {
   return new Date(date1) < new Date(date2);
 }
 
+function generateIdFromUrl(url) {
+  const hash = crypto.createHash('md5').update(url).digest('hex');
+  return hash.substring(0, 8);
+}
+
+function normalizeUrl(url) {
+  try {
+    const parsed = new URL(url);
+    let normalized = parsed.hostname.toLowerCase();
+    if (parsed.port && parsed.port !== '80' && parsed.port !== '443') {
+      normalized += `:${parsed.port}`;
+    }
+    if (parsed.pathname && parsed.pathname !== '/') {
+      normalized += parsed.pathname.replace(/\/$/, '');
+    }
+    return normalized;
+  } catch {
+    return url.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+  }
+}
+
+function normalizeFriendIds(friends) {
+  const idMap = new Map();
+  let normalizedCount = 0;
+  let addedCount = 0;
+
+  friends.forEach((friend, index) => {
+    if (!friend.url) {
+      return;
+    }
+
+    const normalizedUrl = normalizeUrl(friend.url);
+    const baseId = generateIdFromUrl(normalizedUrl);
+
+    let finalId = baseId;
+    let suffix = 0;
+
+    while (idMap.has(finalId)) {
+      suffix++;
+      finalId = `${baseId}${suffix.toString(16).padStart(2, '0')}`;
+    }
+
+    const hadId = !!friend.id;
+    if (friend.id !== finalId) {
+      if (!hadId) {
+        addedCount++;
+      } else {
+        normalizedCount++;
+      }
+      friend.id = finalId;
+    }
+
+    idMap.set(finalId, index);
+  });
+
+  return { normalizedCount, addedCount };
+}
+
 function buildHeaders() {
   const userAgent = getRandomUserAgent();
   const isChrome = userAgent.includes('Chrome');
   const isFirefox = userAgent.includes('Firefox');
   const isSafari = userAgent.includes('Safari') && !userAgent.includes('Chrome');
-  
+
   const headers = {
     'User-Agent': userAgent,
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -97,12 +156,12 @@ function buildHeaders() {
 }
 
 function getProxyForUrl(url) {
-  const proxyUrl = url.startsWith('https') 
-    ? process.env.HTTPS_PROXY || process.env.https_proxy 
+  const proxyUrl = url.startsWith('https')
+    ? process.env.HTTPS_PROXY || process.env.https_proxy
     : process.env.HTTP_PROXY || process.env.http_proxy;
-  
+
   if (!proxyUrl) return null;
-  
+
   try {
     const parsed = new URL(proxyUrl);
     return {
@@ -164,14 +223,14 @@ function checkUrl(url, attempt = 0, isFallback = false) {
       req.destroy();
 
       // Check for anti-bot indicators (403, 429, 404 can all be anti-bot responses)
-      const isAntiBot = 
+      const isAntiBot =
         res.statusCode === 403 ||
         res.statusCode === 429 ||
         res.statusCode === 404 ||
         (res.headers['x-frame-options'] === 'DENY' && res.statusCode === 403);
-      
+
       // Check for CDN protection
-      const hasProtection = 
+      const hasProtection =
         res.headers['cf-ray'] ||
         res.headers['x-sucuri-id'] ||
         res.headers['x-sucuri-cache'] ||
@@ -184,7 +243,7 @@ function checkUrl(url, attempt = 0, isFallback = false) {
       const isSuccess = res.statusCode >= 200 && res.statusCode < 400;
       const isReachable = isSuccess || isClientError;
       const needRetry = res.statusCode === 429 || res.statusCode === 503 || res.statusCode === 502;
-      
+
       resolve({
         success: isReachable,
         statusCode: res.statusCode,
@@ -199,7 +258,7 @@ function checkUrl(url, attempt = 0, isFallback = false) {
 
     req.on('error', (error) => {
       req.destroy();
-      
+
       if (isHttps && !isFallback) {
         const httpUrl = getHttpAlternative(url);
         if (httpUrl) {
@@ -209,7 +268,7 @@ function checkUrl(url, attempt = 0, isFallback = false) {
           return;
         }
       }
-      
+
       resolve({
         success: false,
         error: error.message,
@@ -230,12 +289,157 @@ function checkUrl(url, attempt = 0, isFallback = false) {
   });
 }
 
+function analyzePageContent(body, statusCode, headers) {
+  const result = {
+    isMaintenance: false,
+    isJsChallenge: false,
+    hasValidContent: false,
+    reason: null,
+  };
+
+  if (!body || body.length < 50) {
+    return result;
+  }
+
+  const lowerBody = body.toLowerCase();
+  const contentType = headers['content-type'] || '';
+
+  if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
+    result.hasValidContent = body.length > 100;
+    return result;
+  }
+
+  result.hasValidContent = true;
+
+  const maintenanceIndicators = [
+    'maintenance',
+    'under maintenance',
+    'site maintenance',
+    '网站维护',
+    '系统维护',
+    '正在维护',
+    '维护中',
+    '暂时关闭',
+    '系统升级',
+    '升级中',
+    '正在升级',
+    'service unavailable',
+    '暂时无法访问',
+    'be right back',
+    'coming soon',
+    'we\'ll be back',
+    'we will be back',
+    'down for maintenance',
+    'scheduled maintenance',
+    '临时维护',
+    '维护模式',
+    'maintenance mode',
+  ];
+
+  for (const indicator of maintenanceIndicators) {
+    if (lowerBody.includes(indicator)) {
+      result.isMaintenance = true;
+      result.reason = indicator;
+      return result;
+    }
+  }
+
+  const titleMatch = body.match(/<title[^>]*>([^<]+)<\/title>/i);
+  if (titleMatch) {
+    const title = titleMatch[1].toLowerCase();
+    for (const indicator of maintenanceIndicators) {
+      if (title.includes(indicator)) {
+        result.isMaintenance = true;
+        result.reason = `title: ${indicator}`;
+        return result;
+      }
+    }
+  }
+
+  const h1Match = body.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+  if (h1Match) {
+    const h1 = h1Match[1].toLowerCase();
+    for (const indicator of maintenanceIndicators) {
+      if (h1.includes(indicator)) {
+        result.isMaintenance = true;
+        result.reason = `h1: ${indicator}`;
+        return result;
+      }
+    }
+  }
+
+  const jsChallengeIndicators = [
+    'cloudflare',
+    'cf-browser-verification',
+    'challenge-platform',
+    'jschl_vc',
+    'jschl_answer',
+    'checking your browser',
+    'please wait...',
+    'please wait…',
+    'just a moment',
+    'ddos protection',
+    'ray id:',
+    'enable javascript',
+    'checking if the site connection is secure',
+    'browser check',
+    'security check',
+    'captcha',
+    'recaptcha',
+    'hcaptcha',
+    'turnstile',
+    'javascript',
+    'script',
+    'challenge',
+    'verify',
+    'verification',
+  ];
+
+  for (const indicator of jsChallengeIndicators) {
+    if (lowerBody.includes(indicator)) {
+      result.isJsChallenge = true;
+      result.jsChallengeIndicator = indicator;
+      break;
+    }
+  }
+
+  if (statusCode !== 200 && body.length > 500) {
+    const hasHtmlStructure = lowerBody.includes('<html') || lowerBody.includes('<!doctype');
+    const hasBody = lowerBody.includes('<body') || lowerBody.includes('<div') || lowerBody.includes('<main');
+    const hasContent = body.length > 1000;
+
+    if (hasHtmlStructure && hasBody && hasContent) {
+      result.hasValidContent = true;
+    }
+
+    if ((statusCode === 503 || statusCode === 502 || statusCode === 504) && hasContent && !result.isMaintenance) {
+      result.hasValidContent = true;
+      result.isMaintenance = true;
+      result.reason = `HTTP ${statusCode} with valid content`;
+    }
+
+    if (hasContent && !result.isMaintenance && !result.isJsChallenge) {
+      const scriptCount = (lowerBody.match(/<script/g) || []).length;
+      const hasChallengeKeywords = lowerBody.includes('challenge') || 
+                                    lowerBody.includes('verify') || 
+                                    lowerBody.includes('captcha') ||
+                                    lowerBody.includes('cloudflare');
+      if (scriptCount > 3 || hasChallengeKeywords) {
+        result.isJsChallenge = true;
+        result.jsChallengeIndicator = 'detected from content structure';
+      }
+    }
+  }
+
+  return result;
+}
+
 function checkUrlWithGet(url, timeout = TIMEOUT) {
   return new Promise((resolve) => {
     const isHttps = url.startsWith('https');
     const protocol = isHttps ? https : http;
     const headers = buildHeaders();
-    
+
     const options = {
       method: 'GET',
       timeout: timeout,
@@ -248,32 +452,61 @@ function checkUrlWithGet(url, timeout = TIMEOUT) {
 
     const req = protocol.request(new URL(url), options, (res) => {
       // Check for anti-bot indicators (403, 429, 404 can all be anti-bot responses)
-      const isAntiBot = 
+      const isAntiBot =
         res.statusCode === 403 ||
         res.statusCode === 429 ||
         res.statusCode === 404 ||
         (res.headers['x-frame-options'] === 'DENY' && res.statusCode === 403);
-      
+
       // Check for Cloudflare or similar protection
-      const hasProtection = 
+      const hasProtection =
         res.headers['cf-ray'] ||
         res.headers['x-sucuri-id'] ||
         res.headers['x-sucuri-cache'] ||
         res.headers.server?.toLowerCase().includes('cloudflare');
 
-      res.on('data', () => {
-        req.destroy();
-        resolve({
-          success: true,
-          statusCode: res.statusCode,
-          statusMessage: res.statusMessage,
-          isAntiBot,
-          hasProtection,
-        });
+      let body = '';
+      let bodyLength = 0;
+      const maxBodyLength = 50000;
+
+      res.on('data', (chunk) => {
+        bodyLength += chunk.length;
+        if (bodyLength <= maxBodyLength) {
+          body += chunk.toString('utf8');
+        }
       });
-      
+
       res.on('end', () => {
-        // If it's an anti-bot response, still consider it as reachable
+        const contentInfo = analyzePageContent(body, res.statusCode, res.headers);
+
+        if (contentInfo.isMaintenance) {
+          resolve({
+            success: true,
+            statusCode: res.statusCode,
+            statusMessage: res.statusMessage,
+            isAntiBot,
+            hasProtection: !!hasProtection,
+            isMaintenance: true,
+            maintenanceReason: contentInfo.reason,
+            hasContent: bodyLength > 0,
+          });
+          return;
+        }
+
+        if (contentInfo.isJsChallenge) {
+          resolve({
+            success: true,
+            statusCode: res.statusCode,
+            statusMessage: res.statusMessage,
+            isAntiBot: true,
+            hasProtection: !!hasProtection,
+            isJsChallenge: true,
+            jsChallengeIndicator: contentInfo.jsChallengeIndicator,
+            hasContent: bodyLength > 0,
+          });
+          return;
+        }
+
         if (isAntiBot || hasProtection) {
           resolve({
             success: true,
@@ -281,21 +514,39 @@ function checkUrlWithGet(url, timeout = TIMEOUT) {
             statusMessage: res.statusMessage,
             isAntiBot: true,
             hasProtection: !!hasProtection,
+            hasContent: bodyLength > 0,
+            isJsChallenge: contentInfo.isJsChallenge || false,
+            jsChallengeIndicator: contentInfo.jsChallengeIndicator || null,
           });
-        } else if (res.statusCode >= 500) {
-          // 5xx server errors - offline
+          return;
+        }
+
+        if (res.statusCode >= 500 && !contentInfo.hasValidContent) {
           resolve({
             success: false,
             statusCode: res.statusCode,
             statusMessage: res.statusMessage,
           });
-        } else {
+          return;
+        }
+
+        if (res.statusCode >= 500 && contentInfo.hasValidContent) {
           resolve({
-            success: res.statusCode >= 200 && res.statusCode < 400,
+            success: true,
             statusCode: res.statusCode,
             statusMessage: res.statusMessage,
+            hasContent: bodyLength > 0,
+            isMaintenance: contentInfo.isMaintenance,
           });
+          return;
         }
+
+        resolve({
+          success: res.statusCode >= 200 && res.statusCode < 400,
+          statusCode: res.statusCode,
+          statusMessage: res.statusMessage,
+          hasContent: bodyLength > 0,
+        });
       });
     });
 
@@ -322,7 +573,7 @@ function checkUrlWithGet(url, timeout = TIMEOUT) {
 async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
   let usedHttpFallback = false;
   const startTime = Date.now();
-  
+
   for (let i = 0; i <= retries; i++) {
     try {
       if (i > 0) {
@@ -331,8 +582,8 @@ async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
       }
 
       let result = await checkUrl(url);
-      
-      if (!result.success && i === retries - 1) {
+
+      if (!result.success || result.statusCode >= 400) {
         await new Promise(resolve => setTimeout(resolve, getRandomDelay(100, 300)));
         result = await checkUrlWithGet(result.usedHttpFallback ? getHttpAlternative(url) || url : url);
         if (result.usedHttpFallback) {
@@ -342,9 +593,26 @@ async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
 
       const responseTime = Date.now() - startTime;
 
+      if (result.isMaintenance) {
+        return {
+          success: true,
+          status: 'maintenance',
+          statusCode: result.statusCode,
+          attempts: i + 1,
+          usedHttpFallback,
+          responseTime,
+          isAntiBot: result.isAntiBot || false,
+          hasProtection: result.hasProtection || false,
+          isMaintenance: true,
+          maintenanceReason: result.maintenanceReason,
+          isJsChallenge: result.isJsChallenge || false,
+          jsChallengeIndicator: result.jsChallengeIndicator || null,
+        };
+      }
+
       if (result.success) {
-        return { 
-          success: true, 
+        return {
+          success: true,
           status: 'online',
           statusCode: result.statusCode,
           attempts: i + 1,
@@ -352,6 +620,8 @@ async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
           responseTime,
           isAntiBot: result.isAntiBot || false,
           hasProtection: result.hasProtection || false,
+          isJsChallenge: result.isJsChallenge || false,
+          jsChallengeIndicator: result.jsChallengeIndicator || null,
         };
       }
 
@@ -430,6 +700,15 @@ async function checkFriendsConnectivity() {
       return;
     }
 
+    console.log('Normalizing friend IDs...');
+    const { normalizedCount, addedCount } = normalizeFriendIds(data.friends);
+    if (normalizedCount > 0 || addedCount > 0) {
+      console.log(`  Added: ${addedCount}, Normalized: ${normalizedCount}`);
+    } else {
+      console.log('  All IDs are valid');
+    }
+    console.log('');
+
     const friendsToCheck = data.friends.filter(friend => friend.url);
     console.log(`Checking connectivity for ${friendsToCheck.length} friends (concurrency: ${CONCURRENCY_LIMIT})...`);
     console.log('');
@@ -440,16 +719,24 @@ async function checkFriendsConnectivity() {
 
     const tasks = friendsToCheck.map((friend, index) => async () => {
       const result = await checkUrlWithRetry(friend.url);
-      
+
       completedCount.value++;
       const progress = Math.round((completedCount.value / total) * 100);
+      const maintenanceLabel = result.isMaintenance ? ' [维护]' : '';
       const antiBotLabel = result.isAntiBot ? ' [反爬]' : '';
       const protectionLabel = result.hasProtection ? ' [防护]' : '';
       const httpFallbackLabel = result.usedHttpFallback ? ' [HTTP]' : '';
-      const status = result.success 
-        ? `✓ Online (${result.statusCode})${httpFallbackLabel}${antiBotLabel}${protectionLabel}`
-        : `✗ Offline (${result.error || result.statusCode || 'unknown'})`;
-      
+      const jsChallengeLabel = result.isJsChallenge ? ' [JS验证]' : '';
+
+      let status;
+      if (result.isMaintenance) {
+        status = `⚠ Maintenance (${result.statusCode})${maintenanceLabel}`;
+      } else if (result.success) {
+        status = `✓ Online (${result.statusCode})${httpFallbackLabel}${antiBotLabel}${protectionLabel}${jsChallengeLabel}`;
+      } else {
+        status = `✗ Offline (${result.error || result.statusCode || 'unknown'})`;
+      }
+
       console.log(`[${completedCount.value}/${total}] ${progress}% - ${friend.id}: ${status}`);
 
       const checkInfo = {
@@ -461,9 +748,19 @@ async function checkFriendsConnectivity() {
         responseTime: result.responseTime || null,
         isAntiBot: result.isAntiBot || false,
         hasProtection: result.hasProtection || false,
+        isMaintenance: result.isMaintenance || false,
+        maintenanceReason: result.maintenanceReason || null,
+        isJsChallenge: result.isJsChallenge || false,
+        jsChallengeIndicator: result.jsChallengeIndicator || null,
       };
 
-      if (result.success) {
+      if (result.isMaintenance) {
+        friend.status = 'maintenance';
+        friend.checkInfo = checkInfo;
+        if (friend.offlineSince) {
+          delete friend.offlineSince;
+        }
+      } else if (result.success) {
         friend.status = 'online';
         friend.checkInfo = checkInfo;
         if (friend.offlineSince) {
@@ -484,7 +781,7 @@ async function checkFriendsConnectivity() {
         id: friend.id,
         name: friend.name,
         url: friend.url,
-        status: result.success ? 'online' : 'offline',
+        status: result.isMaintenance ? 'maintenance' : (result.success ? 'online' : 'offline'),
         attempts: result.attempts,
         checkInfo,
       };
@@ -502,6 +799,7 @@ async function checkFriendsConnectivity() {
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     const onlineCount = results.filter(r => r.status === 'online').length;
     const offlineCount = results.filter(r => r.status === 'offline').length;
+    const maintenanceCount = results.filter(r => r.status === 'maintenance').length;
 
     console.log('');
     console.log('Connectivity check completed!');
@@ -509,9 +807,10 @@ async function checkFriendsConnectivity() {
     console.log(`Updated ${FRIENDS_FILE}`);
     console.log('');
     console.log('Summary:');
-    console.log(`  Online:  ${onlineCount}`);
-    console.log(`  Offline: ${offlineCount}`);
-    console.log(`  Total:   ${results.length}`);
+    console.log(`  Online:      ${onlineCount}`);
+    console.log(`  Maintenance: ${maintenanceCount}`);
+    console.log(`  Offline:     ${offlineCount}`);
+    console.log(`  Total:       ${results.length}`);
 
   } catch (error) {
     console.error('Failed to check friends connectivity:', error);
