@@ -11,8 +11,11 @@
  * @author SAKURAIN
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Text, Line, Sphere, Billboard } from '@react-three/drei';
+import * as THREE from 'three';
 import {
   Play,
   Pause,
@@ -101,6 +104,19 @@ const SortingVisualizer = ({ speed, onShowCode }: { speed: number; onShowCode: (
   useEffect(() => {
     generateArray();
   }, [generateArray]);
+
+  // Reset and generate new array when algorithm changes
+  useEffect(() => {
+    stopRef.current = true;
+    setIsRunning(false);
+    setIsPaused(false);
+    setComparing([]);
+    setSwapping([]);
+    setSorted([]);
+    // Generate new array
+    const newArray = Array.from({ length: arraySize }, () => Math.floor(Math.random() * maxValue) + 5);
+    setArray(newArray);
+  }, [currentAlgorithm]);
 
   const delay = useCallback((ms: number) => new Promise(resolve => setTimeout(resolve, ms)), []);
 
@@ -543,7 +559,7 @@ const PathfindingVisualizer = ({ speed, onShowCode }: { speed: number; onShowCod
   const [currentAlgorithm, setCurrentAlgorithm] = useState<string>('bfs');
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawMode, setDrawMode] = useState<'wall' | 'start' | 'end'>('wall');
-  const [mazeType, setMazeType] = useState<'none' | 'recursive' | 'random'>('none');
+  const [mazeType, setMazeType] = useState<'none' | 'recursive' | 'random' | 'complex'>('random');
   const stopRef = useRef(false);
   
   const rows = 15;
@@ -566,9 +582,230 @@ const PathfindingVisualizer = ({ speed, onShowCode }: { speed: number; onShowCod
     setMazeType('none');
   }, [start, end]);
 
+  // Generate random start and end positions
+  const generateRandomPositions = useCallback(() => {
+    const newStart: [number, number] = [
+      Math.floor(Math.random() * (rows - 4)) + 2,
+      Math.floor(Math.random() * (cols / 3)) + 1
+    ];
+    const newEnd: [number, number] = [
+      Math.floor(Math.random() * (rows - 4)) + 2,
+      Math.floor(Math.random() * (cols / 3)) + cols * 2 / 3
+    ];
+    return { newStart, newEnd };
+  }, []);
+
+  // Check if two points are connected using BFS
+  const isConnected = useCallback((grid: GridCell[][], start: [number, number], end: [number, number]): boolean => {
+    const visited: boolean[][] = Array(rows).fill(null).map(() => Array(cols).fill(false));
+    const queue: [number, number][] = [start];
+    visited[start[0]][start[1]] = true;
+    
+    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    
+    while (queue.length > 0) {
+      const [r, c] = queue.shift()!;
+      if (r === end[0] && c === end[1]) return true;
+      
+      for (const [dr, dc] of directions) {
+        const nr = r + dr;
+        const nc = c + dc;
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc]) {
+          const cellType = grid[nr][nc].type;
+          if (cellType === 'empty' || cellType === 'start' || cellType === 'end') {
+            visited[nr][nc] = true;
+            queue.push([nr, nc]);
+          }
+        }
+      }
+    }
+    return false;
+  }, []);
+
+  // Create a path between two points using BFS pathfinding
+  const createPathBetween = useCallback((grid: GridCell[][], start: [number, number], end: [number, number]) => {
+    const visited: boolean[][] = Array(rows).fill(null).map(() => Array(cols).fill(false));
+    const parent: Map<string, [number, number]> = new Map();
+    const queue: [number, number][] = [start];
+    visited[start[0]][start[1]] = true;
+    
+    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    
+    while (queue.length > 0) {
+      const [r, c] = queue.shift()!;
+      
+      for (const [dr, dc] of directions) {
+        const nr = r + dr;
+        const nc = c + dc;
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && !visited[nr][nc]) {
+          visited[nr][nc] = true;
+          parent.set(`${nr},${nc}`, [r, c]);
+          
+          if (nr === end[0] && nc === end[1]) {
+            // Reconstruct path and carve it
+            let curr: [number, number] = [nr, nc];
+            while (parent.has(`${curr[0]},${curr[1]}`)) {
+              if (grid[curr[0]][curr[1]].type === 'wall') {
+                grid[curr[0]][curr[1]].type = 'empty';
+              }
+              curr = parent.get(`${curr[0]},${curr[1]}`)!;
+            }
+            return true;
+          }
+          queue.push([nr, nc]);
+        }
+      }
+    }
+    return false;
+  }, []);
+
+  // Generate complex maze with multiple paths
+  const generateComplexMaze = useCallback(async (initialStart?: [number, number], initialEnd?: [number, number]) => {
+    stopRef.current = false;
+    setIsRunning(true);
+    
+    // Random start and end if not provided
+    const { newStart, newEnd } = initialStart && initialEnd 
+      ? { newStart: initialStart, newEnd: initialEnd }
+      : generateRandomPositions();
+    
+    setStart(newStart);
+    setEnd(newEnd);
+    
+    // Start with all walls
+    const newGrid: GridCell[][] = [];
+    for (let i = 0; i < rows; i++) {
+      const row: GridCell[] = [];
+      for (let j = 0; j < cols; j++) {
+        row.push({ type: 'wall', distance: Infinity, parentRow: -1, parentCol: -1 });
+      }
+      newGrid.push(row);
+    }
+    setGrid(newGrid);
+    await delay(speed / 2);
+    
+    // Use recursive backtracking from start
+    const visited: boolean[][] = Array(rows).fill(null).map(() => Array(cols).fill(false));
+    const stack: [number, number][] = [[newStart[0], newStart[1]]];
+    visited[newStart[0]][newStart[1]] = true;
+    newGrid[newStart[0]][newStart[1]].type = 'empty';
+    
+    const directions: [number, number][] = [[0, 2], [2, 0], [0, -2], [-2, 0]];
+    
+    while (stack.length > 0) {
+      if (stopRef.current) break;
+      
+      const [row, col] = stack[stack.length - 1];
+      const neighbors: [number, number][] = [];
+      
+      for (const [dr, dc] of directions) {
+        const nr = row + dr;
+        const nc = col + dc;
+        if (nr > 0 && nr < rows - 1 && nc > 0 && nc < cols - 1 && !visited[nr][nc]) {
+          neighbors.push([nr, nc]);
+        }
+      }
+      
+      if (neighbors.length > 0) {
+        const [nr, nc] = neighbors[Math.floor(Math.random() * neighbors.length)];
+        const wallRow = row + (nr - row) / 2;
+        const wallCol = col + (nc - col) / 2;
+        
+        newGrid[wallRow][wallCol].type = 'empty';
+        newGrid[nr][nc].type = 'empty';
+        visited[nr][nc] = true;
+        visited[wallRow][wallCol] = true;
+        
+        stack.push([nr, nc]);
+        setGrid([...newGrid]);
+        await delay(speed / 8);
+      } else {
+        stack.pop();
+      }
+    }
+    
+    // Clear area around start and end
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        const sr = newStart[0] + dr;
+        const sc = newStart[1] + dc;
+        if (sr >= 0 && sr < rows && sc >= 0 && sc < cols && newGrid[sr][sc].type === 'wall') {
+          newGrid[sr][sc].type = 'empty';
+        }
+        const er = newEnd[0] + dr;
+        const ec = newEnd[1] + dc;
+        if (er >= 0 && er < rows && ec >= 0 && ec < cols && newGrid[er][ec].type === 'wall') {
+          newGrid[er][ec].type = 'empty';
+        }
+      }
+    }
+    
+    // Ensure start and end are set
+    newGrid[newStart[0]][newStart[1]].type = 'start';
+    newGrid[newEnd[0]][newEnd[1]].type = 'end';
+    
+    // Check if start and end are connected, if not create a path
+    if (!isConnected(newGrid, newStart, newEnd)) {
+      createPathBetween(newGrid, newStart, newEnd);
+    }
+    
+    // Add extra passages for multiple paths
+    const extraPassages = Math.floor((rows * cols) / 12);
+    for (let i = 0; i < extraPassages; i++) {
+      if (stopRef.current) break;
+      const r = Math.floor(Math.random() * (rows - 2)) + 1;
+      const c = Math.floor(Math.random() * (cols - 2)) + 1;
+      if (newGrid[r][c].type === 'wall') {
+        let emptyNeighbors = 0;
+        if (r > 0 && newGrid[r-1][c].type === 'empty') emptyNeighbors++;
+        if (r < rows-1 && newGrid[r+1][c].type === 'empty') emptyNeighbors++;
+        if (c > 0 && newGrid[r][c-1].type === 'empty') emptyNeighbors++;
+        if (c < cols-1 && newGrid[r][c+1].type === 'empty') emptyNeighbors++;
+        
+        if (emptyNeighbors >= 2) {
+          newGrid[r][c].type = 'empty';
+        }
+      }
+    }
+    
+    // Final check and ensure connectivity
+    newGrid[newStart[0]][newStart[1]].type = 'start';
+    newGrid[newEnd[0]][newEnd[1]].type = 'end';
+    
+    if (!isConnected(newGrid, newStart, newEnd)) {
+      createPathBetween(newGrid, newStart, newEnd);
+      newGrid[newStart[0]][newStart[1]].type = 'start';
+      newGrid[newEnd[0]][newEnd[1]].type = 'end';
+    }
+    
+    setGrid([...newGrid]);
+    setMazeType('complex');
+    setIsRunning(false);
+  }, [speed, generateRandomPositions]);
+
+  // Initialize with complex maze on mount
   useEffect(() => {
-    initializeGrid();
-  }, [initializeGrid]);
+    generateComplexMaze();
+  }, []);
+
+  // Reset when algorithm changes
+  useEffect(() => {
+    stopRef.current = true;
+    setIsRunning(false);
+    // Clear visited and path cells
+    setGrid(prevGrid => {
+      const newGrid = prevGrid.map(row => 
+        row.map(cell => ({
+          ...cell,
+          type: cell.type === 'visited' || cell.type === 'path' ? 'empty' : cell.type,
+          distance: Infinity,
+          parentRow: -1,
+          parentCol: -1,
+        }))
+      );
+      return newGrid;
+    });
+  }, [currentAlgorithm]);
 
   const delay = useCallback((ms: number) => new Promise(resolve => setTimeout(resolve, ms)), []);
 
@@ -970,6 +1207,14 @@ const PathfindingVisualizer = ({ speed, onShowCode }: { speed: number; onShowCod
         </div>
         
         <div className="maze-buttons">
+          <button 
+            onClick={() => generateComplexMaze()} 
+            disabled={isRunning}
+            className={`algo-btn ${mazeType === 'complex' ? 'active' : ''}`}
+            title="复杂多路迷宫"
+          >
+            <Network size={18} />
+          </button>
           <button 
             onClick={generateRecursiveBacktrackingMaze} 
             disabled={isRunning}
@@ -1405,14 +1650,14 @@ const AdvancedAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; on
   const [result, setResult] = useState<string>('');
   const [sortedOrder, setSortedOrder] = useState<number[]>([]);
   
-  const [knapsackWeights] = useState<number[]>([2, 3, 4, 5]);
-  const [knapsackValues] = useState<number[]>([3, 4, 5, 6]);
-  const [knapsackCapacity] = useState<number>(8);
+  const [knapsackWeights, setKnapsackWeights] = useState<number[]>([]);
+  const [knapsackValues, setKnapsackValues] = useState<number[]>([]);
+  const [knapsackCapacity, setKnapsackCapacity] = useState<number>(0);
   const [dpTable, setDpTable] = useState<number[][]>([]);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
   
-  const [lcsStr1] = useState<string>('ABCBDAB');
-  const [lcsStr2] = useState<string>('BDCABA');
+  const [lcsStr1, setLcsStr1] = useState<string>('');
+  const [lcsStr2, setLcsStr2] = useState<string>('');
   const [lcsTable, setLcsTable] = useState<number[][]>([]);
   const [lcsPath, setLcsPath] = useState<[number, number][]>([]);
 
@@ -1420,27 +1665,66 @@ const AdvancedAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; on
 
   const delay = useCallback((ms: number) => new Promise(resolve => setTimeout(resolve, ms)), []);
 
-  const initializeGraph = useCallback(() => {
-    const graphNodes: GraphNode[] = [
-      { id: 0, x: 150, y: 50, visited: false, inStack: false, component: -1 },
-      { id: 1, x: 250, y: 50, visited: false, inStack: false, component: -1 },
-      { id: 2, x: 350, y: 50, visited: false, inStack: false, component: -1 },
-      { id: 3, x: 100, y: 130, visited: false, inStack: false, component: -1 },
-      { id: 4, x: 200, y: 130, visited: false, inStack: false, component: -1 },
-      { id: 5, x: 300, y: 130, visited: false, inStack: false, component: -1 },
-      { id: 6, x: 400, y: 130, visited: false, inStack: false, component: -1 },
-    ];
+  // Generate random DAG for topological sort
+  const generateRandomDAG = useCallback(() => {
+    const nodeCount = 6 + Math.floor(Math.random() * 3); // 6-8 nodes
+    const graphNodes: GraphNode[] = [];
     
-    const graphEdges: GraphEdge[] = [
-      { from: 0, to: 1 },
-      { from: 1, to: 2 },
-      { from: 0, to: 3 },
-      { from: 1, to: 4 },
-      { from: 2, to: 5 },
-      { from: 2, to: 6 },
-      { from: 3, to: 4 },
-      { from: 4, to: 5 },
-    ];
+    // SVG dimensions: 600 x 280
+    const svgWidth = 600;
+    const svgHeight = 280;
+    const padding = 50;
+    
+    // Position nodes in layers
+    const layers = 3;
+    const nodesPerLayer = Math.ceil(nodeCount / layers);
+    const layerWidth = (svgWidth - 2 * padding) / (layers - 1);
+    
+    for (let i = 0; i < nodeCount; i++) {
+      const layer = Math.floor(i / nodesPerLayer);
+      const posInLayer = i % nodesPerLayer;
+      const nodesInThisLayer = Math.min(nodesPerLayer, nodeCount - layer * nodesPerLayer);
+      const layerHeight = svgHeight - 2 * padding;
+      const ySpacing = nodesInThisLayer > 1 ? layerHeight / (nodesInThisLayer - 1) : 0;
+      
+      const x = padding + layer * layerWidth;
+      const y = nodesInThisLayer > 1 
+        ? padding + posInLayer * ySpacing 
+        : svgHeight / 2;
+      
+      graphNodes.push({ id: i, x, y, visited: false, inStack: false, component: -1 });
+    }
+    
+    // Generate edges (only forward to ensure DAG)
+    const graphEdges: GraphEdge[] = [];
+    for (let i = 0; i < nodeCount; i++) {
+      const currentLayer = Math.floor(i / nodesPerLayer);
+      // Connect to nodes in next layers
+      for (let j = i + 1; j < nodeCount; j++) {
+        const targetLayer = Math.floor(j / nodesPerLayer);
+        if (targetLayer > currentLayer && Math.random() < 0.35) {
+          graphEdges.push({ from: i, to: j });
+        }
+      }
+    }
+    
+    // Ensure at least some edges
+    if (graphEdges.length < 3) {
+      for (let l = 0; l < layers - 1; l++) {
+        const layerStart = l * nodesPerLayer;
+        const nextLayerStart = (l + 1) * nodesPerLayer;
+        const nextLayerEnd = Math.min(nextLayerStart + nodesPerLayer, nodeCount);
+        
+        for (let i = layerStart; i < Math.min(layerStart + nodesPerLayer, nodeCount); i++) {
+          if (nextLayerStart < nodeCount) {
+            const target = nextLayerStart + Math.floor(Math.random() * (nextLayerEnd - nextLayerStart));
+            if (target < nodeCount) {
+              graphEdges.push({ from: i, to: target });
+            }
+          }
+        }
+      }
+    }
     
     setNodes(graphNodes);
     setEdges(graphEdges);
@@ -1450,9 +1734,76 @@ const AdvancedAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; on
     setIsRunning(false);
   }, []);
 
+  // Generate random knapsack problem
+  const generateRandomKnapsack = useCallback(() => {
+    const itemCount = 5 + Math.floor(Math.random() * 4); // 5-8 items
+    const capacity = 10 + Math.floor(Math.random() * 10); // 10-19 capacity
+    
+    const weights: number[] = [];
+    const values: number[] = [];
+    
+    for (let i = 0; i < itemCount; i++) {
+      weights.push(1 + Math.floor(Math.random() * Math.min(capacity / 2, 8)));
+      values.push(1 + Math.floor(Math.random() * 15));
+    }
+    
+    setKnapsackWeights(weights);
+    setKnapsackValues(values);
+    setKnapsackCapacity(capacity);
+    setDpTable([]);
+    setSelectedItems([]);
+    setResult('');
+  }, []);
+
+  // Generate random LCS strings
+  const generateRandomLCS = useCallback(() => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const len1 = 5 + Math.floor(Math.random() * 4); // 5-8 chars
+    const len2 = 5 + Math.floor(Math.random() * 4);
+    
+    let str1 = '';
+    let str2 = '';
+    
+    for (let i = 0; i < len1; i++) {
+      str1 += chars[Math.floor(Math.random() * chars.length)];
+    }
+    for (let i = 0; i < len2; i++) {
+      str2 += chars[Math.floor(Math.random() * chars.length)];
+    }
+    
+    setLcsStr1(str1);
+    setLcsStr2(str2);
+    setLcsTable([]);
+    setLcsPath([]);
+    setResult('');
+  }, []);
+
   useEffect(() => {
-    initializeGraph();
-  }, [initializeGraph]);
+    generateRandomDAG();
+    generateRandomKnapsack();
+    generateRandomLCS();
+  }, [generateRandomDAG, generateRandomKnapsack, generateRandomLCS]);
+
+  // Reset when algorithm changes
+  useEffect(() => {
+    stopRef.current = true;
+    setIsRunning(false);
+    setResult('');
+    setDpTable([]);
+    setLcsTable([]);
+    setSelectedItems([]);
+    setLcsPath([]);
+    setSortedOrder([]);
+    
+    // Regenerate data based on algorithm
+    if (currentAlgorithm === 'topo' || currentAlgorithm === 'scc') {
+      generateRandomDAG();
+    } else if (currentAlgorithm === 'knapsack') {
+      generateRandomKnapsack();
+    } else if (currentAlgorithm === 'lcs') {
+      generateRandomLCS();
+    }
+  }, [currentAlgorithm, generateRandomDAG, generateRandomKnapsack, generateRandomLCS]);
 
   const topologicalSort = useCallback(async () => {
     const newNodes = nodes.map(n => ({ ...n, visited: false, inStack: false }));
@@ -1703,11 +2054,6 @@ const AdvancedAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; on
             value={currentAlgorithm}
             onChange={(e) => {
               setCurrentAlgorithm(e.target.value);
-              setResult('');
-              setDpTable([]);
-              setLcsTable([]);
-              setSelectedItems([]);
-              setLcsPath([]);
             }}
             disabled={isRunning}
             className="algo-select"
@@ -1727,8 +2073,18 @@ const AdvancedAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; on
             <Code size={18} />
           </button>
           {(currentAlgorithm === 'topo' || currentAlgorithm === 'scc') && (
-            <button onClick={initializeGraph} disabled={isRunning} className="algo-btn" title="重置图">
-              <RotateCcw size={18} />
+            <button onClick={generateRandomDAG} disabled={isRunning} className="algo-btn" title="随机生成图">
+              <Shuffle size={18} />
+            </button>
+          )}
+          {currentAlgorithm === 'knapsack' && (
+            <button onClick={generateRandomKnapsack} disabled={isRunning} className="algo-btn" title="随机生成背包问题">
+              <Shuffle size={18} />
+            </button>
+          )}
+          {currentAlgorithm === 'lcs' && (
+            <button onClick={generateRandomLCS} disabled={isRunning} className="algo-btn" title="随机生成字符串">
+              <Shuffle size={18} />
             </button>
           )}
           {!isRunning ? (
@@ -1758,7 +2114,7 @@ const AdvancedAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; on
 
       {(currentAlgorithm === 'topo' || currentAlgorithm === 'scc') && (
         <div className="graph-container">
-          <svg className="graph-svg" width="500" height="200">
+          <svg className="graph-svg" width="600" height="280">
             {edges.map((edge, idx) => {
               const fromNode = nodes.find(n => n.id === edge.from);
               const toNode = nodes.find(n => n.id === edge.to);
@@ -1953,6 +2309,243 @@ interface NeuralConnection {
   weight: number;
 }
 
+// WebGL 3D Point component for K-Means and Perceptron
+const Point3D = ({ position, color, size = 0.08 }: { position: [number, number, number]; color: string; size?: number }) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+  
+  useFrame(() => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x += 0.01;
+      meshRef.current.rotation.y += 0.01;
+    }
+  });
+  
+  return (
+    <Sphere ref={meshRef} position={position} args={[size, 16, 16]}>
+      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.3} />
+    </Sphere>
+  );
+};
+
+// 3D Decision Plane for Perceptron
+const DecisionPlane3D = ({ weights }: { weights: number[]; bias: number }) => {
+  if (weights.length < 2) return null;
+  
+  const w0 = weights[0] || 0.5;
+  const w1 = weights[1] || 0.5;
+  
+  return (
+    <mesh rotation={[Math.PI / 2, 0, Math.atan2(w1, w0)]} position={[2, 1.5, 0]}>
+      <planeGeometry args={[6, 0.02]} />
+      <meshStandardMaterial color="#3b82f6" transparent opacity={0.5} side={THREE.DoubleSide} />
+    </mesh>
+  );
+};
+
+// 3D K-Means Visualization
+const KMeans3DScene = ({ points, centroids, assignments }: { points: DataPoint[]; centroids: [number, number][]; assignments: number[] }) => {
+  const colors = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+  
+  return (
+    <>
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} intensity={1} />
+      
+      {points.map((point, idx) => (
+        <Point3D
+          key={`point-${idx}`}
+          position={[point.x, point.y, 0]}
+          color={colors[assignments[idx] ?? point.label] || '#888888'}
+          size={0.06}
+        />
+      ))}
+      
+      {centroids.map((centroid, idx) => (
+        <group key={`centroid-${idx}`}>
+          <Sphere position={[centroid[0], centroid[1], 0]} args={[0.15, 32, 32]}>
+            <meshStandardMaterial 
+              color={colors[idx]} 
+              emissive={colors[idx]} 
+              emissiveIntensity={0.5}
+              wireframe={false}
+            />
+          </Sphere>
+          <Billboard position={[centroid[0], centroid[1] + 0.3, 0]}>
+            <Text fontSize={0.2} color="white" anchorX="center" anchorY="middle">
+              {`C${idx + 1}`}
+            </Text>
+          </Billboard>
+        </group>
+      ))}
+      
+      <OrbitControls enablePan enableZoom enableRotate />
+      <gridHelper args={[8, 8, '#333333', '#222222']} />
+    </>
+  );
+};
+
+// 3D Gradient Descent Visualization
+const GradientDescent3DScene = ({ path, currentX }: { path: number[]; currentX: number }) => {
+  const surfacePoints = useMemo(() => {
+    const points: [number, number, number][] = [];
+    for (let x = -3; x <= 3; x += 0.3) {
+      for (let z = -3; z <= 3; z += 0.3) {
+        points.push([x, x * x + z * z, z]);
+      }
+    }
+    return points;
+  }, []);
+  
+  const pathPoints = useMemo(() => {
+    return path.map((x) => [x, x * x, 0] as [number, number, number]);
+  }, [path]);
+  
+  return (
+    <>
+      <ambientLight intensity={0.4} />
+      <pointLight position={[10, 10, 10]} intensity={1} />
+      
+      {/* Surface points */}
+      {surfacePoints.map((point, idx) => (
+        <Sphere key={`surface-${idx}`} position={point} args={[0.05, 8, 8]}>
+          <meshStandardMaterial color="#3b82f6" transparent opacity={0.3} />
+        </Sphere>
+      ))}
+      
+      {/* Gradient path */}
+      {pathPoints.length > 1 && (
+        <Line points={pathPoints} color="#f59e0b" lineWidth={3} />
+      )}
+      
+      {/* Current position */}
+      <Sphere position={[currentX, currentX * currentX, 0]} args={[0.12, 32, 32]}>
+        <meshStandardMaterial color="#10b981" emissive="#10b981" emissiveIntensity={0.5} />
+      </Sphere>
+      
+      <OrbitControls enablePan enableZoom enableRotate />
+    </>
+  );
+};
+
+// 3D Neural Network Visualization
+const NeuralNetwork3DScene = ({ nodes, connections, activations }: { nodes: NeuralNode[]; connections: NeuralConnection[]; activations: Map<string, number> }) => {
+  const layerColors = ['#ef4444', '#3b82f6', '#10b981'];
+  
+  // Calculate node positions dynamically based on actual nodes
+  const nodePositions = useMemo(() => {
+    const positions = new Map<string, [number, number, number]>();
+    
+    // Group nodes by layer
+    const layerGroups = new Map<number, NeuralNode[]>();
+    nodes.forEach(node => {
+      if (!layerGroups.has(node.layer)) {
+        layerGroups.set(node.layer, []);
+      }
+      layerGroups.get(node.layer)!.push(node);
+    });
+    
+    const layerCount = layerGroups.size;
+    const layerSpacing = 3;
+    const startX = -((layerCount - 1) * layerSpacing) / 2;
+    
+    layerGroups.forEach((layerNodes, layer) => {
+      const nodeCount = layerNodes.length;
+      const startY = -((nodeCount - 1) * 1.5) / 2;
+      
+      layerNodes.forEach((node, idx) => {
+        const x = startX + layer * layerSpacing;
+        const y = startY + idx * 1.5;
+        positions.set(node.id, [x, y, 0]);
+      });
+    });
+    
+    return positions;
+  }, [nodes]);
+  
+  return (
+    <>
+      <ambientLight intensity={0.5} />
+      <pointLight position={[10, 10, 10]} intensity={1} />
+      
+      {/* Connections */}
+      {connections.map((conn, idx) => {
+        const fromPos = nodePositions.get(conn.from);
+        const toPos = nodePositions.get(conn.to);
+        if (!fromPos || !toPos) return null;
+        
+        // Color based on weight sign: positive = green, negative = red
+        const weightColor = conn.weight > 0 ? '#10b981' : '#ef4444';
+        const activation = activations.get(conn.to) || 0;
+        
+        return (
+          <Line
+            key={`conn-${idx}`}
+            points={[fromPos, toPos]}
+            color={weightColor}
+            lineWidth={Math.abs(conn.weight) * 2 + 0.5}
+            transparent
+            opacity={0.3 + activation * 0.5}
+          />
+        );
+      })}
+      
+      {/* Nodes */}
+      {nodes.map((node) => {
+        const pos = nodePositions.get(node.id);
+        if (!pos) return null;
+        
+        const activation = activations.get(node.id) || 0;
+        
+        return (
+          <group key={node.id}>
+            <Sphere position={pos} args={[0.3, 32, 32]}>
+              <meshStandardMaterial 
+                color={layerColors[node.layer % layerColors.length]} 
+                emissive={layerColors[node.layer % layerColors.length]}
+                emissiveIntensity={0.2 + activation * 0.8}
+              />
+            </Sphere>
+            <Billboard position={[pos[0], pos[1] + 0.5, pos[2]]}>
+              <Text fontSize={0.2} color="white" anchorX="center">
+                {activation.toFixed(2)}
+              </Text>
+            </Billboard>
+          </group>
+        );
+      })}
+      
+      {/* Dynamic Layer labels */}
+      {(() => {
+        const layerGroups = new Map<number, NeuralNode[]>();
+        nodes.forEach(node => {
+          if (!layerGroups.has(node.layer)) {
+            layerGroups.set(node.layer, []);
+          }
+          layerGroups.get(node.layer)!.push(node);
+        });
+        
+        const layerCount = layerGroups.size;
+        const layerSpacing = 3;
+        const startX = -((layerCount - 1) * layerSpacing) / 2;
+        const layerNames = ['输入层', '隐藏层', '输出层'];
+        
+        return Array.from(layerGroups.keys()).map((layer) => {
+          const x = startX + layer * layerSpacing;
+          return (
+            <Billboard key={`label-${layer}`} position={[x, -3, 0]}>
+              <Text fontSize={0.3} color="#888888" anchorX="center">
+                {layerNames[layer] || `层 ${layer + 1}`}
+              </Text>
+            </Billboard>
+          );
+        });
+      })()}
+      
+      <OrbitControls enablePan enableZoom enableRotate />
+    </>
+  );
+};
+
 const MLAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; onShowCode: (id: string, name: string) => void }) => {
   const [currentAlgorithm, setCurrentAlgorithm] = useState<string>('perceptron');
   const [isRunning, setIsRunning] = useState(false);
@@ -1962,7 +2555,6 @@ const MLAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; onShowCo
   const [dataPoints, setDataPoints] = useState<DataPoint[]>([]);
   const [weights, setWeights] = useState<number[]>([0.5, 0.5]);
   const [bias, setBias] = useState<number>(0);
-  const [decisionLine, setDecisionLine] = useState<number | null>(null);
   const [iteration, setIteration] = useState<number>(0);
   const [accuracy, setAccuracy] = useState<number>(0);
 
@@ -1970,8 +2562,6 @@ const MLAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; onShowCo
   const [centroids, setCentroids] = useState<[number, number][]>([]);
   const [clusterAssignments, setClusterAssignments] = useState<number[]>([]);
 
-  const [gradientX, setGradientX] = useState<number[]>([]);
-  const [gradientY, setGradientY] = useState<number[]>([]);
   const [gradientCurrentX, setGradientCurrentX] = useState<number>(3);
   const [gradientPath, setGradientPath] = useState<number[]>([]);
   const [learningRate] = useState<number>(0.1);
@@ -1995,7 +2585,6 @@ const MLAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; onShowCo
     setDataPoints(points);
     setWeights([Math.random() - 0.5, Math.random() - 0.5]);
     setBias(0);
-    setDecisionLine(null);
     setIteration(0);
     setAccuracy(0);
     setResult('');
@@ -2022,14 +2611,6 @@ const MLAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; onShowCo
   }, []);
 
   const generateGradientData = useCallback(() => {
-    const xData: number[] = [];
-    const yData: number[] = [];
-    for (let x = -3; x <= 3; x += 0.1) {
-      xData.push(x);
-      yData.push(x * x);
-    }
-    setGradientX(xData);
-    setGradientY(yData);
     setGradientCurrentX(3);
     setGradientPath([3]);
     setResult('');
@@ -2113,7 +2694,6 @@ const MLAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; onShowCo
           
           setWeights([...w]);
           setBias(b);
-          setDecisionLine(-b / w[1]);
           
           await delay(speed);
         } else {
@@ -2348,29 +2928,26 @@ const MLAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; onShowCo
 
       {currentAlgorithm === 'perceptron' && (
         <div className="ml-container">
-          <div className="ml-canvas perceptron-canvas">
-            <svg width="400" height="300" viewBox="0 0 4 3">
-              <line
-                x1="0"
-                y1={decisionLine !== null ? decisionLine / 4 * 3 : 0}
-                x2="4"
-                y2={decisionLine !== null ? (decisionLine - 4 * weights[0] / weights[1]) / 4 * 3 : 0}
-                stroke="var(--accent-primary)"
-                strokeWidth="0.05"
-                strokeDasharray="0.1,0.1"
-              />
-              {dataPoints.map((point, idx) => (
-                <circle
-                  key={idx}
-                  cx={point.x / 4}
-                  cy={(3 - point.y / 4 * 3)}
-                  r="0.1"
-                  fill={point.label === 1 ? '#10b981' : '#ef4444'}
-                  stroke="var(--text-primary)"
-                  strokeWidth="0.02"
-                />
-              ))}
-            </svg>
+          <div className="ml-canvas-3d">
+            <Canvas camera={{ position: [2, 2, 5], fov: 50 }}>
+              <Suspense fallback={null}>
+                <ambientLight intensity={0.5} />
+                <pointLight position={[10, 10, 10]} intensity={1} />
+                
+                {dataPoints.map((point, idx) => (
+                  <Point3D
+                    key={`perceptron-point-${idx}`}
+                    position={[point.x, point.y, 0]}
+                    color={point.label === 1 ? '#10b981' : '#ef4444'}
+                    size={0.08}
+                  />
+                ))}
+                
+                <DecisionPlane3D weights={weights} bias={bias} />
+                <gridHelper args={[8, 8, '#333333', '#222222']} />
+                <OrbitControls enablePan enableZoom enableRotate />
+              </Suspense>
+            </Canvas>
           </div>
           <div className="ml-stats">
             <div className="ml-stat-item">
@@ -2401,51 +2978,16 @@ const MLAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; onShowCo
 
       {currentAlgorithm === 'kmeans' && (
         <div className="ml-container">
-          <div className="ml-canvas kmeans-canvas">
-            <svg width="400" height="300" viewBox="0 0 4 3">
-              {kmeansPoints.map((point, idx) => (
-                <circle
-                  key={idx}
-                  cx={point.x / 4}
-                  cy={(3 - point.y / 4 * 3)}
-                  r="0.08"
-                  fill={
-                    clusterAssignments[idx] === 0 ? '#ef4444' :
-                    clusterAssignments[idx] === 1 ? '#3b82f6' :
-                    clusterAssignments[idx] === 2 ? '#10b981' :
-                    'var(--text-muted)'
-                  }
-                  opacity="0.7"
+          <div className="ml-canvas-3d">
+            <Canvas camera={{ position: [2, 2, 6], fov: 50 }}>
+              <Suspense fallback={null}>
+                <KMeans3DScene 
+                  points={kmeansPoints} 
+                  centroids={centroids} 
+                  assignments={clusterAssignments} 
                 />
-              ))}
-              {centroids.map((centroid, idx) => (
-                <g key={`centroid-${idx}`}>
-                  <circle
-                    cx={centroid[0] / 4}
-                    cy={(3 - centroid[1] / 4 * 3)}
-                    r="0.12"
-                    fill={
-                      idx === 0 ? '#ef4444' :
-                      idx === 1 ? '#3b82f6' :
-                      '#10b981'
-                    }
-                    stroke="var(--text-primary)"
-                    strokeWidth="0.03"
-                  />
-                  <text
-                    x={centroid[0] / 4}
-                    y={(3 - centroid[1] / 4 * 3)}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fill="white"
-                    fontSize="0.15"
-                    fontWeight="bold"
-                  >
-                    C{idx + 1}
-                  </text>
-                </g>
-              ))}
-            </svg>
+              </Suspense>
+            </Canvas>
           </div>
           <div className="ml-legend">
             <div className="legend-item">
@@ -2466,38 +3008,12 @@ const MLAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; onShowCo
 
       {currentAlgorithm === 'gradient' && (
         <div className="ml-container">
-          <div className="ml-canvas gradient-canvas">
-            <svg width="400" height="300" viewBox="0 0 7 10">
-              <path
-                d={`M ${gradientX.map((x, i) => `${(x + 3) / 6 * 7} ${9 - gradientY[i] / 9 * 9}`).join(' L ')}`}
-                fill="none"
-                stroke="var(--accent-primary)"
-                strokeWidth="0.1"
-              />
-              {gradientPath.map((x, idx) => (
-                <g key={idx}>
-                  <circle
-                    cx={(x + 3) / 6 * 7}
-                    cy={9 - (x * x) / 9 * 9}
-                    r="0.15"
-                    fill={idx === gradientPath.length - 1 ? '#10b981' : 'var(--accent-secondary)'}
-                    stroke="var(--text-primary)"
-                    strokeWidth="0.05"
-                  />
-                  {idx > 0 && (
-                    <line
-                      x1={(gradientPath[idx - 1] + 3) / 6 * 7}
-                      y1={9 - (gradientPath[idx - 1] * gradientPath[idx - 1]) / 9 * 9}
-                      x2={(x + 3) / 6 * 7}
-                      y2={9 - (x * x) / 9 * 9}
-                      stroke="var(--accent-secondary)"
-                      strokeWidth="0.05"
-                      strokeDasharray="0.1,0.1"
-                    />
-                  )}
-                </g>
-              ))}
-            </svg>
+          <div className="ml-canvas-3d">
+            <Canvas camera={{ position: [0, 8, 8], fov: 50 }}>
+              <Suspense fallback={null}>
+                <GradientDescent3DScene path={gradientPath} currentX={gradientCurrentX} />
+              </Suspense>
+            </Canvas>
           </div>
           <div className="ml-stats">
             <div className="ml-stat-item">
@@ -2518,78 +3034,16 @@ const MLAlgorithmsVisualizer = ({ speed, onShowCode }: { speed: number; onShowCo
 
       {currentAlgorithm === 'neuralnet' && (
         <div className="ml-container">
-          <div className="ml-canvas neuralnet-canvas">
-            <svg width="500" height="300" viewBox="0 0 10 6">
-              {nnConnections.map((conn, idx) => {
-                const fromNode = nnNodes.find(n => n.id === conn.from);
-                const toNode = nnNodes.find(n => n.id === conn.to);
-                if (!fromNode || !toNode) return null;
-                
-                const fromX = fromNode.layer * 3 + 1;
-                const fromY = (fromNode.layer === 0 ? 
-                  nnNodes.filter(n => n.layer === 0).indexOf(fromNode) :
-                  nnNodes.filter(n => n.layer < fromNode.layer).length + 
-                  nnNodes.filter(n => n.layer === fromNode.layer).indexOf(fromNode)) * 1.5 + 1;
-                const toX = toNode.layer * 3 + 1;
-                const toY = (nnNodes.filter(n => n.layer < toNode.layer).length + 
-                  nnNodes.filter(n => n.layer === toNode.layer).indexOf(toNode)) * 1.5 + 1;
-                
-                const activation = nnActivations.get(conn.to) || 0;
-                
-                return (
-                  <line
-                    key={idx}
-                    x1={fromX}
-                    y1={fromY}
-                    x2={toX}
-                    y2={toY}
-                    stroke={activation > 0.5 ? 'var(--accent-primary)' : 'var(--border-color)'}
-                    strokeWidth={Math.abs(conn.weight) * 0.1 + 0.02}
-                    opacity={0.3 + activation * 0.7}
-                  />
-                );
-              })}
-              {nnNodes.map((node) => {
-                const x = node.layer * 3 + 1;
-                const layerNodes = nnNodes.filter(n => n.layer === node.layer);
-                const y = layerNodes.indexOf(node) * 1.5 + 1 + 
-                  (node.layer === 0 ? 0 : 
-                   node.layer === 1 ? 0.75 : 1.5);
-                const activation = nnActivations.get(node.id) || 0;
-                
-                return (
-                  <g key={node.id}>
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r="0.4"
-                      fill={`rgba(var(--accent-primary-rgb), ${activation})`}
-                      stroke="var(--accent-primary)"
-                      strokeWidth="0.05"
-                    />
-                    <text
-                      x={x}
-                      y={y}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      fill="var(--text-primary)"
-                      fontSize="0.3"
-                    >
-                      {activation.toFixed(2)}
-                    </text>
-                  </g>
-                );
-              })}
-              <text x="1" y="5.5" textAnchor="middle" fill="var(--text-secondary)" fontSize="0.4">
-                输入层
-              </text>
-              <text x="4" y="5.5" textAnchor="middle" fill="var(--text-secondary)" fontSize="0.4">
-                隐藏层
-              </text>
-              <text x="7" y="5.5" textAnchor="middle" fill="var(--text-secondary)" fontSize="0.4">
-                输出层
-              </text>
-            </svg>
+          <div className="ml-canvas-3d">
+            <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
+              <Suspense fallback={null}>
+                <NeuralNetwork3DScene 
+                  nodes={nnNodes} 
+                  connections={nnConnections} 
+                  activations={nnActivations} 
+                />
+              </Suspense>
+            </Canvas>
           </div>
           <div className="ml-stats">
             <div className="ml-stat-item">
@@ -2665,12 +3119,12 @@ const AlgoVisualizerPage = () => {
         <input
           type="range"
           min="10"
-          max="200"
-          value={210 - speed}
-          onChange={(e) => setSpeed(210 - parseInt(e.target.value))}
+          max="310"
+          value={310 - speed}
+          onChange={(e) => setSpeed(310 - parseInt(e.target.value))}
           className="speed-slider"
         />
-        <span className="speed-value">{Math.round((210 - speed) / 200 * 100)}%</span>
+        <span className="speed-value">{Math.round((310 - speed) / 200 * 100)}%</span>
       </div>
 
       <AnimatePresence mode="wait">
