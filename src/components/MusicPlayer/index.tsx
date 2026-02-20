@@ -70,6 +70,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const handleNextRef = useRef<() => void>(() => {});
+  const preloadRef = useRef<HTMLAudioElement | null>(null);
 
   // Initialize shuffled order when playlist is loaded
   useEffect(() => {
@@ -149,6 +150,11 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
       audio.removeEventListener('progress', handleProgress);
       audio.pause();
       audio.src = '';
+      // Cleanup preload audio
+      if (preloadRef.current) {
+        preloadRef.current.pause();
+        preloadRef.current.src = '';
+      }
     };
   }, [isVisible]);
 
@@ -204,6 +210,35 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
       audioRef.current.volume = isMuted ? 0 : volume;
     }
   }, [volume, isMuted]);
+
+  // Preload next song for better playback experience
+  useEffect(() => {
+    if (!isVisible || playlist.length === 0 || shuffledOrder.length === 0) return;
+
+    const nextPosition = currentPosition + 1;
+    let nextIndex: number;
+
+    if (nextPosition >= shuffledOrder.length) {
+      nextIndex = shuffledOrder[0];
+    } else {
+      nextIndex = shuffledOrder[nextPosition];
+    }
+
+    const nextSong = playlist[nextIndex];
+    if (!nextSong?.src) return;
+
+    // Create preload audio element
+    if (!preloadRef.current) {
+      preloadRef.current = new Audio();
+      preloadRef.current.preload = 'auto';
+    }
+
+    // Set the next song source for preloading
+    if (preloadRef.current.src !== nextSong.src) {
+      preloadRef.current.src = nextSong.src;
+      preloadRef.current.load();
+    }
+  }, [currentPosition, shuffledOrder, playlist, isVisible]);
 
   const handlePlayPause = useCallback(() => {
     if (error) {

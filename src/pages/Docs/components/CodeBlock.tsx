@@ -17,6 +17,17 @@ const langNames: Record<string, string> = {
   scss: 'SCSS', md: 'Markdown', dockerfile: 'Dockerfile', nginx: 'Nginx'
 };
 
+const customStyle = {
+  margin: 0,
+  padding: '1rem',
+  fontSize: '0.875rem',
+  lineHeight: '1.6',
+  fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace",
+  whiteSpace: 'pre' as const,
+  overflowX: 'auto' as const,
+  background: 'transparent',
+};
+
 export const CodeBlock = ({ language, value }: CodeBlockProps) => {
   const [copied, setCopied] = useState(false);
 
@@ -70,22 +81,15 @@ export const CodeBlock = ({ language, value }: CodeBlockProps) => {
           language={language || 'text'}
           PreTag="div"
           className="prism-code"
-          customStyle={{ 
-            margin: 0, 
-            borderRadius: 0, 
-            fontSize: '0.875rem', 
-            lineHeight: '1.6', 
-            padding: '1rem',
-            fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace !important",
-            whiteSpace: 'pre',
-            overflowX: 'auto'
-          }}
+          style={{}}
+          customStyle={customStyle}
+          useInlineStyles={false}
           showLineNumbers
           lineNumberStyle={{ 
             minWidth: '2.5em', 
             paddingRight: '1em', 
             color: 'var(--text-muted)', 
-            textAlign: 'right', 
+            textAlign: 'right' as const, 
             fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace",
             fontSize: '0.875rem',
             opacity: '0.5'
