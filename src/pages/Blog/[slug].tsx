@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Tag, Share2, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, Tag, Share2, ArrowLeft, Scale } from 'lucide-react';
 import { AmbientGlow } from '@/components/effects';
 import { useTheme, useMobile } from '@/hooks';
 import { ImagePreviewProvider, useImagePreview } from '@/contexts/ImagePreviewContext';
 import { MarkdownRenderer } from '@/pages/Docs/components/MarkdownRenderer';
 import { ArticleSidebar } from './components/ArticleSidebar';
 import { FloatingToolbar } from './components/FloatingToolbar';
+import { CommentSection } from './components/CommentSection';
 import { getBlogPost, formatDateDetail, getReadingTime, getWordCount } from '../Blog/utils';
 import { RouteLoader } from '@/components/RouterTransition';
 import type { BlogPost } from '../Blog/types';
@@ -259,7 +260,7 @@ function BlogPostContent() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
+              transition={{ duration: 0.6, delay: 0.35 }}
               className="mt-8 flex items-center justify-between md:hidden"
             >
               <button
@@ -292,7 +293,7 @@ function BlogPostContent() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
               className="mt-8 rounded-xl p-5 flex items-center gap-4"
               style={{
                 background: 'linear-gradient(135deg, var(--bg-secondary), var(--bg-primary))',
@@ -306,20 +307,7 @@ function BlogPostContent() {
                   boxShadow: '0 2px 10px var(--accent-glow)',
                 }}
               >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-white"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 6v6l4 2" />
-                </svg>
+                <Scale className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
@@ -343,6 +331,14 @@ function BlogPostContent() {
                   署名-非商业性使用-相同方式共享
                 </div>
               </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.45 }}
+            >
+              <CommentSection postId={slug || ''} />
             </motion.div>
           </motion.article>
         </main>
