@@ -318,6 +318,30 @@
   color: #fbbf24 !important;
 }
 
+/* Additional token types for better dark mode visibility */
+.dark .token.parameter,
+.dark .token.decorator,
+.dark .token.annotation {
+  color: #fca5a5 !important;
+}
+
+.dark .token.namespace {
+  color: #93c5fd !important;
+}
+
+.dark .token.console {
+  color: #fbbf24 !important;
+}
+
+.dark .token.generic {
+  color: #d1d5db !important;
+}
+
+/* Ensure all other tokens have visible colors in dark mode */
+.dark .token:not(.comment):not(.prolog):not(.doctype):not(.cdata):not(.punctuation):not(.property):not(.tag):not(.boolean):not(.number):not(.constant):not(.symbol):not(.deleted):not(.selector):not(.attr-name):not(.string):not(.char):not(.builtin):not(.inserted):not(.operator):not(.entity):not(.url):not(.atrule):not(.attr-value):not(.keyword):not(.function):not(.class-name):not(.regex):not(.important):not(.variable):not(.parameter):not(.decorator):not(.annotation):not(.namespace):not(.console):not(.generic) {
+  color: #e5e7eb !important;
+}
+
 /* Inline Code */
 .inline-code {
   display: inline-block;
