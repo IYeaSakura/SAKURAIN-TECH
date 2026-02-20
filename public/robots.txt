@@ -1,0 +1,15 @@
+# Robots.txt for SAKURAIN.NET
+# https://sakurain.net/
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://sakurain.net/sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1
+
+# Block sensitive paths
+Disallow: /api/
+Disallow: /edge-functions/
