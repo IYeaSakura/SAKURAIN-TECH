@@ -364,11 +364,11 @@ function RelatedPostsCard({
     >
       <div className="flex items-center gap-1.5 mb-3" style={{ color: 'var(--text-primary)' }}>
         <TrendingUp className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
-        <span className="text-xs font-medium">相关文章</span>
+        <span className="text-xs font-medium">推荐文章</span>
       </div>
 
       <div className="space-y-2">
-        {posts.slice(0, 3).map((post) => (
+        {posts.slice(0, 2).map((post) => (
           <motion.button
             key={post.slug}
             onClick={() => onNavigate(post.slug)}

@@ -324,10 +324,10 @@ async function handleCreateComment(request, postId, env) {
         ));
       }
 
-      const parentHasParent = currentComments.find(c => c.id === parentId)?.parentId;
-      if (parentHasParent) {
+      const parentComment = currentComments.find(c => c.id === parentId);
+      if (parentComment && parentComment.parentId) {
         return addCorsHeaders(new Response(
-          JSON.stringify({ error: 'Only one level of nesting is supported. Use @mention instead.' }),
+          JSON.stringify({ error: 'Cannot reply to a nested comment. Please reply to the root comment.' }),
           { status: 400, headers: { 'Content-Type': 'application/json' } }
         ));
       }
