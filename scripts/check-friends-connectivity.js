@@ -163,16 +163,37 @@ function checkUrl(url, attempt = 0, isFallback = false) {
 
       req.destroy();
 
+      // Check for anti-bot indicators (403, 429, 404 can all be anti-bot responses)
+      const isAntiBot = 
+        res.statusCode === 403 ||
+        res.statusCode === 429 ||
+        res.statusCode === 404 ||
+        (res.headers['x-frame-options'] === 'DENY' && res.statusCode === 403);
+      
+      // Check for CDN protection
+      const hasProtection = 
+        res.headers['cf-ray'] ||
+        res.headers['x-sucuri-id'] ||
+        res.headers['x-sucuri-cache'] ||
+        res.headers.server?.toLowerCase().includes('cloudflare');
+
+      // 4xx means site is reachable (could be anti-bot, page not found, etc.)
+      const isClientError = res.statusCode >= 400 && res.statusCode < 500;
+
+      // Consider online if: 2xx, 3xx, or 4xx
       const isSuccess = res.statusCode >= 200 && res.statusCode < 400;
+      const isReachable = isSuccess || isClientError;
       const needRetry = res.statusCode === 429 || res.statusCode === 503 || res.statusCode === 502;
       
       resolve({
-        success: isSuccess,
+        success: isReachable,
         statusCode: res.statusCode,
         statusMessage: res.statusMessage,
         needRetry: needRetry,
         headers: res.headers,
         usedHttpFallback: isFallback,
+        isAntiBot,
+        hasProtection,
       });
     });
 
@@ -226,21 +247,55 @@ function checkUrlWithGet(url, timeout = TIMEOUT) {
     }
 
     const req = protocol.request(new URL(url), options, (res) => {
+      // Check for anti-bot indicators (403, 429, 404 can all be anti-bot responses)
+      const isAntiBot = 
+        res.statusCode === 403 ||
+        res.statusCode === 429 ||
+        res.statusCode === 404 ||
+        (res.headers['x-frame-options'] === 'DENY' && res.statusCode === 403);
+      
+      // Check for Cloudflare or similar protection
+      const hasProtection = 
+        res.headers['cf-ray'] ||
+        res.headers['x-sucuri-id'] ||
+        res.headers['x-sucuri-cache'] ||
+        res.headers.server?.toLowerCase().includes('cloudflare');
+
       res.on('data', () => {
         req.destroy();
         resolve({
           success: true,
           statusCode: res.statusCode,
           statusMessage: res.statusMessage,
+          isAntiBot,
+          hasProtection,
         });
       });
       
       res.on('end', () => {
-        resolve({
-          success: res.statusCode >= 200 && res.statusCode < 400,
-          statusCode: res.statusCode,
-          statusMessage: res.statusMessage,
-        });
+        // If it's an anti-bot response, still consider it as reachable
+        if (isAntiBot || hasProtection) {
+          resolve({
+            success: true,
+            statusCode: res.statusCode,
+            statusMessage: res.statusMessage,
+            isAntiBot: true,
+            hasProtection: !!hasProtection,
+          });
+        } else if (res.statusCode >= 500) {
+          // 5xx server errors - offline
+          resolve({
+            success: false,
+            statusCode: res.statusCode,
+            statusMessage: res.statusMessage,
+          });
+        } else {
+          resolve({
+            success: res.statusCode >= 200 && res.statusCode < 400,
+            statusCode: res.statusCode,
+            statusMessage: res.statusMessage,
+          });
+        }
       });
     });
 
@@ -266,6 +321,7 @@ function checkUrlWithGet(url, timeout = TIMEOUT) {
 
 async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
   let usedHttpFallback = false;
+  const startTime = Date.now();
   
   for (let i = 0; i <= retries; i++) {
     try {
@@ -284,6 +340,8 @@ async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
         }
       }
 
+      const responseTime = Date.now() - startTime;
+
       if (result.success) {
         return { 
           success: true, 
@@ -291,17 +349,22 @@ async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
           statusCode: result.statusCode,
           attempts: i + 1,
           usedHttpFallback,
+          responseTime,
+          isAntiBot: result.isAntiBot || false,
+          hasProtection: result.hasProtection || false,
         };
       }
 
-      if (!result.needRetry && result.statusCode >= 400) {
+      // 5xx server errors - offline
+      if (result.statusCode >= 500) {
         return {
           success: false,
           status: 'offline',
           statusCode: result.statusCode,
-          error: result.statusMessage || 'Blocked',
+          error: result.statusMessage || 'Server Error',
           attempts: i + 1,
           usedHttpFallback,
+          responseTime,
         };
       }
 
@@ -313,16 +376,19 @@ async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
           error: result.error || result.statusMessage || 'Failed after retries',
           attempts: i + 1,
           usedHttpFallback,
+          responseTime,
         };
       }
     } catch (error) {
       if (i === retries) {
+        const responseTime = Date.now() - startTime;
         return {
           success: false,
           status: 'offline',
           error: error.message,
           attempts: i + 1,
           usedHttpFallback,
+          responseTime,
         };
       }
     }
@@ -377,19 +443,35 @@ async function checkFriendsConnectivity() {
       
       completedCount.value++;
       const progress = Math.round((completedCount.value / total) * 100);
+      const antiBotLabel = result.isAntiBot ? ' [反爬]' : '';
+      const protectionLabel = result.hasProtection ? ' [防护]' : '';
+      const httpFallbackLabel = result.usedHttpFallback ? ' [HTTP]' : '';
       const status = result.success 
-        ? `✓ Online (${result.statusCode})${result.usedHttpFallback ? ' [HTTP]' : ''}`
+        ? `✓ Online (${result.statusCode})${httpFallbackLabel}${antiBotLabel}${protectionLabel}`
         : `✗ Offline (${result.error || result.statusCode || 'unknown'})`;
       
       console.log(`[${completedCount.value}/${total}] ${progress}% - ${friend.id}: ${status}`);
 
+      const checkInfo = {
+        lastChecked: getBuildTimestamp(),
+        statusCode: result.statusCode || null,
+        error: result.error || null,
+        attempts: result.attempts,
+        usedHttpFallback: result.usedHttpFallback || false,
+        responseTime: result.responseTime || null,
+        isAntiBot: result.isAntiBot || false,
+        hasProtection: result.hasProtection || false,
+      };
+
       if (result.success) {
         friend.status = 'online';
+        friend.checkInfo = checkInfo;
         if (friend.offlineSince) {
           delete friend.offlineSince;
         }
       } else {
         friend.status = 'offline';
+        friend.checkInfo = checkInfo;
         const today = getTodayDate();
         if (!friend.offlineSince) {
           friend.offlineSince = today;
@@ -404,6 +486,7 @@ async function checkFriendsConnectivity() {
         url: friend.url,
         status: result.success ? 'online' : 'offline',
         attempts: result.attempts,
+        checkInfo,
       };
     });
 

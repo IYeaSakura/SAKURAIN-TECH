@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import {
   Globe,
   ExternalLink,
@@ -17,6 +17,11 @@ import {
   User,
   FileText,
   Send,
+  Bug,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  X,
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { AmbientGlow, LightBeam } from '@/components/effects';
@@ -25,6 +30,17 @@ import { RouteLoader } from '@/components/RouterTransition';
 import type { SiteData } from '@/types';
 
 // Types
+interface CheckInfo {
+  lastChecked: string;
+  statusCode: number | null;
+  error: string | null;
+  attempts: number;
+  usedHttpFallback: boolean;
+  responseTime: number | null;
+  isAntiBot: boolean;
+  hasProtection: boolean;
+}
+
 interface Friend {
   id: string;
   name: string;
@@ -35,6 +51,7 @@ interface Friend {
   featured: boolean;
   status?: 'online' | 'offline';
   unidirectional?: boolean;
+  checkInfo?: CheckInfo;
 }
 
 interface FriendCategory {
@@ -72,6 +89,226 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; style?: 
 
 // CSS clip-path helpers
 const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
+
+// Debug Panel Component
+function DebugPanel({ 
+  friends, 
+  onClose 
+}: { 
+  friends: Friend[]; 
+  onClose: () => void;
+}) {
+  const onlineCount = friends.filter(f => f.status === 'online').length;
+  const offlineCount = friends.filter(f => f.status === 'offline').length;
+  const unknownCount = friends.filter(f => !f.status).length;
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const formatResponseTime = (ms: number | null) => {
+    if (ms === null) return '-';
+    if (ms < 1000) return `${ms}ms`;
+    return `${(ms / 1000).toFixed(2)}s`;
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      className="mb-8 overflow-hidden"
+    >
+      <div 
+        className="p-6"
+        style={{
+          background: 'var(--bg-card)',
+          border: '2px solid var(--border-subtle)',
+          clipPath: clipPathRounded(12),
+        }}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Bug className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+            <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+              友链连通性调试
+            </h3>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4 text-green-500" /> {onlineCount}
+              </span>
+              {offlineCount > 0 && (
+                <span className="flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4 text-red-500" /> {offlineCount}
+                </span>
+              )}
+              {unknownCount > 0 && (
+                <span className="flex items-center gap-1">
+                  <Clock className="w-4 h-4 text-gray-400" /> {unknownCount}
+                </span>
+              )}
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 transition-colors hover:bg-white/5"
+              style={{ clipPath: clipPathRounded(4) }}
+            >
+              <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+            </button>
+          </div>
+        </div>
+        
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {friends.map((friend) => (
+            <div 
+              key={friend.id}
+              className="flex items-start gap-3 p-3"
+              style={{
+                background: 'var(--bg-secondary)',
+                clipPath: clipPathRounded(4),
+              }}
+            >
+              <div className="flex-shrink-0 mt-0.5">
+                {friend.status === 'online' ? (
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                ) : friend.status === 'offline' ? (
+                  <AlertCircle className="w-4 h-4 text-red-500" />
+                ) : (
+                  <Clock className="w-4 h-4 text-gray-400" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                    {friend.name}
+                  </span>
+                  <span 
+                    className="text-xs px-2 py-0.5"
+                    style={{
+                      background: friend.status === 'online' ? 'rgba(34, 197, 94, 0.2)' : 
+                                  friend.status === 'offline' ? 'rgba(239, 68, 68, 0.2)' : 
+                                  'rgba(156, 163, 175, 0.2)',
+                      color: friend.status === 'online' ? '#22c55e' : 
+                             friend.status === 'offline' ? '#ef4444' : 
+                             '#9ca3af',
+                      clipPath: clipPathRounded(2),
+                    }}
+                  >
+                    {friend.status === 'online' ? '在线' : 
+                     friend.status === 'offline' ? '离线' : '未检测'}
+                  </span>
+                  {friend.checkInfo && (
+                    <>
+                      {friend.checkInfo.statusCode && (
+                        <span 
+                          className="text-xs px-2 py-0.5"
+                          style={{
+                            background: friend.checkInfo.statusCode >= 400 && friend.checkInfo.statusCode < 500
+                              ? 'rgba(234, 179, 8, 0.2)'
+                              : 'rgba(59, 130, 246, 0.2)',
+                            color: friend.checkInfo.statusCode >= 400 && friend.checkInfo.statusCode < 500
+                              ? '#eab308'
+                              : '#3b82f6',
+                            clipPath: clipPathRounded(2),
+                          }}
+                        >
+                          HTTP {friend.checkInfo.statusCode}
+                        </span>
+                      )}
+                      {friend.checkInfo.responseTime !== null && (
+                        <span 
+                          className="text-xs px-2 py-0.5"
+                          style={{
+                            background: 'rgba(168, 85, 247, 0.2)',
+                            color: '#a855f7',
+                            clipPath: clipPathRounded(2),
+                          }}
+                        >
+                          {formatResponseTime(friend.checkInfo.responseTime)}
+                        </span>
+                      )}
+                      {friend.checkInfo.usedHttpFallback && (
+                        <span 
+                          className="text-xs px-2 py-0.5"
+                          style={{
+                            background: 'rgba(234, 179, 8, 0.2)',
+                            color: '#eab308',
+                            clipPath: clipPathRounded(2),
+                          }}
+                        >
+                          HTTP降级
+                        </span>
+                      )}
+                      {friend.checkInfo.isAntiBot && (
+                        <span 
+                          className="text-xs px-2 py-0.5"
+                          style={{
+                            background: 'rgba(249, 115, 22, 0.2)',
+                            color: '#f97316',
+                            clipPath: clipPathRounded(2),
+                          }}
+                        >
+                          反爬检测
+                        </span>
+                      )}
+                      {friend.checkInfo.hasProtection && (
+                        <span 
+                          className="text-xs px-2 py-0.5"
+                          style={{
+                            background: 'rgba(6, 182, 212, 0.2)',
+                            color: '#06b6d4',
+                            clipPath: clipPathRounded(2),
+                          }}
+                        >
+                          CDN防护
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+                <div className="text-xs mt-1 truncate" style={{ color: 'var(--text-muted)' }}>
+                  {friend.url}
+                </div>
+                {friend.checkInfo && (
+                  <div className="text-xs mt-1 flex items-center gap-3" style={{ color: 'var(--text-muted)' }}>
+                    <span>检测时间: {formatDate(friend.checkInfo.lastChecked)}</span>
+                    <span>重试次数: {friend.checkInfo.attempts}</span>
+                  </div>
+                )}
+                {friend.checkInfo?.error && (
+                  <div 
+                    className="text-xs mt-2 p-2 break-all"
+                    style={{ 
+                      background: 'rgba(239, 68, 68, 0.1)', 
+                      color: '#f87171',
+                      borderLeft: '2px solid #ef4444',
+                      clipPath: clipPathRounded(2),
+                    }}
+                  >
+                    <span className="font-medium">失败原因: </span>
+                    {friend.checkInfo.error}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 // Pixel Card Component - 方块像素风格 + 高级感边框光效
 const PixelCard = memo(function PixelCard({
@@ -518,13 +755,17 @@ const HeroSection = memo(function HeroSection({
   description,
   stats,
   lastUpdated,
-  onApplyClick
+  onApplyClick,
+  onDebugClick,
+  showDebug
 }: {
   title: string;
   description: string;
   stats: { friends: number; categories: number; online: number };
   lastUpdated?: string;
   onApplyClick: () => void;
+  onDebugClick: () => void;
+  showDebug: boolean;
 }) {
   const animationEnabled = useAnimationEnabled();
   const isMobile = useMobile();
@@ -577,23 +818,45 @@ const HeroSection = memo(function HeroSection({
             </p>
             
             {/* Apply Button - Prominent position */}
-            <motion.button
-              initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
-              animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
-              transition={{ delay: 0.4, duration: 0.5 }}
-              whileHover={animationEnabled ? { scale: 1.02 } : undefined}
-              whileTap={{ scale: 0.98 }}
-              onClick={onApplyClick}
-              className="inline-flex items-center gap-2 px-6 py-3 font-semibold text-white transition-all"
-              style={{
-                background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                clipPath: clipPathRounded(6),
-                boxShadow: '0 4px 20px rgba(86, 156, 214, 0.3)',
-              }}
-            >
-              <Mail className="w-5 h-5" />
-              申请友链
-            </motion.button>
+            <div className="flex items-center gap-3">
+              <motion.button
+                initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+                animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                whileHover={animationEnabled ? { scale: 1.02 } : undefined}
+                whileTap={{ scale: 0.98 }}
+                onClick={onApplyClick}
+                className="inline-flex items-center gap-2 px-6 py-3 font-semibold text-white transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                  clipPath: clipPathRounded(6),
+                  boxShadow: '0 4px 20px rgba(86, 156, 214, 0.3)',
+                }}
+              >
+                <Mail className="w-5 h-5" />
+                申请友链
+              </motion.button>
+              
+              {/* Debug Button */}
+              <motion.button
+                initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+                animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
+                transition={{ delay: 0.5, duration: 0.5 }}
+                whileHover={animationEnabled ? { scale: 1.02 } : undefined}
+                whileTap={{ scale: 0.98 }}
+                onClick={onDebugClick}
+                className="inline-flex items-center gap-2 px-4 py-3 font-medium transition-all"
+                style={{
+                  background: showDebug ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                  border: '1px solid var(--border-subtle)',
+                  color: showDebug ? 'white' : 'var(--text-primary)',
+                  clipPath: clipPathRounded(6),
+                }}
+              >
+                <Bug className="w-4 h-4" />
+                <span className="hidden sm:inline">调试</span>
+              </motion.button>
+            </div>
             
             {lastUpdated && (
               <motion.div
@@ -1296,6 +1559,7 @@ export default function FriendsPage() {
   const [redirectModalOpen, setRedirectModalOpen] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [mailtoModalOpen, setMailtoModalOpen] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
   const isMobile = useMobile();
   const animationEnabled = useAnimationEnabled();
 
@@ -1445,9 +1709,21 @@ export default function FriendsPage() {
           stats={stats}
           lastUpdated={data.lastUpdated}
           onApplyClick={handleApplyClick}
+          onDebugClick={() => setShowDebug(!showDebug)}
+          showDebug={showDebug}
         />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+          {/* Debug Panel */}
+          <AnimatePresence>
+            {showDebug && (
+              <DebugPanel 
+                friends={data.friends} 
+                onClose={() => setShowDebug(false)} 
+              />
+            )}
+          </AnimatePresence>
+          
           {/* Categories - 与我相关 */}
           {friendsByCategory.map(({ category, friends }, index) => (
             friends.length > 0 && (
