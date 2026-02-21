@@ -4,13 +4,34 @@
   <subtitle>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。</subtitle>
   <link href="https://sakurain.net/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://sakurain.net" rel="alternate" type="text/html"/>
-  <updated>2026-02-19T00:00:00.000Z</updated>
+  <updated>2026-02-21T00:00:00.000Z</updated>
   <id>https://sakurain.net/</id>
   <author>
     <name>SAKURAIN</name>
     <email>Yae_SakuRain@outlook.com</email>
   </author>
   <rights>© 2026 SAKURAIN 技术工作室</rights>
+  <entry>
+    <title>重启鸽了三年的算法可视化项目：从工程需求到技术实现</title>
+    <link href="https://sakurain.net/blog/algorithm-visualization-project-restart"/>
+    <id>https://sakurain.net/blog/algorithm-visualization-project-restart</id>
+    <published>2026-02-21T00:00:00.000Z</published>
+    <updated>2026-02-21T00:00:00.000Z</updated>
+    <author>
+      <name>SAKURAIN</name>
+      <email>Yae_SakuRain@outlook.com</email>
+    </author>
+    <summary>记录重启搁置三年的算法可视化项目的完整过程，包括技术选型演进、React + Framer Motion 架构设计、状态驱动的执行引擎实现，以及博弈算法可视化的特殊适配方案。</summary>
+    <category term="系统架构"/>
+    <category term="软件工程"/>
+    <category term="搜索算法"/>
+    <category term="蒙特卡洛树搜索"/>
+    <category term="优化算法"/>
+    <category term="算法可视化"/>
+    <category term="前端工程"/>
+    <category term="博弈算法"/>
+  </entry>
+
   <entry>
     <title>解剖X.com推荐算法：当3140亿参数的Grok-1成为你的&quot;数字策展人&quot;</title>
     <link href="https://sakurain.net/blog/x-com-recommendation-algorithm-grok"/>
