@@ -183,26 +183,24 @@ export function useAlgorithmRunner(options: UseAlgorithmRunnerOptions = {}) {
     }));
   }, [steps.length]);
 
-  // 检查是否可以前进/后退
-  const canStepForward = currentStepIndex < steps.length - 1;
+  // 检查是否可以前进/后退（循环模式下前进始终可用）
+  const canStepForward = steps.length > 0;
   const canStepBackward = currentStepIndex > 0;
 
-  // 前进一步
+  // 前进一步（循环到开头）
   const stepForward = useCallback(() => {
-    if (currentStepIndex < steps.length - 1) {
-      const newIndex = currentStepIndex + 1;
-      setCurrentStepIndex(newIndex);
-      const step = steps[newIndex];
-      setState(s => ({
-        ...s,
-        currentStep: newIndex + 1,
-        currentLine: step.lineNumber,
-        message: step.description,
-        variables: step.variables
-      }));
-      return step;
-    }
-    return null;
+    if (steps.length === 0) return null;
+    const newIndex = currentStepIndex >= steps.length - 1 ? 0 : currentStepIndex + 1;
+    setCurrentStepIndex(newIndex);
+    const step = steps[newIndex];
+    setState(s => ({
+      ...s,
+      currentStep: newIndex + 1,
+      currentLine: step.lineNumber,
+      message: step.description,
+      variables: step.variables
+    }));
+    return step;
   }, [currentStepIndex, steps]);
 
   // 后退一步

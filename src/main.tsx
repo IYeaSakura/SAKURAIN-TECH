@@ -181,6 +181,9 @@ function PageLayout({ children }: { children: React.ReactNode }) {
   // 只在以下路径显示导航：首页、博客列表、文档列表、友链、朋友圈、关于、说说、地球Online、工作室
   const showNavPaths = ['/', '/blog', '/docs', '/friends', '/friends-circle', '/about', '/notes', '/earth-online', '/studio', '/algo-viz'];
   const shouldShowNav = showNavPaths.includes(location.pathname);
+  
+  // 算法可视化页面导航不固定
+  const isStickyNav = location.pathname !== '/algo-viz';
 
   // 首屏加载期间显示加载占位符（保持音乐播放器）
   if (isLoading) {
@@ -201,6 +204,7 @@ function PageLayout({ children }: { children: React.ReactNode }) {
           theme={theme}
           onThemeToggle={toggleTheme}
           isThemeTransitioning={isTransitioning}
+          sticky={isStickyNav}
         />
       )}
       {children}
