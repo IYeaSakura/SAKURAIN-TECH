@@ -23,17 +23,17 @@ export interface DemoConfig {
 }
 
 export const DEMOS: DemoConfig[] = [
-  { 
-    id: 'cesium', 
-    icon: Globe, 
-    label: 'Cesium 地球', 
+  {
+    id: 'cesium',
+    icon: Globe,
+    label: 'Cesium 地球',
     title: '地球Online',
     description: '全球玩家实时数据可视化，基于 CesiumJS 的 3D 地球渲染'
   },
-  { 
-    id: 'chinamap', 
-    icon: Map, 
-    label: '中国地图', 
+  {
+    id: 'chinamap',
+    icon: Map,
+    label: '中国地图',
     title: '地球Online-国服',
     description: '中国区域高精度 3D 地图，基于 Three.js 的立体渲染'
   },
@@ -135,14 +135,14 @@ export interface GlobeShowcaseProps {
 
 /**
  * 地球Online展示容器
- * 
+ *
  * 功能特性：
  * - 支持两种展示模式：3D地球、中国地图
  * - 支持全屏/退出全屏
  * - 支持特效切换
  * - 懒加载 3D 资源，需要用户点击后才加载
  */
-export const GlobeShowcase = memo(function GlobeShowcase({ 
+export const GlobeShowcase = memo(function GlobeShowcase({
   pageMode = false,
   initialDemo = 'cesium',
   className = ''

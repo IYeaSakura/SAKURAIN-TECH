@@ -99,7 +99,7 @@ const getComplexityScenarios = (complexityType: string, exponent?: number) => {
       const exp = exponent || 2;
       return { 
         best: { type: 'linear', exp: 1, label: 'O(n)' },
-        worst: { type: 'polynomial', exp, label: `O(n^${exp})` }
+        worst: { type: 'polynomial', exp, label: exp === 2 ? 'O(n²)' : exp === 3 ? 'O(n³)' : `O(n^${exp})` }
       };
     case 'exponential':
       return { 
@@ -145,8 +145,77 @@ const generateChartData = (
 };
 
 // 复杂度信息提示组件
-const ComplexityTooltip: React.FC = () => {
+// 获取算法的最好/最坏情况说明
+const getAlgorithmScenarioDesc = (algorithmName: string): { best: string; worst: string } => {
+  const name = algorithmName.replace(' - 复杂度分析', '');
+  
+  switch (name) {
+    case '冒泡排序':
+      return {
+        best: '数组已经有序，只需进行一次遍历确认，无需交换元素。',
+        worst: '数组完全逆序，每轮都需要进行大量比较和交换操作。'
+      };
+    case '选择排序':
+      return {
+        best: '无论输入如何，都需要遍历未排序部分找到最小值，比较次数固定。',
+        worst: '无论输入如何，都需要遍历未排序部分找到最小值，比较次数固定。'
+      };
+    case '插入排序':
+      return {
+        best: '数组已经有序，每个元素只需比较一次即可确定位置。',
+        worst: '数组完全逆序，每个元素都需要与前面所有元素比较并移动。'
+      };
+    case '希尔排序':
+      return {
+        best: '增量序列选择得当，元素基本有序时效率很高。',
+        worst: '增量序列选择不当，导致大量元素移动和比较。'
+      };
+    case '快速排序':
+      return {
+        best: '每次分区都能将数组均匀划分，递归深度最小。',
+        worst: '数组已经有序或完全逆序，每次分区极度不平衡，退化为 O(n²)。'
+      };
+    case '归并排序':
+      return {
+        best: '无论输入如何，都需要进行相同次数的分割和合并操作。',
+        worst: '无论输入如何，都需要进行相同次数的分割和合并操作。'
+      };
+    case '堆排序':
+      return {
+        best: '无论输入如何，建堆和堆调整的操作次数固定。',
+        worst: '无论输入如何，建堆和堆调整的操作次数固定。'
+      };
+    case '计数排序':
+      return {
+        best: '数据范围小而元素多，计数数组利用率高。',
+        worst: '数据范围远大于元素数量，需要大量额外空间。'
+      };
+    case '基数排序':
+      return {
+        best: '数字位数少且分布均匀，桶分配效率高。',
+        worst: '数字位数多且分布不均，需要多轮桶分配操作。'
+      };
+    case '桶排序':
+      return {
+        best: '数据均匀分布在各个桶中，每个桶内元素很少。',
+        worst: '数据集中在一个或少数几个桶中，退化为普通排序。'
+      };
+    case 'TimSort':
+      return {
+        best: '数组已经有序或部分有序，可以直接利用已有顺序。',
+        worst: '数组完全无序，需要执行完整的 run 查找和归并操作。'
+      };
+    default:
+      return {
+        best: '输入数据已经处于最优状态，算法执行最少操作即可完成。',
+        worst: '输入数据处于最不利状态，算法需要执行最多操作才能完成。'
+      };
+  }
+};
+
+const ComplexityTooltip: React.FC<{ algorithmName: string }> = ({ algorithmName }) => {
   const [showTooltip, setShowTooltip] = useState(false);
+  const desc = getAlgorithmScenarioDesc(algorithmName);
   
   return (
     <div className="complexity-tooltip-wrapper">
@@ -160,11 +229,11 @@ const ComplexityTooltip: React.FC = () => {
         <div className="complexity-tooltip complexity-tooltip-detailed">
           <div className="tooltip-section">
             <div className="tooltip-title">什么是最好情况？</div>
-            <div className="tooltip-desc">输入数据已经处于最优状态，算法执行最少操作即可完成。</div>
+            <div className="tooltip-desc">{desc.best}</div>
           </div>
           <div className="tooltip-section">
             <div className="tooltip-title">什么是最坏情况？</div>
-            <div className="tooltip-desc">输入数据处于最不利状态，算法需要执行最多操作才能完成。</div>
+            <div className="tooltip-desc">{desc.worst}</div>
           </div>
         </div>
       )}
@@ -184,7 +253,8 @@ const ComplexityChart: React.FC<{
   };
   title: string;
   yLabel: string;
-}> = ({ data, title, yLabel }) => {
+  algorithmName: string;
+}> = ({ data, title, yLabel, algorithmName }) => {
   const width = 500;
   const height = 240;
   const padding = { top: 20, right: 20, bottom: 45, left: 55 };
@@ -212,7 +282,7 @@ const ComplexityChart: React.FC<{
     <div className="chart-container">
       <div className="chart-header">
         <h4 className="chart-title">{title}</h4>
-        <ComplexityTooltip />
+        <ComplexityTooltip algorithmName={algorithmName} />
       </div>
       <div className="chart-labels">
         <span className="label-best">最好: {data.bestLabel}</span>
@@ -305,12 +375,14 @@ export const ComplexityChartModal: React.FC<ComplexityChartModalProps> = ({
               <ComplexityChart 
                 data={timeData} 
                 title="时间复杂度曲线" 
-                yLabel="时间" 
+                yLabel="时间"
+                algorithmName={algorithmName}
               />
               <ComplexityChart 
                 data={spaceData} 
                 title="空间复杂度曲线" 
-                yLabel="空间" 
+                yLabel="空间"
+                algorithmName={algorithmName}
               />
             </div>
 

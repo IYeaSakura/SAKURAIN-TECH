@@ -9,3 +9,4 @@ export { ControlPanel } from './ControlPanel';
 export { Legend } from './Legend';
 export { CodeTemplateModal } from './CodeTemplateModal';
 export { ComplexityChartModal } from './ComplexityChartModal';
+export { MemoryVisualizer } from './MemoryVisualizer';

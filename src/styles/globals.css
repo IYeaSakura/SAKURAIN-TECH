@@ -369,36 +369,23 @@ strong, b {
   color: white;
 }
 
-/* Hide default cursor on desktop */
+/* Show default cursor alongside custom cursor on desktop */
 @media (min-width: 1024px) {
   * {
-    cursor: none !important;
+    cursor: auto !important;
   }
   
-  /* Restore default cursor in fullscreen container */
-  .fullscreen-container,
-  .fullscreen-container * {
-    cursor: default !important;
-  }
-  
-  /* But allow pointer cursor on interactive elements in fullscreen */
-  .fullscreen-container button,
-  .fullscreen-container a,
-  .fullscreen-container [role="button"] {
+  /* Pointer cursor on interactive elements */
+  a, button, [role="button"], input[type="range"], select, textarea, 
+  .cursor-pointer, [class*="slider"], [class*="thumb"] {
     cursor: pointer !important;
   }
   
-  /* Restore default cursor in globe showcase content area */
-  .globe-showcase-content,
-  .globe-showcase-content * {
-    cursor: default !important;
-  }
-  
-  /* But allow pointer cursor on interactive elements in globe showcase */
-  .globe-showcase-content button,
-  .globe-showcase-content a,
-  .globe-showcase-content [role="button"] {
-    cursor: pointer !important;
+  /* Text cursor for text inputs */
+  input[type="text"], input[type="number"], input[type="email"], 
+  input[type="password"], input[type="search"], 
+  textarea, [contenteditable="true"] {
+    cursor: text !important;
   }
 }
 
