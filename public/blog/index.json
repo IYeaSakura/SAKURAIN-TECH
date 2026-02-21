@@ -1,6 +1,22 @@
 {
   "posts": [
     {
+      "slug": "shell-sort-time-complexity-analysis",
+      "title": "希尔排序时间复杂度深度解析：从经验估计到严格证明",
+      "description": "系统梳理希尔排序时间复杂度分析从经验估计到严格证明的完整演进脉络，深入剖析不同增量序列的数学结构，重建关键定理的证明过程。",
+      "date": "2026-02-21",
+      "author": "SAKURAIN",
+      "tags": [
+        "排序算法",
+        "算法分析",
+        "复杂度理论"
+      ],
+      "cover": "/image/logo.webp",
+      "featured": true,
+      "wordCount": 13818,
+      "readingTime": "25 分钟阅读"
+    },
+    {
       "slug": "x-com-recommendation-algorithm-grok",
       "title": "解剖X.com推荐算法：当3140亿参数的Grok-1成为你的\"数字策展人\"",
       "description": "深入剖析X.com开源的\"For You\"推荐系统技术栈，从双源内容融合机制到Grok-1 Transformer排序模型，探索MoE架构如何实现314B参数容量下的高效推理。",

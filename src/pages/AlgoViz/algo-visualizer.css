@@ -316,6 +316,45 @@
   flex: 1;
 }
 
+/* 状态栏控制（数组大小） */
+.viz-status-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.viz-status-control .status-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.viz-status-control input[type="range"] {
+  width: 100px;
+  height: 6px;
+  -webkit-appearance: none;
+  background: rgba(128, 128, 128, 0.3);
+  border-radius: 3px;
+  outline: none;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+}
+
+.viz-status-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  cursor: pointer;
+  border: 2px solid white;
+}
+
+.viz-status-control .status-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 20px;
+}
+
 /* ============ 数组大小调节 ============ */
 .array-size-control {
   display: flex;

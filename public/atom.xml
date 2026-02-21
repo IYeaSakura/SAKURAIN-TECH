@@ -33,6 +33,22 @@
   </entry>
 
   <entry>
+    <title>希尔排序时间复杂度深度解析：从经验估计到严格证明</title>
+    <link href="https://sakurain.net/blog/shell-sort-time-complexity-analysis"/>
+    <id>https://sakurain.net/blog/shell-sort-time-complexity-analysis</id>
+    <published>2026-02-21T00:00:00.000Z</published>
+    <updated>2026-02-21T00:00:00.000Z</updated>
+    <author>
+      <name>SAKURAIN</name>
+      <email>Yae_SakuRain@outlook.com</email>
+    </author>
+    <summary>系统梳理希尔排序时间复杂度分析从经验估计到严格证明的完整演进脉络，深入剖析不同增量序列的数学结构，重建关键定理的证明过程。</summary>
+    <category term="排序算法"/>
+    <category term="算法分析"/>
+    <category term="复杂度理论"/>
+  </entry>
+
+  <entry>
     <title>解剖X.com推荐算法：当3140亿参数的Grok-1成为你的&quot;数字策展人&quot;</title>
     <link href="https://sakurain.net/blog/x-com-recommendation-algorithm-grok"/>
     <id>https://sakurain.net/blog/x-com-recommendation-algorithm-grok</id>

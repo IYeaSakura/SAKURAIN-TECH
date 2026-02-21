@@ -15,6 +15,7 @@ interface NavigationProps {
   theme: Theme;
   onThemeToggle: (event: React.MouseEvent<HTMLElement>) => void;
   isThemeTransitioning?: boolean;
+  sticky?: boolean;
 }
 
 const dockItems = [
@@ -25,7 +26,7 @@ const dockItems = [
   { label: '关于', href: '/about', icon: User, isCustom: true },
 ];
 
-export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }: NavigationProps) {
+export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, sticky = true }: NavigationProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -127,7 +128,8 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning }:
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
         className={cn(
-          'fixed top-0 left-0 right-0 z-50 transition-all duration-300 overflow-hidden',
+          sticky ? 'fixed top-0 left-0 right-0 z-50' : 'relative',
+          'transition-all duration-300 overflow-hidden',
           isScrolled ? 'mc-navbar' : 'bg-transparent'
         )}
         style={{ pointerEvents: 'auto' }}

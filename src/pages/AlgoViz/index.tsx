@@ -2897,21 +2897,6 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
             <button className="toolbar-btn" onClick={generateData} disabled={runner.isRunning} title="新数据">
               <Shuffle size={18} />
             </button>
-            {currentAlgo.category === 'sorting' && (
-              <div className="toolbar-slider">
-                <span className="slider-label">大小</span>
-                <input
-                  type="range"
-                  min="5"
-                  max="50"
-                  value={arraySize}
-                  onChange={(e) => handleArraySizeChange(parseInt(e.target.value))}
-                  disabled={runner.isRunning}
-                  style={{ '--value': `${((arraySize - 5) / (50 - 5)) * 100}%` } as React.CSSProperties}
-                />
-                <span className="slider-value">{arraySize}</span>
-              </div>
-            )}
           </div>
           
           <div className="toolbar-spacer" />
@@ -2947,6 +2932,21 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
           <div className="status-message">
             {runner.state.message || '准备就绪 - 点击"开始"运行算法'}
           </div>
+          {currentAlgo.category === 'sorting' && (
+            <div className="viz-status-control">
+              <span className="status-label">数组大小</span>
+              <input
+                type="range"
+                min="5"
+                max="50"
+                value={arraySize}
+                onChange={(e) => handleArraySizeChange(parseInt(e.target.value))}
+                disabled={runner.isRunning}
+                style={{ '--value': `${((arraySize - 5) / (50 - 5)) * 100}%` } as React.CSSProperties}
+              />
+              <span className="status-value">{arraySize}</span>
+            </div>
+          )}
         </div>
       </div>
       
