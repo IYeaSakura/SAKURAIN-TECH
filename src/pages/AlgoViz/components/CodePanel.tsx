@@ -3,7 +3,7 @@
  * 展示算法代码，支持当前行高亮
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 interface CodePanelProps {
@@ -22,6 +22,25 @@ export const CodePanel: React.FC<CodePanelProps> = ({
   title = '算法实现'
 }) => {
   const lines = code.split('\n');
+  const contentRef = useRef<HTMLDivElement>(null);
+  const lineRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // 自动滚动到当前行
+  useEffect(() => {
+    if (currentLine > 0 && lineRefs.current[currentLine - 1]) {
+      const lineElement = lineRefs.current[currentLine - 1];
+      const container = contentRef.current;
+      if (lineElement && container) {
+        const lineRect = lineElement.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        
+        // 检查当前行是否在可视区域内
+        if (lineRect.top < containerRect.top || lineRect.bottom > containerRect.bottom) {
+          lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }
+  }, [currentLine]);
 
   // 计算缩进级别
   const getIndentLevel = (line: string): number => {
@@ -36,7 +55,7 @@ export const CodePanel: React.FC<CodePanelProps> = ({
         <span className="code-language">{language}</span>
       </div>
       
-      <div className="code-content">
+      <div className="code-content" ref={contentRef}>
         {lines.map((line, index) => {
           const lineNumber = index + 1;
           const isActive = lineNumber === currentLine;
@@ -45,6 +64,7 @@ export const CodePanel: React.FC<CodePanelProps> = ({
           return (
             <motion.div
               key={index}
+              ref={el => { lineRefs.current[index] = el; }}
               className={`code-line ${isActive ? 'active' : ''}`}
               animate={{
                 backgroundColor: isActive ? 'var(--code-active-bg)' : 'transparent'

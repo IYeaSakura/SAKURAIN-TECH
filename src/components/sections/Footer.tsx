@@ -97,7 +97,10 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
               <span>开发日志</span>
             </button>
             <button
-              onClick={() => navigateTo('/algo-viz')}
+              onClick={() => {
+                navigateTo('/algo-viz');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className="flex items-center gap-2 text-sm transition-colors hover:text-[var(--accent-primary)] cursor-pointer"
               style={{ color: 'var(--text-muted)' }}
             >

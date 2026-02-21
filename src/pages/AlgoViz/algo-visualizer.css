@@ -113,6 +113,224 @@
   min-height: 700px;
 }
 
+/* ============ 全屏模式 ============ */
+.algo-playground.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  border-radius: 0;
+  min-height: 100vh;
+}
+
+.fullscreen-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.fullscreen-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+  height: 60px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.fullscreen-header > * {
+  display: flex;
+  align-items: center;
+}
+
+.fullscreen-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+.fullscreen-header select {
+  padding: 0.5rem 2rem 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  min-width: 200px;
+  height: 40px;
+  box-sizing: border-box;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+}
+
+.fullscreen-header select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fullscreen-header select option {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.fullscreen-header .exit-fullscreen-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.fullscreen-header .exit-fullscreen-btn:hover {
+  background: var(--border-color);
+  color: var(--text-primary);
+}
+
+.fullscreen-header .complexity-badges {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-left: 1rem;
+}
+
+.fullscreen-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  gap: 1rem;
+  padding: 1rem;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.fullscreen-code {
+  background: var(--bg-card);
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+  overflow: auto;
+  height: 100%;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
+.fullscreen-code::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.fullscreen-code::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fullscreen-code::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.fullscreen-code:hover::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+}
+
+.fullscreen-code .code-panel {
+  height: 100%;
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+  border: none;
+  border-radius: 0;
+}
+
+.fullscreen-code .code-content {
+  flex: 1;
+  overflow: auto;
+  max-height: none !important;
+  height: 100%;
+}
+
+.fullscreen-code pre {
+  height: 100%;
+  margin: 0;
+}
+
+.fullscreen-canvas {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.fullscreen-memory {
+  background: var(--bg-card);
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+  overflow: auto;
+  height: 100%;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
+.fullscreen-memory::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.fullscreen-memory::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fullscreen-memory::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.fullscreen-memory:hover::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+}
+
+.fullscreen-memory .memory-visualizer {
+  max-height: none;
+  height: 100%;
+}
+
+.fullscreen-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  height: 64px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
 /* ============ 左侧可视化区域 ============ */
 .playground-visualization {
   display: flex;
@@ -149,6 +367,8 @@
   font-size: 0.75rem;
   font-weight: 600;
   font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .viz-badge.secondary {
@@ -269,9 +489,10 @@
   width: 100px;
   height: 6px;
   -webkit-appearance: none;
-  background: var(--border-color);
+  background: linear-gradient(to right, var(--accent-primary) 0%, var(--accent-primary) var(--value, 50%), rgba(128, 128, 128, 0.3) var(--value, 50%), rgba(128, 128, 128, 0.3) 100%);
   border-radius: 3px;
   outline: none;
+  border: 1px solid rgba(128, 128, 128, 0.4);
 }
 
 .speed-slider::-webkit-slider-thumb {
@@ -332,7 +553,7 @@
   width: 100px;
   height: 6px;
   -webkit-appearance: none;
-  background: rgba(128, 128, 128, 0.3);
+  background: linear-gradient(to right, var(--accent-primary) 0%, var(--accent-primary) var(--value, 50%), rgba(128, 128, 128, 0.3) var(--value, 50%), rgba(128, 128, 128, 0.3) 100%);
   border-radius: 3px;
   outline: none;
   border: 1px solid rgba(128, 128, 128, 0.4);
@@ -1391,6 +1612,12 @@
 }
 
 /* ============ 响应式设计 ============ */
+@media (max-width: 1400px) {
+  .fullscreen-main {
+    grid-template-columns: 250px 1fr 250px;
+  }
+}
+
 @media (max-width: 1200px) {
   .algo-playground {
     grid-template-columns: 1fr;
@@ -1400,6 +1627,11 @@
     border-left: none;
     border-top: 1px solid var(--border-color);
     max-height: none;
+  }
+  
+  .fullscreen-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: 200px 1fr 200px;
   }
 }
 
@@ -1427,5 +1659,18 @@
     flex-direction: column;
     gap: 0.75rem;
     align-items: flex-start;
+  }
+  
+  .fullscreen-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: 150px 1fr 150px;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .fullscreen-controls {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
   }
 }

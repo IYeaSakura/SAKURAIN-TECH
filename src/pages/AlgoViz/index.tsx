@@ -18,7 +18,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Zap, Binary, GitBranch, Network, Grid3X3, Brain, FileCode, BarChart3,
-  Play, Pause, RotateCcw, SkipBack, SkipForward, Shuffle, BookOpen
+  Play, Pause, RotateCcw, SkipBack, SkipForward, Shuffle, BookOpen,
+  Maximize2, Minimize2
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { CommentSection } from '@/pages/Blog/components/CommentSection';
@@ -84,6 +85,10 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
   // 弹窗状态
   const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
   const [isChartModalOpen, setIsChartModalOpen] = useState(false);
+  
+  // 全屏状态
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const playgroundRef = useRef<HTMLDivElement>(null);
 
   // Refs用于控制执行流程
   const isPausedRef = useRef<boolean>(false);
@@ -2829,8 +2834,172 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
   };
 
   return (
-    <div className="algo-playground">
-      {/* 左侧可视化 */}
+    <div className={`algo-playground ${isFullscreen ? 'fullscreen' : ''}`} ref={playgroundRef}>
+      {isFullscreen ? (
+        // 全屏布局
+        <div className="fullscreen-layout">
+          {/* 顶部栏 */}
+          <div className="fullscreen-header">
+            <div className="header-left">
+              <button 
+                className="exit-fullscreen-btn" 
+                onClick={() => setIsFullscreen(false)}
+                title="退出全屏"
+              >
+                <Minimize2 size={18} />
+              </button>
+              <select
+                className="algo-select"
+                value={currentAlgo.id}
+                onChange={(e) => {
+                  const algo = categoryAlgorithms.find(a => a.id === e.target.value);
+                  if (algo) onAlgorithmChange(algo);
+                }}
+                disabled={runner.isRunning}
+              >
+                {categoryAlgorithms.map(algo => (
+                  <option key={algo.id} value={algo.id}>{algo.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="complexity-badges">
+              <span className="viz-badge">{currentAlgo.timeComplexity}</span>
+              <span className="viz-badge secondary">{currentAlgo.spaceComplexity}</span>
+            </div>
+          </div>
+          
+          {/* 中间三栏布局 */}
+          <div className="fullscreen-main">
+            {/* 左侧：代码面板 */}
+            <div className="fullscreen-code">
+              <CodePanel 
+                code={currentAlgo.code} 
+                currentLine={runner.state.currentLine} 
+              />
+            </div>
+            
+            {/* 中间：可视化画布 */}
+            <div className="fullscreen-canvas">
+              {currentAlgo.category === 'sorting' && (
+                <ArrayVisualizer data={sortingData} />
+              )}
+              {currentAlgo.category === 'graph' && (
+                <GraphVisualizer 
+                  nodes={graphData.nodes} 
+                  edges={graphData.edges} 
+                  state={graphState}
+                />
+              )}
+            </div>
+            
+            {/* 右侧：内存可视化 */}
+            <div className="fullscreen-memory">
+              {currentAlgo.category === 'sorting' && (
+                <MemoryVisualizer memory={runner.currentStep?.memory} />
+              )}
+            </div>
+          </div>
+          
+          {/* 底部：控制面板 */}
+          <div className="fullscreen-controls">
+            <div className="toolbar-group">
+              {!runner.isRunning ? (
+                <button className="toolbar-btn primary" onClick={handleStart} title="开始">
+                  <Play size={20} />
+                </button>
+              ) : runner.isPaused ? (
+                <button className="toolbar-btn primary" onClick={runner.resume} title="继续">
+                  <Play size={20} />
+                </button>
+              ) : (
+                <button className="toolbar-btn" onClick={runner.pause} title="暂停">
+                  <Pause size={20} />
+                </button>
+              )}
+              <button className="toolbar-btn danger" onClick={handleStop} disabled={!runner.isRunning} title="停止">
+                <RotateCcw size={20} />
+              </button>
+            </div>
+            
+            <div className="toolbar-divider" />
+            
+            <div className="toolbar-group">
+              <button className="toolbar-btn" onClick={handleStepBackward} disabled={!runner.canStepBackward} title="后退">
+                <SkipBack size={18} />
+              </button>
+              <span className="toolbar-step">{runner.state.currentStep} / {runner.state.totalSteps || '-'}</span>
+              <button className="toolbar-btn" onClick={handleStepForward} disabled={!runner.canStepForward} title="前进">
+                <SkipForward size={18} />
+              </button>
+            </div>
+            
+            <div className="toolbar-divider" />
+            
+            <div className="toolbar-group">
+              <button className="toolbar-btn" onClick={generateData} disabled={runner.isRunning} title="新数据">
+                <Shuffle size={18} />
+              </button>
+            </div>
+            
+            <div className="toolbar-spacer" />
+            
+            <div className="toolbar-group speed-group">
+              <span className="toolbar-label">速度</span>
+              <input
+                type="range"
+                min="1"
+                max="100"
+                value={101 - Math.round(runner.speed / 10)}
+                onChange={(e) => runner.setSpeed(1010 - parseInt(e.target.value) * 10)}
+                disabled={runner.isRunning}
+                className="speed-slider"
+                style={{ '--value': `${101 - Math.round(runner.speed / 10)}%` } as React.CSSProperties}
+              />
+            </div>
+            
+            {currentAlgo.category === 'sorting' && (
+              <>
+                <div className="toolbar-divider" />
+                <div className="toolbar-group">
+                  <span className="toolbar-label">数组大小</span>
+                  <input
+                    type="range"
+                    min="5"
+                    max="50"
+                    value={arraySize}
+                    onChange={(e) => handleArraySizeChange(parseInt(e.target.value))}
+                    disabled={runner.isRunning}
+                    className="speed-slider"
+                    style={{ '--value': `${((arraySize - 5) / (50 - 5)) * 100}%` } as React.CSSProperties}
+                  />
+                  <span className="slider-value">{arraySize}</span>
+                </div>
+              </>
+            )}
+            
+            <div className="toolbar-divider" />
+            
+            <div className="toolbar-group">
+              <button 
+                className="toolbar-btn" 
+                onClick={() => setIsCodeModalOpen(true)} 
+                title="查看代码模板"
+              >
+                <FileCode size={18} />
+              </button>
+              <button 
+                className="toolbar-btn" 
+                onClick={() => setIsChartModalOpen(true)} 
+                title="查看复杂度分析"
+              >
+                <BarChart3 size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        // 正常布局
+        <>
       <div className="playground-visualization">
         <div className="viz-header">
           <h2 className="viz-title">{currentAlgo.name}</h2>
@@ -2911,7 +3080,20 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               onChange={(e) => runner.setSpeed(1010 - parseInt(e.target.value) * 10)}
               disabled={runner.isRunning}
               className="speed-slider"
+              style={{ '--value': `${101 - Math.round(runner.speed / 10)}%` } as React.CSSProperties}
             />
+          </div>
+          
+          <div className="toolbar-divider" />
+          
+          <div className="toolbar-group">
+            <button 
+              className="toolbar-btn" 
+              onClick={() => setIsFullscreen(!isFullscreen)} 
+              title={isFullscreen ? "退出全屏" : "全屏"}
+            >
+              {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            </button>
           </div>
         </div>
         
@@ -2990,6 +3172,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         
         <Legend category={currentAlgo.category} />
       </div>
+      </>
+      )}
       
       {/* 代码模板弹窗 */}
       <CodeTemplateModal

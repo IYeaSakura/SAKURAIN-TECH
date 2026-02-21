@@ -54,7 +54,7 @@
 }
 
 .memory-array-cell {
-  background: white;
+  background: var(--bg-card, white);
   border: 1px solid var(--border-color, #e2e8f0);
   border-radius: 0.375rem;
   padding: 0.375rem;
@@ -102,7 +102,7 @@
 }
 
 .memory-variable {
-  background: white;
+  background: var(--bg-card, white);
   border: 1px solid var(--border-color, #e2e8f0);
   border-radius: 0.5rem;
   padding: 0.5rem;
