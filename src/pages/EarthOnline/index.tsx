@@ -1,16 +1,16 @@
 /**
  * 地球Online子页面
- * 
+ *
  * 布局：左侧信息栏 + 右侧展示容器
  * 复用主页的展示容器（GlobeShowcase组件）
- * 
+ *
  * @author SAKURAIN
  */
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Globe, 
-  Map, 
+import {
+  Globe,
+  Map,
   Sparkles,
   ChevronRight
 } from 'lucide-react';
@@ -20,6 +20,7 @@ import { Footer } from '@/components/sections/Footer';
 import { RouteLoader } from '@/components/RouterTransition';
 import { useConfig, useMobile } from '@/hooks';
 import { clipPathRounded } from '@/utils/styles';
+import { CommentSection } from '@/pages/Blog/components/CommentSection';
 import type { SiteData } from '@/types';
 
 // 特性卡片组件
@@ -48,10 +49,10 @@ const FeatureCard = ({ icon: Icon, title, description, isActive, onClick, delay 
       <div
         className="relative p-4 overflow-hidden transition-all duration-300"
         style={{
-          background: isActive 
-            ? 'rgba(59, 130, 246, 0.1)' 
-            : isHovered 
-              ? 'rgba(255, 255, 255, 0.05)' 
+          background: isActive
+            ? 'rgba(59, 130, 246, 0.1)'
+            : isHovered
+              ? 'rgba(255, 255, 255, 0.05)'
               : 'rgba(255, 255, 255, 0.02)',
           border: `2px solid ${isActive ? 'var(--accent-primary)' : isHovered ? 'rgba(59, 130, 246, 0.5)' : 'rgba(255, 255, 255, 0.08)'}`,
           clipPath: clipPathRounded(8),
@@ -60,7 +61,7 @@ const FeatureCard = ({ icon: Icon, title, description, isActive, onClick, delay 
       >
         {/* 左侧激活指示器 */}
         {isActive && (
-          <div 
+          <div
             className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r"
             style={{ background: 'var(--accent-primary)' }}
           />
@@ -74,20 +75,20 @@ const FeatureCard = ({ icon: Icon, title, description, isActive, onClick, delay 
               clipPath: clipPathRounded(6),
             }}
           >
-            <Icon 
-              className="w-6 h-6 transition-colors duration-300" 
-              style={{ color: isActive ? 'var(--accent-primary)' : 'var(--text-muted)' }} 
+            <Icon
+              className="w-6 h-6 transition-colors duration-300"
+              style={{ color: isActive ? 'var(--accent-primary)' : 'var(--text-muted)' }}
             />
           </div>
-          
+
           <div className="flex-1 min-w-0">
-            <h3 
+            <h3
               className="font-bold text-base mb-1 transition-colors duration-300"
               style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)' }}
             >
               {title}
             </h3>
-            <p 
+            <p
               className="text-sm line-clamp-2 transition-colors duration-300"
               style={{ color: 'var(--text-muted)' }}
             >
@@ -95,13 +96,13 @@ const FeatureCard = ({ icon: Icon, title, description, isActive, onClick, delay 
             </p>
           </div>
 
-          <ChevronRight 
+          <ChevronRight
             className="flex-shrink-0 w-5 h-5 transition-all duration-300"
-            style={{ 
+            style={{
               color: isActive ? 'var(--accent-primary)' : 'var(--text-muted)',
               opacity: isActive || isHovered ? 1 : 0,
               transform: isActive || isHovered ? 'translateX(0)' : 'translateX(-10px)',
-            }} 
+            }}
           />
         </div>
       </div>
@@ -110,11 +111,11 @@ const FeatureCard = ({ icon: Icon, title, description, isActive, onClick, delay 
 };
 
 // 信息面板组件
-const InfoPanel = ({ 
-  selectedDemo, 
-  onSelectDemo 
-}: { 
-  selectedDemo: DemoType; 
+const InfoPanel = ({
+  selectedDemo,
+  onSelectDemo
+}: {
+  selectedDemo: DemoType;
   onSelectDemo: (demo: DemoType) => void;
 }) => {
   const currentDemo = DEMOS.find(d => d.id === selectedDemo) || DEMOS[0];
@@ -245,7 +246,7 @@ export default function EarthOnlinePage() {
       <div className="fixed inset-0 pointer-events-none">
         <AmbientGlow color="var(--accent-primary)" opacity={0.1} position="top-right" size={500} />
         <AmbientGlow color="var(--accent-secondary)" opacity={0.08} position="bottom-left" size={400} />
-        
+
         {/* 网格背景 */}
         <div
           className="absolute inset-0 opacity-[0.02]"
@@ -270,12 +271,12 @@ export default function EarthOnlinePage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="w-full lg:w-[400px] xl:w-[450px] flex-shrink-0 p-6 lg:p-8 lg:border-r"
-            style={{ 
+            style={{
               borderColor: 'rgba(255, 255, 255, 0.08)',
             }}
           >
-            <InfoPanel 
-              selectedDemo={selectedDemo} 
+            <InfoPanel
+              selectedDemo={selectedDemo}
               onSelectDemo={setSelectedDemo}
             />
           </motion.aside>
@@ -288,14 +289,29 @@ export default function EarthOnlinePage() {
             className="flex-1 p-4 lg:p-8"
           >
             <div className="w-full h-[500px] lg:h-[calc(100vh-140px)]">
-              <GlobeShowcase 
-                pageMode={true} 
+              <GlobeShowcase
+                pageMode={true}
                 initialDemo={selectedDemo}
                 key={selectedDemo} // 强制重新挂载以响应切换
               />
             </div>
           </motion.section>
         </main>
+
+        {/* 功能反馈评论区 */}
+        <motion.section
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full px-6 lg:px-8 py-8"
+          style={{
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          }}
+        >
+          <div className="max-w-4xl mx-auto">
+            <CommentSection postId="earth-online-feedback" />
+          </div>
+        </motion.section>
 
         {/* Footer */}
         {siteData?.footer && (

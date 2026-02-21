@@ -7,7 +7,8 @@
 export type AlgorithmCategory = 'sorting' | 'graph' | 'tree' | 'dp' | 'ml';
 
 export type AlgorithmId = 
-  | 'bubble' | 'selection' | 'insertion' | 'quick' | 'merge' | 'heap'
+  | 'bubble' | 'selection' | 'insertion' | 'shell' | 'quick' | 'merge' | 'heap'
+  | 'counting' | 'radix' | 'bucket' | 'timsort'
   | 'bfs' | 'dfs' | 'dijkstra' | 'astar'
   | 'topo' | 'scc' | 'kosaraju' | 'tarjan'
   | 'knapsack' | 'lcs' | 'lis'
@@ -197,6 +198,46 @@ export interface DPKnapsackData {
   selectedItems: number[];
 }
 
+// ============ 内存状态 ============
+export interface MemoryCell {
+  name: string;
+  value: any;
+  type: 'primitive' | 'array' | 'reference' | 'temp';
+  address?: string;
+  isHighlighted?: boolean;
+  description?: string;
+}
+
+export interface MemoryState {
+  // 主数组
+  mainArray?: {
+    name: string;
+    data: number[];
+    indices?: number[];
+  };
+  // 辅助数组/临时数组
+  auxiliaryArrays?: {
+    name: string;
+    data: any[];
+    description?: string;
+  }[];
+  // 变量
+  variables: MemoryCell[];
+  // 栈帧（用于递归算法）
+  callStack?: {
+    functionName: string;
+    parameters: MemoryCell[];
+    localVariables: MemoryCell[];
+  }[];
+  // 内存使用统计
+  stats?: {
+    totalBytes: number;
+    arrayBytes: number;
+    variableBytes: number;
+    auxiliaryBytes: number;
+  };
+}
+
 // ============ 步骤记录 ============
 export interface AlgorithmStep {
   id: number;
@@ -217,6 +258,8 @@ export interface AlgorithmStep {
     sorted: number[];
     pivot?: number;
   };
+  // 内存状态快照
+  memory?: MemoryState;
 }
 
 // ============ 导出配置 ============

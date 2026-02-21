@@ -68,7 +68,6 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   onStepForward,
   onStepBackward,
   onGenerateData,
-  onRestart,
   speed,
   onSpeedChange,
   currentStep,
@@ -224,16 +223,16 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
           </div>
         )}
         
-        {/* 新数据并开始按钮 */}
+        {/* 生成新数据按钮 */}
         <motion.button
           className="control-btn secondary"
-          onClick={onRestart || onGenerateData}
+          onClick={onGenerateData}
           disabled={isRunning}
           whileHover={{ scale: isRunning ? 1 : 1.02 }}
           whileTap={{ scale: isRunning ? 1 : 0.98 }}
         >
           <Shuffle size={18} />
-          <span>新数据并开始</span>
+          <span>生成新数据（手动开始）</span>
         </motion.button>
       </div>
 
@@ -250,6 +249,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             value={speedSliderValue}
             onChange={(e) => handleSpeedChange(parseInt(e.target.value))}
             disabled={isRunning}
+            style={{ '--value': `${speedSliderValue}%` } as React.CSSProperties}
           />
           <span className="speed-label">快</span>
         </div>

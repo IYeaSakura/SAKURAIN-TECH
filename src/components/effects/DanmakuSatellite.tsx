@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import { generateAuthHeaders } from '@/lib/api-auth';
 
 // API 基础路径
-const API_BASE_URL = '/api/danmaku';
+const API_BASE_URL = 'https://sakurain.net/api/danmaku';
 
 // 调试日志
 const debugLog = (...args: unknown[]) => {

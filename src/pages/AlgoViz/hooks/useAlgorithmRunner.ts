@@ -145,6 +145,8 @@ export function useAlgorithmRunner(options: UseAlgorithmRunnerOptions = {}) {
     setSteps(prev => {
       const newStep: AlgorithmStep = { ...step, id: prev.length };
       const newSteps = [...prev, newStep];
+      const newIndex = newSteps.length - 1;
+      setCurrentStepIndex(newIndex);
       setState(s => ({
         ...s,
         totalSteps: newSteps.length,

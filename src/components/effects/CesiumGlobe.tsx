@@ -347,8 +347,8 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
       </div>
 
       {isLoaded && viewerRef.current && (
-        <DanmakuSatellite 
-          viewer={viewerRef.current} 
+        <DanmakuSatellite
+          viewer={viewerRef.current}
           setIsRotationPaused={setIsRotationPaused}
         />
       )}
