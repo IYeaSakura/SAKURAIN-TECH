@@ -11,7 +11,18 @@ import { extractTextFromChildren, generateHeadingId, splitContentByHeadings } fr
 import type { HeadingAnchor } from '../types';
 import '../../../styles/code-block.css';
 
-// Heading Anchor Component - rendered immediately
+// Wrapper for math elements to ensure horizontal scroll without affecting layout
+const MathBlock = ({ children }: { children?: any }) => {
+  return (
+    <div style={{ overflowX: 'auto', overflowY: 'hidden', margin: 0, padding: 0, border: 'none', backgroundColor: 'transparent' }}>
+      <div style={{ whiteSpace: 'nowrap' }}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
+// Heading Anchor Component - rendered immediately with math support
 const HeadingAnchorElement = memo(({ heading }: { heading: HeadingAnchor }) => {
   const className = `font-bold scroll-mt-28 ${
     heading.level === 2 ? 'text-2xl mt-10 mb-4' :
@@ -19,12 +30,26 @@ const HeadingAnchorElement = memo(({ heading }: { heading: HeadingAnchor }) => {
     'text-lg mt-6 mb-3'
   }`;
 
+  // 使用 ReactMarkdown 渲染标题内容，支持数学公式
+  const renderHeadingContent = () => (
+    <ReactMarkdown 
+      remarkPlugins={[remarkGfm, remarkMath]} 
+      rehypePlugins={[rehypeKatex]}
+      components={{
+        p: ({ children }: any) => <>{children}</>,  // 移除 p 标签包装
+        math: MathBlock as any,
+      } as any}
+    >
+      {heading.text}
+    </ReactMarkdown>
+  );
+
   if (heading.level === 2) {
-    return <h2 id={heading.id} data-heading="true" className={className} style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }}>{heading.text}</h2>;
+    return <h2 id={heading.id} data-heading="true" className={className} style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }}>{renderHeadingContent()}</h2>;
   } else if (heading.level === 3) {
-    return <h3 id={heading.id} data-heading="true" className={className} style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }}>{heading.text}</h3>;
+    return <h3 id={heading.id} data-heading="true" className={className} style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }}>{renderHeadingContent()}</h3>;
   } else {
-    return <h4 id={heading.id} data-heading="true" className={className} style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }}>{heading.text}</h4>;
+    return <h4 id={heading.id} data-heading="true" className={className} style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }}>{renderHeadingContent()}</h4>;
   }
 });
 HeadingAnchorElement.displayName = 'HeadingAnchorElement';
@@ -56,11 +81,15 @@ const contentOnlyComponents = {
       if (Array.isArray(child)) {
         return child.flatMap((c: any) => {
           if (c?.type === 'br') return '\n';
+          // 保留 math 元素，不递归处理
+          if (c?.type === 'math' || c?.type?.name === 'MathBlock') return c;
           if (typeof c === 'object' && c?.props?.children) return processCellChildren(c.props.children);
           return c;
         });
       }
       if (child?.type === 'br') return '\n';
+      // 保留 math 元素
+      if (child?.type === 'math' || child?.type?.name === 'MathBlock') return child;
       return child;
     };
     return <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>{processCellChildren(children)}</td>;
@@ -128,17 +157,21 @@ const MarkdownCode = ({ inline, className, children }: any) => {
   return <CodeBlock language="text" value={codeString} />;
 };
 
-// Process table cell children to handle <br />
+// Process table cell children to handle <br /> while preserving math elements
 const processCellChildren = (child: any): any => {
   if (typeof child === 'string') return child;
   if (Array.isArray(child)) {
     return child.flatMap((c) => {
       if (c?.type === 'br') return '\n';
+      // 保留 math 元素，不递归处理
+      if (c?.type === 'math' || c?.type?.name === 'MathBlock') return c;
       if (typeof c === 'object' && c?.props?.children) return processCellChildren(c.props.children);
       return c;
     });
   }
   if (child?.type === 'br') return '\n';
+  // 保留 math 元素
+  if (child?.type === 'math' || child?.type?.name === 'MathBlock') return child;
   return child;
 };
 
@@ -188,17 +221,6 @@ const finalMarkdownComponents = {
 const finalContentOnlyComponents = {
   ...contentOnlyComponents,
   pre: PreBlock
-};
-
-// Wrapper for math elements to ensure horizontal scroll without affecting layout
-const MathBlock = ({ children }: { children?: any }) => {
-  return (
-    <div style={{ overflowX: 'auto', overflowY: 'hidden', margin: 0, padding: 0, border: 'none', backgroundColor: 'transparent' }}>
-      <div style={{ whiteSpace: 'nowrap' }}>
-        {children}
-      </div>
-    </div>
-  );
 };
 
 // Update components to include math wrapper

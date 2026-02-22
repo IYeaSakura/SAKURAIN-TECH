@@ -148,6 +148,7 @@ export interface GraphState {
   queue?: number[];
   stack?: number[];
   currentNode?: number;
+  result?: number[]; // 拓扑排序结果
 }
 
 // ============ 树算法数据 ============

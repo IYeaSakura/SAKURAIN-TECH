@@ -15,11 +15,11 @@ export const bubbleSortDefinition: AlgorithmDefinition = {
   description: '通过重复遍历数组，比较相邻元素并交换位置，使较大元素逐渐"冒泡"到数组末尾。简单但效率较低，适合教学演示。',
   code: `function bubbleSort(arr) {
   const n = arr.length;
-  
+
   // 外层循环控制遍历轮数
   for (let i = 0; i < n - 1; i++) {
     let swapped = false;
-    
+
     // 内层循环进行相邻比较
     for (let j = 0; j < n - i - 1; j++) {
       // 比较相邻元素
@@ -29,11 +29,11 @@ export const bubbleSortDefinition: AlgorithmDefinition = {
         swapped = true;
       }
     }
-    
+
     // 如果本轮没有交换，说明已经有序
     if (!swapped) break;
   }
-  
+
   return arr;
 }`,
   supportedViews: ['array'],
