@@ -418,6 +418,10 @@ export interface SCCGeneratorOptions {
   maxNodesPerSCC?: number;
 }
 
+/**
+ * 生成SCC测试图（强连通分量）
+ * 使用网格布局，确保SCC之间从左到右排列，内部节点整齐分布
+ */
 export function generateSCCGraph(options: SCCGeneratorOptions = {}): GraphData {
   const {
     sccCount = 3,
@@ -430,6 +434,7 @@ export function generateSCCGraph(options: SCCGeneratorOptions = {}): GraphData {
 
   const width = 800;
   const height = 500;
+  const padding = 80;
 
   // 生成每个SCC的大小
   const sccSizes: number[] = [];
@@ -437,74 +442,112 @@ export function generateSCCGraph(options: SCCGeneratorOptions = {}): GraphData {
     sccSizes.push(minNodesPerSCC + Math.floor(Math.random() * (maxNodesPerSCC - minNodesPerSCC + 1)));
   }
 
-  // 创建节点
-  let nodeId = 0;
-  for (let sccIdx = 0; sccIdx < sccCount; sccIdx++) {
-    const size = sccSizes[sccIdx];
-    const centerX = (width / (sccCount + 1)) * (sccIdx + 1);
-    const centerY = height / 2;
-    const radius = 100;
+  const totalNodes = sccSizes.reduce((a, b) => a + b, 0);
+  
+  // 使用网格布局 - 确保节点整齐不重叠
+  // 计算网格大小（优先横向排列SCC）
+  let cols: number, rows: number;
+  if (totalNodes <= 6) { cols = 3; rows = 2; }
+  else if (totalNodes <= 8) { cols = 4; rows = 2; }
+  else if (totalNodes <= 9) { cols = 3; rows = 3; }
+  else if (totalNodes <= 12) { cols = 4; rows = 3; }
+  else { cols = 5; rows = 3; }
+  
+  const cellWidth = (width - 2 * padding) / (cols - 1 || 1);
+  const cellHeight = (height - 2 * padding) / (rows - 1 || 1);
 
-    for (let i = 0; i < size; i++) {
-      const angle = (i / size) * 2 * Math.PI - Math.PI / 2;
-      nodes.push({
-        id: nodeId,
-        x: centerX + Math.cos(angle) * radius,
-        y: centerY + Math.sin(angle) * radius,
-        visited: false,
-        inStack: false,
-        component: -1,
-        layer: sccIdx
+  // 创建网格位置
+  const gridPositions: { x: number; y: number; col: number; row: number }[] = [];
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < rows; r++) {
+      gridPositions.push({
+        col: c,
+        row: r,
+        x: cols === 1 ? width / 2 : padding + c * cellWidth,
+        y: rows === 1 ? height / 2 : padding + r * cellHeight
       });
-      nodeId++;
     }
   }
 
-  // 添加SCC内部边（强连通）
-  let startIdx = 0;
+  // 创建节点 - 每个SCC占据一个列区域
+  let nodeId = 0;
+  let sccStartIndices: number[] = [0];
+  let gridIdx = 0;
+  
   for (let sccIdx = 0; sccIdx < sccCount; sccIdx++) {
     const size = sccSizes[sccIdx];
+    
+    // 为每个SCC分配网格位置（优先从左到右，SCC内部从上到下）
+    for (let i = 0; i < size; i++) {
+      if (gridIdx >= gridPositions.length) break;
+      
+      const pos = gridPositions[gridIdx];
+      nodes.push({
+        id: nodeId,
+        x: pos.x + (Math.random() - 0.5) * 20, // 小幅随机扰动
+        y: pos.y + (Math.random() - 0.5) * 20,
+        visited: false,
+        inStack: false,
+        component: -1,
+        layer: pos.col
+      });
+      nodeId++;
+      gridIdx++;
+    }
+    
+    sccStartIndices.push(nodeId);
+  }
 
-    // 基础环
+  // 添加SCC内部边（强连通）
+  for (let sccIdx = 0; sccIdx < sccCount; sccIdx++) {
+    const startIdx = sccStartIndices[sccIdx];
+    const size = sccSizes[sccIdx];
+
+    // 基础环：确保强连通
     for (let i = 0; i < size; i++) {
       const from = startIdx + i;
       const to = startIdx + ((i + 1) % size);
       edges.push({ from, to });
     }
 
-    // 额外边确保强连通
+    // 额外边确保更强的连通性（但避免过度连接）
     if (size > 2) {
-      for (let i = 0; i < size - 2; i++) {
-        const from = startIdx + i;
-        const to = startIdx + i + 2;
-        edges.push({ from, to });
+      // 添加一些随机内部边，但限制数量
+      const maxInternalEdges = Math.min(size - 1, 2);
+      for (let i = 0; i < maxInternalEdges; i++) {
+        const from = startIdx + Math.floor(Math.random() * size);
+        const to = startIdx + Math.floor(Math.random() * size);
+        if (from !== to) {
+          // 检查是否已存在
+          const exists = edges.some(e => e.from === from && e.to === to);
+          if (!exists) {
+            edges.push({ from, to });
+          }
+        }
       }
     }
-
-    startIdx += size;
   }
 
-  // 添加SCC之间的边（单向，从编号小到大）
-  startIdx = 0;
+  // 添加SCC之间的边（单向，从左到右）
   for (let sccIdx = 0; sccIdx < sccCount - 1; sccIdx++) {
+    const fromStart = sccStartIndices[sccIdx];
     const fromSize = sccSizes[sccIdx];
-    const toStart = startIdx + fromSize;
+    const toStart = sccStartIndices[sccIdx + 1];
+    const toSize = sccSizes[sccIdx + 1];
 
     // 每个SCC至少一条边到下一个SCC
-    const from = startIdx + Math.floor(Math.random() * fromSize);
-    const to = toStart + Math.floor(Math.random() * sccSizes[sccIdx + 1]);
+    const from = fromStart + Math.floor(Math.random() * fromSize);
+    const to = toStart + Math.floor(Math.random() * toSize);
     edges.push({ from, to });
 
-    // 可能再添加一条
-    if (Math.random() < 0.5) {
-      const from2 = startIdx + Math.floor(Math.random() * fromSize);
-      const to2 = toStart + Math.floor(Math.random() * sccSizes[sccIdx + 1]);
+    // 可能再添加一条（但不要过多）
+    if (Math.random() < 0.4) {
+      const from2 = fromStart + Math.floor(Math.random() * fromSize);
+      const to2 = toStart + Math.floor(Math.random() * toSize);
       if (from2 !== from || to2 !== to) {
         edges.push({ from: from2, to: to2 });
       }
     }
-
-    startIdx += fromSize;
   }
 
   return { nodes, edges, directed: true, weighted: false };
@@ -600,10 +643,14 @@ export function generateWeightedGraph(options: WeightedGraphGeneratorOptions = {
   return { nodes, edges, directed: false, weighted: true };
 }
 
+/**
+ * 生成美观的随机图
+ * 使用分层布局（类似拓扑排序），确保节点整齐不重叠
+ */
 export function generateRandomGraph(options: GraphGeneratorOptions = {}): GraphData {
   const {
-    nodeCount = 8,
-    edgeCount = 12,
+    nodeCount = 12,
+    edgeCount = 15,
     directed = false,
     weighted = false,
     minWeight = 1,
@@ -616,41 +663,116 @@ export function generateRandomGraph(options: GraphGeneratorOptions = {}): GraphD
 
   const width = 800;
   const height = 500;
+  const padding = 100;
 
-  // 在圆形区域内随机分布节点
-  const centerX = width / 2;
-  const centerY = height / 2;
-  const radius = Math.min(width, height) / 2 - 80;
-
-  for (let i = 0; i < nodeCount; i++) {
-    const angle = (i / nodeCount) * 2 * Math.PI;
-    const r = radius * (0.5 + Math.random() * 0.5);
-    nodes.push({
-      id: i,
-      x: centerX + Math.cos(angle) * r,
-      y: centerY + Math.sin(angle) * r,
-      visited: false
-    });
+  // 使用分层布局 - 类似拓扑排序的美观布局
+  // 根据节点数计算层数和每层节点数
+  let layerCount: number;
+  if (nodeCount <= 6) {
+    layerCount = 2;
+  } else if (nodeCount <= 9) {
+    layerCount = 3;
+  } else {
+    layerCount = 4;
   }
+  
+  const nodesPerLayer = Math.ceil(nodeCount / layerCount);
+  const layerWidth = (width - 2 * padding) / (layerCount - 1 || 1);
 
-  // 确保连通性（生成树）
-  if (connected) {
-    for (let i = 1; i < nodeCount; i++) {
-      const parent = Math.floor(Math.random() * i);
-      edges.push({
-        from: parent,
-        to: i,
-        weight: weighted ? minWeight + Math.floor(Math.random() * (maxWeight - minWeight + 1)) : undefined
+  // 创建节点并分配层
+  let nodeId = 0;
+  for (let layer = 0; layer < layerCount && nodeId < nodeCount; layer++) {
+    const count = Math.min(nodesPerLayer, nodeCount - nodeId);
+    const layerHeight = height - 2 * padding;
+    
+    // 每层节点均匀分布
+    for (let i = 0; i < count; i++) {
+      const spacing = count > 1 ? layerHeight / (count - 1) : 0;
+      // 添加小幅随机扰动让布局更自然（但保持整体整齐）
+      const jitterX = (Math.random() - 0.5) * 30;
+      const jitterY = count > 1 ? (Math.random() - 0.5) * 40 : 0;
+      
+      nodes.push({
+        id: nodeId,
+        x: padding + layer * layerWidth + jitterX,
+        y: count > 1 ? padding + i * spacing + jitterY : height / 2 + jitterY,
+        visited: false,
+        layer
       });
+      nodeId++;
     }
   }
 
-  // 添加额外边
+  // 创建边（主要连接相邻层，偶尔跨层）
+  const adj = new Map<number, Set<number>>();
+  nodes.forEach(n => adj.set(n.id, new Set()));
+
+  // 确保连通性 - 从左到右连接
+  if (connected) {
+    for (let layer = 0; layer < layerCount - 1; layer++) {
+      const currentLayerNodes = nodes.filter(n => n.layer === layer).map(n => n.id);
+      const nextLayerNodes = nodes.filter(n => n.layer === layer + 1).map(n => n.id);
+      
+      if (currentLayerNodes.length > 0 && nextLayerNodes.length > 0) {
+        // 每个节点至少连接到下一层的一个节点
+        currentLayerNodes.forEach((fromId, idx) => {
+          // 连接到下一层的对应位置或随机节点
+          const toIdx = Math.min(idx, nextLayerNodes.length - 1);
+          const toId = nextLayerNodes[toIdx];
+          
+          if (!adj.get(fromId)!.has(toId)) {
+            adj.get(fromId)!.add(toId);
+            edges.push({
+              from: fromId,
+              to: toId,
+              weight: weighted ? minWeight + Math.floor(Math.random() * (maxWeight - minWeight + 1)) : undefined
+            });
+          }
+        });
+        
+        // 确保下一层的每个节点至少有一个入边
+        nextLayerNodes.forEach(toId => {
+          const hasIncoming = edges.some(e => e.to === toId);
+          if (!hasIncoming) {
+            const fromId = currentLayerNodes[Math.floor(Math.random() * currentLayerNodes.length)];
+            if (!adj.get(fromId)!.has(toId)) {
+              adj.get(fromId)!.add(toId);
+              edges.push({
+                from: fromId,
+                to: toId,
+                weight: weighted ? minWeight + Math.floor(Math.random() * (maxWeight - minWeight + 1)) : undefined
+              });
+            }
+          }
+        });
+      }
+    }
+  }
+
+  // 添加额外边增加复杂性（主要在同一层内或相邻层之间）
   const existingEdges = new Set(edges.map(e => `${e.from}-${e.to}`));
   let attempts = 0;
+  
   while (edges.length < edgeCount && attempts < 1000) {
     const from = Math.floor(Math.random() * nodeCount);
-    const to = Math.floor(Math.random() * nodeCount);
+    const fromNode = nodes.find(n => n.id === from)!;
+    
+    // 70%概率连接到同一层或相邻层，30%随机连接
+    let to: number;
+    if (Math.random() < 0.7) {
+      // 同一层或相邻层
+      const fromLayer = fromNode.layer ?? 0;
+      const targetLayer = Math.random() < 0.5 ? fromLayer : fromLayer + 1;
+      const targetLayerNodes = nodes.filter(n => n.layer === targetLayer && n.id !== from);
+      if (targetLayerNodes.length === 0) {
+        attempts++;
+        continue;
+      }
+      to = targetLayerNodes[Math.floor(Math.random() * targetLayerNodes.length)].id;
+    } else {
+      // 完全随机
+      to = Math.floor(Math.random() * nodeCount);
+    }
     
     if (from !== to) {
       const key1 = `${from}-${to}`;

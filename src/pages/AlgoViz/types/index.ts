@@ -269,6 +269,13 @@ export interface AlgorithmStep {
   };
   // 内存状态快照
   memory?: MemoryState;
+  // 迷宫模式状态（用于BFS/DFS等寻路算法的网格可视化）
+  mazeState?: {
+    visitedCells: string[];  // 已访问的格子坐标 ["x,y", ...]
+    currentCell?: { x: number; y: number } | null;  // 当前访问的格子
+    backtrackingCell?: { x: number; y: number } | null;  // 回溯的格子（DFS）
+    pathCells: string[];  // 最终路径上的格子
+  };
 }
 
 // ============ 导出配置 ============

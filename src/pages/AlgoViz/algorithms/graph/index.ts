@@ -3,19 +3,12 @@
  * Contains definitions for various graph algorithms
  */
 
-// Basic graph representations
-export { adjacencyMatrixDefinition } from './adjacency-matrix';
-export { adjacencyListDefinition } from './adjacency-list';
-export { chainForwardStarDefinition } from './chain-forward-star';
-
 // Traversal algorithms
 export { topoSortDefinition } from './topo';
-export { sccDefinition } from './scc';
 export { bfsDefinition } from './bfs';
 export { dfsDefinition } from './dfs';
 
 // Shortest path algorithms
-export { dijkstraDefinition } from './dijkstra';
 export { bellmanFordDefinition } from './bellmanford';
 export { spfaDefinition } from './spfa';
 export { floydDefinition } from './floyd';
@@ -26,7 +19,6 @@ export { primDefinition } from './prim';
 
 // Connectivity algorithms
 export { dsuDefinition } from '../codes/dsu';
-export { tarjanDefinition } from '../codes/tarjan';
 export { articulationPointsDefinition } from './articulation-points';
 
 // Network flow algorithms
@@ -48,25 +40,20 @@ export { lctDefinition } from './lct';
 export { stoerWagnerDefinition } from './stoer-wagner';
 
 // Full definitions from codes directory
-export { dijkstraDefinition as dijkstraFullDefinition } from '../codes/dijkstra';
+export { dijkstraDefinition } from '../codes/dijkstra';
 export { astarDefinition } from '../codes/astar';
+export { tarjanDefinition } from '../codes/tarjan';
 
 // Import all for unified export
-import { adjacencyMatrixDefinition } from './adjacency-matrix';
-import { adjacencyListDefinition } from './adjacency-list';
-import { chainForwardStarDefinition } from './chain-forward-star';
 import { topoSortDefinition } from './topo';
-import { sccDefinition } from './scc';
 import { bfsDefinition } from './bfs';
 import { dfsDefinition } from './dfs';
-import { dijkstraDefinition } from './dijkstra';
 import { bellmanFordDefinition } from './bellmanford';
 import { spfaDefinition } from './spfa';
 import { floydDefinition } from './floyd';
 import { kruskalDefinition } from './kruskal';
 import { primDefinition } from './prim';
 import { dsuDefinition } from '../codes/dsu';
-import { tarjanDefinition } from '../codes/tarjan';
 import { articulationPointsDefinition } from './articulation-points';
 import { dinicDefinition } from './dinic';
 import { isapDefinition } from './isap';
@@ -78,53 +65,47 @@ import { hldDefinition } from './hld';
 import { virtualTreeDefinition } from './virtual-tree';
 import { lctDefinition } from './lct';
 import { stoerWagnerDefinition } from './stoer-wagner';
-import { dijkstraDefinition as dijkstraFullDefinition } from '../codes/dijkstra';
+import { dijkstraDefinition } from '../codes/dijkstra';
 import { astarDefinition } from '../codes/astar';
+import { tarjanDefinition } from '../codes/tarjan';
 
 export const graphAlgorithms = [
-  // Level 1: Basic representations
-  adjacencyMatrixDefinition,
-  adjacencyListDefinition,
-  chainForwardStarDefinition,
-  
-  // Level 2: Traversal
+  // Level 1: Traversal
   bfsDefinition,
   dfsDefinition,
   
-  // Level 3: Shortest path
+  // Level 2: Shortest path
   dijkstraDefinition,
-  dijkstraFullDefinition,
   astarDefinition,
   bellmanFordDefinition,
   spfaDefinition,
   floydDefinition,
   
-  // Level 4: MST
+  // Level 3: MST
   kruskalDefinition,
   primDefinition,
   
-  // Level 5: Connectivity
+  // Level 4: Connectivity
   topoSortDefinition,
-  sccDefinition,
   tarjanDefinition,
   dsuDefinition,
   articulationPointsDefinition,
   
-  // Level 6: Network flow
+  // Level 5: Network flow
   dinicDefinition,
   isapDefinition,
   mcmfDefinition,
   
-  // Level 7: Matching
+  // Level 6: Matching
   hungarianDefinition,
   hopcroftKarpDefinition,
   
-  // Level 8: Tree algorithms
+  // Level 7: Tree algorithms
   lcaDefinition,
   hldDefinition,
   virtualTreeDefinition,
   
-  // Level 9: Advanced
+  // Level 8: Advanced
   lctDefinition,
   stoerWagnerDefinition
 ];

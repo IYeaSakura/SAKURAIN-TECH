@@ -1,14 +1,14 @@
 import { memo, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Rss, 
-  ExternalLink, 
-  Calendar, 
-  User, 
-  ChevronLeft, 
-  ChevronRight, 
-  RefreshCw, 
-  Globe, 
+import {
+  Rss,
+  ExternalLink,
+  Calendar,
+  User,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Globe,
   BarChart3,
   Users,
   Newspaper,
@@ -242,11 +242,11 @@ function StatCard({
 }
 
 // 统计面板组件
-function StatsPanel({ 
-  items, 
-  onClose 
-}: { 
-  items: FeedItem[]; 
+function StatsPanel({
+  items,
+  onClose
+}: {
+  items: FeedItem[];
   onClose: () => void;
 }) {
   const stats = useMemo(() => {
@@ -255,7 +255,7 @@ function StatsPanel({
     items.forEach(item => {
       sourceStats[item.source] = (sourceStats[item.source] || 0) + 1;
     });
-    
+
     // 按日期统计（最近7天）
     const dateStats: Record<string, number> = {};
     const now = new Date();
@@ -264,7 +264,7 @@ function StatsPanel({
       d.setDate(d.getDate() - i);
       dateStats[d.toISOString().split('T')[0]] = 0;
     }
-    
+
     items.forEach(item => {
       if (item.pubDate) {
         const date = new Date(item.pubDate).toISOString().split('T')[0];
@@ -273,12 +273,12 @@ function StatsPanel({
         }
       }
     });
-    
+
     // 排序来源
     const sortedSources = Object.entries(sourceStats)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10);
-    
+
     return { sourceStats: sortedSources, dateStats };
   }, [items]);
 
@@ -289,7 +289,7 @@ function StatsPanel({
       exit={{ opacity: 0, height: 0 }}
       className="mb-8 overflow-hidden"
     >
-      <div 
+      <div
         className="p-6"
         style={{
           background: 'var(--bg-card)',
@@ -301,7 +301,7 @@ function StatsPanel({
           <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
             统计详情
           </h3>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 transition-colors hover:bg-white/5"
             style={{ clipPath: clipPathRounded(4) }}
@@ -309,7 +309,7 @@ function StatsPanel({
             <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
           </button>
         </div>
-        
+
         <div className="grid md:grid-cols-2 gap-6">
           {/* 来源统计 */}
           <div>
@@ -318,7 +318,7 @@ function StatsPanel({
             </h4>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {stats.sourceStats.map(([source, count], index) => (
-                <div 
+                <div
                   key={source}
                   className="flex items-center justify-between p-3"
                   style={{
@@ -329,7 +329,7 @@ function StatsPanel({
                   <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
                     {index + 1}. {source}
                   </span>
-                  <span 
+                  <span
                     className="px-2 py-1 text-xs font-medium"
                     style={{
                       background: 'var(--accent-primary)20',
@@ -343,7 +343,7 @@ function StatsPanel({
               ))}
             </div>
           </div>
-          
+
           {/* 日期统计 */}
           <div>
             <h4 className="text-sm font-medium mb-4" style={{ color: 'var(--text-muted)' }}>
@@ -560,11 +560,11 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 }
 
 // 调试面板组件
-function DebugPanel({ 
-  sources, 
-  onClose 
-}: { 
-  sources: FeedSourceStatus[]; 
+function DebugPanel({
+  sources,
+  onClose
+}: {
+  sources: FeedSourceStatus[];
   onClose: () => void;
 }) {
   const successCount = sources.filter(s => s.status === 'success').length;
@@ -605,7 +605,7 @@ function DebugPanel({
       exit={{ opacity: 0, height: 0 }}
       className="mb-8 overflow-hidden"
     >
-      <div 
+      <div
         className="p-6"
         style={{
           background: 'var(--bg-card)',
@@ -627,7 +627,7 @@ function DebugPanel({
               {timeoutCount > 0 && <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-yellow-500" /> {timeoutCount}</span>}
               {pendingCount > 0 && <span className="flex items-center gap-1"><Loader2 className="w-4 h-4 text-blue-500 animate-spin" /> {pendingCount}</span>}
             </div>
-            <button 
+            <button
               onClick={onClose}
               className="p-2 transition-colors hover:bg-white/5"
               style={{ clipPath: clipPathRounded(4) }}
@@ -636,10 +636,10 @@ function DebugPanel({
             </button>
           </div>
         </div>
-        
+
         <div className="space-y-2 max-h-80 overflow-y-auto">
           {sources.map((source) => (
-            <div 
+            <div
               key={source.name}
               className="flex items-center gap-3 p-3"
               style={{
@@ -655,16 +655,16 @@ function DebugPanel({
                   <span className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
                     {source.name}
                   </span>
-                  <span 
+                  <span
                     className="text-xs px-2 py-0.5"
                     style={{
-                      background: source.status === 'success' ? 'rgba(34, 197, 94, 0.2)' : 
+                      background: source.status === 'success' ? 'rgba(34, 197, 94, 0.2)' :
                                   source.status === 'error' ? 'rgba(239, 68, 68, 0.2)' :
-                                  source.status === 'timeout' ? 'rgba(234, 179, 8, 0.2)' : 
+                                  source.status === 'timeout' ? 'rgba(234, 179, 8, 0.2)' :
                                   'rgba(59, 130, 246, 0.2)',
-                      color: source.status === 'success' ? '#22c55e' : 
+                      color: source.status === 'success' ? '#22c55e' :
                              source.status === 'error' ? '#ef4444' :
-                             source.status === 'timeout' ? '#eab308' : 
+                             source.status === 'timeout' ? '#eab308' :
                              '#3b82f6',
                       clipPath: clipPathRounded(2),
                     }}
@@ -681,10 +681,10 @@ function DebugPanel({
                   {source.url}
                 </div>
                 {source.error && (
-                  <div 
+                  <div
                     className="text-xs mt-2 p-2 break-all"
-                    style={{ 
-                      background: 'rgba(239, 68, 68, 0.1)', 
+                    style={{
+                      background: 'rgba(239, 68, 68, 0.1)',
                       color: '#f87171',
                       borderLeft: '2px solid #ef4444',
                       clipPath: clipPathRounded(2),
@@ -706,11 +706,11 @@ function DebugPanel({
 // Parse feed content - auto-detect format
 const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> => {
   const items: FeedItem[] = [];
-  
+
   // Try JSON format first
   try {
     const jsonData = JSON.parse(content);
-    
+
     if (jsonData.items && Array.isArray(jsonData.items)) {
       jsonData.items.forEach((item: any) => {
         items.push({
@@ -726,7 +726,7 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
       });
       return items;
     }
-    
+
     if (jsonData.entries && Array.isArray(jsonData.entries)) {
       jsonData.entries.forEach((item: any) => {
         items.push({
@@ -745,14 +745,14 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
   } catch {
     // Not JSON, continue to XML parsing
   }
-  
+
   // Parse as XML
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(content, 'text/xml');
-  
+
   const isRSS = xmlDoc.querySelector('rss') !== null;
   const isAtom = xmlDoc.querySelector('feed') !== null;
-  
+
   if (isRSS) {
     const itemElements = xmlDoc.querySelectorAll('item');
     itemElements.forEach((item) => {
@@ -760,9 +760,9 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
       const link = item.querySelector('link')?.textContent || source.url;
       const description = item.querySelector('description')?.textContent || '';
       const pubDate = item.querySelector('pubDate')?.textContent || '';
-      const author = item.querySelector('author')?.textContent || 
+      const author = item.querySelector('author')?.textContent ||
                     item.querySelector('creator')?.textContent || source.name;
-      
+
       items.push({
         title: title.replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
         link,
@@ -779,12 +779,12 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
     entryElements.forEach((entry) => {
       const title = entry.querySelector('title')?.textContent || '无标题';
       const link = entry.querySelector('link')?.getAttribute('href') || source.url;
-      const content = entry.querySelector('content')?.textContent || 
+      const content = entry.querySelector('content')?.textContent ||
                      entry.querySelector('summary')?.textContent || '';
-      const updated = entry.querySelector('updated')?.textContent || 
+      const updated = entry.querySelector('updated')?.textContent ||
                      entry.querySelector('published')?.textContent || '';
       const author = entry.querySelector('author > name')?.textContent || source.name;
-      
+
       items.push({
         title: title.replace(/<!\[CDATA\[|\]\]>/g, '').trim(),
         link,
@@ -797,7 +797,7 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
       });
     });
   }
-  
+
   return items;
 };
 
@@ -972,7 +972,7 @@ const FeedCard = memo(function FeedCard({
                     transition={{ duration: 0.3 }}
                   />
                 </motion.div>
-                
+
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-medium truncate block" style={{ color: 'var(--text-primary)' }}>
                     {item.source}
@@ -1072,7 +1072,7 @@ const Pagination = memo(function Pagination({
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     const maxVisible = 5;
-    
+
     if (totalPages <= maxVisible) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
@@ -1086,7 +1086,7 @@ const Pagination = memo(function Pagination({
         pages.push(1, '...', currentPage, '...', totalPages);
       }
     }
-    
+
     return pages;
   };
 
@@ -1117,8 +1117,8 @@ const Pagination = memo(function Pagination({
           disabled={page === '...'}
           className="min-w-[40px] h-[40px] px-3 transition-all disabled:cursor-default"
           style={{
-            background: page === currentPage 
-              ? 'var(--accent-primary)' 
+            background: page === currentPage
+              ? 'var(--accent-primary)'
               : 'var(--bg-secondary)',
             border: '1px solid var(--border-subtle)',
             clipPath: clipPathRounded(4),
@@ -1151,7 +1151,7 @@ const Pagination = memo(function Pagination({
 // 加载进度组件
 function LoadingProgress({ loaded, total }: { loaded: number; total: number }) {
   const progress = total > 0 ? Math.round((loaded / total) * 100) : 0;
-  
+
   return (
     <div className="flex flex-col items-center justify-center py-20">
       <div className="w-64 h-2 mb-4 overflow-hidden" style={{ clipPath: clipPathRounded(2) }}>
@@ -1171,7 +1171,7 @@ function LoadingProgress({ loaded, total }: { loaded: number; total: number }) {
 }
 
 // 刷新冷却时间（毫秒）
-const REFRESH_COOLDOWN_MS = 60 * 1000; // 60秒
+const REFRESH_COOLDOWN_MS = 90 * 1000; // 90秒
 
 // Main Feed Page Component
 export default function FeedPage() {
@@ -1202,21 +1202,21 @@ export default function FeedPage() {
   }, []);
 
   const fetchFriendFeed = useCallback(async (
-    friend: Friend, 
+    friend: Friend,
     forceRefresh = false,
     signal?: AbortSignal
   ): Promise<{ items: FeedItem[], timestamp: number, status: FeedSourceStatus }> => {
     const feedUrl = getFeedUrl(friend);
     try {
       // 根据forceRefresh参数选择不同的接口
-      const apiUrl = forceRefresh 
-        ? `/api/feed/refresh?url=${encodeURIComponent(feedUrl)}`
-        : `/api/feed/get?url=${encodeURIComponent(feedUrl)}`;
-      
+      const apiUrl = forceRefresh
+        ? `https://sakurain.net/api/feed/refresh?url=${encodeURIComponent(feedUrl)}`
+        : `https://sakurain.net/api/feed/get?url=${encodeURIComponent(feedUrl)}`;
+
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Timeout')), FETCH_TIMEOUT);
       });
-      
+
       const fetchPromise = fetch(apiUrl, {
         method: 'GET',
         headers: {
@@ -1224,22 +1224,22 @@ export default function FeedPage() {
         },
         signal,
       });
-      
+
       const response = await Promise.race([fetchPromise, timeoutPromise]);
-      
+
       const content = await response.text();
       const timestampHeader = response.headers.get('X-Feed-Timestamp');
       const timestamp = timestampHeader ? parseInt(timestampHeader, 10) : Date.now();
-      
+
       // Check if source is marked as failed
       const isMarkedFailed = response.headers.get('X-Feed-Failed') === 'true';
       const failedReason = response.headers.get('X-Feed-Failed-Reason');
       const failedAttempts = response.headers.get('X-Feed-Failed-Attempts');
-      
+
       // Handle HTTP error responses
       if (!response.ok) {
         let errorMsg = `HTTP ${response.status}`;
-        
+
         // If marked as failed, show more specific info
         if (isMarkedFailed) {
           errorMsg = '该订阅源已被标记为不可访问';
@@ -1270,22 +1270,22 @@ export default function FeedPage() {
         }
         throw new Error(errorMsg);
       }
-      
+
       // Detect JavaScript challenge/anti-bot protection
-      if (content.includes('__test=') || 
+      if (content.includes('__test=') ||
           (content.includes('<script') && content.includes('slowAES.decrypt') && content.includes('location.href'))) {
         throw new Error('JavaScript Challenge: 该站点启用了反爬虫保护，无法获取RSS');
       }
-      
+
       // Detect generic HTML error pages
       if (content.includes('<html') && !content.includes('<rss') && !content.includes('<feed') && !content.includes('<?xml')) {
         const titleMatch = content.match(/<title>([^<]*)<\/title>/i);
         const title = titleMatch ? titleMatch[1] : '未知错误';
         throw new Error(`返回HTML页面: ${title.slice(0, 50)}`);
       }
-      
+
       const items = await parseFeed(content, friend);
-      
+
       // If parsing succeeded but no items found, check if content looks valid
       if (items.length === 0 && content.trim()) {
         // Content exists but no items parsed - might be malformed feed
@@ -1293,12 +1293,12 @@ export default function FeedPage() {
         const hasRssTag = content.includes('<rss');
         const hasFeedTag = content.includes('<feed');
         const hasJsonItems = content.includes('"items"') || content.includes('"entries"');
-        
+
         if (!hasXmlDecl && !hasRssTag && !hasFeedTag && !hasJsonItems) {
           throw new Error('RSS格式无效: 无法解析订阅内容');
         }
       }
-      
+
       return {
         items,
         timestamp,
@@ -1314,15 +1314,15 @@ export default function FeedPage() {
       const errorMsg = (err as Error).message || String(err);
       const isTimeout = errorMsg.includes('Timeout');
       const isAbort = (err as Error).name === 'AbortError';
-      
+
       if (isAbort) {
         console.warn(`[Feed] Fetch aborted for ${friend.name} (${feedUrl})`);
       } else {
         console.warn(`[Feed] Failed to fetch feed for ${friend.name} (${feedUrl}):`, err);
       }
-      
-      return { 
-        items: [], 
+
+      return {
+        items: [],
         timestamp: Date.now(),
         status: {
           name: friend.name,
@@ -1340,7 +1340,7 @@ export default function FeedPage() {
     signal?: AbortSignal
   ): Promise<BatchFeedResult> => {
     try {
-      const response = await fetch(`/api/feed/batch-get?feeds=${encodeURIComponent(JSON.stringify(feeds))}`, {
+      const response = await fetch(`https://sakurain.net/api/feed/batch-get?feeds=${encodeURIComponent(JSON.stringify(feeds))}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
@@ -1391,21 +1391,21 @@ export default function FeedPage() {
         setLoadingProgress({ loaded: 0, total: 0 });
         setSourceStatus([]);
       }
-      
+
       const [friendsRes, siteRes] = await Promise.all([
         fetch(`/data/friends.json?v=${Date.now()}`, { cache: 'no-store', signal }),
         fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store', signal }),
       ]);
-      
+
       if (!friendsRes.ok) throw new Error('Failed to load friends data');
-      
+
       const friendsData = await friendsRes.json();
       const siteData = await siteRes.json();
-      
+
       const eligibleFriends = friendsData.friends?.filter(
         (f: Friend) => f.feed && f.feed.trim() !== ''
       ) || [];
-      
+
       // 初始化状态
       if (!isBackgroundRefresh) {
         setSourceStatus(eligibleFriends.map((f: Friend) => ({
@@ -1415,37 +1415,37 @@ export default function FeedPage() {
           itemCount: 0,
         })));
       }
-      
+
       setFriends(eligibleFriends);
       setFooterData(siteData.footer);
-      
+
       const allFeeds: FeedItem[] = [];
       const statusList: FeedSourceStatus[] = [];
       let latestTimestamp = 0;
-      
+
       // 如果不是强制刷新，先尝试批量获取
       let feedsToFetchIndividually: Friend[] = [];
-      
+
       if (!forceRefresh && !isBackgroundRefresh) {
         try {
           const feedRequests = eligibleFriends.map((f: Friend) => ({
             url: getFeedUrl(f),
             name: f.name,
           }));
-          
+
           const batchResult = await fetchBatchFeeds(feedRequests, signal);
-          
+
           // 处理已缓存的内容（包括过期缓存，isExpired=true的已经在cached中）
           for (const batchItem of batchResult.cached) {
             if (signal.aborted) break;
-            
+
             const friend = eligibleFriends.find((f: Friend) => f.name === batchItem.name);
             if (!friend) continue;
-            
+
             try {
               const items = await parseFeed(batchItem.content, friend);
               allFeeds.push(...items);
-              
+
               const status: FeedSourceStatus = {
                 name: friend.name,
                 url: batchItem.url,
@@ -1454,7 +1454,7 @@ export default function FeedPage() {
                 error: items.length === 0 ? '订阅源无文章内容' : undefined,
               };
               statusList.push(status);
-              
+
               if (batchItem.timestamp > latestTimestamp) {
                 latestTimestamp = batchItem.timestamp;
               }
@@ -1464,12 +1464,12 @@ export default function FeedPage() {
               feedsToFetchIndividually.push(friend);
             }
           }
-          
+
           // 处理失败的feed
           for (const failed of batchResult.failed || []) {
             const friend = eligibleFriends.find((f: Friend) => f.name === failed.name);
             if (!friend) continue;
-            
+
             statusList.push({
               name: friend.name,
               url: failed.url,
@@ -1478,15 +1478,15 @@ export default function FeedPage() {
               error: failed.error,
             });
           }
-          
+
           // 收集需要单独获取的feed
           const missingNames = new Set(batchResult.missing.map(m => m.name));
           const expiredNames = new Set((batchResult.expired || []).map(e => e.name));
-          
-          feedsToFetchIndividually = eligibleFriends.filter((f: Friend) => 
+
+          feedsToFetchIndividually = eligibleFriends.filter((f: Friend) =>
             missingNames.has(f.name) || expiredNames.has(f.name)
           );
-          
+
           // 更新已缓存feed的状态
           setSourceStatus([...statusList, ...feedsToFetchIndividually.map((f: Friend) => ({
             name: f.name,
@@ -1494,7 +1494,7 @@ export default function FeedPage() {
             status: 'pending' as const,
             itemCount: 0,
           }))]);
-          
+
         } catch (batchErr) {
           console.error('[Feed] Batch fetch failed, falling back to individual fetch:', batchErr);
           feedsToFetchIndividually = eligibleFriends;
@@ -1503,21 +1503,21 @@ export default function FeedPage() {
         // 强制刷新或后台刷新，全部单独获取
         feedsToFetchIndividually = eligibleFriends;
       }
-      
+
       // 设置进度总数量
       const totalFeedsToFetch = feedsToFetchIndividually.length;
       let fetchedCount = 0;
       setLoadingProgress({ loaded: fetchedCount, total: totalFeedsToFetch });
-      
+
       // 单独获取剩余的feed
       for (let i = 0; i < feedsToFetchIndividually.length; i++) {
         if (signal.aborted) break;
-        
+
         const friend = feedsToFetchIndividually[i];
         const { items, timestamp, status } = await fetchFriendFeed(friend, forceRefresh, signal);
         allFeeds.push(...items);
         statusList.push(status);
-        
+
         // 实时更新状态
         setSourceStatus([...statusList, ...feedsToFetchIndividually.slice(i + 1).map((f: Friend) => ({
           name: f.name,
@@ -1525,15 +1525,15 @@ export default function FeedPage() {
           status: 'pending' as const,
           itemCount: 0,
         }))]);
-        
+
         // 更新最新时间戳
         if (timestamp > latestTimestamp) {
           latestTimestamp = timestamp;
         }
-        
+
         fetchedCount++;
         setLoadingProgress({ loaded: fetchedCount, total: totalFeedsToFetch });
-        
+
         if (i < 3 || allFeeds.length <= POSTS_PER_PAGE) {
           const sorted = [...allFeeds].sort((a, b) => {
             const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
@@ -1544,7 +1544,7 @@ export default function FeedPage() {
           setDisplayItems(sorted.slice(0, POSTS_PER_PAGE));
         }
       }
-      
+
       if (!signal.aborted) {
         const sorted = allFeeds.sort((a, b) => {
           const dateA = a.pubDate ? new Date(a.pubDate).getTime() : 0;
@@ -1554,10 +1554,10 @@ export default function FeedPage() {
         setAllItems(sorted);
         setCurrentPage(1);
         updateDisplayItems(sorted, 1);
-        
+
         // Save to cache
         setFeedCache(sorted, statusList);
-        
+
         // 使用KV存储中的最新时间戳更新lastRefreshTime
         if (latestTimestamp > 0) {
           setLastRefreshTime(new Date(latestTimestamp));
@@ -1595,21 +1595,21 @@ export default function FeedPage() {
   const handleRefresh = useCallback(async () => {
     const now = Date.now();
     const elapsed = now - lastRefreshTimeRef.current;
-    
+
     if (elapsed < REFRESH_COOLDOWN_MS) {
       const remaining = Math.ceil((REFRESH_COOLDOWN_MS - elapsed) / 1000);
       console.log(`请等待 ${remaining} 秒后再次刷新`);
       return;
     }
-    
+
     lastRefreshTimeRef.current = now;
     setRefreshing(true);
     setShowStats(false);
     _setRefreshCooldown(60);
-    
+
     // Clear cache before force refresh
     clearFeedCache();
-    
+
     // 启动冷却倒计时
     if (cooldownTimerRef.current) {
       clearInterval(cooldownTimerRef.current);
@@ -1626,7 +1626,7 @@ export default function FeedPage() {
         return prev - 1;
       });
     }, 1000);
-    
+
     await loadData(true);
     setRefreshing(false);
   }, [loadData]);
@@ -1646,7 +1646,7 @@ export default function FeedPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [allItems, updateDisplayItems]);
 
-  const totalPages = useMemo(() => 
+  const totalPages = useMemo(() =>
     Math.ceil(allItems.length / POSTS_PER_PAGE),
     [allItems.length]
   );
