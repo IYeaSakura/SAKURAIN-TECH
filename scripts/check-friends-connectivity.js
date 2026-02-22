@@ -737,7 +737,7 @@ async function checkFriendsConnectivity() {
         status = `✗ Offline (${result.error || result.statusCode || 'unknown'})`;
       }
 
-      console.log(`[${completedCount.value}/${total}] ${progress}% - ${friend.id}: ${status}`);
+      console.log(`[${completedCount.value}/${total}] ${progress}% - ${friend.name}: ${status}`);
 
       const checkInfo = {
         lastChecked: getBuildTimestamp(),
