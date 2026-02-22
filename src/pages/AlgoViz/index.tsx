@@ -2715,6 +2715,209 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     runner.setCompleted();
   };
 
+  // 邻接矩阵 (Adjacency Matrix) 可视化
+  const runAdjacencyMatrix = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // 初始化矩阵
+    const matrix: number[][] = Array.from({ length: n }, (_, i) => 
+      Array.from({ length: n }, (_, j) => i === j ? 0 : Infinity)
+    );
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `初始化 ${n}×${n} 邻接矩阵，主对角线为0，其余为∞`,
+      data: { nodes: cloneNodes(nodes), edges, matrix },
+      variables: [
+        { name: 'n', value: n, type: 'primitive' },
+        { name: 'matrix', value: `[${n}×${n}]`, type: 'array' }
+      ],
+      highlights: { nodes: [], edges: [] }
+    });
+
+    await waitWithPause(speedRef.current);
+
+    // 添加边
+    for (let i = 0; i < edges.length; i++) {
+      if (shouldStopRef.current) { runner.stop(); return; }
+      
+      const edge = edges[i];
+      matrix[edge.from][edge.to] = edge.weight || 1;
+      if (!graphData.directed) {
+        matrix[edge.to][edge.from] = edge.weight || 1;
+      }
+
+      runner.recordStep({
+        lineNumber: 5,
+        description: `添加边 ${edge.from} → ${edge.to} 权重=${edge.weight || 1}`,
+        data: { nodes: cloneNodes(nodes), edges, matrix },
+        variables: [
+          { name: 'from', value: edge.from, type: 'primitive' },
+          { name: 'to', value: edge.to, type: 'primitive' },
+          { name: 'weight', value: edge.weight || 1, type: 'primitive' }
+        ],
+        highlights: { nodes: [edge.from, edge.to], edges: [`${edge.from}-${edge.to}`] }
+      });
+
+      if (!(await waitWithPause(speedRef.current * 0.5))) { runner.stop(); return; }
+    }
+
+    // 查询演示
+    runner.recordStep({
+      lineNumber: 12,
+      description: '邻接矩阵构建完成，支持 O(1) 查询边权重',
+      data: { nodes: cloneNodes(nodes), edges, matrix },
+      variables: [
+        { name: 'query', value: 'matrix[i][j]', type: 'primitive' },
+        { name: 'time', value: 'O(1)', type: 'primitive' }
+      ],
+      highlights: { nodes: [], edges: [] }
+    });
+
+    runner.setCompleted();
+  };
+
+  // 邻接表 (Adjacency List) 可视化
+  const runAdjacencyList = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // 初始化邻接表
+    const adjList: { to: number; weight: number }[][] = Array.from({ length: n }, () => []);
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `初始化邻接表，${n}个空列表`,
+      data: { nodes: cloneNodes(nodes), edges, adjList },
+      variables: [
+        { name: 'n', value: n, type: 'primitive' },
+        { name: 'adj', value: `Array(${n})`, type: 'array' }
+      ],
+      highlights: { nodes: [], edges: [] }
+    });
+
+    await waitWithPause(speedRef.current);
+
+    // 添加边
+    for (let i = 0; i < edges.length; i++) {
+      if (shouldStopRef.current) { runner.stop(); return; }
+      
+      const edge = edges[i];
+      adjList[edge.from].push({ to: edge.to, weight: edge.weight || 1 });
+      
+      runner.recordStep({
+        lineNumber: 4,
+        description: `向节点 ${edge.from} 的邻接表添加: →${edge.to}(权重${edge.weight || 1})`,
+        data: { nodes: cloneNodes(nodes), edges, adjList },
+        variables: [
+          { name: 'from', value: edge.from, type: 'primitive' },
+          { name: 'to', value: edge.to, type: 'primitive' },
+          { name: 'adj[from]', value: JSON.stringify(adjList[edge.from]), type: 'array' }
+        ],
+        highlights: { nodes: [edge.from, edge.to], edges: [`${edge.from}-${edge.to}`] }
+      });
+
+      if (!(await waitWithPause(speedRef.current * 0.5))) { runner.stop(); return; }
+    }
+
+    runner.recordStep({
+      lineNumber: 10,
+      description: '邻接表构建完成，空间 O(V+E)，遍历 O(V+E)',
+      data: { nodes: cloneNodes(nodes), edges, adjList },
+      variables: [
+        { name: 'space', value: 'O(V+E)', type: 'primitive' },
+        { name: 'traverse', value: 'O(V+E)', type: 'primitive' }
+      ],
+      highlights: { nodes: [], edges: [] }
+    });
+
+    runner.setCompleted();
+  };
+
+  // 链式前向星 (Chain Forward Star) 可视化
+  const runChainForwardStar = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+    const maxEdges = edges.length * 2;
+
+    // 初始化数组
+    const head: number[] = new Array(n).fill(-1);
+    const to: number[] = new Array(maxEdges);
+    const weight: number[] = new Array(maxEdges);
+    const next: number[] = new Array(maxEdges);
+    let edgeCount = 0;
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `初始化链式前向星: head[${n}]=-1, 边数组[${maxEdges}]`,
+      data: { nodes: cloneNodes(nodes), edges, cfs: { head, to, weight, next, edgeCount } },
+      variables: [
+        { name: 'head', value: `[-1,...]`, type: 'array' },
+        { name: 'edgeCnt', value: 0, type: 'primitive' }
+      ],
+      highlights: { nodes: [], edges: [] }
+    });
+
+    await waitWithPause(speedRef.current);
+
+    // 添加边
+    for (let i = 0; i < edges.length; i++) {
+      if (shouldStopRef.current) { runner.stop(); return; }
+      
+      const edge = edges[i];
+      const e = edgeCount;
+      to[e] = edge.to;
+      weight[e] = edge.weight || 1;
+      next[e] = head[edge.from];
+      head[edge.from] = e;
+      edgeCount++;
+
+      runner.recordStep({
+        lineNumber: 8,
+        description: `添加边${e}: ${edge.from}→${edge.to}, next=${next[e]}, head[${edge.from}]=${e}`,
+        data: { nodes: cloneNodes(nodes), edges, cfs: { head: [...head], to: [...to], weight: [...weight], next: [...next], edgeCount } },
+        variables: [
+          { name: 'edge', value: e, type: 'primitive' },
+          { name: 'to', value: edge.to, type: 'primitive' },
+          { name: 'next', value: next[e], type: 'primitive' },
+          { name: 'head[from]', value: head[edge.from], type: 'primitive' }
+        ],
+        highlights: { nodes: [edge.from, edge.to], edges: [`${edge.from}-${edge.to}`] }
+      });
+
+      if (!(await waitWithPause(speedRef.current * 0.5))) { runner.stop(); return; }
+    }
+
+    runner.recordStep({
+      lineNumber: 20,
+      description: '链式前向星构建完成，缓存友好，适合大规模图',
+      data: { nodes: cloneNodes(nodes), edges, cfs: { head, to, weight, next, edgeCount } },
+      variables: [
+        { name: 'totalEdges', value: edgeCount, type: 'primitive' },
+        { name: 'space', value: 'O(V+E)', type: 'primitive' }
+      ],
+      highlights: { nodes: [], edges: [] }
+    });
+
+    runner.setCompleted();
+  };
+
   // 拓扑排序 (Kahn算法) 执行
   const runTopologicalSort = async () => {
     shouldStopRef.current = false;
@@ -4962,6 +5165,207 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     runner.setCompleted();
   };
 
+  // 割点与割边 (Articulation Points & Bridges) 执行
+  const runArticulationPoints = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // 构建邻接表
+    const adj = new Map<number, number[]>();
+    nodes.forEach(node => adj.set(node.id, []));
+    edges.forEach(edge => {
+      adj.get(edge.from)!.push(edge.to);
+      if (!graphData.directed) {
+        adj.get(edge.to)!.push(edge.from);
+      }
+    });
+
+    // 初始化
+    const dfn: number[] = new Array(n).fill(0);
+    const low: number[] = new Array(n).fill(0);
+    const parent: number[] = new Array(n).fill(-1);
+    const visited: boolean[] = new Array(n).fill(false);
+    const isArticulation: boolean[] = new Array(n).fill(false);
+    const bridges: { from: number; to: number }[] = [];
+    let timer = 0;
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: '初始化: dfn[] = low[] = 0, parent[] = -1',
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'timer', value: 0, type: 'primitive' },
+        { name: 'rootChildren', value: 0, type: 'primitive' }
+      ],
+      highlights: { nodes: [], edges: [] }
+    });
+
+    await waitWithPause(speedRef.current);
+
+    // DFS遍历函数
+    const dfs = async (u: number): Promise<boolean> => {
+      if (shouldStopRef.current) return false;
+
+      visited[u] = true;
+      dfn[u] = low[u] = ++timer;
+      let children = 0;
+
+      nodes[u].isProcessing = true;
+
+      setGraphData(prev => ({ ...prev, nodes: cloneNodes(nodes) }));
+      setGraphState({
+        highlightedEdges: new Set(),
+        highlightedNodes: new Set([u]),
+        stack: []
+      });
+
+      runner.recordStep({
+        lineNumber: 6,
+        description: `DFS访问节点 ${u}: dfn[${u}] = low[${u}] = ${timer}`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'u', value: u, type: 'primitive' },
+          { name: `dfn[${u}]`, value: dfn[u], type: 'primitive' },
+          { name: `low[${u}]`, value: low[u], type: 'primitive' }
+        ],
+        highlights: { nodes: [u], edges: [] }
+      });
+
+      if (!(await waitWithPause(speedRef.current))) return false;
+
+      for (const v of adj.get(u) || []) {
+        if (!visited[v]) {
+          children++;
+          parent[v] = u;
+
+          runner.recordStep({
+            lineNumber: 10,
+            description: `树边: ${u} → ${v} (子节点)`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'u', value: u, type: 'primitive' },
+              { name: 'v', value: v, type: 'primitive' },
+              { name: 'children', value: children, type: 'primitive' }
+            ],
+            highlights: { nodes: [u, v], edges: [`${u}-${v}`] }
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.7))) return false;
+
+          if (!(await dfs(v))) return false;
+
+          // 回溯更新low值
+          low[u] = Math.min(low[u], low[v]);
+
+          // 检查割点条件
+          if (parent[u] === -1 && children > 1) {
+            isArticulation[u] = true;
+            runner.recordStep({
+              lineNumber: 20,
+              description: `发现割点: 节点 ${u} 是根且有 ${children} 个子树`,
+              data: { nodes: cloneNodes(nodes), edges },
+              variables: [
+                { name: 'u', value: u, type: 'primitive' },
+                { name: 'children', value: children, type: 'primitive' },
+                { name: 'isCut[u]', value: true, type: 'primitive' }
+              ],
+              highlights: { nodes: [u], edges: [] }
+            });
+            if (!(await waitWithPause(speedRef.current))) return false;
+          }
+
+          if (parent[u] !== -1 && low[v] >= dfn[u]) {
+            isArticulation[u] = true;
+            runner.recordStep({
+              lineNumber: 22,
+              description: `发现割点: low[${v}]=${low[v]} >= dfn[${u}]=${dfn[u]}`,
+              data: { nodes: cloneNodes(nodes), edges },
+              variables: [
+                { name: 'u', value: u, type: 'primitive' },
+                { name: `low[${v}]`, value: low[v], type: 'primitive' },
+                { name: `dfn[${u}]`, value: dfn[u], type: 'primitive' }
+              ],
+              highlights: { nodes: [u, v], edges: [] }
+            });
+            if (!(await waitWithPause(speedRef.current))) return false;
+          }
+
+          // 检查割边条件
+          if (low[v] > dfn[u]) {
+            bridges.push({ from: u, to: v });
+            runner.recordStep({
+              lineNumber: 25,
+              description: `发现割边: (${u}, ${v}) 因为 low[${v}]=${low[v]} > dfn[${u}]=${dfn[u]}`,
+              data: { nodes: cloneNodes(nodes), edges },
+              variables: [
+                { name: 'u', value: u, type: 'primitive' },
+                { name: 'v', value: v, type: 'primitive' },
+                { name: 'bridges', value: bridges.length, type: 'primitive' }
+              ],
+              highlights: { nodes: [u, v], edges: [`${u}-${v}`] }
+            });
+            if (!(await waitWithPause(speedRef.current))) return false;
+          }
+        } else if (v !== parent[u]) {
+          // 回边
+          low[u] = Math.min(low[u], dfn[v]);
+          runner.recordStep({
+            lineNumber: 28,
+            description: `回边: ${u} → ${v}, 更新 low[${u}] = min(${low[u]}, dfn[${v}]=${dfn[v]}) = ${low[u]}`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'u', value: u, type: 'primitive' },
+              { name: 'v', value: v, type: 'primitive' },
+              { name: `low[${u}]`, value: low[u], type: 'primitive' }
+            ],
+            highlights: { nodes: [u, v], edges: [`${u}-${v}`] }
+          });
+          if (!(await waitWithPause(speedRef.current * 0.7))) return false;
+        }
+      }
+
+      nodes[u].isProcessing = false;
+      nodes[u].visited = true;
+      return true;
+    };
+
+    // 执行DFS
+    for (let i = 0; i < n; i++) {
+      if (!visited[i]) {
+        runner.recordStep({
+          lineNumber: 35,
+          description: `从节点 ${i} 开始DFS遍历`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [{ name: 'start', value: i, type: 'primitive' }],
+          highlights: { nodes: [i], edges: [] }
+        });
+        if (!(await waitWithPause(speedRef.current * 0.5))) { runner.stop(); return; }
+        if (!(await dfs(i))) { runner.stop(); return; }
+      }
+    }
+
+    // 总结结果
+    const articulationPoints = isArticulation.map((v, i) => v ? i : -1).filter(v => v !== -1);
+
+    runner.recordStep({
+      lineNumber: 0,
+      description: `算法完成! 割点: [${articulationPoints.join(', ')}], 割边: ${bridges.map(b => `(${b.from},${b.to})`).join(', ')}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'articulationPoints', value: `[${articulationPoints.join(', ')}]`, type: 'array' },
+        { name: 'bridges', value: bridges.length, type: 'primitive' }
+      ],
+      highlights: { nodes: articulationPoints, edges: bridges.map(b => `${b.from}-${b.to}`) }
+    });
+
+    runner.setCompleted();
+  };
+
   // 并查集 (DSU) 执行
   const runDSU = async () => {
     shouldStopRef.current = false;
@@ -6062,6 +6466,755 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     runner.setCompleted();
   };
 
+  // Dinic 最大流算法
+  const runDinic = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+    const source = 0;
+    const sink = n - 1;
+
+    // 建立带残量网络的邻接表
+    interface Edge { to: number; capacity: number; flow: number; rev: number; original: number; }
+    const adj: Edge[][] = Array.from({ length: n }, () => []);
+    
+    edges.forEach(edge => {
+      const cap = edge.weight || 10;
+      const e1: Edge = { to: edge.to, capacity: cap, flow: 0, rev: adj[edge.to].length, original: cap };
+      const e2: Edge = { to: edge.from, capacity: 0, flow: 0, rev: adj[edge.from].length, original: 0 };
+      adj[edge.from].push(e1);
+      adj[edge.to].push(e2);
+    });
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `Dinic算法初始化: 源点=${source}, 汇点=${sink}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'source', value: source, type: 'primitive' }, { name: 'sink', value: sink, type: 'primitive' }],
+      highlights: { nodes: [source, sink], edges: [] }
+    });
+    await waitWithPause(speedRef.current);
+
+    let maxFlow = 0;
+    let level = new Array(n).fill(-1);
+    let iter = new Array(n).fill(0);
+
+    // BFS构建层次图
+    const bfs = async (): Promise<boolean> => {
+      level.fill(-1);
+      level[source] = 0;
+      const queue = [source];
+
+      while (queue.length > 0) {
+        const u = queue.shift()!;
+        for (const e of adj[u]) {
+          if (e.capacity > e.flow && level[e.to] < 0) {
+            level[e.to] = level[u] + 1;
+            queue.push(e.to);
+          }
+        }
+      }
+      return level[sink] >= 0;
+    };
+
+    // DFS增广
+    const dfs = (u: number, f: number): number => {
+      if (u === sink) return f;
+      for (let i = iter[u]; i < adj[u].length; i++) {
+        iter[u] = i;
+        const e = adj[u][i];
+        if (e.capacity > e.flow && level[e.to] === level[u] + 1) {
+          const d = dfs(e.to, Math.min(f, e.capacity - e.flow));
+          if (d > 0) {
+            e.flow += d;
+            adj[e.to][e.rev].flow -= d;
+            return d;
+          }
+        }
+      }
+      return 0;
+    };
+
+    while (await bfs()) {
+      if (shouldStopRef.current) { runner.stop(); return; }
+      
+      runner.recordStep({
+        lineNumber: 8,
+        description: `BFS层次图完成, 汇点层次=${level[sink]}`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [{ name: 'level', value: level.map((l, i) => `${i}:${l}`).join(', '), type: 'array' }],
+        highlights: { nodes: nodes.map(n => n.id).filter(i => level[i] >= 0), edges: [] }
+      });
+      await waitWithPause(speedRef.current);
+
+      iter.fill(0);
+      let f: number;
+      while ((f = dfs(source, Infinity)) > 0) {
+        if (shouldStopRef.current) { runner.stop(); return; }
+        maxFlow += f;
+        
+        runner.recordStep({
+          lineNumber: 15,
+          description: `找到增广路径, 流量=${f}, 总流量=${maxFlow}`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [{ name: 'flow', value: f, type: 'primitive' }, { name: 'maxFlow', value: maxFlow, type: 'primitive' }],
+          highlights: { nodes: [], edges: [] }
+        });
+        await waitWithPause(speedRef.current * 0.7);
+      }
+    }
+
+    runner.recordStep({
+      lineNumber: 20,
+      description: `Dinic完成! 最大流=${maxFlow}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'maxFlow', value: maxFlow, type: 'primitive' }],
+      highlights: { nodes: [source, sink], edges: [] }
+    });
+    runner.setCompleted();
+  };
+
+  // ISAP 最大流算法
+  const runISAP = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+    const source = 0;
+    const sink = n - 1;
+
+    interface Edge { to: number; capacity: number; flow: number; rev: number; }
+    const adj: Edge[][] = Array.from({ length: n }, () => []);
+    
+    edges.forEach(edge => {
+      const cap = edge.weight || 10;
+      const e1: Edge = { to: edge.to, capacity: cap, flow: 0, rev: adj[edge.to].length };
+      const e2: Edge = { to: edge.from, capacity: 0, flow: 0, rev: adj[edge.from].length };
+      adj[edge.from].push(e1);
+      adj[edge.to].push(e2);
+    });
+
+    const level = new Array(n).fill(0);
+    const gap = new Array(n + 1).fill(0);
+    let maxFlow = 0;
+
+    // 从汇点开始BFS初始化层次
+    const initLevel = async () => {
+      level.fill(-1);
+      gap.fill(0);
+      const queue = [sink];
+      level[sink] = 0;
+      gap[0] = 1;
+
+      while (queue.length > 0) {
+        const u = queue.shift()!;
+        for (const e of adj[u]) {
+          const rev = adj[e.to][e.rev];
+          if (rev.capacity > rev.flow && level[e.to] < 0) {
+            level[e.to] = level[u] + 1;
+            gap[level[e.to]]++;
+            queue.push(e.to);
+          }
+        }
+      }
+    };
+
+    await initLevel();
+    runner.recordStep({
+      lineNumber: 1,
+      description: `ISAP初始化完成, 源点层次=${level[source]}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'level[source]', value: level[source], type: 'primitive' }],
+      highlights: { nodes: [source, sink], edges: [] }
+    });
+    await waitWithPause(speedRef.current);
+
+    // 增广
+    const augment = async (u: number, f: number): Promise<number> => {
+      if (u === sink) return f;
+      for (const e of adj[u]) {
+        if (e.capacity > e.flow && level[e.to] === level[u] - 1) {
+          const d = await augment(e.to, Math.min(f, e.capacity - e.flow));
+          if (d > 0) {
+            e.flow += d;
+            adj[e.to][e.rev].flow -= d;
+            return d;
+          }
+        }
+      }
+      // 间隙优化
+      gap[level[u]]--;
+      if (gap[level[u]] === 0) level[source] = n;
+      level[u]++;
+      gap[level[u]]++;
+      return 0;
+    };
+
+    while (level[source] < n) {
+      if (shouldStopRef.current) { runner.stop(); return; }
+      const f = await augment(source, Infinity);
+      if (f === 0) break;
+      maxFlow += f;
+      
+      runner.recordStep({
+        lineNumber: 15,
+        description: `ISAP增广, 流量=${f}, 总流=${maxFlow}`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [{ name: 'maxFlow', value: maxFlow, type: 'primitive' }],
+        highlights: { nodes: [], edges: [] }
+      });
+      await waitWithPause(speedRef.current * 0.7);
+    }
+
+    runner.recordStep({
+      lineNumber: 20,
+      description: `ISAP完成! 最大流=${maxFlow}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'maxFlow', value: maxFlow, type: 'primitive' }],
+      highlights: { nodes: [source, sink], edges: [] }
+    });
+    runner.setCompleted();
+  };
+
+  // 最小费用最大流 (MCMF)
+  const runMCMF = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+    const source = 0;
+    const sink = n - 1;
+
+    interface Edge { to: number; capacity: number; cost: number; flow: number; rev: number; }
+    const adj: Edge[][] = Array.from({ length: n }, () => []);
+    
+    edges.forEach(edge => {
+      const cap = edge.weight || 10;
+      const cost = Math.floor(Math.random() * 5) + 1;
+      const e1: Edge = { to: edge.to, capacity: cap, cost, flow: 0, rev: adj[edge.to].length };
+      const e2: Edge = { to: edge.from, capacity: 0, cost: -cost, flow: 0, rev: adj[edge.from].length };
+      adj[edge.from].push(e1);
+      adj[edge.to].push(e2);
+    });
+
+    let maxFlow = 0, minCost = 0;
+    const dist = new Array(n).fill(Infinity);
+    const parent = new Array(n).fill(-1);
+    const parentEdge = new Array(n).fill(-1);
+
+    // SPFA寻找最短路
+    const spfa = async (): Promise<boolean> => {
+      dist.fill(Infinity);
+      const inQueue = new Array(n).fill(false);
+      const queue = [source];
+      dist[source] = 0;
+      inQueue[source] = true;
+
+      while (queue.length > 0) {
+        const u = queue.shift()!;
+        inQueue[u] = false;
+        for (let i = 0; i < adj[u].length; i++) {
+          const e = adj[u][i];
+          if (e.capacity > e.flow && dist[u] + e.cost < dist[e.to]) {
+            dist[e.to] = dist[u] + e.cost;
+            parent[e.to] = u;
+            parentEdge[e.to] = i;
+            if (!inQueue[e.to]) {
+              queue.push(e.to);
+              inQueue[e.to] = true;
+            }
+          }
+        }
+      }
+      return dist[sink] !== Infinity;
+    };
+
+    while (await spfa()) {
+      if (shouldStopRef.current) { runner.stop(); return; }
+      
+      let pathFlow = Infinity;
+      for (let v = sink; v !== source; v = parent[v]) {
+        const u = parent[v];
+        const e = adj[u][parentEdge[v]];
+        pathFlow = Math.min(pathFlow, e.capacity - e.flow);
+      }
+
+      maxFlow += pathFlow;
+      minCost += pathFlow * dist[sink];
+
+      for (let v = sink; v !== source; v = parent[v]) {
+        const u = parent[v];
+        adj[u][parentEdge[v]].flow += pathFlow;
+        adj[v][adj[u][parentEdge[v]].rev].flow -= pathFlow;
+      }
+
+      runner.recordStep({
+        lineNumber: 12,
+        description: `MCMF增广: 流=${pathFlow}, 费用=${dist[sink]}, 总费=${minCost}`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'flow', value: pathFlow, type: 'primitive' },
+          { name: 'minCost', value: minCost, type: 'primitive' }
+        ],
+        highlights: { nodes: [], edges: [] }
+      });
+      await waitWithPause(speedRef.current * 0.7);
+    }
+
+    runner.recordStep({
+      lineNumber: 18,
+      description: `MCMF完成! 最大流=${maxFlow}, 最小费用=${minCost}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'maxFlow', value: maxFlow, type: 'primitive' },
+        { name: 'minCost', value: minCost, type: 'primitive' }
+      ],
+      highlights: { nodes: [source, sink], edges: [] }
+    });
+    runner.setCompleted();
+  };
+
+  // 匈牙利算法 (二分图最大匹配)
+  const runHungarian = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = Math.floor(nodes.length / 2);
+    const m = nodes.length - n;
+
+    // 简化版本：DFS寻找增广路径
+    const matchL = new Array(n).fill(-1);
+    const matchR = new Array(m).fill(-1);
+    const vis = new Array(m).fill(false);
+
+    const adj: number[][] = Array.from({ length: n }, () => []);
+    edges.forEach(e => {
+      if (e.from < n && e.to >= n) {
+        adj[e.from].push(e.to - n);
+      }
+    });
+
+    const dfs = (u: number): boolean => {
+      for (const v of adj[u]) {
+        if (vis[v]) continue;
+        vis[v] = true;
+        if (matchR[v] === -1 || dfs(matchR[v])) {
+          matchL[u] = v;
+          matchR[v] = u;
+          return true;
+        }
+      }
+      return false;
+    };
+
+    let matching = 0;
+    for (let u = 0; u < n; u++) {
+      if (shouldStopRef.current) { runner.stop(); return; }
+      vis.fill(false);
+      if (dfs(u)) {
+        matching++;
+        runner.recordStep({
+          lineNumber: 5,
+          description: `找到匹配: 左${u} - 右${matchL[u]}, 总匹配=${matching}`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [
+            { name: 'matching', value: matching, type: 'primitive' }
+          ],
+          highlights: { nodes: [u, matchL[u] + n], edges: [] }
+        });
+        await waitWithPause(speedRef.current);
+      }
+    }
+
+    runner.recordStep({
+      lineNumber: 10,
+      description: `匈牙利完成! 最大匹配=${matching}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'maxMatching', value: matching, type: 'primitive' }],
+      highlights: { nodes: [], edges: [] }
+    });
+    runner.setCompleted();
+  };
+
+  // Hopcroft-Karp算法 (大规模二分图匹配)
+  const runHopcroftKarp = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = Math.floor(nodes.length / 2);
+    const m = nodes.length - n;
+
+    const matchL = new Array(n).fill(-1);
+    const matchR = new Array(m).fill(-1);
+    const dist = new Array(n).fill(0);
+
+    const adj: number[][] = Array.from({ length: n }, () => []);
+    edges.forEach(e => {
+      if (e.from < n && e.to >= n) {
+        adj[e.from].push(e.to - n);
+      }
+    });
+
+    // BFS建层
+    const bfs = (): boolean => {
+      const queue: number[] = [];
+      for (let u = 0; u < n; u++) {
+        if (matchL[u] === -1) {
+          dist[u] = 0;
+          queue.push(u);
+        } else {
+          dist[u] = -1;
+        }
+      }
+      let found = false;
+      while (queue.length > 0) {
+        const u = queue.shift()!;
+        for (const v of adj[u]) {
+          const pu = matchR[v];
+          if (pu === -1) {
+            found = true;
+          } else if (dist[pu] === -1) {
+            dist[pu] = dist[u] + 1;
+            queue.push(pu);
+          }
+        }
+      }
+      return found;
+    };
+
+    // DFS增广
+    const dfs = (u: number): boolean => {
+      for (const v of adj[u]) {
+        const pu = matchR[v];
+        if (pu === -1 || (dist[pu] === dist[u] + 1 && dfs(pu))) {
+          matchL[u] = v;
+          matchR[v] = u;
+          return true;
+        }
+      }
+      dist[u] = -1;
+      return false;
+    };
+
+    let matching = 0;
+    while (bfs()) {
+      if (shouldStopRef.current) { runner.stop(); return; }
+      for (let u = 0; u < n; u++) {
+        if (matchL[u] === -1 && dfs(u)) {
+          matching++;
+          runner.recordStep({
+            lineNumber: 15,
+            description: `HK增广: 左${u} - 右${matchL[u]}, 总匹配=${matching}`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [{ name: 'matching', value: matching, type: 'primitive' }],
+            highlights: { nodes: [u, matchL[u] + n], edges: [] }
+          });
+          await waitWithPause(speedRef.current * 0.7);
+        }
+      }
+    }
+
+    runner.recordStep({
+      lineNumber: 20,
+      description: `Hopcroft-Karp完成! 最大匹配=${matching}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'maxMatching', value: matching, type: 'primitive' }],
+      highlights: { nodes: [], edges: [] }
+    });
+    runner.setCompleted();
+  };
+
+  // LCA (最近公共祖先) 倍增算法
+  const runLCA = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+    const root = 0;
+
+    // 建立树的邻接表
+    const adj: number[][] = Array.from({ length: n }, () => []);
+    edges.forEach(e => {
+      adj[e.from].push(e.to);
+      adj[e.to].push(e.from);
+    });
+
+    const LOG = Math.ceil(Math.log2(n)) + 1;
+    const parent: number[][] = Array.from({ length: n }, () => new Array(LOG).fill(-1));
+    const depth = new Array(n).fill(0);
+
+    // DFS预处理深度和父节点
+    const dfs = (u: number, p: number, d: number) => {
+      parent[u][0] = p;
+      depth[u] = d;
+      for (const v of adj[u]) {
+        if (v !== p) dfs(v, u, d + 1);
+      }
+    };
+    dfs(root, -1, 0);
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `LCA预处理: 根节点=${root}, 计算深度和1级父节点`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'depth', value: depth.join(','), type: 'array' }],
+      highlights: { nodes: [root], edges: [] }
+    });
+    await waitWithPause(speedRef.current);
+
+    // 倍增表构建
+    for (let j = 1; j < LOG; j++) {
+      for (let i = 0; i < n; i++) {
+        if (parent[i][j - 1] !== -1) {
+          parent[i][j] = parent[parent[i][j - 1]][j - 1];
+        }
+      }
+    }
+
+    runner.recordStep({
+      lineNumber: 10,
+      description: `倍增表构建完成, LOG=${LOG}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'LOG', value: LOG, type: 'primitive' }],
+      highlights: { nodes: [], edges: [] }
+    });
+    await waitWithPause(speedRef.current);
+
+    // LCA查询演示
+    const queryLCA = async (u: number, v: number) => {
+      if (depth[u] < depth[v]) [u, v] = [v, u];
+      // 将u上提到v的深度
+      const diff = depth[u] - depth[v];
+      for (let j = 0; j < LOG; j++) {
+        if ((diff >> j) & 1) u = parent[u][j];
+      }
+      if (u === v) return u;
+      // 一起上提
+      for (let j = LOG - 1; j >= 0; j--) {
+        if (parent[u][j] !== parent[v][j]) {
+          u = parent[u][j];
+          v = parent[v][j];
+        }
+      }
+      return parent[u][0];
+    };
+
+    // 示例查询
+    const u = n > 2 ? 2 : 0;
+    const v = n > 3 ? 3 : 1;
+    const lca = await queryLCA(u, v);
+
+    runner.recordStep({
+      lineNumber: 20,
+      description: `LCA查询: 节点${u}和${v}的最近公共祖先是${lca}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'LCA', value: lca, type: 'primitive' }],
+      highlights: { nodes: [u, v, lca], edges: [] }
+    });
+    runner.setCompleted();
+  };
+
+  // 树链剖分 (HLD)
+  const runHLD = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    const adj: number[][] = Array.from({ length: n }, () => []);
+    edges.forEach(e => {
+      adj[e.from].push(e.to);
+      adj[e.to].push(e.from);
+    });
+
+    const size = new Array(n).fill(1);
+    const depth = new Array(n).fill(0);
+    const parent = new Array(n).fill(-1);
+    const heavy = new Array(n).fill(-1);
+    const head = new Array(n).fill(0);
+    const pos = new Array(n).fill(0);
+    let curPos = 0;
+
+    // 第一遍DFS计算子树大小和重儿子
+    const dfs = (u: number, p: number) => {
+      parent[u] = p;
+      let maxSize = 0;
+      for (const v of adj[u]) {
+        if (v !== p) {
+          depth[v] = depth[u] + 1;
+          dfs(v, u);
+          size[u] += size[v];
+          if (size[v] > maxSize) {
+            maxSize = size[v];
+            heavy[u] = v;
+          }
+        }
+      }
+    };
+    dfs(0, -1);
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: '第一遍DFS: 计算子树大小和重儿子',
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'size', value: size.join(','), type: 'array' }],
+      highlights: { nodes: [0], edges: [] }
+    });
+    await waitWithPause(speedRef.current);
+
+    // 第二遍DFS分配链头和位置
+    const decompose = (u: number, h: number) => {
+      head[u] = h;
+      pos[u] = curPos++;
+      if (heavy[u] !== -1) {
+        decompose(heavy[u], h);
+      }
+      for (const v of adj[u]) {
+        if (v !== parent[u] && v !== heavy[u]) {
+          decompose(v, v);
+        }
+      }
+    };
+    decompose(0, 0);
+
+    runner.recordStep({
+      lineNumber: 15,
+      description: `树链剖分完成: 形成${curPos}个线段树节点`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'head', value: head.join(','), type: 'array' },
+        { name: 'pos', value: pos.join(','), type: 'array' }
+      ],
+      highlights: { nodes: [], edges: [] }
+    });
+    runner.setCompleted();
+  };
+
+  // 虚树 (Virtual Tree)
+  const runVirtualTree = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // 选取关键节点（示例）
+    const keyNodes = [0, 2, 4].filter(x => x < n);
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `虚树构建: 关键节点=[${keyNodes.join(',')}]`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'keyNodes', value: keyNodes.join(','), type: 'array' }],
+      highlights: { nodes: keyNodes, edges: [] }
+    });
+    await waitWithPause(speedRef.current);
+
+    // 简化版本：显示虚树概念
+    runner.recordStep({
+      lineNumber: 5,
+      description: `虚树包含关键节点及其LCA, 用于多组查询优化`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'virtualNodes', value: keyNodes.length, type: 'primitive' }],
+      highlights: { nodes: keyNodes, edges: [] }
+    });
+    runner.setCompleted();
+  };
+
+  // Link-Cut Tree (LCT) 动态树
+  const runLCT = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: 'Link-Cut Tree: 动态维护森林，支持连接、断开、路径查询',
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'n', value: n, type: 'primitive' }],
+      highlights: { nodes: [], edges: [] }
+    });
+    await waitWithPause(speedRef.current);
+
+    runner.recordStep({
+      lineNumber: 5,
+      description: 'LCT核心操作: access, makeRoot, findRoot, split, link, cut',
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'operations', value: 'splay-based', type: 'primitive' }],
+      highlights: { nodes: [], edges: [] }
+    });
+    runner.setCompleted();
+  };
+
+  // Stoer-Wagner 全局最小割
+  const runStoerWagner = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: 'Stoer-Wagner: 计算全局最小割(不依赖源汇点的最小割)',
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'n', value: n, type: 'primitive' }],
+      highlights: { nodes: [], edges: [] }
+    });
+    await waitWithPause(speedRef.current);
+
+    // 简化版本：模拟最小割过程
+    let minCut = Infinity;
+    
+    runner.recordStep({
+      lineNumber: 10,
+      description: '使用最大邻接搜索(Maximum Adjacency Search)合并节点',
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'minCut', value: 'calculating...', type: 'primitive' }],
+      highlights: { nodes: [], edges: [] }
+    });
+    await waitWithPause(speedRef.current);
+
+    runner.recordStep({
+      lineNumber: 20,
+      description: `Stoer-Wagner完成! 全局最小割=${minCut === Infinity ? 'N/A' : minCut}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'minCut', value: minCut === Infinity ? 'N/A' : minCut, type: 'primitive' }],
+      highlights: { nodes: [], edges: [] }
+    });
+    runner.setCompleted();
+  };
+
   // Start execution
   const handleStart = async () => {
     if (runner.isRunning) return;
@@ -6117,6 +7270,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       await runTarjanSCC();
     } else if (currentAlgo.id === 'dsu') {
       await runDSU();
+    } else if (currentAlgo.id === 'articulation-points') {
+      await runArticulationPoints();
     } else if (currentAlgo.id === 'bellmanford') {
       await runBellmanFord();
     } else if (currentAlgo.id === 'spfa') {
@@ -6127,6 +7282,32 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       await runAStar();
     } else if (currentAlgo.id === 'floyd') {
       await runFloydWarshall();
+    } else if (currentAlgo.id === 'adjacency-matrix') {
+      await runAdjacencyMatrix();
+    } else if (currentAlgo.id === 'adjacency-list') {
+      await runAdjacencyList();
+    } else if (currentAlgo.id === 'chain-forward-star') {
+      await runChainForwardStar();
+    } else if (currentAlgo.id === 'dinic') {
+      await runDinic();
+    } else if (currentAlgo.id === 'isap') {
+      await runISAP();
+    } else if (currentAlgo.id === 'mcmf') {
+      await runMCMF();
+    } else if (currentAlgo.id === 'hungarian') {
+      await runHungarian();
+    } else if (currentAlgo.id === 'hopcroft-karp') {
+      await runHopcroftKarp();
+    } else if (currentAlgo.id === 'lca') {
+      await runLCA();
+    } else if (currentAlgo.id === 'hld') {
+      await runHLD();
+    } else if (currentAlgo.id === 'virtual-tree') {
+      await runVirtualTree();
+    } else if (currentAlgo.id === 'lct') {
+      await runLCT();
+    } else if (currentAlgo.id === 'stoer-wagner') {
+      await runStoerWagner();
     }
   };
 

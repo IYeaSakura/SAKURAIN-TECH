@@ -88,7 +88,8 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
       const endY = to.y - (dy / len) * offset;
       
       // 检查是否有其他节点位于这条边的路径上
-      const nodeRadius = 35; // 节点半径 + 缓冲区
+      // 使用较大的检测半径确保边不会太接近节点
+      const nodeRadius = 45; 
       const intersectingNodes = nodes.filter(n => {
         if (n.id === from.id || n.id === to.id) return false;
         const dist = pointToLineDistance(n.x, n.y, startX, startY, endX, endY);
@@ -97,36 +98,44 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
       
       let path: string;
       
-      if (intersectingNodes.length > 0) {
-        // 有节点在路径上，使用三次贝塞尔曲线（S形）绕行
-        const midX = (startX + endX) / 2;
-        const midY = (startY + endY) / 2;
+      // 如果边较短，使用直线；否则检查是否需要曲线
+      if (intersectingNodes.length > 0 && len > 80) {
+        // 有节点在路径上，使用三次贝塞尔曲线绕行
         
         // 计算垂直于边方向的单位向量
         const perpX = -(dy / len);
         const perpY = (dx / len);
         
-        // 根据相交节点的位置决定偏移方向
-        // 计算所有相交节点到边的中点的位置
-        const avgNodeX = intersectingNodes.reduce((sum, n) => sum + n.x, 0) / intersectingNodes.length;
-        const avgNodeY = intersectingNodes.reduce((sum, n) => sum + n.y, 0) / intersectingNodes.length;
+        // 计算边的中点
+        const midX = (startX + endX) / 2;
+        const midY = (startY + endY) / 2;
         
-        // 判断节点在边的哪一侧
-        const crossProduct = (avgNodeX - midX) * perpX + (avgNodeY - midY) * perpY;
-        const direction = crossProduct > 0 ? 1 : -1;
+        // 判断哪些节点在边的哪一侧，选择远离节点的方向
+        let positiveSide = 0, negativeSide = 0;
+        intersectingNodes.forEach(n => {
+          const cross = (n.x - midX) * perpX + (n.y - midY) * perpY;
+          if (cross > 0) positiveSide++;
+          else negativeSide++;
+        });
         
-        // 曲线偏移量（根据相交节点数量调整）
-        const curveOffset = 50 + intersectingNodes.length * 20;
+        // 选择节点较少的一侧进行偏移
+        const direction = positiveSide > negativeSide ? -1 : 1;
         
-        // 使用三次贝塞尔曲线，控制点分别在两侧
-        const cp1X = startX + (endX - startX) * 0.3 + perpX * curveOffset * direction;
-        const cp1Y = startY + (endY - startY) * 0.3 + perpY * curveOffset * direction;
-        const cp2X = startX + (endX - startX) * 0.7 + perpX * curveOffset * direction;
-        const cp2Y = startY + (endY - startY) * 0.7 + perpY * curveOffset * direction;
+        // 计算需要的偏移量，确保足够绕开所有节点
+        const maxDist = Math.max(...intersectingNodes.map(n => 
+          pointToLineDistance(n.x, n.y, startX, startY, endX, endY)
+        ));
+        const curveOffset = Math.max(60, maxDist + 30);
+        
+        // 使用三次贝塞尔曲线，控制点在偏移方向上
+        const cp1X = startX + (endX - startX) * 0.25 + perpX * curveOffset * direction;
+        const cp1Y = startY + (endY - startY) * 0.25 + perpY * curveOffset * direction;
+        const cp2X = startX + (endX - startX) * 0.75 + perpX * curveOffset * direction;
+        const cp2Y = startY + (endY - startY) * 0.75 + perpY * curveOffset * direction;
         
         path = `M ${startX} ${startY} C ${cp1X} ${cp1Y} ${cp2X} ${cp2Y} ${endX} ${endY}`;
       } else {
-        // 没有相交节点，使用直线
+        // 没有相交节点或边太短，使用直线
         path = `M ${startX} ${startY} L ${endX} ${endY}`;
       }
 
