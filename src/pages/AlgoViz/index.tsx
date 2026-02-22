@@ -19,7 +19,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Zap, Binary, GitBranch, Network, Grid3X3, Brain, FileCode, BarChart3,
   Play, Pause, RotateCcw, SkipBack, SkipForward, Shuffle, BookOpen,
-  Maximize2, Minimize2
+  Maximize2, Minimize2, Upload, Check, X
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { CommentSection } from '@/pages/Blog/components/CommentSection';
@@ -28,6 +28,7 @@ import { CommentSection } from '@/pages/Blog/components/CommentSection';
 import { ALL_ALGORITHMS, getAlgorithmsByCategory, getCodeTemplates } from './algorithms';
 import { useAlgorithmRunner } from './hooks/useAlgorithmRunner';
 import { generateSortingData, generateDAG, generateSCCGraph } from './utils/dataGenerators';
+import { parseGraphData, validateGraphData } from './utils/graphDataParser';
 
 // 导入组件
 import {
@@ -49,10 +50,17 @@ import type {
   GraphState,
   AlgorithmStep,
   MemoryState,
-  MemoryCell
+  MemoryCell,
+  GraphNode,
+  GraphEdge
 } from './types';
 
 import './algo-visualizer.css';
+
+// 深拷贝节点数组辅助函数
+const cloneNodes = (nodes: GraphNode[]): GraphNode[] => {
+  return nodes.map(n => ({ ...n }));
+};
 
 // 分类配置
 const CATEGORIES: { id: AlgorithmCategory; name: string; icon: React.ReactNode }[] = [
@@ -71,8 +79,8 @@ interface AlgorithmPlaygroundProps {
 
 const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, onAlgorithmChange }) => {
   
-  // 执行器 - 默认速度300ms
-  const runner = useAlgorithmRunner({ initialSpeed: 300 });
+  // 执行器 - 默认速度200ms
+  const runner = useAlgorithmRunner({ initialSpeed: 200 });
   
   // 数据状态
   const [sortingData, setSortingData] = useState<SortingData>({ array: [], comparing: [], swapping: [], sorted: [] });
@@ -89,6 +97,19 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
   // 全屏状态
   const [isFullscreen, setIsFullscreen] = useState(false);
   const playgroundRef = useRef<HTMLDivElement>(null);
+  
+  // 数组导入弹窗状态
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importInput, setImportInput] = useState('');
+  const [importError, setImportError] = useState<string | null>(null);
+  
+  // 图导入弹窗状态
+  const [isGraphImportModalOpen, setIsGraphImportModalOpen] = useState(false);
+  const [graphImportInput, setGraphImportInput] = useState('');
+  const [graphImportError, setGraphImportError] = useState<string | null>(null);
+  
+  // 拓扑排序图形模式
+  const [dagPattern, setDagPattern] = useState<'random' | 'linear' | 'diamond' | 'hourglass' | 'butterfly'>('random');
 
   // Refs用于控制执行流程
   const isPausedRef = useRef<boolean>(false);
@@ -124,12 +145,65 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     }
   }, []);
 
+  // 从步骤数据恢复图状态
+  const restoreGraphStateFromStep = useCallback((step: AlgorithmStep | null) => {
+    if (!step) return;
+    
+    const data = step.data;
+    if (data && data.nodes) {
+      // 深拷贝节点数据确保状态不会被覆盖
+      const restoredNodes = data.nodes.map((n: any) => ({ ...n }));
+      
+      // 恢复节点和边数据
+      setGraphData(prev => ({
+        ...prev,
+        nodes: restoredNodes,
+        edges: data.edges || prev.edges,
+        directed: true,
+        weighted: false
+      }));
+      
+      // 恢复图状态（高亮等）
+      const highlightedNodes = new Set<number>(step.highlights?.nodes || []);
+      const highlightedEdges = new Set<string>(step.highlights?.edges || []);
+      
+      // 从变量中恢复队列和当前节点
+      const queueVar = step.variables.find(v => v.name === 'queue');
+      const queue = queueVar ? 
+        queueVar.value.toString().replace(/[\[\]]/g, '').split(',').filter((s: string) => s.trim()).map(Number).filter((n: number) => !isNaN(n)) : 
+        [];
+      
+      // 尝试从内存状态恢复栈（用于DFS等算法）
+      const stackVar = step.variables.find(v => v.name === 'stack');
+      const stack = stackVar ? 
+        stackVar.value.toString().replace(/[\[\]]/g, '').split(',').filter((s: string) => s.trim()).map(Number).filter((n: number) => !isNaN(n)) : 
+        [];
+      
+      const uVar = step.variables.find(v => v.name === 'u');
+      const currentNode = uVar && uVar.value !== undefined && uVar.value !== '' ? Number(uVar.value) : undefined;
+      
+      setGraphState(prev => ({
+        ...prev,
+        highlightedEdges,
+        highlightedNodes,
+        queue,
+        stack,
+        currentNode: isNaN(currentNode as number) ? undefined : currentNode,
+        phase: step.description.includes('完成') ? 'completed' : 'running'
+      }));
+    }
+  }, []);
+
   // 步骤变化时恢复状态（复盘模式）
   useEffect(() => {
     if (runner.isReviewMode && runner.currentStep) {
-      restoreSortingStateFromStep(runner.currentStep);
+      if (currentAlgo.category === 'sorting') {
+        restoreSortingStateFromStep(runner.currentStep);
+      } else if (currentAlgo.category === 'graph') {
+        restoreGraphStateFromStep(runner.currentStep);
+      }
     }
-  }, [runner.currentStep, runner.isReviewMode, restoreSortingStateFromStep]);
+  }, [runner.currentStep, runner.isReviewMode, restoreSortingStateFromStep, restoreGraphStateFromStep, currentAlgo.category]);
 
   // 生成数据
   const generateData = useCallback(() => {
@@ -147,7 +221,12 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       });
       setSortingData(data);
     } else if (currentAlgo.id === 'topo') {
-      const data = generateDAG({ nodeCount: 9, layerCount: 4, edgeDensity: 0.35 });
+      const data = generateDAG({ 
+        nodeCount: 10, 
+        layerCount: 4, 
+        edgeDensity: 0.4,
+        pattern: dagPattern 
+      });
       setGraphData(data);
     } else if (currentAlgo.id === 'scc') {
       const data = generateSCCGraph({ sccCount: 3, minNodesPerSCC: 3, maxNodesPerSCC: 4 });
@@ -167,6 +246,110 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
   useEffect(() => {
     generateData();
   }, [currentAlgo.id]);
+
+  // 校验并导入数组
+  const handleImportArray = useCallback(() => {
+    setImportError(null);
+    
+    if (!importInput.trim()) {
+      setImportError('请输入数组内容');
+      return;
+    }
+    
+    // 支持格式: [1,2,3] 或 1,2,3
+    let processed = importInput.trim();
+    
+    // 如果包含方括号，提取内容
+    if (processed.startsWith('[') && processed.endsWith(']')) {
+      processed = processed.slice(1, -1);
+    }
+    
+    // 分割并解析数字
+    const parts = processed.split(/[,，]/);
+    const numbers: number[] = [];
+    
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i].trim();
+      if (part === '') continue;
+      
+      const num = Number(part);
+      if (isNaN(num)) {
+        setImportError(`第 ${i + 1} 个元素 "${part}" 不是有效的数字`);
+        return;
+      }
+      
+      // 限制数值范围
+      if (num < 1 || num > 999) {
+        setImportError(`数值 ${num} 超出范围 (1-999)`);
+        return;
+      }
+      
+      numbers.push(num);
+    }
+    
+    if (numbers.length < 2) {
+      setImportError('数组至少需要包含 2 个元素');
+      return;
+    }
+    
+    if (numbers.length > 100) {
+      setImportError('数组最多包含 100 个元素');
+      return;
+    }
+    
+    // 应用导入的数组
+    setSortingData({
+      array: numbers,
+      comparing: [],
+      swapping: [],
+      sorted: []
+    });
+    setArraySize(numbers.length);
+    initialArrayRef.current = numbers;
+    setImportInput('');
+    setIsImportModalOpen(false);
+    runner.clearSteps();
+  }, [importInput, runner]);
+
+  // 处理图数据导入
+  const handleGraphImport = useCallback(() => {
+    setGraphImportError(null);
+    
+    if (!graphImportInput.trim()) {
+      setGraphImportError('请输入图数据');
+      return;
+    }
+    
+    const result = parseGraphData(graphImportInput);
+    
+    if (result.error) {
+      setGraphImportError(result.error);
+      return;
+    }
+    
+    const validation = validateGraphData({ 
+      nodes: result.nodes, 
+      edges: result.edges, 
+      directed: true, 
+      weighted: false 
+    });
+    
+    if (!validation.valid) {
+      setGraphImportError(validation.error || '图数据无效');
+      return;
+    }
+    
+    // 应用导入的图数据
+    setGraphData({
+      nodes: result.nodes,
+      edges: result.edges,
+      directed: true,
+      weighted: false
+    });
+    setGraphImportInput('');
+    setIsGraphImportModalOpen(false);
+    runner.clearSteps();
+  }, [graphImportInput, runner]);
 
   // 等待函数（支持暂停）- 修复版
   const waitWithPause = useCallback(async (ms: number): Promise<boolean> => {
@@ -224,6 +407,89 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         arrayBytes,
         variableBytes,
         auxiliaryBytes
+      }
+    };
+  };
+
+  // 构建图算法的内存状态
+  const buildGraphMemoryState = (
+    nodes: GraphNode[],
+    edges: GraphEdge[],
+    variables: Array<{ name: string; value: any; type?: 'primitive' | 'array' | 'reference' | 'temp' }>,
+    options?: {
+      adjacencyList?: Map<number, number[]>;
+      inDegree?: Map<number, number>;
+      queue?: number[];
+      result?: number[];
+    }
+  ): MemoryState => {
+    const varCells: MemoryCell[] = variables.map(v => ({
+      name: v.name,
+      value: v.value,
+      type: v.type || 'primitive',
+      isHighlighted: false
+    }));
+
+    const auxiliaryArrays: { name: string; data: any[]; description?: string }[] = [];
+    
+    // 添加邻接表
+    if (options?.adjacencyList) {
+      const adjData: string[] = [];
+      options.adjacencyList.forEach((neighbors, nodeId) => {
+        adjData.push(`${nodeId}→[${neighbors.join(', ')}]`);
+      });
+      auxiliaryArrays.push({
+        name: '邻接表',
+        data: adjData,
+        description: '图的邻接表表示'
+      });
+    }
+    
+    // 添加入度数组
+    if (options?.inDegree) {
+      const inDegreeData: string[] = [];
+      options.inDegree.forEach((deg, nodeId) => {
+        inDegreeData.push(`节点${nodeId}:${deg}`);
+      });
+      auxiliaryArrays.push({
+        name: '入度表',
+        data: inDegreeData,
+        description: '每个节点的入度'
+      });
+    }
+    
+    // 添加队列
+    if (options?.queue !== undefined) {
+      auxiliaryArrays.push({
+        name: '队列',
+        data: options.queue,
+        description: '待处理的节点'
+      });
+    }
+    
+    // 添加结果
+    if (options?.result !== undefined) {
+      auxiliaryArrays.push({
+        name: '结果序列',
+        data: options.result,
+        description: '拓扑排序结果'
+      });
+    }
+
+    const nodeBytes = nodes.length * 16;
+    const edgeBytes = edges.length * 8;
+    const varBytes = varCells.length * 8;
+    const auxBytes = auxiliaryArrays.reduce((sum, a) => sum + a.data.length * 8, 0);
+
+    return {
+      variables: varCells,
+      auxiliaryArrays,
+      callStack: [],
+      stats: {
+        totalBytes: nodeBytes + edgeBytes + varBytes + auxBytes,
+        arrayBytes: nodeBytes,
+        variableBytes: varBytes + auxBytes,
+        auxiliaryBytes: edgeBytes
       }
     };
   };
@@ -2337,6 +2603,266 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     runner.setCompleted();
   };
 
+  // 拓扑排序 (Kahn算法) 执行
+  const runTopologicalSort = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // 构建邻接表
+    const adj = new Map<number, number[]>();
+    const inDegree = new Map<number, number>();
+    
+    nodes.forEach(node => {
+      adj.set(node.id, []);
+      inDegree.set(node.id, 0);
+    });
+    
+    edges.forEach(edge => {
+      adj.get(edge.from)!.push(edge.to);
+      inDegree.set(edge.to, (inDegree.get(edge.to) || 0) + 1);
+    });
+
+    // 初始化节点入度显示
+    nodes.forEach(node => {
+      node.inDegree = inDegree.get(node.id) || 0;
+      node.tempInDegree = node.inDegree;
+      node.visited = false;
+      node.inQueue = false;
+    });
+
+    // 初始化队列（所有入度为0的节点）
+    const queue: number[] = [];
+    nodes.forEach(node => {
+      if ((inDegree.get(node.id) || 0) === 0) {
+        queue.push(node.id);
+        node.inQueue = true;
+      }
+    });
+
+    const result: number[] = [];
+
+    setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set(), queue: [...queue] });
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `初始化完成。入度为0的节点: [${queue.join(', ')}]，加入队列`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'queue', value: `[${queue.join(', ')}]`, type: 'array' },
+        { name: 'result', value: '[]', type: 'array' }
+      ],
+      highlights: { nodes: queue, edges: [] },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [
+          { name: 'n', value: n, type: 'primitive' },
+          { name: 'queue.size', value: queue.length, type: 'primitive' }
+        ],
+        { adjacencyList: adj, inDegree, queue, result }
+      )
+    });
+
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+
+    while (queue.length > 0) {
+      if (shouldStopRef.current) {
+        runner.stop();
+        return;
+      }
+
+      // 取出队首节点
+      const u = queue.shift()!;
+      const nodeU = nodes.find(n => n.id === u)!;
+      nodeU.inQueue = false;
+      nodeU.visited = true;
+      nodeU.isProcessing = true;
+      result.push(u);
+
+      setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+      setGraphState({ 
+        highlightedEdges: new Set(), 
+        highlightedNodes: new Set([u]),
+        queue: [...queue],
+        currentNode: u
+      });
+
+      runner.recordStep({
+        lineNumber: 5,
+        description: `取出节点 ${u}，加入结果序列。当前结果: [${result.join(' → ')}]`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'u', value: u, type: 'primitive' },
+          { name: 'queue', value: `[${queue.join(', ')}]`, type: 'array' },
+          { name: 'result', value: `[${result.join(', ')}]`, type: 'array' }
+        ],
+        highlights: { nodes: [u], edges: [] },
+        memory: buildGraphMemoryState(
+          nodes,
+          edges,
+          [
+            { name: 'u', value: u, type: 'primitive' },
+            { name: 'queue.size', value: queue.length, type: 'primitive' },
+            { name: 'result.size', value: result.length, type: 'primitive' }
+          ],
+          { adjacencyList: adj, inDegree, queue, result }
+        )
+      });
+
+      if (!(await waitWithPause(speedRef.current))) {
+        runner.stop();
+        return;
+      }
+
+      // 处理所有邻居节点
+      const neighbors = adj.get(u) || [];
+      for (const v of neighbors) {
+        if (shouldStopRef.current) {
+          runner.stop();
+          return;
+        }
+
+        const nodeV = nodes.find(n => n.id === v)!;
+        const oldDegree = inDegree.get(v) || 0;
+        const newDegree = oldDegree - 1;
+        inDegree.set(v, newDegree);
+        nodeV.tempInDegree = newDegree;
+
+        // 高亮当前处理的边
+        const edgeKey = `${u}-${v}`;
+        setGraphState(prev => ({
+          ...prev,
+          highlightedEdges: new Set([...prev.highlightedEdges, edgeKey]),
+          highlightedNodes: new Set([u, v])
+        }));
+
+        runner.recordStep({
+          lineNumber: 8,
+          description: `节点 ${u} → ${v}: 将节点 ${v} 的入度从 ${oldDegree} 减为 ${newDegree}`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [
+            { name: 'u', value: u, type: 'primitive' },
+            { name: 'v', value: v, type: 'primitive' },
+            { name: `inDegree[${v}]`, value: newDegree, type: 'primitive' }
+          ],
+          highlights: { nodes: [u, v], edges: [edgeKey] },
+          memory: buildGraphMemoryState(
+            nodes,
+            edges,
+            [
+              { name: 'u', value: u, type: 'primitive' },
+              { name: 'v', value: v, type: 'primitive' }
+            ],
+            { adjacencyList: adj, inDegree, queue, result }
+          )
+        });
+
+        if (!(await waitWithPause(speedRef.current * 0.7))) {
+          runner.stop();
+          return;
+        }
+
+        // 如果入度变为0，加入队列
+        if (newDegree === 0) {
+          queue.push(v);
+          nodeV.inQueue = true;
+          nodeV.isProcessing = false;
+
+          setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+          setGraphState(prev => ({ ...prev, queue: [...queue] }));
+
+          runner.recordStep({
+            lineNumber: 10,
+            description: `节点 ${v} 的入度变为0，加入队列`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'v', value: v, type: 'primitive' },
+              { name: 'queue', value: `[${queue.join(', ')}]`, type: 'array' }
+            ],
+            highlights: { nodes: [v], edges: [] },
+            memory: buildGraphMemoryState(
+              nodes,
+              edges,
+              [
+                { name: 'v', value: v, type: 'primitive' },
+                { name: 'queue.size', value: queue.length, type: 'primitive' }
+              ],
+              { adjacencyList: adj, inDegree, queue, result }
+            )
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.7))) {
+            runner.stop();
+            return;
+          }
+        }
+      }
+
+      // 取消当前节点的处理状态
+      nodeU.isProcessing = false;
+      setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    }
+
+    // 检查是否所有节点都被处理（检测环）
+    if (result.length !== n) {
+      runner.recordStep({
+        lineNumber: 14,
+        description: `错误：图中存在环，无法进行拓扑排序！已处理 ${result.length}/${n} 个节点`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'result.size', value: result.length, type: 'primitive' },
+          { name: 'n', value: n, type: 'primitive' }
+        ],
+        highlights: { nodes: [], edges: [] },
+        memory: buildGraphMemoryState(
+          nodes,
+          edges,
+          [
+            { name: 'result.size', value: result.length, type: 'primitive' },
+            { name: 'n', value: n, type: 'primitive' }
+          ],
+          { adjacencyList: adj, inDegree, queue: [], result }
+        )
+      });
+    } else {
+      setGraphState({ 
+        highlightedEdges: new Set(), 
+        highlightedNodes: new Set(),
+        queue: [],
+        currentNode: undefined,
+        phase: 'completed'
+      });
+
+      runner.recordStep({
+        lineNumber: 14,
+        description: `拓扑排序完成！结果序列: [${result.join(' → ')}]`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'result', value: `[${result.join(', ')}]`, type: 'array' }
+        ],
+        highlights: { nodes: result, edges: [] },
+        memory: buildGraphMemoryState(
+          nodes,
+          edges,
+          [{ name: 'result.size', value: result.length, type: 'primitive' }],
+          { adjacencyList: adj, inDegree, queue: [], result }
+        )
+      });
+    }
+
+    runner.setCompleted();
+  };
+
   // TimSort 执行
   const runTimSort = async () => {
     shouldStopRef.current = false;
@@ -2786,6 +3312,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       await runCountingSort();
     } else if (currentAlgo.id === 'radix') {
       await runRadixSort();
+    } else if (currentAlgo.id === 'topo') {
+      await runTopologicalSort();
     }
   };
 
@@ -2800,7 +3328,7 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
 
   // 处理数组大小变化
   const handleArraySizeChange = (newSize: number) => {
-    if (newSize < 5 || newSize > 50) return;
+    if (newSize < 2 || newSize > 100) return;
     setArraySize(newSize);
     // 重新生成数据
     if (!runner.isRunning) {
@@ -2822,14 +3350,22 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     }
     const step = runner.stepForward();
     if (step) {
-      restoreSortingStateFromStep(step);
+      if (currentAlgo.category === 'sorting') {
+        restoreSortingStateFromStep(step);
+      } else if (currentAlgo.category === 'graph') {
+        restoreGraphStateFromStep(step);
+      }
     }
   };
 
   const handleStepBackward = () => {
     const step = runner.stepBackward();
     if (step) {
-      restoreSortingStateFromStep(step);
+      if (currentAlgo.category === 'sorting') {
+        restoreSortingStateFromStep(step);
+      } else if (currentAlgo.category === 'graph') {
+        restoreGraphStateFromStep(step);
+      }
     }
   };
 
@@ -2862,9 +3398,19 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                 ))}
               </select>
             </div>
-            <div className="complexity-badges">
-              <span className="viz-badge">{currentAlgo.timeComplexity}</span>
-              <span className="viz-badge secondary">{currentAlgo.spaceComplexity}</span>
+            
+            {/* 中间：步骤描述 */}
+            <div className="header-center">
+              <div className="step-description" title={runner.state.message}>
+                {runner.state.message || '准备就绪，点击"开始"运行算法'}
+              </div>
+            </div>
+            
+            <div className="header-right">
+              <div className="complexity-badges">
+                <span className="viz-badge">{currentAlgo.timeComplexity}</span>
+                <span className="viz-badge secondary">{currentAlgo.spaceComplexity}</span>
+              </div>
             </div>
           </div>
           
@@ -2895,6 +3441,9 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
             {/* 右侧：内存可视化 */}
             <div className="fullscreen-memory">
               {currentAlgo.category === 'sorting' && (
+                <MemoryVisualizer memory={runner.currentStep?.memory} />
+              )}
+              {currentAlgo.category === 'graph' && (
                 <MemoryVisualizer memory={runner.currentStep?.memory} />
               )}
             </div>
@@ -2947,14 +3496,16 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               <span className="toolbar-label">速度</span>
               <input
                 type="range"
-                min="1"
-                max="100"
-                value={101 - Math.round(runner.speed / 10)}
-                onChange={(e) => runner.setSpeed(1010 - parseInt(e.target.value) * 10)}
+                min="10"
+                max="1000"
+                step="10"
+                value={runner.speed}
+                onChange={(e) => runner.setSpeed(parseInt(e.target.value))}
                 disabled={runner.isRunning}
-                className="speed-slider"
-                style={{ '--value': `${101 - Math.round(runner.speed / 10)}%` } as React.CSSProperties}
+                className="speed-slider large"
+                style={{ '--value': `${((runner.speed - 10) / 990) * 100}%` } as React.CSSProperties}
               />
+              <span className="speed-display">{runner.speed}ms/步</span>
             </div>
             
             {currentAlgo.category === 'sorting' && (
@@ -2965,14 +3516,71 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                   <input
                     type="range"
                     min="5"
-                    max="50"
+                    max="100"
                     value={arraySize}
                     onChange={(e) => handleArraySizeChange(parseInt(e.target.value))}
                     disabled={runner.isRunning}
                     className="speed-slider"
-                    style={{ '--value': `${((arraySize - 5) / (50 - 5)) * 100}%` } as React.CSSProperties}
+                    style={{ '--value': `${((arraySize - 5) / (100 - 5)) * 100}%` } as React.CSSProperties}
                   />
                   <span className="slider-value">{arraySize}</span>
+                </div>
+                
+                <div className="toolbar-divider" />
+                <div className="toolbar-group">
+                  <button 
+                    className="toolbar-btn" 
+                    onClick={() => setIsImportModalOpen(true)} 
+                    disabled={runner.isRunning}
+                    title="导入数组"
+                  >
+                    <Upload size={18} />
+                  </button>
+                </div>
+              </>
+            )}
+            
+            {currentAlgo.id === 'topo' && (
+              <>
+                <div className="toolbar-divider" />
+                <div className="toolbar-group">
+                  <span className="toolbar-label">图形模式</span>
+                  <select
+                    className="toolbar-select"
+                    value={dagPattern}
+                    onChange={(e) => {
+                      setDagPattern(e.target.value as any);
+                      if (!runner.isRunning) {
+                        const data = generateDAG({ 
+                          nodeCount: 10, 
+                          layerCount: 4, 
+                          edgeDensity: 0.4,
+                          pattern: e.target.value as any
+                        });
+                        setGraphData(data);
+                        runner.clearSteps();
+                      }
+                    }}
+                    disabled={runner.isRunning}
+                  >
+                    <option value="random">随机</option>
+                    <option value="linear">线性链</option>
+                    <option value="diamond">菱形</option>
+                    <option value="hourglass">沙漏形</option>
+                    <option value="butterfly">蝴蝶形</option>
+                  </select>
+                </div>
+                
+                <div className="toolbar-divider" />
+                <div className="toolbar-group">
+                  <button 
+                    className="toolbar-btn" 
+                    onClick={() => setIsGraphImportModalOpen(true)} 
+                    disabled={runner.isRunning}
+                    title="导入图数据"
+                  >
+                    <Upload size={18} />
+                  </button>
                 </div>
               </>
             )}
@@ -3164,6 +3772,9 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         {currentAlgo.category === 'sorting' && (
           <MemoryVisualizer memory={runner.currentStep?.memory} />
         )}
+        {currentAlgo.category === 'graph' && (
+          <MemoryVisualizer memory={runner.currentStep?.memory} />
+        )}
         
         <CodePanel 
           code={currentAlgo.code} 
@@ -3191,6 +3802,121 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         timeComplexity={currentAlgo.timeComplexity}
         spaceComplexity={currentAlgo.spaceComplexity}
       />
+      
+      {/* 数组导入弹窗 */}
+      {isImportModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsImportModalOpen(false)}>
+          <div className="modal-content import-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">
+                <Upload size={18} />
+                导入数组
+              </h3>
+              <button 
+                className="modal-close-btn" 
+                onClick={() => setIsImportModalOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="import-hint">
+                请输入数组内容，格式: <code>[1, 2, 3, 4, 5]</code> 或 <code>1,2,3,4,5</code>
+              </p>
+              <p className="import-hint">
+                数值范围: 1-999，至少2个元素，最多100个元素
+              </p>
+              <textarea
+                className="import-input"
+                value={importInput}
+                onChange={(e) => setImportInput(e.target.value)}
+                placeholder="例如: [10, 25, 15, 30, 5]"
+                rows={3}
+              />
+              {importError && (
+                <div className="import-error">
+                  <X size={14} />
+                  {importError}
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="control-btn secondary" 
+                onClick={() => setIsImportModalOpen(false)}
+              >
+                取消
+              </button>
+              <button 
+                className="control-btn primary" 
+                onClick={handleImportArray}
+              >
+                <Check size={16} />
+                确认导入
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 图导入弹窗 */}
+      {isGraphImportModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsGraphImportModalOpen(false)}>
+          <div className="modal-content import-modal graph-import-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">
+                <Upload size={18} />
+                导入图数据
+              </h3>
+              <button 
+                className="modal-close-btn" 
+                onClick={() => setIsGraphImportModalOpen(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <p className="import-hint">
+                支持格式1 - 边列表: <code>0-&gt;1, 0-&gt;2, 1-&gt;3, 2-&gt;3</code>
+              </p>
+              <p className="import-hint">
+                支持格式2 - JSON: <code>{'{"nodes": 4, "edges": [[0,1], [0,2], [1,3], [2,3]]}'}</code>
+              </p>
+              <p className="import-hint">
+                最多20个节点，将自动检测环并分层布局
+              </p>
+              <textarea
+                className="import-input"
+                value={graphImportInput}
+                onChange={(e) => setGraphImportInput(e.target.value)}
+                placeholder="例如: 0->1, 0->2, 1->3, 2->3"
+                rows={5}
+              />
+              {graphImportError && (
+                <div className="import-error">
+                  <X size={14} />
+                  {graphImportError}
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="control-btn secondary" 
+                onClick={() => setIsGraphImportModalOpen(false)}
+              >
+                取消
+              </button>
+              <button 
+                className="control-btn primary" 
+                onClick={handleGraphImport}
+              >
+                <Check size={16} />
+                确认导入
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

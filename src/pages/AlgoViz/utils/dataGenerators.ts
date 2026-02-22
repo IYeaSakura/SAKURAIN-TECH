@@ -73,13 +73,15 @@ export interface DAGGeneratorOptions {
   nodeCount?: number;
   layerCount?: number;
   edgeDensity?: number; // 0-1，边的密度
+  pattern?: 'random' | 'linear' | 'diamond' | 'hourglass' | 'butterfly';
 }
 
 export function generateDAG(options: DAGGeneratorOptions = {}): GraphData {
   const {
     nodeCount = 10,
     layerCount = 4,
-    edgeDensity = 0.4
+    edgeDensity = 0.4,
+    pattern = 'random'
   } = options;
 
   const nodes: GraphNode[] = [];
@@ -119,30 +121,27 @@ export function generateDAG(options: DAGGeneratorOptions = {}): GraphData {
   const adj = new Map<number, Set<number>>();
   nodes.forEach(n => adj.set(n.id, new Set()));
 
-  for (let i = 0; i < nodeCount; i++) {
-    const currentLayer = nodes[i].layer!;
-    const nextLayerStart = (currentLayer + 1) * nodesPerLayer;
-
-    // 确保不是最后一层的节点有出边
-    if (nextLayerStart < nodeCount) {
-      const targetCount = Math.min(nodesPerLayer, nodeCount - nextLayerStart);
-      const target = nextLayerStart + Math.floor(Math.random() * targetCount);
-      
-      if (!adj.get(i)!.has(target)) {
-        adj.get(i)!.add(target);
-        edges.push({ from: i, to: target });
-      }
-    }
-
-    // 根据密度添加额外边
-    for (let j = i + 1; j < nodeCount; j++) {
-      if (nodes[j].layer! > currentLayer && Math.random() < edgeDensity) {
-        if (!adj.get(i)!.has(j)) {
-          adj.get(i)!.add(j);
-          edges.push({ from: i, to: j });
-        }
-      }
-    }
+  // 根据模式创建边
+  switch (pattern) {
+    case 'linear':
+      // 线性链：每个节点只连接到下一层的一个节点
+      createLinearEdges(nodes, edges, adj, nodesPerLayer, layerCount);
+      break;
+    case 'diamond':
+      // 菱形：从窄到宽再到窄
+      createDiamondEdges(nodes, edges, adj, nodesPerLayer, layerCount, edgeDensity);
+      break;
+    case 'hourglass':
+      // 沙漏形：中间窄两端宽
+      createHourglassEdges(nodes, edges, adj, nodesPerLayer, layerCount, edgeDensity);
+      break;
+    case 'butterfly':
+      // 蝴蝶形：展示多个并行路径
+      createButterflyEdges(nodes, edges, adj, nodesPerLayer, layerCount, edgeDensity);
+      break;
+    default:
+      // 随机模式（使用网格布局确保整齐）
+      createRandomEdges(nodes, edges, adj, nodesPerLayer, layerCount, edgeDensity, nodeCount);
   }
 
   // 计算入度
@@ -153,6 +152,265 @@ export function generateDAG(options: DAGGeneratorOptions = {}): GraphData {
 
   return { nodes, edges, directed: true, weighted: false };
 }
+
+// 线性边
+function createLinearEdges(nodes: GraphNode[], edges: GraphEdge[], adj: Map<number, Set<number>>, nodesPerLayer: number, layerCount: number) {
+  for (let layer = 0; layer < layerCount - 1; layer++) {
+    const start = layer * nodesPerLayer;
+    const end = Math.min(start + nodesPerLayer, nodes.length);
+    const nextStart = (layer + 1) * nodesPerLayer;
+    const nextEnd = Math.min(nextStart + nodesPerLayer, nodes.length);
+    
+    // 每个节点连接到下一层对应位置的节点
+    for (let i = start; i < end && i - start < nextEnd - nextStart; i++) {
+      const target = nextStart + (i - start);
+      if (target < nodes.length && !adj.get(i)!.has(target)) {
+        adj.get(i)!.add(target);
+        edges.push({ from: i, to: target });
+      }
+    }
+  }
+}
+
+// 菱形边
+function createDiamondEdges(nodes: GraphNode[], edges: GraphEdge[], adj: Map<number, Set<number>>, nodesPerLayer: number, layerCount: number, edgeDensity: number) {
+  const midLayer = Math.floor(layerCount / 2);
+  
+  for (let layer = 0; layer < layerCount - 1; layer++) {
+    const start = layer * nodesPerLayer;
+    const end = Math.min(start + nodesPerLayer, nodes.length);
+    const nextStart = (layer + 1) * nodesPerLayer;
+    const nextEnd = Math.min(nextStart + nodesPerLayer, nodes.length);
+    
+    // 前一半层：向外扩散
+    // 后一半层：向内收缩
+    for (let i = start; i < end; i++) {
+      const offset = i - start;
+      // 主要连接到对应位置的节点
+      const primaryTarget = nextStart + Math.min(offset, nextEnd - nextStart - 1);
+      if (primaryTarget < nodes.length && !adj.get(i)!.has(primaryTarget)) {
+        adj.get(i)!.add(primaryTarget);
+        edges.push({ from: i, to: primaryTarget });
+      }
+      
+      // 可能连接到相邻节点
+      if (Math.random() < edgeDensity) {
+        const neighborTarget = primaryTarget + (layer < midLayer ? 1 : -1);
+        if (neighborTarget >= nextStart && neighborTarget < nextEnd && !adj.get(i)!.has(neighborTarget)) {
+          adj.get(i)!.add(neighborTarget);
+          edges.push({ from: i, to: neighborTarget });
+        }
+      }
+    }
+  }
+}
+
+// 沙漏形边
+function createHourglassEdges(nodes: GraphNode[], edges: GraphEdge[], adj: Map<number, Set<number>>, nodesPerLayer: number, layerCount: number, _edgeDensity: number) {
+  const midLayer = Math.floor(layerCount / 2);
+  
+  for (let layer = 0; layer < layerCount - 1; layer++) {
+    const start = layer * nodesPerLayer;
+    const end = Math.min(start + nodesPerLayer, nodes.length);
+    const nextStart = (layer + 1) * nodesPerLayer;
+    // const nextEnd = Math.min(nextStart + nodesPerLayer, nodes.length); // 未使用
+    
+    for (let i = start; i < end; i++) {
+      const offset = i - start;
+      
+      // 中间层节点多，边缘层节点少
+      const layerSize = layer < midLayer ? 
+        Math.max(1, nodesPerLayer - layer) : 
+        Math.max(1, nodesPerLayer - (layerCount - 1 - layer));
+      
+      if (offset < layerSize) {
+        // 计算目标位置
+        const ratio = offset / Math.max(1, layerSize - 1);
+        const nextLayerSize = layer + 1 < midLayer ?
+          Math.max(1, nodesPerLayer - (layer + 1)) :
+          Math.max(1, nodesPerLayer - (layerCount - 2 - layer));
+        const targetOffset = Math.floor(ratio * Math.max(1, nextLayerSize - 1));
+        const target = nextStart + targetOffset;
+        
+        if (target < nodes.length && !adj.get(i)!.has(target)) {
+          adj.get(i)!.add(target);
+          edges.push({ from: i, to: target });
+        }
+      }
+    }
+  }
+}
+
+// 蝴蝶形边
+function createButterflyEdges(nodes: GraphNode[], edges: GraphEdge[], adj: Map<number, Set<number>>, nodesPerLayer: number, layerCount: number, edgeDensity: number) {
+  const midLayer = Math.floor(layerCount / 2);
+  
+  for (let layer = 0; layer < layerCount - 1; layer++) {
+    const start = layer * nodesPerLayer;
+    const end = Math.min(start + nodesPerLayer, nodes.length);
+    const nextStart = (layer + 1) * nodesPerLayer;
+    const nextEnd = Math.min(nextStart + nodesPerLayer, nodes.length);
+    
+    for (let i = start; i < end; i++) {
+      const offset = i - start;
+      const layerSize = end - start;
+      const nextLayerSize = nextEnd - nextStart;
+      
+      // 连接到下一层的对应位置
+      const targetOffset = Math.floor((offset / Math.max(1, layerSize - 1)) * Math.max(1, nextLayerSize - 1));
+      const target = nextStart + targetOffset;
+      
+      if (target < nodes.length && !adj.get(i)!.has(target)) {
+        adj.get(i)!.add(target);
+        edges.push({ from: i, to: target });
+      }
+      
+      // 在蝴蝶中间交叉连接
+      if (layer === midLayer - 1 || layer === midLayer) {
+        const crossTarget = nextStart + nextLayerSize - 1 - targetOffset;
+        if (crossTarget !== target && crossTarget < nodes.length && !adj.get(i)!.has(crossTarget)) {
+          adj.get(i)!.add(crossTarget);
+          edges.push({ from: i, to: crossTarget });
+        }
+      }
+      
+      // 随机额外边
+      if (Math.random() < edgeDensity * 0.5) {
+        const randomTarget = nextStart + Math.floor(Math.random() * nextLayerSize);
+        if (randomTarget < nodes.length && !adj.get(i)!.has(randomTarget)) {
+          adj.get(i)!.add(randomTarget);
+          edges.push({ from: i, to: randomTarget });
+        }
+      }
+    }
+  }
+}
+
+// 网格位置类型
+interface GridPosition {
+  col: number;
+  row: number;
+  x: number;
+  y: number;
+}
+
+// 创建网格布局 - 确保节点整齐不重叠
+function createGridLayout(nodeCount: number, width: number, height: number, padding: number): GridPosition[] {
+  // 根据节点数确定网格大小（优先横向延伸，从左到右流向）
+  let cols: number, rows: number;
+  if (nodeCount <= 6) {
+    cols = 3; rows = 2;
+  } else if (nodeCount <= 8) {
+    cols = 4; rows = 2;
+  } else if (nodeCount <= 9) {
+    cols = 3; rows = 3;
+  } else if (nodeCount <= 12) {
+    cols = 4; rows = 3;
+  } else if (nodeCount <= 15) {
+    cols = 5; rows = 3;
+  } else if (nodeCount <= 16) {
+    cols = 4; rows = 4;
+  } else {
+    cols = 5; rows = 4;
+  }
+  
+  // 生成所有网格位置
+  const available: GridPosition[] = [];
+  const cellWidth = (width - 2 * padding) / (cols - 1 || 1);
+  const cellHeight = (height - 2 * padding) / (rows - 1 || 1);
+  
+  for (let c = 0; c < cols; c++) {
+    for (let r = 0; r < rows; r++) {
+      available.push({
+        col: c,
+        row: r,
+        x: cols === 1 ? width / 2 : padding + c * cellWidth,
+        y: rows === 1 ? height / 2 : padding + r * cellHeight
+      });
+    }
+  }
+  
+  // 随机打乱并选取前nodeCount个位置
+  for (let i = available.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [available[i], available[j]] = [available[j], available[i]];
+  }
+  
+  return available.slice(0, nodeCount);
+}
+
+// 完全随机边（使用网格布局确保整齐）
+function createRandomEdges(nodes: GraphNode[], edges: GraphEdge[], adj: Map<number, Set<number>>, _nodesPerLayer: number, _layerCount: number, edgeDensity: number, nodeCount: number) {
+  const width = 800;
+  const height = 500;
+  const padding = 80;
+  
+  // 使用网格布局 - 确保节点整齐不重叠
+  const gridPositions = createGridLayout(nodeCount, width, height, padding);
+  
+  // 按列排序（从左到右）确保DAG性质
+  gridPositions.sort((a, b) => {
+    if (a.col !== b.col) return a.col - b.col;
+    return a.row - b.row;
+  });
+  
+  // 分配位置给节点（带小幅随机扰动使布局更自然）
+  nodes.forEach((node, i) => {
+    const pos = gridPositions[i];
+    // 小幅随机扰动（最大±20px）让布局更自然
+    const jitterX = (Math.random() - 0.5) * 40;
+    const jitterY = (Math.random() - 0.5) * 40;
+    node.x = pos.x + jitterX;
+    node.y = pos.y + jitterY;
+    node.layer = pos.col; // 使用列作为层，确保从左到右流向
+  });
+
+  // 按x坐标排序节点（确保DAG）
+  const sortedNodes = [...nodes].sort((a, b) => a.x - b.x);
+
+  // 随机生成边（只从左边的节点指向右边的节点，确保无环）
+  const minEdges = Math.max(nodeCount - 1, Math.floor(nodeCount * 0.8));
+  const maxEdges = Math.floor(nodeCount * 1.8);
+  const targetEdgeCount = Math.floor(minEdges + (maxEdges - minEdges) * edgeDensity);
+  
+  // 首先确保每个节点（除了最后一个）至少有一条出边 - 优先连接相邻或近邻节点
+  for (let i = 0; i < sortedNodes.length - 1; i++) {
+    const fromNode = sortedNodes[i];
+    // 优先选择相邻的节点（跳跃1-3个节点）
+    const maxJump = Math.min(3, sortedNodes.length - i - 1);
+    const jump = 1 + Math.floor(Math.random() * maxJump);
+    const target = sortedNodes[i + jump];
+    
+    if (!adj.get(fromNode.id)!.has(target.id)) {
+      adj.get(fromNode.id)!.add(target.id);
+      edges.push({ from: fromNode.id, to: target.id });
+    }
+  }
+  
+  // 添加额外的随机边（优先连接距离较近的节点，避免过长的跨越边）
+  let attempts = 0;
+  while (edges.length < targetEdgeCount && attempts < 1000) {
+    const fromIdx = Math.floor(Math.random() * (sortedNodes.length - 1));
+    // 限制跳跃距离，优先连接相邻或近邻节点
+    const maxJump = Math.min(3, sortedNodes.length - fromIdx - 1);
+    if (maxJump < 1) {
+      attempts++;
+      continue;
+    }
+    const jump = 1 + Math.floor(Math.random() * maxJump);
+    const toIdx = fromIdx + jump;
+    
+    const fromNode = sortedNodes[fromIdx];
+    const toNode = sortedNodes[toIdx];
+    
+    if (!adj.get(fromNode.id)!.has(toNode.id)) {
+      adj.get(fromNode.id)!.add(toNode.id);
+      edges.push({ from: fromNode.id, to: toNode.id });
+    }
+    attempts++;
+  }
+}
+
 
 export interface SCCGeneratorOptions {
   sccCount?: number;
@@ -354,105 +612,29 @@ export function generateRandomTree(options: TreeGeneratorOptions = {}) {
   
   nodes.push({ id: 0, value: Math.floor(Math.random() * 100), depth: 0 });
   
-  while (queue.length > 0 && nodeId < 20) {
-    const current = queue.shift()!;
+  while (queue.length > 0 && nodes.length < 20) {
+    const { id: parentId, depth } = queue.shift()!;
     
-    if (current.depth < maxDepth) {
-      const childCount = Math.floor(Math.random() * maxChildren) + (type === 'binary' ? 0 : 1);
+    if (depth >= maxDepth) continue;
+    
+    const childrenCount = type === 'binary' 
+      ? Math.floor(Math.random() * 3) // 0-2 children for binary
+      : 1 + Math.floor(Math.random() * maxChildren);
+    
+    for (let i = 0; i < childrenCount; i++) {
+      if (nodes.length >= 20) break;
       
-      for (let i = 0; i < childCount && nodeId < 20; i++) {
-        nodeId++;
-        nodes.push({ id: nodeId, value: Math.floor(Math.random() * 100), depth: current.depth + 1 });
-        edges.push({ from: current.id, to: nodeId });
-        queue.push({ id: nodeId, depth: current.depth + 1 });
-      }
+      nodeId++;
+      nodes.push({
+        id: nodeId,
+        value: Math.floor(Math.random() * 100),
+        depth: depth + 1
+      });
+      
+      edges.push({ from: parentId, to: nodeId });
+      queue.push({ id: nodeId, depth: depth + 1 });
     }
   }
   
   return { nodes, edges };
-}
-
-// ============ DP数据生成器 ============
-
-export interface KnapsackGeneratorOptions {
-  itemCount?: number;
-  minWeight?: number;
-  maxWeight?: number;
-  minValue?: number;
-  maxValue?: number;
-  capacityRatio?: number; // 容量与总重量的比例
-}
-
-export function generateKnapsackData(options: KnapsackGeneratorOptions = {}) {
-  const {
-    itemCount = 6,
-    minWeight = 1,
-    maxWeight = 10,
-    minValue = 10,
-    maxValue = 100,
-    capacityRatio = 0.5
-  } = options;
-
-  const weights: number[] = [];
-  const values: number[] = [];
-  let totalWeight = 0;
-
-  for (let i = 0; i < itemCount; i++) {
-    const w = minWeight + Math.floor(Math.random() * (maxWeight - minWeight + 1));
-    const v = minValue + Math.floor(Math.random() * (maxValue - minValue + 1));
-    weights.push(w);
-    values.push(v);
-    totalWeight += w;
-  }
-
-  const capacity = Math.floor(totalWeight * capacityRatio);
-
-  return { weights, values, capacity };
-}
-
-export interface LCSGeneratorOptions {
-  length1?: number;
-  length2?: number;
-  alphabet?: string;
-  similarity?: number; // 0-1，相似度
-}
-
-export function generateLCSData(options: LCSGeneratorOptions = {}) {
-  const {
-    length1 = 8,
-    length2 = 8,
-    alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-    similarity = 0.4
-  } = options;
-
-  // 生成公共子序列
-  const lcsLength = Math.floor(Math.min(length1, length2) * similarity);
-  let commonSubseq = '';
-  for (let i = 0; i < lcsLength; i++) {
-    commonSubseq += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-
-  // 构建str1
-  let str1 = '';
-  let commonIdx = 0;
-  for (let i = 0; i < length1; i++) {
-    if (commonIdx < lcsLength && Math.random() < 0.5) {
-      str1 += commonSubseq[commonIdx++];
-    } else {
-      str1 += alphabet[Math.floor(Math.random() * alphabet.length)];
-    }
-  }
-
-  // 构建str2
-  let str2 = '';
-  commonIdx = 0;
-  for (let i = 0; i < length2; i++) {
-    if (commonIdx < lcsLength && Math.random() < 0.5) {
-      str2 += commonSubseq[commonIdx++];
-    } else {
-      str2 += alphabet[Math.floor(Math.random() * alphabet.length)];
-    }
-  }
-
-  return { str1, str2 };
 }

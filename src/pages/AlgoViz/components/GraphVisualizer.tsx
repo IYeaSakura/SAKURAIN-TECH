@@ -44,7 +44,7 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
     stack = []
   } = state;
 
-  // 计算边的路径
+  // 计算边的路径 - 使用贝塞尔曲线避免穿过节点
   const edgePaths = useMemo(() => {
     return edges.map(edge => {
       const from = nodes.find(n => n.id === edge.from);
@@ -61,6 +61,36 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
       const startY = from.y + (dy / len) * offset;
       const endX = to.x - (dx / len) * offset;
       const endY = to.y - (dy / len) * offset;
+      
+      // 计算控制点创建贝塞尔曲线，避免直线穿过其他节点
+      // 根据边的方向和长度计算控制点
+      const midX = (startX + endX) / 2;
+      const midY = (startY + endY) / 2;
+      
+      // 检查是否有节点在这条边附近
+      const nodesOnPath = nodes.filter(n => {
+        if (n.id === from.id || n.id === to.id) return false;
+        // 计算点到线段的距离
+        const dist = Math.abs((endY - startY) * n.x - (endX - startX) * n.y + endX * startY - endY * startX) / len;
+        // 检查点是否在线段的投影范围内
+        const dot = (n.x - startX) * (endX - startX) + (n.y - startY) * (endY - startY);
+        return dist < 40 && dot > 0 && dot < len * len;
+      });
+      
+      let path: string;
+      if (nodesOnPath.length > 0 && len > 100) {
+        // 如果有节点在路径上，使用弧形曲线绕开
+        const curveOffset = 60; // 弧形偏移量
+        // 根据边的方向决定偏移方向
+        const perpX = -(dy / len) * curveOffset;
+        const perpY = (dx / len) * curveOffset;
+        const cpX = midX + perpX;
+        const cpY = midY + perpY;
+        path = `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`;
+      } else {
+        // 否则使用直线
+        path = `M ${startX} ${startY} L ${endX} ${endY}`;
+      }
 
       return {
         ...edge,
@@ -68,26 +98,27 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
         startY,
         endX,
         endY,
+        path,
         key: `${edge.from}-${edge.to}`
       };
     }).filter(Boolean);
   }, [nodes, edges]);
 
   const getNodeColor = (node: GraphNode): { fill: string; stroke: string } => {
-    // SCC组件颜色
+    // SCC组件颜色（优先）
     if (node.component !== undefined && node.component >= 0) {
       const color = sccColors[node.component % sccColors.length];
       return { fill: color, stroke: color };
     }
     
-    // 状态颜色
+    // 拓扑排序状态颜色（优先级：processing > visited > inQueue > default）
     if (node.isProcessing) {
       return { fill: '#f59e0b', stroke: '#f59e0b' };
     }
     if (node.visited) {
       return { fill: '#10b981', stroke: '#10b981' };
     }
-    if (node.isInQueue || node.inStack) {
+    if (node.isInQueue || node.inQueue) {
       return { fill: '#3b82f6', stroke: '#3b82f6' };
     }
     
@@ -161,15 +192,13 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
           
           return (
             <g key={edge.key}>
-              <motion.line
-                x1={edge.startX}
-                y1={edge.startY}
-                x2={edge.endX}
-                y2={edge.endY}
+              <motion.path
+                d={edge.path}
                 stroke={isHighlighted ? '#f59e0b' : isVisited ? '#10b981' : 'var(--text-secondary)'}
                 strokeWidth={isHighlighted ? 4 : 2}
                 strokeOpacity={isHighlighted ? 1 : isVisited ? 0.6 : 0.3}
                 markerEnd={isHighlighted ? 'url(#arrow-active)' : isVisited ? 'url(#arrow-visited)' : 'url(#arrow-default)'}
+                fill="none"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
                 transition={{ duration: 0.3, delay: idx * 0.02 }}
@@ -232,37 +261,28 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
               {/* 节点ID */}
               <text
                 x={node.x}
-                y={node.y + 2}
+                y={node.y - 2}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill={node.component !== undefined && node.component >= 0 || node.isProcessing || node.visited || node.inQueue || node.inStack ? 'white' : 'var(--text-primary)'}
                 fontWeight="bold"
-                fontSize={16}
+                fontSize={14}
               >
                 {node.id}
               </text>
               
-              {/* 入度显示（拓扑排序用） */}
+              {/* 入度显示（仅在tempInDegree有值时显示） */}
               {node.tempInDegree !== undefined && (
-                <g>
-                  <circle
-                    cx={node.x + 20}
-                    cy={node.y - 20}
-                    r={12}
-                    fill={node.tempInDegree === 0 ? '#10b981' : '#ef4444'}
-                  />
-                  <text
-                    x={node.x + 20}
-                    y={node.y - 19}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fill="white"
-                    fontSize={11}
-                    fontWeight="bold"
-                  >
-                    {node.tempInDegree}
-                  </text>
-                </g>
+                <text
+                  x={node.x}
+                  y={node.y + 12}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill={node.component !== undefined && node.component >= 0 || node.isProcessing || node.visited || node.inQueue || node.inStack ? 'rgba(255,255,255,0.9)' : 'var(--text-secondary)'}
+                  fontSize={10}
+                >
+                  in:{node.tempInDegree}
+                </text>
               )}
               
               {/* 队列/栈标记 */}
@@ -282,24 +302,6 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
           );
         })}
       </svg>
-      
-      {/* 统计信息 */}
-      <div className="graph-stats">
-        <div className="stat-item">
-          <span className="stat-label">节点数</span>
-          <span className="stat-value">{nodes.length}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">边数</span>
-          <span className="stat-value">{edges.length}</span>
-        </div>
-        {state.phase && (
-          <div className="stat-item">
-            <span className="stat-label">阶段</span>
-            <span className="stat-value phase">{state.phase}</span>
-          </div>
-        )}
-      </div>
     </div>
   );
 };

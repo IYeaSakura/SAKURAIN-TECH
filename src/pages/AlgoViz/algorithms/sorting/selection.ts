@@ -15,23 +15,23 @@ export const selectionSortDefinition: AlgorithmDefinition = {
   description: '每次从未排序部分选择最小(或最大)元素，放到已排序部分的末尾。实现简单但效率较低。',
   code: `function selectionSort(arr) {
   const n = arr.length;
-  
+
   for (let i = 0; i < n - 1; i++) {
     let minIdx = i;
-    
+
     // 在未排序部分找最小值
     for (let j = i + 1; j < n; j++) {
       if (arr[j] < arr[minIdx]) {
         minIdx = j;
       }
     }
-    
+
     // 将最小值交换到已排序部分的末尾
     if (minIdx !== i) {
       [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
     }
   }
-  
+
   return arr;
 }`,
   supportedViews: ['array'],
