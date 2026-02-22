@@ -149,6 +149,9 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
   
   // BFS/DFS 迷宫模式状态
   const [useMazeMode, setUseMazeMode] = useState<boolean>(false);
+  // 迷宫尺寸状态（可调整，默认20x30）
+  const [mazeRows, setMazeRows] = useState<number>(20);
+  const [mazeCols, setMazeCols] = useState<number>(30);
   const [mazeData, setMazeData] = useState<GridMapData | null>(null);
   const [mazeVisitedCells, setMazeVisitedCells] = useState<Set<string>>(new Set());
   const [mazeCurrentCell, setMazeCurrentCell] = useState<{ x: number; y: number } | null>(null);
@@ -345,8 +348,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       if (useMazeMode) {
         // 迷宫模式：生成大型复杂迷宫-洞穴混合地图
         const maze = generateGridMap({ 
-          rows: 30, 
-          cols: 45, 
+          rows: mazeRows, 
+          cols: mazeCols, 
           pattern: 'maze',
           ensurePath: true,
           randomStartGoal: true
@@ -406,8 +409,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       if (useMazeMode) {
         // 迷宫模式：生成网格迷宫（使用正权边）
         const maze = generateGridMap({ 
-          rows: 30, 
-          cols: 45, 
+          rows: mazeRows, 
+          cols: mazeCols, 
           pattern: 'cave',
           ensurePath: true 
         });
@@ -441,8 +444,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       if (useMazeMode) {
         // 迷宫模式：生成网格迷宫
         const maze = generateGridMap({ 
-          rows: 30, 
-          cols: 45, 
+          rows: mazeRows, 
+          cols: mazeCols, 
           pattern: 'cave',
           ensurePath: true 
         });
@@ -463,8 +466,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       if (useMazeMode) {
         // 迷宫模式：生成网格迷宫
         const maze = generateGridMap({ 
-          rows: 30, 
-          cols: 45, 
+          rows: mazeRows, 
+          cols: mazeCols, 
           pattern: 'cave',
           ensurePath: true 
         });
@@ -499,7 +502,7 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     }
     
     setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set() });
-  }, [currentAlgo.id, currentAlgo.category, arraySize, runner, _gridSize, _obstacleRate, _gridPattern, useMazeMode]);
+  }, [currentAlgo.id, currentAlgo.category, arraySize, runner, _gridSize, _obstacleRate, _gridPattern, useMazeMode, mazeRows, mazeCols]);
 
   // 初始化数据 - 只执行一次
   useEffect(() => {
@@ -7805,6 +7808,54 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                     {useMazeMode ? '迷宫模式' : '图模式'}
                   </span>
                 </div>
+                
+                {/* 迷宫尺寸调整（仅在迷宫模式显示） */}
+                {useMazeMode && (
+                  <>
+                    <div className="toolbar-group" style={{ marginLeft: '12px' }}>
+                      <span className="toolbar-label">行</span>
+                      <input
+                        type="range"
+                        min="10"
+                        max="35"
+                        step="1"
+                        value={mazeRows}
+                        onChange={(e) => {
+                          const newRows = parseInt(e.target.value);
+                          setMazeRows(newRows);
+                          if (!runner.isRunning) {
+                            setTimeout(() => generateData(), 0);
+                          }
+                        }}
+                        disabled={runner.isRunning}
+                        className="speed-slider"
+                        style={{ width: '60px', '--value': `${((mazeRows - 10) / 25) * 100}%` } as React.CSSProperties}
+                      />
+                      <span className="toolbar-label" style={{ minWidth: '24px', textAlign: 'center' }}>{mazeRows}</span>
+                    </div>
+                    <div className="toolbar-group" style={{ marginLeft: '8px' }}>
+                      <span className="toolbar-label">列</span>
+                      <input
+                        type="range"
+                        min="15"
+                        max="50"
+                        step="1"
+                        value={mazeCols}
+                        onChange={(e) => {
+                          const newCols = parseInt(e.target.value);
+                          setMazeCols(newCols);
+                          if (!runner.isRunning) {
+                            setTimeout(() => generateData(), 0);
+                          }
+                        }}
+                        disabled={runner.isRunning}
+                        className="speed-slider"
+                        style={{ width: '80px', '--value': `${((mazeCols - 15) / 35) * 100}%` } as React.CSSProperties}
+                      />
+                      <span className="toolbar-label" style={{ minWidth: '24px', textAlign: 'center' }}>{mazeCols}</span>
+                    </div>
+                  </>
+                )}
               </>
             )}
             
@@ -8068,6 +8119,15 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                   {useMazeMode ? '迷宫' : '图'}
                 </span>
               </div>
+              
+              {/* 迷宫尺寸调整（仅在迷宫模式显示） */}
+              {useMazeMode && (
+                <>
+                  <div className="toolbar-group" style={{ marginLeft: '8px' }}>
+                    <span className="toolbar-label" style={{ fontSize: '11px' }}>{mazeRows}×{mazeCols}</span>
+                  </div>
+                </>
+              )}
             </>
           )}
           
@@ -8079,11 +8139,11 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               type="range"
               min="1"
               max="100"
-              value={101 - Math.round(runner.speed / 10)}
+              value={Math.round((1010 - runner.speed) / 10)}
               onChange={(e) => runner.setSpeed(1010 - parseInt(e.target.value) * 10)}
               disabled={runner.isRunning}
               className="speed-slider"
-              style={{ '--value': `${101 - Math.round(runner.speed / 10)}%` } as React.CSSProperties}
+              style={{ '--value': `${Math.round((1010 - runner.speed) / 10)}%` } as React.CSSProperties}
             />
           </div>
           
