@@ -41,6 +41,7 @@ import {
   ComplexityChartModal,
   MemoryVisualizer
 } from './components';
+import { GridMazeVisualizer } from './components/GridMazeVisualizer';
 
 // 导入类型
 import type { 
@@ -145,12 +146,55 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
   const [_gridSize, _setGridSize] = useState<number>(15);
   const [_obstacleRate, _setObstacleRate] = useState<number>(0.3);
   const [_heuristicType, _setHeuristicType] = useState<'manhattan' | 'euclidean'>('manhattan');
+  
+  // BFS/DFS 迷宫模式状态
+  const [useMazeMode, setUseMazeMode] = useState<boolean>(false);
+  const [mazeData, setMazeData] = useState<GridMapData | null>(null);
+  const [mazeVisitedCells, setMazeVisitedCells] = useState<Set<string>>(new Set());
+  const [mazeCurrentCell, setMazeCurrentCell] = useState<{ x: number; y: number } | null>(null);
+  const [mazeBacktrackingCell, setMazeBacktrackingCell] = useState<{ x: number; y: number } | null>(null);
+  const [mazePathCells, setMazePathCells] = useState<Set<string>>(new Set());
+  const [mazeReviewStep, setMazeReviewStep] = useState<number>(0);
 
   // Refs用于控制执行流程
   const isPausedRef = useRef<boolean>(false);
   const shouldStopRef = useRef<boolean>(false);
   const speedRef = useRef<number>(runner.speed);
   const initialArrayRef = useRef<number[]>([]); // 保存初始数组
+  
+  // 迷宫状态Refs（用于在异步函数中获取最新状态）
+  const mazeVisitedCellsRef = useRef<Set<string>>(new Set());
+  const mazeCurrentCellRef = useRef<{ x: number; y: number } | null>(null);
+  const mazeBacktrackingCellRef = useRef<{ x: number; y: number } | null>(null);
+  const mazePathCellsRef = useRef<Set<string>>(new Set());
+  
+  // 同步迷宫状态到refs
+  useEffect(() => {
+    mazeVisitedCellsRef.current = mazeVisitedCells;
+  }, [mazeVisitedCells]);
+  
+  useEffect(() => {
+    mazeCurrentCellRef.current = mazeCurrentCell;
+  }, [mazeCurrentCell]);
+  
+  useEffect(() => {
+    mazeBacktrackingCellRef.current = mazeBacktrackingCell;
+  }, [mazeBacktrackingCell]);
+  
+  useEffect(() => {
+    mazePathCellsRef.current = mazePathCells;
+  }, [mazePathCells]);
+  
+  // 构建当前迷宫状态的辅助函数
+  const buildMazeState = useCallback(() => {
+    if (!useMazeMode || !mazeData) return undefined;
+    return {
+      visitedCells: Array.from(mazeVisitedCellsRef.current),
+      currentCell: mazeCurrentCellRef.current,
+      backtrackingCell: mazeBacktrackingCellRef.current,
+      pathCells: Array.from(mazePathCellsRef.current)
+    };
+  }, [useMazeMode, mazeData]);
 
   // 同步速度到 ref（这样可以在异步函数中获取最新值）
   useEffect(() => {
@@ -229,6 +273,24 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     }
   }, []);
 
+  // 从步骤数据恢复迷宫状态（复盘模式）
+  const restoreMazeStateFromStep = useCallback((step: AlgorithmStep | null) => {
+    if (!step || !step.mazeState) {
+      // 如果没有迷宫状态，重置迷宫
+      setMazeVisitedCells(new Set());
+      setMazeCurrentCell(null);
+      setMazeBacktrackingCell(null);
+      setMazePathCells(new Set());
+      return;
+    }
+    
+    // 恢复迷宫状态
+    setMazeVisitedCells(new Set(step.mazeState.visitedCells));
+    setMazeCurrentCell(step.mazeState.currentCell ?? null);
+    setMazeBacktrackingCell(step.mazeState.backtrackingCell ?? null);
+    setMazePathCells(new Set(step.mazeState.pathCells));
+  }, []);
+
   // 步骤变化时恢复状态（复盘模式）
   useEffect(() => {
     if (runner.isReviewMode && runner.currentStep) {
@@ -236,9 +298,13 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         restoreSortingStateFromStep(runner.currentStep);
       } else if (currentAlgo.category === 'graph') {
         restoreGraphStateFromStep(runner.currentStep);
+        // 如果是迷宫模式，同时恢复迷宫状态
+        if (useMazeMode && mazeData) {
+          restoreMazeStateFromStep(runner.currentStep);
+        }
       }
     }
-  }, [runner.currentStep, runner.isReviewMode, restoreSortingStateFromStep, restoreGraphStateFromStep, currentAlgo.category]);
+  }, [runner.currentStep, runner.isReviewMode, restoreSortingStateFromStep, restoreGraphStateFromStep, restoreMazeStateFromStep, currentAlgo.category, useMazeMode, mazeData]);
 
   // 生成数据
   const generateData = useCallback(() => {
@@ -276,17 +342,42 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       });
       setGraphData(data);
     } else if (currentAlgo.id === 'bfs' || currentAlgo.id === 'dfs') {
-      // 为BFS/DFS生成一个连通的无向图
-      const data = generateRandomGraph({ 
-        nodeCount: 8, 
-        edgeCount: 12, 
-        directed: false,
-        connected: true 
-      });
-      setGraphData(data);
-      // 随机选择起始节点
-      const randomStart = Math.floor(Math.random() * data.nodes.length);
-      setStartNode(randomStart);
+      if (useMazeMode) {
+        // 迷宫模式：生成大型复杂迷宫-洞穴混合地图
+        const maze = generateGridMap({ 
+          rows: 30, 
+          cols: 45, 
+          pattern: 'maze',
+          ensurePath: true,
+          randomStartGoal: true
+        });
+        setMazeData(maze);
+        setGraphData(maze.graphData);
+        setMazeVisitedCells(new Set());
+        setMazeCurrentCell(null);
+        setMazeBacktrackingCell(null);
+        setMazePathCells(new Set());
+        setMazeReviewStep(0);
+        // 找到对应迷宫起点的节点ID
+        const startNodeId = maze.graphData.nodes.findIndex(
+          n => Math.round((n.x - 50) / 40) === maze.start.x && 
+               Math.round((n.y - 50) / 40) === maze.start.y
+        );
+        setStartNode(startNodeId >= 0 ? startNodeId : 0);
+      } else {
+        // 普通图模式：使用分层布局生成美观的图
+        const data = generateRandomGraph({ 
+          nodeCount: 12, 
+          edgeCount: 15, 
+          directed: false,
+          connected: true 
+        });
+        setGraphData(data);
+        setMazeData(null);
+        // 随机选择起始节点
+        const randomStart = Math.floor(Math.random() * data.nodes.length);
+        setStartNode(randomStart);
+      }
     } else if (currentAlgo.id === 'floyd') {
       const data = generateWeightedGraph({ nodeCount: 6, edgeDensity: 0.5 });
       setGraphData(data);
@@ -312,41 +403,103 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         completed: false
       });
     } else if (currentAlgo.id === 'bellmanford' || currentAlgo.id === 'spfa') {
-      // 为Bellman-Ford/SPFA生成带负权边的图
-      if (negativeGraphPattern === 'random') {
-        const data = generateNegativeWeightGraph({
-          nodeCount: 6,
-          edgeCount: 10,
-          minWeight: -8,
-          maxWeight: 10,
-          negativeRatio: 0.3,
-          ensureNegativeCycle: false,
-          pattern: 'random'
+      if (useMazeMode) {
+        // 迷宫模式：生成网格迷宫（使用正权边）
+        const maze = generateGridMap({ 
+          rows: 30, 
+          cols: 45, 
+          pattern: 'cave',
+          ensurePath: true 
         });
-        setGraphData(data);
+        setMazeData(maze);
+        setGraphData(maze.graphData);
+        setMazeVisitedCells(new Set());
+        setMazeCurrentCell(null);
+        setMazeBacktrackingCell(null);
+        setMazePathCells(new Set());
+        setStartNode(0);
       } else {
-        const data = generateTeachingGraph(negativeGraphPattern);
-        setGraphData(data);
+        // 普通图模式
+        if (negativeGraphPattern === 'random') {
+          const data = generateNegativeWeightGraph({
+            nodeCount: 6,
+            edgeCount: 10,
+            minWeight: -8,
+            maxWeight: 10,
+            negativeRatio: 0.3,
+            ensureNegativeCycle: false,
+            pattern: 'random'
+          });
+          setGraphData(data);
+        } else {
+          const data = generateTeachingGraph(negativeGraphPattern);
+          setGraphData(data);
+        }
+        setMazeData(null);
       }
     } else if (currentAlgo.id === 'dijkstra') {
-      // 生成带权图用于Dijkstra
-      const data = generateWeightedGraph({ nodeCount: 8, edgeDensity: 0.5, positiveOnly: true });
-      setGraphData(data);
+      if (useMazeMode) {
+        // 迷宫模式：生成网格迷宫
+        const maze = generateGridMap({ 
+          rows: 30, 
+          cols: 45, 
+          pattern: 'cave',
+          ensurePath: true 
+        });
+        setMazeData(maze);
+        setGraphData(maze.graphData);
+        setMazeVisitedCells(new Set());
+        setMazeCurrentCell(null);
+        setMazeBacktrackingCell(null);
+        setMazePathCells(new Set());
+        setStartNode(0);
+      } else {
+        // 普通图模式
+        const data = generateWeightedGraph({ nodeCount: 8, edgeDensity: 0.5, positiveOnly: true });
+        setGraphData(data);
+        setMazeData(null);
+      }
     } else if (currentAlgo.id === 'astar') {
-      // Generate grid map for A*
-      const data = generateGridMap({ 
-        rows: _gridSize, 
-        cols: _gridSize, 
-        obstacleRate: _obstacleRate,
-        pattern: _gridPattern,
-        ensurePath: true
+      if (useMazeMode) {
+        // 迷宫模式：生成网格迷宫
+        const maze = generateGridMap({ 
+          rows: 30, 
+          cols: 45, 
+          pattern: 'cave',
+          ensurePath: true 
+        });
+        setMazeData(maze);
+        setGraphData(maze.graphData);
+        setMazeVisitedCells(new Set());
+        setMazeCurrentCell(null);
+        setMazeBacktrackingCell(null);
+        setMazePathCells(new Set());
+        setStartNode(0);
+      } else {
+        // Generate grid map for A*
+        const data = generateGridMap({ 
+          rows: _gridSize, 
+          cols: _gridSize, 
+          obstacleRate: _obstacleRate,
+          pattern: _gridPattern,
+          ensurePath: true
+        });
+        setGridMapData(data);
+        setGraphData(data.graphData);
+      }
+    } else if (currentAlgo.category === 'graph') {
+      // 为其他图算法生成默认图数据
+      const data = generateRandomGraph({ 
+        nodeCount: 12, 
+        edgeCount: 18, 
+        directed: false,
+        connected: true 
       });
-      setGridMapData(data);
-      setGraphData(data.graphData);
+      setGraphData(data);
     }
     
     setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set() });
-  }, [currentAlgo.id, currentAlgo.category, arraySize, runner, _gridSize, _obstacleRate, _gridPattern]);
+  }, [currentAlgo.id, currentAlgo.category, arraySize, runner, _gridSize, _obstacleRate, _gridPattern, useMazeMode]);
 
   // 初始化数据 - 只执行一次
   useEffect(() => {
@@ -356,6 +509,11 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
 
   // 切换算法时重新生成数据
   useEffect(() => {
+    // 切换算法时重置迷宫模式（只有寻路算法支持迷宫）
+    const pathfindingAlgos = ['bfs', 'dfs', 'dijkstra', 'astar', 'bellmanford', 'spfa'];
+    if (!pathfindingAlgos.includes(currentAlgo.id)) {
+      setUseMazeMode(false);
+    }
     generateData();
   }, [currentAlgo.id]);
 
@@ -2715,209 +2873,6 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     runner.setCompleted();
   };
 
-  // 邻接矩阵 (Adjacency Matrix) 可视化
-  const runAdjacencyMatrix = async () => {
-    shouldStopRef.current = false;
-    isPausedRef.current = false;
-    runner.start();
-
-    const nodes = [...graphData.nodes];
-    const edges = [...graphData.edges];
-    const n = nodes.length;
-
-    // 初始化矩阵
-    const matrix: number[][] = Array.from({ length: n }, (_, i) => 
-      Array.from({ length: n }, (_, j) => i === j ? 0 : Infinity)
-    );
-
-    runner.recordStep({
-      lineNumber: 1,
-      description: `初始化 ${n}×${n} 邻接矩阵，主对角线为0，其余为∞`,
-      data: { nodes: cloneNodes(nodes), edges, matrix },
-      variables: [
-        { name: 'n', value: n, type: 'primitive' },
-        { name: 'matrix', value: `[${n}×${n}]`, type: 'array' }
-      ],
-      highlights: { nodes: [], edges: [] }
-    });
-
-    await waitWithPause(speedRef.current);
-
-    // 添加边
-    for (let i = 0; i < edges.length; i++) {
-      if (shouldStopRef.current) { runner.stop(); return; }
-      
-      const edge = edges[i];
-      matrix[edge.from][edge.to] = edge.weight || 1;
-      if (!graphData.directed) {
-        matrix[edge.to][edge.from] = edge.weight || 1;
-      }
-
-      runner.recordStep({
-        lineNumber: 5,
-        description: `添加边 ${edge.from} → ${edge.to} 权重=${edge.weight || 1}`,
-        data: { nodes: cloneNodes(nodes), edges, matrix },
-        variables: [
-          { name: 'from', value: edge.from, type: 'primitive' },
-          { name: 'to', value: edge.to, type: 'primitive' },
-          { name: 'weight', value: edge.weight || 1, type: 'primitive' }
-        ],
-        highlights: { nodes: [edge.from, edge.to], edges: [`${edge.from}-${edge.to}`] }
-      });
-
-      if (!(await waitWithPause(speedRef.current * 0.5))) { runner.stop(); return; }
-    }
-
-    // 查询演示
-    runner.recordStep({
-      lineNumber: 12,
-      description: '邻接矩阵构建完成，支持 O(1) 查询边权重',
-      data: { nodes: cloneNodes(nodes), edges, matrix },
-      variables: [
-        { name: 'query', value: 'matrix[i][j]', type: 'primitive' },
-        { name: 'time', value: 'O(1)', type: 'primitive' }
-      ],
-      highlights: { nodes: [], edges: [] }
-    });
-
-    runner.setCompleted();
-  };
-
-  // 邻接表 (Adjacency List) 可视化
-  const runAdjacencyList = async () => {
-    shouldStopRef.current = false;
-    isPausedRef.current = false;
-    runner.start();
-
-    const nodes = [...graphData.nodes];
-    const edges = [...graphData.edges];
-    const n = nodes.length;
-
-    // 初始化邻接表
-    const adjList: { to: number; weight: number }[][] = Array.from({ length: n }, () => []);
-
-    runner.recordStep({
-      lineNumber: 1,
-      description: `初始化邻接表，${n}个空列表`,
-      data: { nodes: cloneNodes(nodes), edges, adjList },
-      variables: [
-        { name: 'n', value: n, type: 'primitive' },
-        { name: 'adj', value: `Array(${n})`, type: 'array' }
-      ],
-      highlights: { nodes: [], edges: [] }
-    });
-
-    await waitWithPause(speedRef.current);
-
-    // 添加边
-    for (let i = 0; i < edges.length; i++) {
-      if (shouldStopRef.current) { runner.stop(); return; }
-      
-      const edge = edges[i];
-      adjList[edge.from].push({ to: edge.to, weight: edge.weight || 1 });
-      
-      runner.recordStep({
-        lineNumber: 4,
-        description: `向节点 ${edge.from} 的邻接表添加: →${edge.to}(权重${edge.weight || 1})`,
-        data: { nodes: cloneNodes(nodes), edges, adjList },
-        variables: [
-          { name: 'from', value: edge.from, type: 'primitive' },
-          { name: 'to', value: edge.to, type: 'primitive' },
-          { name: 'adj[from]', value: JSON.stringify(adjList[edge.from]), type: 'array' }
-        ],
-        highlights: { nodes: [edge.from, edge.to], edges: [`${edge.from}-${edge.to}`] }
-      });
-
-      if (!(await waitWithPause(speedRef.current * 0.5))) { runner.stop(); return; }
-    }
-
-    runner.recordStep({
-      lineNumber: 10,
-      description: '邻接表构建完成，空间 O(V+E)，遍历 O(V+E)',
-      data: { nodes: cloneNodes(nodes), edges, adjList },
-      variables: [
-        { name: 'space', value: 'O(V+E)', type: 'primitive' },
-        { name: 'traverse', value: 'O(V+E)', type: 'primitive' }
-      ],
-      highlights: { nodes: [], edges: [] }
-    });
-
-    runner.setCompleted();
-  };
-
-  // 链式前向星 (Chain Forward Star) 可视化
-  const runChainForwardStar = async () => {
-    shouldStopRef.current = false;
-    isPausedRef.current = false;
-    runner.start();
-
-    const nodes = [...graphData.nodes];
-    const edges = [...graphData.edges];
-    const n = nodes.length;
-    const maxEdges = edges.length * 2;
-
-    // 初始化数组
-    const head: number[] = new Array(n).fill(-1);
-    const to: number[] = new Array(maxEdges);
-    const weight: number[] = new Array(maxEdges);
-    const next: number[] = new Array(maxEdges);
-    let edgeCount = 0;
-
-    runner.recordStep({
-      lineNumber: 1,
-      description: `初始化链式前向星: head[${n}]=-1, 边数组[${maxEdges}]`,
-      data: { nodes: cloneNodes(nodes), edges, cfs: { head, to, weight, next, edgeCount } },
-      variables: [
-        { name: 'head', value: `[-1,...]`, type: 'array' },
-        { name: 'edgeCnt', value: 0, type: 'primitive' }
-      ],
-      highlights: { nodes: [], edges: [] }
-    });
-
-    await waitWithPause(speedRef.current);
-
-    // 添加边
-    for (let i = 0; i < edges.length; i++) {
-      if (shouldStopRef.current) { runner.stop(); return; }
-      
-      const edge = edges[i];
-      const e = edgeCount;
-      to[e] = edge.to;
-      weight[e] = edge.weight || 1;
-      next[e] = head[edge.from];
-      head[edge.from] = e;
-      edgeCount++;
-
-      runner.recordStep({
-        lineNumber: 8,
-        description: `添加边${e}: ${edge.from}→${edge.to}, next=${next[e]}, head[${edge.from}]=${e}`,
-        data: { nodes: cloneNodes(nodes), edges, cfs: { head: [...head], to: [...to], weight: [...weight], next: [...next], edgeCount } },
-        variables: [
-          { name: 'edge', value: e, type: 'primitive' },
-          { name: 'to', value: edge.to, type: 'primitive' },
-          { name: 'next', value: next[e], type: 'primitive' },
-          { name: 'head[from]', value: head[edge.from], type: 'primitive' }
-        ],
-        highlights: { nodes: [edge.from, edge.to], edges: [`${edge.from}-${edge.to}`] }
-      });
-
-      if (!(await waitWithPause(speedRef.current * 0.5))) { runner.stop(); return; }
-    }
-
-    runner.recordStep({
-      lineNumber: 20,
-      description: '链式前向星构建完成，缓存友好，适合大规模图',
-      data: { nodes: cloneNodes(nodes), edges, cfs: { head, to, weight, next, edgeCount } },
-      variables: [
-        { name: 'totalEdges', value: edgeCount, type: 'primitive' },
-        { name: 'space', value: 'O(V+E)', type: 'primitive' }
-      ],
-      highlights: { nodes: [], edges: [] }
-    });
-
-    runner.setCompleted();
-  };
-
   // 拓扑排序 (Kahn算法) 执行
   const runTopologicalSort = async () => {
     shouldStopRef.current = false;
@@ -3213,13 +3168,33 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     
     // BFS队列，存储 [节点ID, 距离]
     const queue: number[] = [];
-    const start = startNode % n;
+    
+    // 迷宫模式：找到对应迷宫起点的节点ID
+    let start: number;
+    if (useMazeMode && mazeData) {
+      start = nodes.findIndex(
+        n => Math.round((n.x - 50) / 40) === mazeData.start.x && 
+             Math.round((n.y - 50) / 40) === mazeData.start.y
+      );
+      if (start === -1) start = startNode % n;
+    } else {
+      start = startNode % n;
+    }
     
     queue.push(start);
     nodes[start].inQueue = true;
     nodes[start].distance = 0;
     
     const visitOrder: number[] = [];
+    
+    // 迷宫模式：重置迷宫状态
+    if (useMazeMode && mazeData) {
+      setMazeVisitedCells(new Set());
+      setMazeCurrentCell({ x: mazeData.start.x, y: mazeData.start.y });
+      setMazeBacktrackingCell(null);
+      setMazePathCells(new Set());
+      setMazeReviewStep(0);
+    }
     
     setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
     setGraphState({ 
@@ -3247,7 +3222,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
           { name: 'queue.size', value: queue.length, type: 'primitive' }
         ],
         { adjacencyList: adj, queue, result: visitOrder }
-      )
+      ),
+      mazeState: buildMazeState()
     });
     
     if (!(await waitWithPause(speedRef.current))) {
@@ -3268,6 +3244,19 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       nodeU.visited = true;
       nodeU.isProcessing = true;
       visitOrder.push(u);
+      
+      // 迷宫模式：更新当前访问的格子
+      if (useMazeMode && mazeData) {
+        const nodeIndex = nodes.findIndex(n => n.id === u);
+        if (nodeIndex !== -1) {
+          const node = nodes[nodeIndex];
+          // 从节点坐标计算网格坐标
+          const gridX = Math.round((node.x - 50) / 40);
+          const gridY = Math.round((node.y - 50) / 40);
+          setMazeCurrentCell({ x: gridX, y: gridY });
+          setMazeVisitedCells(prev => new Set(prev).add(`${gridX},${gridY}`));
+        }
+      }
       
       setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
       setGraphState({ 
@@ -3295,12 +3284,76 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
             { name: 'queue.size', value: queue.length, type: 'primitive' }
           ],
           { adjacencyList: adj, queue, result: visitOrder }
-        )
+        ),
+        mazeState: buildMazeState()
       });
       
       if (!(await waitWithPause(speedRef.current))) {
         runner.stop();
         return;
+      }
+      
+      // 迷宫模式：检查是否到达终点
+      if (useMazeMode && mazeData) {
+        const nodeIndex = nodes.findIndex(n => n.id === u);
+        if (nodeIndex !== -1) {
+          const node = nodes[nodeIndex];
+          const gridX = Math.round((node.x - 50) / 40);
+          const gridY = Math.round((node.y - 50) / 40);
+          
+          if (gridX === mazeData.goal.x && gridY === mazeData.goal.y) {
+            // 到达终点！立即显示完整路径
+            const pathCells = new Set<string>();
+            let current: typeof node = node;
+            const visitedNodes = new Set<number>();
+            
+            while (current && current.parent !== null && !visitedNodes.has(current.id)) {
+              const cx = Math.round((current.x - 50) / 40);
+              const cy = Math.round((current.y - 50) / 40);
+              pathCells.add(`${cx},${cy}`);
+              visitedNodes.add(current.id);
+              current = nodes.find(n => n.id === current.parent)!;
+            }
+            // 添加起点
+            if (current) {
+              const cx = Math.round((current.x - 50) / 40);
+              const cy = Math.round((current.y - 50) / 40);
+              pathCells.add(`${cx},${cy}`);
+            }
+            
+            setMazePathCells(pathCells);
+            setMazeCurrentCell(null);
+            
+            // 标记完成
+            setGraphState({ 
+              highlightedEdges: new Set(), 
+              highlightedNodes: new Set(),
+              queue: [],
+              currentNode: undefined,
+              phase: 'completed'
+            });
+            
+            runner.recordStep({
+              lineNumber: 14,
+              description: `找到终点！路径长度: ${pathCells.size} 步`,
+              data: { nodes: cloneNodes(nodes), edges },
+              variables: [
+                { name: 'pathLength', value: pathCells.size, type: 'primitive' }
+              ],
+              highlights: { nodes: visitOrder, edges: [] },
+              memory: buildGraphMemoryState(
+                nodes,
+                edges,
+                [{ name: 'pathLength', value: pathCells.size, type: 'primitive' }],
+                { adjacencyList: adj, queue: [], result: visitOrder }
+              ),
+              mazeState: buildMazeState()
+            });
+            
+            runner.setCompleted();
+            return; // 立即结束
+          }
+        }
       }
       
       // 处理所有邻居
@@ -3348,7 +3401,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                 { name: 'queue.size', value: queue.length, type: 'primitive' }
               ],
               { adjacencyList: adj, queue, result: visitOrder }
-            )
+            ),
+            mazeState: buildMazeState()
           });
           
           if (!(await waitWithPause(speedRef.current * 0.7))) {
@@ -3381,7 +3435,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                 { name: 'v', value: v, type: 'primitive' }
               ],
               { adjacencyList: adj, queue, result: visitOrder }
-            )
+            ),
+            mazeState: buildMazeState()
           });
           
           if (!(await waitWithPause(speedRef.current * 0.5))) {
@@ -3405,6 +3460,34 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       phase: 'completed'
     });
     
+    // 迷宫模式：回溯显示从起点到终点的路径
+    if (useMazeMode && mazeData) {
+      // 从终点回溯到起点
+      let current = nodes.find(n => 
+        Math.round((n.x - 50) / 40) === mazeData.goal.x && 
+        Math.round((n.y - 50) / 40) === mazeData.goal.y
+      );
+      const pathCells = new Set<string>();
+      const visited = new Set<number>();
+      
+      while (current && current.parent !== null && !visited.has(current.id)) {
+        const gridX = Math.round((current.x - 50) / 40);
+        const gridY = Math.round((current.y - 50) / 40);
+        pathCells.add(`${gridX},${gridY}`);
+        visited.add(current.id);
+        current = nodes.find(n => n.id === current!.parent);
+      }
+      // 添加起点
+      if (current) {
+        const gridX = Math.round((current.x - 50) / 40);
+        const gridY = Math.round((current.y - 50) / 40);
+        pathCells.add(`${gridX},${gridY}`);
+      }
+      
+      setMazePathCells(pathCells);
+      setMazeCurrentCell(null);
+    }
+    
     runner.recordStep({
       lineNumber: 14,
       description: `BFS遍历完成！访问顺序: [${visitOrder.join(' → ')}]`,
@@ -3419,7 +3502,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         edges,
         [{ name: 'result.size', value: visitOrder.length, type: 'primitive' }],
         { adjacencyList: adj, queue: [], result: visitOrder }
-      )
+      ),
+      mazeState: buildMazeState()
     });
     
     runner.setCompleted();
@@ -3459,11 +3543,29 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     
     // DFS栈，用于显式栈实现
     const stack: number[] = [];
-    const start = startNode % n;
+    
+    // 迷宫模式：找到对应迷宫起点的节点ID
+    let start: number;
+    if (useMazeMode && mazeData) {
+      start = nodes.findIndex(
+        n => Math.round((n.x - 50) / 40) === mazeData.start.x && 
+             Math.round((n.y - 50) / 40) === mazeData.start.y
+      );
+      if (start === -1) start = startNode % n;
+    } else {
+      start = startNode % n;
+    }
     
     stack.push(start);
     
     const visitOrder: number[] = [];
+    
+    // 迷宫模式：重置迷宫状态
+    if (useMazeMode && mazeData) {
+      setMazeVisitedCells(new Set());
+      setMazeCurrentCell({ x: mazeData.start.x, y: mazeData.start.y });
+      setMazePathCells(new Set());
+    }
     
     setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
     setGraphState({ 
@@ -3490,7 +3592,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
           { name: 'stack.size', value: stack.length, type: 'primitive' }
         ],
         { adjacencyList: adj, queue: stack, result: visitOrder }
-      )
+      ),
+      mazeState: buildMazeState()
     });
     
     if (!(await waitWithPause(speedRef.current))) {
@@ -3514,6 +3617,18 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         nodeU.inStack = true;
         nodeU.isProcessing = true;
         visitOrder.push(u);
+        
+        // 迷宫模式：更新当前访问的格子
+        if (useMazeMode && mazeData) {
+          const nodeIndex = nodes.findIndex(n => n.id === u);
+          if (nodeIndex !== -1) {
+            const node = nodes[nodeIndex];
+            const gridX = Math.round((node.x - 50) / 40);
+            const gridY = Math.round((node.y - 50) / 40);
+            setMazeCurrentCell({ x: gridX, y: gridY });
+            setMazeVisitedCells(prev => new Set(prev).add(`${gridX},${gridY}`));
+          }
+        }
         
         setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
         setGraphState({ 
@@ -3540,12 +3655,77 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               { name: 'stack.size', value: stack.length, type: 'primitive' }
             ],
             { adjacencyList: adj, queue: stack, result: visitOrder }
-          )
+          ),
+          mazeState: buildMazeState()
         });
         
         if (!(await waitWithPause(speedRef.current))) {
           runner.stop();
           return;
+        }
+        
+        // 迷宫模式：检查是否到达终点
+        if (useMazeMode && mazeData) {
+          const nodeIndex = nodes.findIndex(n => n.id === u);
+          if (nodeIndex !== -1) {
+            const node = nodes[nodeIndex];
+            const gridX = Math.round((node.x - 50) / 40);
+            const gridY = Math.round((node.y - 50) / 40);
+            
+            if (gridX === mazeData.goal.x && gridY === mazeData.goal.y) {
+              // 到达终点！立即显示完整路径
+              const pathCells = new Set<string>();
+              let current: typeof node = node;
+              const visitedNodes = new Set<number>();
+              
+              while (current && current.parent !== null && !visitedNodes.has(current.id)) {
+                const cx = Math.round((current.x - 50) / 40);
+                const cy = Math.round((current.y - 50) / 40);
+                pathCells.add(`${cx},${cy}`);
+                visitedNodes.add(current.id);
+                current = nodes.find(n => n.id === current.parent)!;
+              }
+              // 添加起点
+              if (current) {
+                const cx = Math.round((current.x - 50) / 40);
+                const cy = Math.round((current.y - 50) / 40);
+                pathCells.add(`${cx},${cy}`);
+              }
+              
+              setMazePathCells(pathCells);
+              setMazeCurrentCell(null);
+              setMazeBacktrackingCell(null);
+              
+              // 标记完成
+              setGraphState({ 
+                highlightedEdges: new Set(), 
+                highlightedNodes: new Set(),
+                stack: [],
+                currentNode: undefined,
+                phase: 'completed'
+              });
+              
+              runner.recordStep({
+                lineNumber: 20,
+                description: `找到终点！路径长度: ${pathCells.size} 步`,
+                data: { nodes: cloneNodes(nodes), edges },
+                variables: [
+                  { name: 'pathLength', value: pathCells.size, type: 'primitive' }
+                ],
+                highlights: { nodes: visitOrder, edges: [] },
+                memory: buildGraphMemoryState(
+                  nodes,
+                  edges,
+                  [{ name: 'pathLength', value: pathCells.size, type: 'primitive' }],
+                  { adjacencyList: adj, queue: [], result: visitOrder }
+                ),
+                mazeState: buildMazeState()
+              });
+              
+              runner.setCompleted();
+              return; // 立即结束
+            }
+          }
         }
       }
       
@@ -3595,7 +3775,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                 { name: 'stack.size', value: stack.length, type: 'primitive' }
               ],
               { adjacencyList: adj, queue: stack, result: visitOrder }
-            )
+            ),
+            mazeState: buildMazeState()
           });
           
           if (!(await waitWithPause(speedRef.current))) {
@@ -3630,7 +3811,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                 { name: 'v', value: v, type: 'primitive' }
               ],
               { adjacencyList: adj, queue: stack, result: visitOrder }
-            )
+            ),
+            mazeState: buildMazeState()
           });
           
           if (!(await waitWithPause(speedRef.current * 0.5))) {
@@ -3646,6 +3828,18 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         const poppedNode = nodes.find(n => n.id === popped)!;
         poppedNode.inStack = false;
         poppedNode.isProcessing = false;
+        
+        // 迷宫模式：标记回溯位置为红色
+        if (useMazeMode && mazeData) {
+          const poppedIdx = nodes.findIndex(n => n.id === popped);
+          if (poppedIdx !== -1) {
+            const node = nodes[poppedIdx];
+            const gridX = Math.round((node.x - 50) / 40);
+            const gridY = Math.round((node.y - 50) / 40);
+            setMazeBacktrackingCell({ x: gridX, y: gridY });
+            setMazeCurrentCell(null); // 清除当前访问标记
+          }
+        }
         
         setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
         setGraphState(prev => ({
@@ -3673,12 +3867,18 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               { name: 'stack.size', value: stack.length, type: 'primitive' }
             ],
             { adjacencyList: adj, queue: stack, result: visitOrder }
-          )
+          ),
+          mazeState: buildMazeState()
         });
         
         if (!(await waitWithPause(speedRef.current * 0.7))) {
           runner.stop();
           return;
+        }
+        
+        // 清除回溯标记
+        if (useMazeMode && mazeData) {
+          setMazeBacktrackingCell(null);
         }
       }
     }
@@ -3691,6 +3891,32 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       currentNode: undefined,
       phase: 'completed'
     });
+    
+    // 迷宫模式：回溯显示从起点到终点的路径
+    if (useMazeMode && mazeData) {
+      let current = nodes.find(n => 
+        Math.round((n.x - 50) / 40) === mazeData.goal.x && 
+        Math.round((n.y - 50) / 40) === mazeData.goal.y
+      );
+      const pathCells = new Set<string>();
+      const visited = new Set<number>();
+      
+      while (current && current.parent !== null && !visited.has(current.id)) {
+        const gridX = Math.round((current.x - 50) / 40);
+        const gridY = Math.round((current.y - 50) / 40);
+        pathCells.add(`${gridX},${gridY}`);
+        visited.add(current.id);
+        current = nodes.find(n => n.id === current!.parent);
+      }
+      if (current) {
+        const gridX = Math.round((current.x - 50) / 40);
+        const gridY = Math.round((current.y - 50) / 40);
+        pathCells.add(`${gridX},${gridY}`);
+      }
+      
+      setMazePathCells(pathCells);
+      setMazeCurrentCell(null);
+    }
     
     runner.recordStep({
       lineNumber: 20,
@@ -3706,7 +3932,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         edges,
         [{ name: 'result.size', value: visitOrder.length, type: 'primitive' }],
         { adjacencyList: adj, queue: [], result: visitOrder }
-      )
+      ),
+      mazeState: buildMazeState()
     });
     
     runner.setCompleted();
@@ -5807,7 +6034,18 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     // Initialize distances
     const dist: number[] = new Array(n).fill(Infinity);
     const parent: number[] = new Array(n).fill(-1);
-    const start = 0;
+    
+    // 迷宫模式：找到对应迷宫起点的节点ID
+    let start: number;
+    if (useMazeMode && mazeData) {
+      start = nodes.findIndex(
+        n => Math.round((n.x - 50) / 40) === mazeData.start.x && 
+             Math.round((n.y - 50) / 40) === mazeData.start.y
+      );
+      if (start === -1) start = 0;
+    } else {
+      start = 0;
+    }
     dist[start] = 0;
 
     nodes.forEach(node => {
@@ -5827,7 +6065,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         { name: 'dist', value: `[${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`, type: 'array' }
       ],
       highlights: { nodes: [start], edges: [] },
-      memory: buildGraphMemoryState(nodes, edges, [{ name: 'start', value: start, type: 'primitive' }], {})
+      memory: buildGraphMemoryState(nodes, edges, [{ name: 'start', value: start, type: 'primitive' }], {}),
+      mazeState: buildMazeState()
     });
 
     if (!(await waitWithPause(speedRef.current))) {
@@ -5876,7 +6115,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               { name: `dist[${to}]`, value: dist[to], type: 'primitive' }
             ],
             highlights: { nodes: [from, to], edges: [edgeKey] },
-            memory: buildGraphMemoryState(nodes, edges, [{ name: 'round', value: i + 1, type: 'primitive' }], {})
+            memory: buildGraphMemoryState(nodes, edges, [{ name: 'round', value: i + 1, type: 'primitive' }], {}),
+            mazeState: buildMazeState()
           });
 
           if (!(await waitWithPause(speedRef.current * 0.7))) {
@@ -5893,7 +6133,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
           data: { nodes: cloneNodes(nodes), edges },
           variables: [{ name: 'round', value: i + 1, type: 'primitive' }],
           highlights: { nodes: [], edges: [] },
-          memory: buildGraphMemoryState(nodes, edges, [], {})
+          memory: buildGraphMemoryState(nodes, edges, [], {}),
+          mazeState: buildMazeState()
         });
         break;
       }
@@ -5911,7 +6152,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
           data: { nodes: cloneNodes(nodes), edges },
           variables: [{ name: 'hasNegativeCycle', value: true, type: 'primitive' }],
           highlights: { nodes: [from, to], edges: [`${from}-${to}`] },
-          memory: buildGraphMemoryState(nodes, edges, [], {})
+          memory: buildGraphMemoryState(nodes, edges, [], {}),
+          mazeState: buildMazeState()
         });
         runner.setCompleted();
         return;
@@ -5924,7 +6166,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       data: { nodes: cloneNodes(nodes), edges },
       variables: [{ name: 'dist', value: `[${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`, type: 'array' }],
       highlights: { nodes: nodes.map(n => n.id), edges: [] },
-      memory: buildGraphMemoryState(nodes, edges, [], {})
+      memory: buildGraphMemoryState(nodes, edges, [], {}),
+      mazeState: buildMazeState()
     });
 
     runner.setCompleted();
@@ -5956,7 +6199,18 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     const inQueue: boolean[] = new Array(n).fill(false);
     const cnt: number[] = new Array(n).fill(0);
     const queue: number[] = [];
-    const start = 0;
+    
+    // 迷宫模式：找到对应迷宫起点的节点ID
+    let start: number;
+    if (useMazeMode && mazeData) {
+      start = nodes.findIndex(
+        n => Math.round((n.x - 50) / 40) === mazeData.start.x && 
+             Math.round((n.y - 50) / 40) === mazeData.start.y
+      );
+      if (start === -1) start = 0;
+    } else {
+      start = 0;
+    }
 
     dist[start] = 0;
     queue.push(start);
@@ -5980,7 +6234,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         { name: 'queue', value: `[${queue.join(', ')}]`, type: 'array' }
       ],
       highlights: { nodes: [start], edges: [] },
-      memory: buildGraphMemoryState(nodes, edges, [{ name: 'queue', value: queue, type: 'array' }], { queue })
+      memory: buildGraphMemoryState(nodes, edges, [{ name: 'queue', value: queue, type: 'array' }], { queue }),
+      mazeState: buildMazeState()
     });
 
     if (!(await waitWithPause(speedRef.current))) {
@@ -6012,7 +6267,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
           { name: 'dist[u]', value: dist[u], type: 'primitive' }
         ],
         highlights: { nodes: [u], edges: [] },
-        memory: buildGraphMemoryState(nodes, edges, [{ name: 'u', value: u, type: 'primitive' }], { queue })
+        memory: buildGraphMemoryState(nodes, edges, [{ name: 'u', value: u, type: 'primitive' }], { queue }),
+        mazeState: buildMazeState()
       });
 
       if (!(await waitWithPause(speedRef.current))) {
@@ -6055,7 +6311,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                 data: { nodes: cloneNodes(nodes), edges },
                 variables: [{ name: 'hasNegativeCycle', value: true, type: 'primitive' }],
                 highlights: { nodes: [v], edges: [] },
-                memory: buildGraphMemoryState(nodes, edges, [], { queue })
+                memory: buildGraphMemoryState(nodes, edges, [], { queue }),
+                mazeState: buildMazeState()
               });
               runner.setCompleted();
               return;
@@ -6074,7 +6331,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               { name: `dist[${v}]`, value: dist[v], type: 'primitive' }
             ],
             highlights: { nodes: [u, v], edges: [edgeKey] },
-            memory: buildGraphMemoryState(nodes, edges, [], { queue })
+            memory: buildGraphMemoryState(nodes, edges, [], { queue }),
+            mazeState: buildMazeState()
           });
 
           if (!(await waitWithPause(speedRef.current * 0.7))) {
@@ -6094,7 +6352,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       data: { nodes: cloneNodes(nodes), edges },
       variables: [{ name: 'dist', value: `[${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`, type: 'array' }],
       highlights: { nodes: nodes.map(n => n.id), edges: [] },
-      memory: buildGraphMemoryState(nodes, edges, [], {})
+      memory: buildGraphMemoryState(nodes, edges, [], {}),
+      mazeState: buildMazeState()
     });
 
     runner.setCompleted();
@@ -6124,7 +6383,18 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     const dist: number[] = new Array(n).fill(Infinity);
     const parent: number[] = new Array(n).fill(-1);
     const visited: boolean[] = new Array(n).fill(false);
-    const start = 0;
+    
+    // 迷宫模式：找到对应迷宫起点的节点ID
+    let start: number;
+    if (useMazeMode && mazeData) {
+      start = nodes.findIndex(
+        n => Math.round((n.x - 50) / 40) === mazeData.start.x && 
+             Math.round((n.y - 50) / 40) === mazeData.start.y
+      );
+      if (start === -1) start = 0;
+    } else {
+      start = 0;
+    }
 
     dist[start] = 0;
 
@@ -6146,7 +6416,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         { name: 'dist', value: `[${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`, type: 'array' }
       ],
       highlights: { nodes: [start], edges: [] },
-      memory: buildGraphMemoryState(nodes, edges, [{ name: 'start', value: start, type: 'primitive' }], {})
+      memory: buildGraphMemoryState(nodes, edges, [{ name: 'start', value: start, type: 'primitive' }], {}),
+      mazeState: buildMazeState()
     });
 
     if (!(await waitWithPause(speedRef.current))) {
@@ -6190,7 +6461,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
           { name: 'dist[u]', value: dist[u], type: 'primitive' }
         ],
         highlights: { nodes: [u], edges: [] },
-        memory: buildGraphMemoryState(nodes, edges, [{ name: 'u', value: u, type: 'primitive' }], {})
+        memory: buildGraphMemoryState(nodes, edges, [{ name: 'u', value: u, type: 'primitive' }], {}),
+        mazeState: buildMazeState()
       });
 
       if (!(await waitWithPause(speedRef.current))) {
@@ -6232,7 +6504,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               { name: `dist[${v}]`, value: dist[v], type: 'primitive' }
             ],
             highlights: { nodes: [u, v], edges: [edgeKey] },
-            memory: buildGraphMemoryState(nodes, edges, [], {})
+            memory: buildGraphMemoryState(nodes, edges, [], {}),
+            mazeState: buildMazeState()
           });
 
           if (!(await waitWithPause(speedRef.current * 0.7))) {
@@ -6252,7 +6525,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       data: { nodes: cloneNodes(nodes), edges },
       variables: [{ name: 'dist', value: `[${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`, type: 'array' }],
       highlights: { nodes: nodes.map(n => n.id), edges: [] },
-      memory: buildGraphMemoryState(nodes, edges, [], {})
+      memory: buildGraphMemoryState(nodes, edges, [], {}),
+      mazeState: buildMazeState()
     });
 
     runner.setCompleted();
@@ -6279,8 +6553,23 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     });
 
     // Initialize
-    const start = 0;
-    const goal = n - 1;
+    // 迷宫模式：使用迷宫的起点和终点
+    let start: number, goal: number;
+    if (useMazeMode && mazeData) {
+      start = nodes.findIndex(
+        n => Math.round((n.x - 50) / 40) === mazeData.start.x && 
+             Math.round((n.y - 50) / 40) === mazeData.start.y
+      );
+      goal = nodes.findIndex(
+        n => Math.round((n.x - 50) / 40) === mazeData.goal.x && 
+             Math.round((n.y - 50) / 40) === mazeData.goal.y
+      );
+      if (start === -1) start = 0;
+      if (goal === -1) goal = n - 1;
+    } else {
+      start = 0;
+      goal = n - 1;
+    }
 
     const gScore: number[] = new Array(n).fill(Infinity);
     const fScore: number[] = new Array(n).fill(Infinity);
@@ -6318,7 +6607,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         { name: 'fScore[start]', value: fScore[start], type: 'primitive' }
       ],
       highlights: { nodes: [start, goal], edges: [] },
-      memory: buildGraphMemoryState(nodes, edges, [], {})
+      memory: buildGraphMemoryState(nodes, edges, [], {}),
+      mazeState: buildMazeState()
     });
 
     if (!(await waitWithPause(speedRef.current))) {
@@ -6365,7 +6655,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
             { name: 'cost', value: gScore[goal], type: 'primitive' }
           ],
           highlights: { nodes: path, edges: [] },
-          memory: buildGraphMemoryState(nodes, edges, [], {})
+          memory: buildGraphMemoryState(nodes, edges, [], {}),
+          mazeState: buildMazeState()
         });
         break;
       }
@@ -6390,7 +6681,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
           { name: 'fScore[current]', value: fScore[current], type: 'primitive' }
         ],
         highlights: { nodes: [current], edges: [] },
-        memory: buildGraphMemoryState(nodes, edges, [], {})
+        memory: buildGraphMemoryState(nodes, edges, [], {}),
+        mazeState: buildMazeState()
       });
 
       if (!(await waitWithPause(speedRef.current))) {
@@ -6438,7 +6730,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               { name: 'fScore[neighbor]', value: fScore[neighbor], type: 'primitive' }
             ],
             highlights: { nodes: [current, neighbor], edges: [edgeKey] },
-            memory: buildGraphMemoryState(nodes, edges, [], {})
+            memory: buildGraphMemoryState(nodes, edges, [], {}),
+            mazeState: buildMazeState()
           });
 
           if (!(await waitWithPause(speedRef.current * 0.7))) {
@@ -6459,7 +6752,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         data: { nodes: cloneNodes(nodes), edges },
         variables: [],
         highlights: { nodes: [], edges: [] },
-        memory: buildGraphMemoryState(nodes, edges, [], {})
+        memory: buildGraphMemoryState(nodes, edges, [], {}),
+        mazeState: buildMazeState()
       });
     }
 
@@ -7282,12 +7576,6 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       await runAStar();
     } else if (currentAlgo.id === 'floyd') {
       await runFloydWarshall();
-    } else if (currentAlgo.id === 'adjacency-matrix') {
-      await runAdjacencyMatrix();
-    } else if (currentAlgo.id === 'adjacency-list') {
-      await runAdjacencyList();
-    } else if (currentAlgo.id === 'chain-forward-star') {
-      await runChainForwardStar();
     } else if (currentAlgo.id === 'dinic') {
       await runDinic();
     } else if (currentAlgo.id === 'isap') {
@@ -7423,7 +7711,18 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               {currentAlgo.category === 'sorting' && (
                 <ArrayVisualizer data={sortingData} />
               )}
-              {currentAlgo.category === 'graph' && (
+              {currentAlgo.category === 'graph' && useMazeMode && mazeData && (
+                <GridMazeVisualizer 
+                  gridData={mazeData}
+                  visitedCells={mazeVisitedCells}
+                  currentCell={mazeCurrentCell}
+                  backtrackingCell={mazeBacktrackingCell}
+                  pathCells={mazePathCells}
+                  isReviewMode={runner.isReviewMode}
+                  reviewStep={mazeReviewStep}
+                />
+              )}
+              {currentAlgo.category === 'graph' && (!useMazeMode || !mazeData) && (
                 <GraphVisualizer 
                   nodes={graphData.nodes} 
                   edges={graphData.edges} 
@@ -7483,6 +7782,31 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                 <Shuffle size={18} />
               </button>
             </div>
+            
+            {/* 寻路算法迷宫模式切换 */}
+            {(['bfs', 'dfs', 'dijkstra', 'astar', 'bellmanford', 'spfa'].includes(currentAlgo.id)) && (
+              <>
+                <div className="toolbar-divider" />
+                <div className="toolbar-group">
+                  <button 
+                    className={`toolbar-btn ${useMazeMode ? 'active' : ''}`}
+                    onClick={() => {
+                      if (!runner.isRunning) {
+                        setUseMazeMode(!useMazeMode);
+                        setTimeout(() => generateData(), 0);
+                      }
+                    }}
+                    disabled={runner.isRunning}
+                    title={useMazeMode ? "切换到图模式" : "切换到迷宫模式"}
+                  >
+                    <Grid3X3 size={18} />
+                  </button>
+                  <span className="toolbar-label" style={{ marginLeft: '4px' }}>
+                    {useMazeMode ? '迷宫模式' : '图模式'}
+                  </span>
+                </div>
+              </>
+            )}
             
             <div className="toolbar-spacer" />
             
@@ -7711,6 +8035,42 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
             </button>
           </div>
           
+          {/* 寻路算法迷宫模式切换 */}
+          {(['bfs', 'dfs', 'dijkstra', 'astar', 'bellmanford', 'spfa'].includes(currentAlgo.id)) && (
+            <>
+              <div className="toolbar-divider" />
+              <div className="toolbar-group">
+                <button 
+                  className={`toolbar-btn ${useMazeMode ? 'active' : ''}`}
+                  onClick={() => {
+                    if (!runner.isRunning) {
+                      // 先停止并重置所有状态
+                      shouldStopRef.current = true;
+                      runner.stop();
+                      runner.clearSteps();
+                      
+                      // 切换模式并立即重新生成数据
+                      const newMode = !useMazeMode;
+                      setUseMazeMode(newMode);
+                      
+                      // 使用flushSync确保状态立即更新，然后生成数据
+                      setTimeout(() => {
+                        generateData();
+                      }, 0);
+                    }
+                  }}
+                  disabled={runner.isRunning}
+                  title={useMazeMode ? "切换到图模式" : "切换到迷宫模式"}
+                >
+                  <Grid3X3 size={18} />
+                </button>
+                <span className="toolbar-label" style={{ marginLeft: '4px', fontSize: '12px' }}>
+                  {useMazeMode ? '迷宫' : '图'}
+                </span>
+              </div>
+            </>
+          )}
+          
           <div className="toolbar-spacer" />
           
           <div className="toolbar-group speed-group">
@@ -7744,7 +8104,15 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
           {currentAlgo.category === 'sorting' && (
             <ArrayVisualizer data={sortingData} />
           )}
-          {currentAlgo.category === 'graph' && (
+          {currentAlgo.category === 'graph' && useMazeMode && mazeData && (
+            <GridMazeVisualizer 
+              gridData={mazeData}
+              visitedCells={mazeVisitedCells}
+              currentCell={mazeCurrentCell}
+              pathCells={mazePathCells}
+            />
+          )}
+          {currentAlgo.category === 'graph' && (!useMazeMode || !mazeData) && (
             <GraphVisualizer 
               nodes={graphData.nodes} 
               edges={graphData.edges} 
