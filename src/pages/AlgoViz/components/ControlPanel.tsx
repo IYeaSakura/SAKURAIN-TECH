@@ -74,13 +74,15 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   totalSteps,
   message
 }) => {
-  // 速度转换：滑块值越大越快，但存储的是延迟时间（越小越快）
+  // 速度转换：滑块值越大越快（延迟越小）
   // 滑块范围 1-100，对应延迟 1000ms-10ms
-  const speedSliderValue = 101 - Math.round(speed / 10);
+  // 修正：往右（值大）= 更快（延迟小）
+  const speedSliderValue = Math.round((1010 - speed) / 10);
   
   const handleSpeedChange = (value: number) => {
     // value: 1-100, 越大越快
     // 转换为 delay: 1000ms - 10ms
+    // 修正：value=100（最右）→ delay=10ms（最快），value=1（最左）→ delay=1000ms（最慢）
     const delay = 1010 - value * 10;
     onSpeedChange(delay);
   };

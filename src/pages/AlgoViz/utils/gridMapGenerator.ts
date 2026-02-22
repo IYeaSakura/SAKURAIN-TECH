@@ -209,7 +209,8 @@ function generateMaze(
       const nx = current.x + dir.x;
       const ny = current.y + dir.y;
       
-      if (nx > 0 && nx < cols - 1 && ny > 0 && ny < rows - 1 && !visited.has(`${nx},${ny}`)) {
+      // 修复：允许访问到边界（nx < cols 和 ny < rows），确保最后一行/列也能被处理
+      if (nx > 0 && nx < cols && ny > 0 && ny < rows && !visited.has(`${nx},${ny}`)) {
         neighbors.push({ x: nx, y: ny, dx: dir.x / 2, dy: dir.y / 2 });
       }
     }
@@ -223,6 +224,18 @@ function generateMaze(
     } else {
       stack.pop();
     }
+  }
+  
+  // 第二步：确保边界始终是墙（除了起点/终点附近）
+  // 上边界和下边界
+  for (let x = 0; x < cols; x++) {
+    cells[0][x].isObstacle = true;
+    cells[rows - 1][x].isObstacle = true;
+  }
+  // 左边界和右边界
+  for (let y = 0; y < rows; y++) {
+    cells[y][0].isObstacle = true;
+    cells[y][cols - 1].isObstacle = true;
   }
 
   // 第二步：添加洞穴般的额外开口（破坏一些墙创建环路和分支）
