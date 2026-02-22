@@ -510,6 +510,14 @@ export function generateSCCGraph(options: SCCGeneratorOptions = {}): GraphData {
   return { nodes, edges, directed: true, weighted: false };
 }
 
+export interface WeightedGraphGeneratorOptions {
+  nodeCount?: number;
+  edgeDensity?: number;
+  minWeight?: number;
+  maxWeight?: number;
+  positiveOnly?: boolean;
+}
+
 export interface GraphGeneratorOptions {
   nodeCount?: number;
   edgeCount?: number;
@@ -518,6 +526,78 @@ export interface GraphGeneratorOptions {
   minWeight?: number;
   maxWeight?: number;
   connected?: boolean;
+}
+
+/**
+ * 生成用于Floyd-Warshall算法的加权图（无向带权图）
+ */
+export function generateWeightedGraph(options: WeightedGraphGeneratorOptions = {}): GraphData {
+  const {
+    nodeCount = 6,
+    edgeDensity = 0.5,
+    minWeight = 1,
+    maxWeight = 20
+  } = options;
+
+  const nodes: GraphNode[] = [];
+  const edges: GraphEdge[] = [];
+
+  const width = 800;
+  const height = 500;
+  const padding = 100;
+
+  // 在圆形区域内均匀分布节点
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const radius = Math.min(width, height) / 2 - padding;
+
+  for (let i = 0; i < nodeCount; i++) {
+    const angle = (i / nodeCount) * 2 * Math.PI - Math.PI / 2;
+    nodes.push({
+      id: i,
+      x: centerX + Math.cos(angle) * radius,
+      y: centerY + Math.sin(angle) * radius,
+      visited: false,
+      distance: Infinity
+    });
+  }
+
+  // 生成边（无向图，但用两条有向边表示）
+  const existingEdges = new Set<string>();
+  
+  // 确保图是连通的：生成最小生成树的边
+  for (let i = 1; i < nodeCount; i++) {
+    const parent = Math.floor(Math.random() * i);
+    const weight = minWeight + Math.floor(Math.random() * (maxWeight - minWeight + 1));
+    
+    // 添加双向边
+    edges.push({ from: parent, to: i, weight });
+    edges.push({ from: i, to: parent, weight });
+    existingEdges.add(`${parent}-${i}`);
+    existingEdges.add(`${i}-${parent}`);
+  }
+
+  // 添加额外的边以增加密度
+  const maxExtraEdges = Math.floor(nodeCount * (nodeCount - 1) / 2 * edgeDensity) - (nodeCount - 1);
+  let attempts = 0;
+  let extraEdgesAdded = 0;
+  
+  while (extraEdgesAdded < maxExtraEdges && attempts < 1000) {
+    const from = Math.floor(Math.random() * nodeCount);
+    const to = Math.floor(Math.random() * nodeCount);
+    
+    if (from !== to && !existingEdges.has(`${from}-${to}`)) {
+      const weight = minWeight + Math.floor(Math.random() * (maxWeight - minWeight + 1));
+      edges.push({ from, to, weight });
+      edges.push({ from: to, to: from, weight });
+      existingEdges.add(`${from}-${to}`);
+      existingEdges.add(`${to}-${from}`);
+      extraEdgesAdded++;
+    }
+    attempts++;
+  }
+
+  return { nodes, edges, directed: false, weighted: true };
 }
 
 export function generateRandomGraph(options: GraphGeneratorOptions = {}): GraphData {
@@ -600,6 +680,8 @@ export interface TreeGeneratorOptions {
   type?: 'binary' | 'n-ary';
 }
 
+// ============ 树数据生成器 ============
+
 export function generateRandomTree(options: TreeGeneratorOptions = {}) {
   const { maxDepth = 4, maxChildren = 2, type = 'binary' } = options;
   
@@ -637,4 +719,271 @@ export function generateRandomTree(options: TreeGeneratorOptions = {}) {
   }
   
   return { nodes, edges };
+}
+
+// ============ 带负权边的图生成器（用于Bellman-Ford和SPFA）============
+
+export interface NegativeWeightGraphOptions {
+  nodeCount?: number;
+  edgeCount?: number;
+  minWeight?: number;
+  maxWeight?: number;
+  negativeRatio?: number; // 负权边比例 0-1
+  ensureNegativeCycle?: boolean; // 是否确保生成负权环
+  pattern?: 'random' | 'chain' | 'star' | 'grid';
+}
+
+export function generateNegativeWeightGraph(options: NegativeWeightGraphOptions = {}): GraphData {
+  const {
+    nodeCount = 6,
+    edgeCount = 10,
+    minWeight = -8,
+    maxWeight = 10,
+    negativeRatio = 0.3,
+    ensureNegativeCycle = false,
+    pattern = 'random'
+  } = options;
+
+  const nodes: GraphNode[] = [];
+  const edges: GraphEdge[] = [];
+
+  const width = 800;
+  const height = 500;
+  const padding = 80;
+
+  // 根据模式生成节点位置
+  switch (pattern) {
+    case 'chain':
+      // 链状布局
+      for (let i = 0; i < nodeCount; i++) {
+        nodes.push({
+          id: i,
+          x: padding + (i / Math.max(1, nodeCount - 1)) * (width - 2 * padding),
+          y: height / 2,
+          visited: false,
+          distance: Infinity
+        });
+      }
+      break;
+      
+    case 'star':
+      // 星形布局
+      nodes.push({
+        id: 0,
+        x: width / 2,
+        y: height / 2,
+        visited: false,
+        distance: Infinity
+      });
+      for (let i = 1; i < nodeCount; i++) {
+        const angle = ((i - 1) / (nodeCount - 1)) * 2 * Math.PI;
+        const radius = Math.min(width, height) / 3;
+        nodes.push({
+          id: i,
+          x: width / 2 + Math.cos(angle) * radius,
+          y: height / 2 + Math.sin(angle) * radius,
+          visited: false,
+          distance: Infinity
+        });
+      }
+      break;
+      
+    case 'grid':
+      // 网格布局
+      const cols = Math.ceil(Math.sqrt(nodeCount));
+      const cellWidth = (width - 2 * padding) / (cols - 1 || 1);
+      const cellHeight = (height - 2 * padding) / (cols - 1 || 1);
+      for (let i = 0; i < nodeCount; i++) {
+        const row = Math.floor(i / cols);
+        const col = i % cols;
+        nodes.push({
+          id: i,
+          x: cols === 1 ? width / 2 : padding + col * cellWidth,
+          y: cols === 1 ? height / 2 : padding + row * cellHeight,
+          visited: false,
+          distance: Infinity
+        });
+      }
+      break;
+      
+    default:
+      // 随机圆形布局
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const radius = Math.min(width, height) / 2 - padding;
+      for (let i = 0; i < nodeCount; i++) {
+        const angle = (i / nodeCount) * 2 * Math.PI;
+        nodes.push({
+          id: i,
+          x: centerX + Math.cos(angle) * radius,
+          y: centerY + Math.sin(angle) * radius,
+          visited: false,
+          distance: Infinity
+        });
+      }
+  }
+
+  // 辅助函数：生成随机权重
+  const generateWeight = (): number => {
+    const isNegative = Math.random() < negativeRatio;
+    if (isNegative) {
+      return Math.floor(Math.random() * Math.abs(minWeight)) + minWeight;
+    } else {
+      return Math.floor(Math.random() * (maxWeight + 1));
+    }
+  };
+
+  const existingEdges = new Set<string>();
+
+  // 如果需要确保负权环，先创建一个环
+  if (ensureNegativeCycle) {
+    // 创建一个小环（3-4个节点）
+    const cycleSize = Math.min(3 + Math.floor(Math.random() * 2), nodeCount);
+    let cycleWeight = 0;
+    
+    for (let i = 0; i < cycleSize; i++) {
+      const from = i;
+      const to = (i + 1) % cycleSize;
+      // 最后一个边的权重设为负值，使得总权重为负
+      let weight: number;
+      if (i === cycleSize - 1) {
+        weight = -cycleWeight - 1 - Math.floor(Math.random() * 5);
+      } else {
+        weight = Math.floor(Math.random() * 5) + 1;
+        cycleWeight += weight;
+      }
+      
+      edges.push({ from, to, weight });
+      existingEdges.add(`${from}-${to}`);
+    }
+  }
+
+  // 添加更多边确保连通性
+  // 首先确保每个节点（除了0）至少有一条入边
+  for (let i = ensureNegativeCycle ? 3 : 1; i < nodeCount; i++) {
+    const parent = Math.floor(Math.random() * i);
+    const weight = generateWeight();
+    edges.push({ from: parent, to: i, weight });
+    existingEdges.add(`${parent}-${i}`);
+  }
+
+  // 添加额外的随机边
+  let attempts = 0;
+  const targetEdgeCount = Math.max(edgeCount, nodeCount - 1);
+  
+  while (edges.length < targetEdgeCount && attempts < 1000) {
+    const from = Math.floor(Math.random() * nodeCount);
+    const to = Math.floor(Math.random() * nodeCount);
+    
+    if (from !== to && !existingEdges.has(`${from}-${to}`)) {
+      // 避免反向边形成2节点环（除非允许负权环）
+      if (!ensureNegativeCycle && existingEdges.has(`${to}-${from}`)) {
+        attempts++;
+        continue;
+      }
+      
+      const weight = generateWeight();
+      edges.push({ from, to, weight });
+      existingEdges.add(`${from}-${to}`);
+    }
+    attempts++;
+  }
+
+  return { nodes, edges, directed: true, weighted: true };
+}
+
+// 生成用于教学的典型负权边图
+export function generateTeachingGraph(type: 'simple' | 'negative-cycle' | 'complex' = 'simple'): GraphData {
+  const nodes: GraphNode[] = [];
+  const edges: GraphEdge[] = [];
+
+  const width = 800;
+  const height = 500;
+
+  if (type === 'simple') {
+    // 简单的负权边教学图
+    // 布局：0在左，1,2,3在中间列，4在右
+    const positions = [
+      { x: 100, y: 250 },
+      { x: 300, y: 100 },
+      { x: 300, y: 250 },
+      { x: 300, y: 400 },
+      { x: 500, y: 250 }
+    ];
+
+    for (let i = 0; i < 5; i++) {
+      nodes.push({
+        id: i,
+        x: positions[i].x,
+        y: positions[i].y,
+        visited: false,
+        distance: Infinity
+      });
+    }
+
+    // 添加带负权边的边
+    edges.push(
+      { from: 0, to: 1, weight: 4 },
+      { from: 0, to: 2, weight: 2 },
+      { from: 0, to: 3, weight: 5 },
+      { from: 1, to: 2, weight: -3 }, // 负权边
+      { from: 2, to: 4, weight: 2 },
+      { from: 3, to: 4, weight: -2 }, // 负权边
+      { from: 1, to: 4, weight: 6 }
+    );
+  } else if (type === 'negative-cycle') {
+    // 带负权环的图
+    const positions = [
+      { x: 150, y: 250 },
+      { x: 350, y: 150 },
+      { x: 550, y: 250 },
+      { x: 350, y: 350 }
+    ];
+
+    for (let i = 0; i < 4; i++) {
+      nodes.push({
+        id: i,
+        x: positions[i].x,
+        y: positions[i].y,
+        visited: false,
+        distance: Infinity
+      });
+    }
+
+    // 创建一个负权环 1->2->3->1，总权重为负
+    edges.push(
+      { from: 0, to: 1, weight: 5 },
+      { from: 1, to: 2, weight: 3 },
+      { from: 2, to: 3, weight: -8 }, // 负权边
+      { from: 3, to: 1, weight: 2 },  // 形成环
+      { from: 0, to: 3, weight: 2 }
+    );
+  } else {
+    // 复杂图：多个负权边但没有负权环
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * 2 * Math.PI;
+      const radius = 150;
+      nodes.push({
+        id: i,
+        x: width / 2 + Math.cos(angle) * radius,
+        y: height / 2 + Math.sin(angle) * radius,
+        visited: false,
+        distance: Infinity
+      });
+    }
+
+    edges.push(
+      { from: 0, to: 1, weight: 5 },
+      { from: 0, to: 2, weight: -2 },
+      { from: 1, to: 3, weight: 3 },
+      { from: 2, to: 3, weight: 4 },
+      { from: 2, to: 4, weight: -3 },
+      { from: 3, to: 5, weight: 2 },
+      { from: 4, to: 5, weight: 6 },
+      { from: 1, to: 4, weight: -1 },
+      { from: 0, to: 5, weight: 10 }
+    );
+  }
+
+  return { nodes, edges, directed: true, weighted: true };
 }

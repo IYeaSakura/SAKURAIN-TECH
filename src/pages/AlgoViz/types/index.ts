@@ -9,11 +9,18 @@ export type AlgorithmCategory = 'sorting' | 'graph' | 'tree' | 'dp' | 'ml';
 export type AlgorithmId = 
   | 'bubble' | 'selection' | 'insertion' | 'shell' | 'quick' | 'merge' | 'heap'
   | 'counting' | 'radix' | 'bucket' | 'timsort'
-  | 'bfs' | 'dfs' | 'dijkstra' | 'astar'
-  | 'topo' | 'scc' | 'kosaraju' | 'tarjan'
+  | 'bfs' | 'dfs' | 'dijkstra' | 'astar' | 'bellmanford' | 'spfa' | 'floyd'
+  | 'topo' | 'scc' | 'kosaraju' | 'tarjan' | 'dsu'
+  | 'kruskal' | 'prim'
   | 'knapsack' | 'lcs' | 'lis'
   | 'bst' | 'avl' | 'rb-tree'
-  | 'perceptron' | 'kmeans' | 'gradient' | 'neuralnet';
+  | 'perceptron' | 'kmeans' | 'gradient' | 'neuralnet'
+  | 'adjacency-matrix' | 'adjacency-list' | 'chain-forward-star'
+  | 'articulation-points'
+  | 'dinic' | 'isap' | 'mcmf'
+  | 'hungarian' | 'hopcroft-karp'
+  | 'lca' | 'hld' | 'virtual-tree'
+  | 'lct' | 'stoer-wagner';
 
 // ============ 算法定义 ============
 export interface AlgorithmDefinition {
@@ -149,6 +156,7 @@ export interface GraphState {
   stack?: number[];
   currentNode?: number;
   result?: number[]; // 拓扑排序结果
+  totalWeight?: number; // MST总权重
 }
 
 // ============ 树算法数据 ============
