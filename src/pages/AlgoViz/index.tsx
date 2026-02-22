@@ -27,7 +27,8 @@ import { CommentSection } from '@/pages/Blog/components/CommentSection';
 // 导入模块
 import { ALL_ALGORITHMS, getAlgorithmsByCategory, getCodeTemplates } from './algorithms';
 import { useAlgorithmRunner } from './hooks/useAlgorithmRunner';
-import { generateSortingData, generateDAG, generateSCCGraph } from './utils/dataGenerators';
+import { generateSortingData, generateDAG, generateSCCGraph, generateWeightedGraph, generateNegativeWeightGraph, generateTeachingGraph, generateRandomGraph } from './utils/dataGenerators';
+import { generateGridMap, type GridMapData } from './utils/gridMapGenerator';
 import { parseGraphData, validateGraphData } from './utils/graphDataParser';
 
 // 导入组件
@@ -110,6 +111,40 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
   
   // 拓扑排序图形模式
   const [dagPattern, setDagPattern] = useState<'random' | 'linear' | 'diamond' | 'hourglass' | 'butterfly'>('random');
+  
+  // Negative weight graph pattern
+  const [negativeGraphPattern, setNegativeGraphPattern] = useState<'random' | 'simple' | 'negative-cycle' | 'complex'>('simple');
+  
+  // Floyd-Warshall matrix state
+  const [_matrixData, setMatrixData] = useState<{
+    dist: number[][];
+    next: number[][];
+    size: number;
+    currentK: number;
+    currentI: number;
+    currentJ: number;
+    updated: boolean;
+    completed: boolean;
+  }>({
+    dist: [],
+    next: [],
+    size: 0,
+    currentK: -1,
+    currentI: -1,
+    currentJ: -1,
+    updated: false,
+    completed: false
+  });
+  
+  // BFS/DFS start node
+  const [startNode, setStartNode] = useState<number>(0);
+  
+  // Grid map state (for A* and other grid-based pathfinding algorithms)
+  const [_gridMapData, setGridMapData] = useState<GridMapData | null>(null);
+  const [_gridPattern, _setGridPattern] = useState<'random' | 'maze' | 'rooms' | 'corridors'>('random');
+  const [_gridSize, _setGridSize] = useState<number>(15);
+  const [_obstacleRate, _setObstacleRate] = useState<number>(0.3);
+  const [_heuristicType, _setHeuristicType] = useState<'manhattan' | 'euclidean'>('manhattan');
 
   // Refs用于控制执行流程
   const isPausedRef = useRef<boolean>(false);
@@ -231,10 +266,87 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     } else if (currentAlgo.id === 'scc') {
       const data = generateSCCGraph({ sccCount: 3, minNodesPerSCC: 3, maxNodesPerSCC: 4 });
       setGraphData(data);
+    } else if (currentAlgo.id === 'kruskal' || currentAlgo.id === 'prim') {
+      // 为MST算法生成带权无向图
+      const data = generateWeightedGraph({ 
+        nodeCount: 8, 
+        edgeDensity: 0.5,
+        minWeight: 1,
+        maxWeight: 20
+      });
+      setGraphData(data);
+    } else if (currentAlgo.id === 'bfs' || currentAlgo.id === 'dfs') {
+      // 为BFS/DFS生成一个连通的无向图
+      const data = generateRandomGraph({ 
+        nodeCount: 8, 
+        edgeCount: 12, 
+        directed: false,
+        connected: true 
+      });
+      setGraphData(data);
+      // 随机选择起始节点
+      const randomStart = Math.floor(Math.random() * data.nodes.length);
+      setStartNode(randomStart);
+    } else if (currentAlgo.id === 'floyd') {
+      const data = generateWeightedGraph({ nodeCount: 6, edgeDensity: 0.5 });
+      setGraphData(data);
+      // 初始化距离矩阵
+      const n = data.nodes.length;
+      const dist: number[][] = Array.from({ length: n }, (_, i) => 
+        Array.from({ length: n }, (_, j) => i === j ? 0 : Infinity)
+      );
+      // 填充已知边权重
+      data.edges.forEach(edge => {
+        if (edge.weight !== undefined) {
+          dist[edge.from][edge.to] = edge.weight;
+        }
+      });
+      setMatrixData({
+        dist,
+        next: Array.from({ length: n }, () => Array(n).fill(-1)),
+        size: n,
+        currentK: -1,
+        currentI: -1,
+        currentJ: -1,
+        updated: false,
+        completed: false
+      });
+    } else if (currentAlgo.id === 'bellmanford' || currentAlgo.id === 'spfa') {
+      // 为Bellman-Ford/SPFA生成带负权边的图
+      if (negativeGraphPattern === 'random') {
+        const data = generateNegativeWeightGraph({
+          nodeCount: 6,
+          edgeCount: 10,
+          minWeight: -8,
+          maxWeight: 10,
+          negativeRatio: 0.3,
+          ensureNegativeCycle: false,
+          pattern: 'random'
+        });
+        setGraphData(data);
+      } else {
+        const data = generateTeachingGraph(negativeGraphPattern);
+        setGraphData(data);
+      }
+    } else if (currentAlgo.id === 'dijkstra') {
+      // 生成带权图用于Dijkstra
+      const data = generateWeightedGraph({ nodeCount: 8, edgeDensity: 0.5, positiveOnly: true });
+      setGraphData(data);
+    } else if (currentAlgo.id === 'astar') {
+      // Generate grid map for A*
+      const data = generateGridMap({ 
+        rows: _gridSize, 
+        cols: _gridSize, 
+        obstacleRate: _obstacleRate,
+        pattern: _gridPattern,
+        ensurePath: true
+      });
+      setGridMapData(data);
+      setGraphData(data.graphData);
     }
     
     setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set() });
-  }, [currentAlgo.id, currentAlgo.category, arraySize, runner]);
+  }, [currentAlgo.id, currentAlgo.category, arraySize, runner, _gridSize, _obstacleRate, _gridPattern]);
 
   // 初始化数据 - 只执行一次
   useEffect(() => {
@@ -420,7 +532,7 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       adjacencyList?: Map<number, number[]>;
       inDegree?: Map<number, number>;
       queue?: number[];
-      result?: number[];
+      result?: number[] | string[];
     }
   ): MemoryState => {
     const varCells: MemoryCell[] = variables.map(v => ({
@@ -2863,6 +2975,1254 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     runner.setCompleted();
   };
 
+  // BFS (广度优先搜索) 执行
+  const runBFS = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    
+    runner.start();
+    
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+    
+    // 构建邻接表
+    const adj = new Map<number, number[]>();
+    nodes.forEach(node => {
+      adj.set(node.id, []);
+    });
+    
+    edges.forEach(edge => {
+      adj.get(edge.from)!.push(edge.to);
+      if (!graphData.directed) {
+        adj.get(edge.to)!.push(edge.from);
+      }
+    });
+    
+    // 初始化节点状态
+    nodes.forEach(node => {
+      node.visited = false;
+      node.inQueue = false;
+      node.isProcessing = false;
+      node.distance = Infinity;
+      node.parent = null;
+    });
+    
+    // BFS队列，存储 [节点ID, 距离]
+    const queue: number[] = [];
+    const start = startNode % n;
+    
+    queue.push(start);
+    nodes[start].inQueue = true;
+    nodes[start].distance = 0;
+    
+    const visitOrder: number[] = [];
+    
+    setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    setGraphState({ 
+      highlightedEdges: new Set(), 
+      highlightedNodes: new Set([start]),
+      queue: [...queue],
+      currentNode: start
+    });
+    
+    runner.recordStep({
+      lineNumber: 1,
+      description: `初始化完成。起点: ${start}，加入队列`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'start', value: start, type: 'primitive' },
+        { name: 'queue', value: `[${queue.join(', ')}]`, type: 'array' },
+        { name: 'visited', value: `[${start}]`, type: 'array' }
+      ],
+      highlights: { nodes: [start], edges: [] },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [
+          { name: 'start', value: start, type: 'primitive' },
+          { name: 'queue.size', value: queue.length, type: 'primitive' }
+        ],
+        { adjacencyList: adj, queue, result: visitOrder }
+      )
+    });
+    
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+    
+    while (queue.length > 0) {
+      if (shouldStopRef.current) {
+        runner.stop();
+        return;
+      }
+      
+      // 取出队首节点
+      const u = queue.shift()!;
+      const nodeU = nodes.find(n => n.id === u)!;
+      nodeU.inQueue = false;
+      nodeU.visited = true;
+      nodeU.isProcessing = true;
+      visitOrder.push(u);
+      
+      setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+      setGraphState({ 
+        highlightedEdges: new Set(), 
+        highlightedNodes: new Set([u]),
+        queue: [...queue],
+        currentNode: u
+      });
+      
+      runner.recordStep({
+        lineNumber: 5,
+        description: `取出节点 ${u} (距离: ${nodeU.distance})，标记为已访问。访问顺序: [${visitOrder.join(' → ')}]`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'u', value: u, type: 'primitive' },
+          { name: 'queue', value: `[${queue.join(', ')}]`, type: 'array' },
+          { name: 'distance[u]', value: nodeU.distance, type: 'primitive' }
+        ],
+        highlights: { nodes: [u], edges: [] },
+        memory: buildGraphMemoryState(
+          nodes,
+          edges,
+          [
+            { name: 'u', value: u, type: 'primitive' },
+            { name: 'queue.size', value: queue.length, type: 'primitive' }
+          ],
+          { adjacencyList: adj, queue, result: visitOrder }
+        )
+      });
+      
+      if (!(await waitWithPause(speedRef.current))) {
+        runner.stop();
+        return;
+      }
+      
+      // 处理所有邻居
+      const neighbors = adj.get(u) || [];
+      for (const v of neighbors) {
+        if (shouldStopRef.current) {
+          runner.stop();
+          return;
+        }
+        
+        const nodeV = nodes.find(n => n.id === v)!;
+        
+        if (!nodeV.visited && !nodeV.inQueue) {
+          // 发现新节点
+          queue.push(v);
+          nodeV.inQueue = true;
+          nodeV.distance = (nodeU.distance || 0) + 1;
+          nodeV.parent = u;
+          
+          // 高亮边 u -> v
+          const edgeKey = graphData.directed ? `${u}-${v}` : `${Math.min(u, v)}-${Math.max(u, v)}`;
+          setGraphState(prev => ({
+            ...prev,
+            highlightedEdges: new Set([...prev.highlightedEdges, edgeKey]),
+            highlightedNodes: new Set([u, v]),
+            queue: [...queue]
+          }));
+          
+          runner.recordStep({
+            lineNumber: 9,
+            description: `发现节点 ${v}，距离 = ${nodeV.distance}，父节点 = ${u}，加入队列`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'u', value: u, type: 'primitive' },
+              { name: 'v', value: v, type: 'primitive' },
+              { name: 'distance[v]', value: nodeV.distance, type: 'primitive' }
+            ],
+            highlights: { nodes: [u, v], edges: [edgeKey] },
+            memory: buildGraphMemoryState(
+              nodes,
+              edges,
+              [
+                { name: 'u', value: u, type: 'primitive' },
+                { name: 'v', value: v, type: 'primitive' },
+                { name: 'queue.size', value: queue.length, type: 'primitive' }
+              ],
+              { adjacencyList: adj, queue, result: visitOrder }
+            )
+          });
+          
+          if (!(await waitWithPause(speedRef.current * 0.7))) {
+            runner.stop();
+            return;
+          }
+        } else {
+          // 节点已访问或在队列中
+          const edgeKey = graphData.directed ? `${u}-${v}` : `${Math.min(u, v)}-${Math.max(u, v)}`;
+          setGraphState(prev => ({
+            ...prev,
+            highlightedEdges: new Set([...prev.highlightedEdges, edgeKey]),
+            highlightedNodes: new Set([u, v])
+          }));
+          
+          runner.recordStep({
+            lineNumber: 11,
+            description: `节点 ${v} 已${nodeV.visited ? '访问' : '在队列中'}，跳过`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'u', value: u, type: 'primitive' },
+              { name: 'v', value: v, type: 'primitive' }
+            ],
+            highlights: { nodes: [u, v], edges: [edgeKey] },
+            memory: buildGraphMemoryState(
+              nodes,
+              edges,
+              [
+                { name: 'u', value: u, type: 'primitive' },
+                { name: 'v', value: v, type: 'primitive' }
+              ],
+              { adjacencyList: adj, queue, result: visitOrder }
+            )
+          });
+          
+          if (!(await waitWithPause(speedRef.current * 0.5))) {
+            runner.stop();
+            return;
+          }
+        }
+      }
+      
+      // 取消当前节点的处理状态
+      nodeU.isProcessing = false;
+      setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    }
+    
+    // BFS完成
+    setGraphState({ 
+      highlightedEdges: new Set(), 
+      highlightedNodes: new Set(),
+      queue: [],
+      currentNode: undefined,
+      phase: 'completed'
+    });
+    
+    runner.recordStep({
+      lineNumber: 14,
+      description: `BFS遍历完成！访问顺序: [${visitOrder.join(' → ')}]`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'result', value: `[${visitOrder.join(', ')}]`, type: 'array' },
+        { name: 'result.size', value: visitOrder.length, type: 'primitive' }
+      ],
+      highlights: { nodes: visitOrder, edges: [] },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [{ name: 'result.size', value: visitOrder.length, type: 'primitive' }],
+        { adjacencyList: adj, queue: [], result: visitOrder }
+      )
+    });
+    
+    runner.setCompleted();
+  };
+
+  // DFS (深度优先搜索) 执行
+  const runDFS = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+    
+    runner.start();
+    
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+    
+    // 构建邻接表
+    const adj = new Map<number, number[]>();
+    nodes.forEach(node => {
+      adj.set(node.id, []);
+    });
+    
+    edges.forEach(edge => {
+      adj.get(edge.from)!.push(edge.to);
+      if (!graphData.directed) {
+        adj.get(edge.to)!.push(edge.from);
+      }
+    });
+    
+    // 初始化节点状态
+    nodes.forEach(node => {
+      node.visited = false;
+      node.inStack = false;
+      node.isProcessing = false;
+      node.parent = null;
+    });
+    
+    // DFS栈，用于显式栈实现
+    const stack: number[] = [];
+    const start = startNode % n;
+    
+    stack.push(start);
+    
+    const visitOrder: number[] = [];
+    
+    setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    setGraphState({ 
+      highlightedEdges: new Set(), 
+      highlightedNodes: new Set([start]),
+      stack: [...stack],
+      currentNode: start
+    });
+    
+    runner.recordStep({
+      lineNumber: 1,
+      description: `初始化完成。起点: ${start}，压入栈`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'start', value: start, type: 'primitive' },
+        { name: 'stack', value: `[${stack.join(', ')}]`, type: 'array' }
+      ],
+      highlights: { nodes: [start], edges: [] },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [
+          { name: 'start', value: start, type: 'primitive' },
+          { name: 'stack.size', value: stack.length, type: 'primitive' }
+        ],
+        { adjacencyList: adj, queue: stack, result: visitOrder }
+      )
+    });
+    
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+    
+    while (stack.length > 0) {
+      if (shouldStopRef.current) {
+        runner.stop();
+        return;
+      }
+      
+      // 查看栈顶（不弹出）
+      const u = stack[stack.length - 1];
+      const nodeU = nodes.find(n => n.id === u)!;
+      
+      // 如果节点未访问，标记为正在处理
+      if (!nodeU.visited) {
+        nodeU.visited = true;
+        nodeU.inStack = true;
+        nodeU.isProcessing = true;
+        visitOrder.push(u);
+        
+        setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+        setGraphState({ 
+          highlightedEdges: new Set(), 
+          highlightedNodes: new Set([u]),
+          stack: [...stack],
+          currentNode: u
+        });
+        
+        runner.recordStep({
+          lineNumber: 5,
+          description: `访问节点 ${u}，标记为已访问。访问顺序: [${visitOrder.join(' → ')}]`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [
+            { name: 'u', value: u, type: 'primitive' },
+            { name: 'stack', value: `[${stack.join(', ')}]`, type: 'array' }
+          ],
+          highlights: { nodes: [u], edges: [] },
+          memory: buildGraphMemoryState(
+            nodes,
+            edges,
+            [
+              { name: 'u', value: u, type: 'primitive' },
+              { name: 'stack.size', value: stack.length, type: 'primitive' }
+            ],
+            { adjacencyList: adj, queue: stack, result: visitOrder }
+          )
+        });
+        
+        if (!(await waitWithPause(speedRef.current))) {
+          runner.stop();
+          return;
+        }
+      }
+      
+      // 寻找未访问的邻居
+      const neighbors = adj.get(u) || [];
+      let foundUnvisited = false;
+      
+      for (const v of neighbors) {
+        if (shouldStopRef.current) {
+          runner.stop();
+          return;
+        }
+        
+        const nodeV = nodes.find(n => n.id === v)!;
+        
+        if (!nodeV.visited) {
+          // 发现未访问的邻居，压入栈
+          foundUnvisited = true;
+          stack.push(v);
+          nodeV.parent = u;
+          
+          // 高亮边 u -> v
+          const edgeKey = graphData.directed ? `${u}-${v}` : `${Math.min(u, v)}-${Math.max(u, v)}`;
+          setGraphState(prev => ({
+            ...prev,
+            highlightedEdges: new Set([...prev.highlightedEdges, edgeKey]),
+            highlightedNodes: new Set([u, v]),
+            stack: [...stack]
+          }));
+          
+          runner.recordStep({
+            lineNumber: 9,
+            description: `发现未访问的邻居 ${v}，压入栈。深度 +1`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'u', value: u, type: 'primitive' },
+              { name: 'v', value: v, type: 'primitive' },
+              { name: 'stack.size', value: stack.length, type: 'primitive' }
+            ],
+            highlights: { nodes: [u, v], edges: [edgeKey] },
+            memory: buildGraphMemoryState(
+              nodes,
+              edges,
+              [
+                { name: 'u', value: u, type: 'primitive' },
+                { name: 'v', value: v, type: 'primitive' },
+                { name: 'stack.size', value: stack.length, type: 'primitive' }
+              ],
+              { adjacencyList: adj, queue: stack, result: visitOrder }
+            )
+          });
+          
+          if (!(await waitWithPause(speedRef.current))) {
+            runner.stop();
+            return;
+          }
+          
+          break;  // 处理完一个邻居后继续循环（深度优先）
+        } else if (nodeV.inStack) {
+          // 发现回边（当前DFS路径上的节点）
+          const edgeKey = graphData.directed ? `${u}-${v}` : `${Math.min(u, v)}-${Math.max(u, v)}`;
+          setGraphState(prev => ({
+            ...prev,
+            highlightedEdges: new Set([...prev.highlightedEdges, edgeKey]),
+            highlightedNodes: new Set([u, v])
+          }));
+          
+          runner.recordStep({
+            lineNumber: 13,
+            description: `节点 ${v} 在当前路径上（回边），跳过`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'u', value: u, type: 'primitive' },
+              { name: 'v', value: v, type: 'primitive' }
+            ],
+            highlights: { nodes: [u, v], edges: [edgeKey] },
+            memory: buildGraphMemoryState(
+              nodes,
+              edges,
+              [
+                { name: 'u', value: u, type: 'primitive' },
+                { name: 'v', value: v, type: 'primitive' }
+              ],
+              { adjacencyList: adj, queue: stack, result: visitOrder }
+            )
+          });
+          
+          if (!(await waitWithPause(speedRef.current * 0.5))) {
+            runner.stop();
+            return;
+          }
+        }
+      }
+      
+      // 如果没有未访问的邻居，弹出栈（回溯）
+      if (!foundUnvisited) {
+        const popped = stack.pop()!;
+        const poppedNode = nodes.find(n => n.id === popped)!;
+        poppedNode.inStack = false;
+        poppedNode.isProcessing = false;
+        
+        setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+        setGraphState(prev => ({
+          ...prev,
+          stack: [...stack],
+          currentNode: stack.length > 0 ? stack[stack.length - 1] : undefined
+        }));
+        
+        runner.recordStep({
+          lineNumber: 17,
+          description: stack.length > 0 
+            ? `节点 ${popped} 无未访问邻居，弹出栈。回溯到节点 ${stack[stack.length - 1]}`
+            : `节点 ${popped} 无未访问邻居，弹出栈。栈为空，遍历完成`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [
+            { name: 'popped', value: popped, type: 'primitive' },
+            { name: 'stack.size', value: stack.length, type: 'primitive' }
+          ],
+          highlights: { nodes: poppedNode.parent !== null && poppedNode.parent !== undefined ? [popped, poppedNode.parent] : [popped], edges: [] },
+          memory: buildGraphMemoryState(
+            nodes,
+            edges,
+            [
+              { name: 'popped', value: popped, type: 'primitive' },
+              { name: 'stack.size', value: stack.length, type: 'primitive' }
+            ],
+            { adjacencyList: adj, queue: stack, result: visitOrder }
+          )
+        });
+        
+        if (!(await waitWithPause(speedRef.current * 0.7))) {
+          runner.stop();
+          return;
+        }
+      }
+    }
+    
+    // DFS完成
+    setGraphState({ 
+      highlightedEdges: new Set(), 
+      highlightedNodes: new Set(),
+      stack: [],
+      currentNode: undefined,
+      phase: 'completed'
+    });
+    
+    runner.recordStep({
+      lineNumber: 20,
+      description: `DFS遍历完成！访问顺序: [${visitOrder.join(' → ')}]`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'result', value: `[${visitOrder.join(', ')}]`, type: 'array' },
+        { name: 'result.size', value: visitOrder.length, type: 'primitive' }
+      ],
+      highlights: { nodes: visitOrder, edges: [] },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [{ name: 'result.size', value: visitOrder.length, type: 'primitive' }],
+        { adjacencyList: adj, queue: [], result: visitOrder }
+      )
+    });
+    
+    runner.setCompleted();
+  };
+
+  // Kruskal MST 执行
+  const runKruskal = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // 构建边列表（去重，因为是无向图）
+    const edgeList: { from: number; to: number; weight: number }[] = [];
+    const seen = new Set<string>();
+    edges.forEach(e => {
+      const key = e.from < e.to ? `${e.from}-${e.to}` : `${e.to}-${e.from}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        edgeList.push({ from: e.from, to: e.to, weight: e.weight || 1 });
+      }
+    });
+
+    // 按权重排序边
+    edgeList.sort((a, b) => a.weight - b.weight);
+
+    // 初始化并查集
+    const parent: number[] = Array.from({ length: n }, (_, i) => i);
+    const rank: number[] = new Array(n).fill(0);
+
+    const find = (x: number): number => {
+      if (parent[x] !== x) {
+        parent[x] = find(parent[x]);
+      }
+      return parent[x];
+    };
+
+    const union = (x: number, y: number): boolean => {
+      const px = find(x), py = find(y);
+      if (px === py) return false;
+      if (rank[px] < rank[py]) {
+        parent[px] = py;
+      } else if (rank[px] > rank[py]) {
+        parent[py] = px;
+      } else {
+        parent[py] = px;
+        rank[px]++;
+      }
+      return true;
+    };
+
+    const mstEdges: string[] = [];
+    const mstNodes = new Set<number>();
+    let totalWeight = 0;
+
+    // 初始化状态
+    setGraphData(prev => ({ ...prev, nodes: [...nodes], edges: [...edges] }));
+    setGraphState({ 
+      highlightedEdges: new Set(), 
+      highlightedNodes: new Set(),
+      phase: 'running'
+    });
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `初始化完成。共有 ${n} 个节点，${edgeList.length} 条边。准备按权重排序后依次处理。`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'n', value: n, type: 'primitive' },
+        { name: 'm', value: edgeList.length, type: 'primitive' },
+        { name: 'totalWeight', value: 0, type: 'primitive' }
+      ],
+      highlights: { nodes: [], edges: [] },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [
+          { name: 'n', value: n, type: 'primitive' },
+          { name: 'edgeCount', value: edgeList.length, type: 'primitive' }
+        ],
+        { result: [] }
+      )
+    });
+
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+
+    // 遍历排序后的边
+    for (let i = 0; i < edgeList.length; i++) {
+      if (shouldStopRef.current) {
+        runner.stop();
+        return;
+      }
+
+      const edge = edgeList[i];
+      const edgeKey = edge.from < edge.to ? `${edge.from}-${edge.to}` : `${edge.to}-${edge.from}`;
+
+      // 高亮当前考虑的边
+      setGraphState(prev => ({
+        ...prev,
+        highlightedEdges: new Set([edgeKey]),
+        highlightedNodes: new Set([edge.from, edge.to])
+      }));
+
+      const fromRoot = find(edge.from);
+      const toRoot = find(edge.to);
+      const willFormCycle = fromRoot === toRoot;
+
+      runner.recordStep({
+        lineNumber: 8,
+        description: `考虑边 (${edge.from}-${edge.to})，权重=${edge.weight}。${willFormCycle ? '会形成环，跳过！' : '不会形成环，加入MST'}`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'i', value: i, type: 'primitive' },
+          { name: 'u', value: edge.from, type: 'primitive' },
+          { name: 'v', value: edge.to, type: 'primitive' },
+          { name: 'weight', value: edge.weight, type: 'primitive' },
+          { name: 'totalWeight', value: totalWeight, type: 'primitive' }
+        ],
+        highlights: { nodes: [edge.from, edge.to], edges: [edgeKey] },
+        memory: buildGraphMemoryState(
+          nodes,
+          edges,
+          [
+            { name: 'i', value: i, type: 'primitive' },
+            { name: 'u', value: edge.from, type: 'primitive' },
+            { name: 'v', value: edge.to, type: 'primitive' },
+            { name: 'find(u)', value: fromRoot, type: 'primitive' },
+            { name: 'find(v)', value: toRoot, type: 'primitive' }
+          ],
+          { result: mstEdges.map(e => `边${e}`) }
+        )
+      });
+
+      if (!(await waitWithPause(speedRef.current))) {
+        runner.stop();
+        return;
+      }
+
+      if (!willFormCycle) {
+        // 加入MST
+        union(edge.from, edge.to);
+        mstEdges.push(edgeKey);
+        mstNodes.add(edge.from);
+        mstNodes.add(edge.to);
+        totalWeight += edge.weight;
+
+        // 高亮MST边
+        setGraphState(prev => ({
+          ...prev,
+          highlightedEdges: new Set(mstEdges),
+          highlightedNodes: new Set(mstNodes)
+        }));
+
+        runner.recordStep({
+          lineNumber: 10,
+          description: `将边 (${edge.from}-${edge.to}) 加入MST。当前总权重: ${totalWeight}`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [
+            { name: 'totalWeight', value: totalWeight, type: 'primitive' },
+            { name: 'mstEdges', value: mstEdges.length, type: 'primitive' }
+          ],
+          highlights: { nodes: Array.from(mstNodes), edges: mstEdges },
+          memory: buildGraphMemoryState(
+            nodes,
+            edges,
+            [
+              { name: 'totalWeight', value: totalWeight, type: 'primitive' },
+              { name: 'mstSize', value: mstEdges.length, type: 'primitive' }
+            ],
+            { result: mstEdges.map(e => `边${e}`) }
+          )
+        });
+
+        if (!(await waitWithPause(speedRef.current * 0.7))) {
+          runner.stop();
+          return;
+        }
+
+        // 检查是否完成
+        if (mstEdges.length === n - 1) {
+          break;
+        }
+      }
+    }
+
+    // 最终结果
+    setGraphState({ 
+      highlightedEdges: new Set(mstEdges), 
+      highlightedNodes: new Set(mstNodes),
+      phase: 'completed',
+      totalWeight
+    });
+
+    runner.recordStep({
+      lineNumber: 16,
+      description: `Kruskal算法完成！MST包含 ${mstEdges.length} 条边，总权重: ${totalWeight}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'totalWeight', value: totalWeight, type: 'primitive' },
+        { name: 'mstEdges', value: mstEdges.length, type: 'primitive' }
+      ],
+      highlights: { nodes: Array.from(mstNodes), edges: mstEdges },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [
+          { name: 'totalWeight', value: totalWeight, type: 'primitive' },
+          { name: 'mstSize', value: mstEdges.length, type: 'primitive' }
+        ],
+        { result: mstEdges.map(e => `边${e}(权重${edgeList.find(ed => {
+          const ek = ed.from < ed.to ? `${ed.from}-${ed.to}` : `${ed.to}-${ed.from}`;
+          return ek === e;
+        })?.weight || '?'})`) }
+      )
+    });
+
+    runner.setCompleted();
+  };
+
+  // Prim MST 执行
+  const runPrim = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // 构建邻接表
+    const adj = new Map<number, { to: number; weight: number }[]>();
+    nodes.forEach(node => adj.set(node.id, []));
+    edges.forEach(edge => {
+      adj.get(edge.from)!.push({ to: edge.to, weight: edge.weight || 1 });
+      adj.get(edge.to)!.push({ to: edge.from, weight: edge.weight || 1 });
+    });
+
+    // Prim算法
+    const inMST = new Array(n).fill(false);
+    const key = new Array(n).fill(Infinity);
+    const parent = new Array(n).fill(-1);
+
+    // 从节点0开始
+    const startNode = 0;
+    key[startNode] = 0;
+
+    // 优先队列实现
+    type PQItem = { node: number; key: number };
+    const pq: PQItem[] = [{ node: startNode, key: 0 }];
+
+    const heapifyUp = (idx: number) => {
+      while (idx > 0) {
+        const p = Math.floor((idx - 1) / 2);
+        if (pq[p].key <= pq[idx].key) break;
+        [pq[p], pq[idx]] = [pq[idx], pq[p]];
+        idx = p;
+      }
+    };
+
+    const heapifyDown = (idx: number) => {
+      while (true) {
+        let min = idx;
+        const left = 2 * idx + 1;
+        const right = 2 * idx + 2;
+        if (left < pq.length && pq[left].key < pq[min].key) min = left;
+        if (right < pq.length && pq[right].key < pq[min].key) min = right;
+        if (min === idx) break;
+        [pq[idx], pq[min]] = [pq[min], pq[idx]];
+        idx = min;
+      }
+    };
+
+    const pqEnqueue = (node: number, k: number) => {
+      pq.push({ node, key: k });
+      heapifyUp(pq.length - 1);
+    };
+
+    const pqDequeue = (): number | null => {
+      if (pq.length === 0) return null;
+      const min = pq[0];
+      const end = pq.pop()!;
+      if (pq.length > 0) {
+        pq[0] = end;
+        heapifyDown(0);
+      }
+      return min.node;
+    };
+
+    const mstEdges: string[] = [];
+    let totalWeight = 0;
+
+    // 初始化显示
+    setGraphData(prev => ({ ...prev, nodes: [...nodes], edges: [...edges] }));
+    setGraphState({ 
+      highlightedEdges: new Set(), 
+      highlightedNodes: new Set([startNode]),
+      currentNode: startNode,
+      phase: 'running'
+    });
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `Prim算法初始化。从节点 ${startNode} 开始构建MST。`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'start', value: startNode, type: 'primitive' },
+        { name: 'n', value: n, type: 'primitive' }
+      ],
+      highlights: { nodes: [startNode], edges: [] },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [
+          { name: 'start', value: startNode, type: 'primitive' },
+          { name: 'n', value: n, type: 'primitive' }
+        ],
+        { result: [] }
+      )
+    });
+
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+
+    while (mstEdges.length < n - 1) {
+      if (shouldStopRef.current) {
+        runner.stop();
+        return;
+      }
+
+      const u = pqDequeue();
+      if (u === null) break;
+      if (inMST[u]) continue;
+
+      inMST[u] = true;
+
+      // 如果不是起始节点，添加边到MST
+      if (parent[u] !== -1) {
+        const edgeKey = parent[u] < u ? `${parent[u]}-${u}` : `${u}-${parent[u]}`;
+        mstEdges.push(edgeKey);
+        totalWeight += key[u];
+      }
+
+      // 高亮当前节点
+      const currentMSTNodes = nodes.filter((_, i) => inMST[i]).map(n => n.id);
+      setGraphState(prev => ({
+        ...prev,
+        highlightedEdges: new Set(mstEdges),
+        highlightedNodes: new Set(currentMSTNodes),
+        currentNode: u
+      }));
+
+      runner.recordStep({
+        lineNumber: 8,
+        description: `将节点 ${u} 加入MST${parent[u] !== -1 ? `，通过边 (${parent[u]}-${u})，权重=${key[u]}` : ''}。当前总权重: ${totalWeight}`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'u', value: u, type: 'primitive' },
+          { name: 'key[u]', value: key[u], type: 'primitive' },
+          { name: 'totalWeight', value: totalWeight, type: 'primitive' }
+        ],
+        highlights: { nodes: currentMSTNodes, edges: mstEdges },
+        memory: buildGraphMemoryState(
+          nodes,
+          edges,
+          [
+            { name: 'u', value: u, type: 'primitive' },
+            { name: 'totalWeight', value: totalWeight, type: 'primitive' },
+            { name: 'mstSize', value: mstEdges.length, type: 'primitive' }
+          ],
+          { result: mstEdges.map(e => `边${e}`) }
+        )
+      });
+
+      if (!(await waitWithPause(speedRef.current))) {
+        runner.stop();
+        return;
+      }
+
+      // 更新邻居
+      for (const { to: v, weight } of adj.get(u) || []) {
+        if (!inMST[v] && weight < key[v]) {
+          const oldKey = key[v];
+          key[v] = weight;
+          parent[v] = u;
+          pqEnqueue(v, key[v]);
+
+          // 高亮更新的边
+          const updateEdgeKey = u < v ? `${u}-${v}` : `${v}-${u}`;
+          setGraphState(prev => ({
+            ...prev,
+            highlightedEdges: new Set([...mstEdges, updateEdgeKey]),
+            highlightedNodes: new Set([...currentMSTNodes, v])
+          }));
+
+          runner.recordStep({
+            lineNumber: 15,
+            description: `更新节点 ${v} 的最小连接边：从 ${oldKey === Infinity ? '∞' : oldKey} 变为 ${weight}（通过节点 ${u}）`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'v', value: v, type: 'primitive' },
+              { name: 'oldKey', value: oldKey === Infinity ? '∞' : oldKey, type: 'primitive' },
+              { name: 'newKey', value: weight, type: 'primitive' },
+              { name: 'parent[v]', value: u, type: 'primitive' }
+            ],
+            highlights: { nodes: [...currentMSTNodes, v], edges: [...mstEdges, updateEdgeKey] },
+            memory: buildGraphMemoryState(
+              nodes,
+              edges,
+              [
+                { name: 'v', value: v, type: 'primitive' },
+                { name: 'key[v]', value: weight, type: 'primitive' },
+                { name: 'parent[v]', value: u, type: 'primitive' }
+              ],
+              { result: mstEdges.map(e => `边${e}`) }
+            )
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.7))) {
+            runner.stop();
+            return;
+          }
+        }
+      }
+    }
+
+    // 最终结果
+    const finalMSTNodes = nodes.filter((_, i) => inMST[i]).map(n => n.id);
+    setGraphState({ 
+      highlightedEdges: new Set(mstEdges), 
+      highlightedNodes: new Set(finalMSTNodes),
+      phase: 'completed',
+      totalWeight
+    });
+
+    runner.recordStep({
+      lineNumber: 20,
+      description: `Prim算法完成！MST包含 ${mstEdges.length} 条边，总权重: ${totalWeight}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'totalWeight', value: totalWeight, type: 'primitive' },
+        { name: 'mstEdges', value: mstEdges.length, type: 'primitive' }
+      ],
+      highlights: { nodes: finalMSTNodes, edges: mstEdges },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [
+          { name: 'totalWeight', value: totalWeight, type: 'primitive' },
+          { name: 'mstSize', value: mstEdges.length, type: 'primitive' }
+        ],
+        { result: mstEdges.map(e => `边${e}`) }
+      )
+    });
+
+    runner.setCompleted();
+  };
+
+  // Floyd-Warshall (弗洛伊德) 多源最短路径算法执行
+  const runFloydWarshall = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // 初始化距离矩阵
+    const dist: number[][] = Array.from({ length: n }, (_, i) => 
+      Array.from({ length: n }, (_, j) => i === j ? 0 : Infinity)
+    );
+    const next: number[][] = Array.from({ length: n }, () => Array(n).fill(-1));
+
+    // 填充已知边权重
+    edges.forEach(edge => {
+      if (edge.weight !== undefined && edge.weight < dist[edge.from][edge.to]) {
+        dist[edge.from][edge.to] = edge.weight;
+        next[edge.from][edge.to] = edge.to;
+      }
+    });
+
+    // 记录初始矩阵状态
+    setMatrixData({
+      dist: dist.map(row => [...row]),
+      next: next.map(row => [...row]),
+      size: n,
+      currentK: -1,
+      currentI: -1,
+      currentJ: -1,
+      updated: false,
+      completed: false
+    });
+
+    runner.recordStep({
+      lineNumber: 5,
+      description: `初始化距离矩阵完成。对角线为0，已知边填充权重，其余为∞`,
+      data: { 
+        nodes: cloneNodes(nodes), 
+        edges,
+        matrix: dist.map(row => [...row]),
+        size: n
+      },
+      variables: [
+        { name: 'n', value: n, type: 'primitive' }
+      ],
+      highlights: { nodes: [], edges: [] },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [
+          { name: 'n', value: n, type: 'primitive' }
+        ],
+        {}
+      )
+    });
+
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+
+    // Floyd-Warshall 核心三重循环
+    for (let k = 0; k < n; k++) {
+      if (shouldStopRef.current) {
+        runner.stop();
+        return;
+      }
+
+      // 高亮当前中转点k
+      setMatrixData(prev => ({ ...prev, currentK: k, currentI: -1, currentJ: -1, updated: false }));
+      
+      // 高亮节点k
+      const nodeK = nodes.find(n => n.id === k);
+      if (nodeK) nodeK.isProcessing = true;
+      setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+
+      runner.recordStep({
+        lineNumber: 10,
+        description: `开始第 ${k + 1} 轮迭代：以节点 ${k} 作为中转点`,
+        data: { 
+          nodes: cloneNodes(nodes), 
+          edges,
+          matrix: dist.map(row => [...row]),
+          k,
+          size: n
+        },
+        variables: [
+          { name: 'k', value: k, type: 'primitive' }
+        ],
+        highlights: { nodes: [k], edges: [] },
+        memory: buildGraphMemoryState(
+          nodes,
+          edges,
+          [
+            { name: 'k', value: k, type: 'primitive' },
+            { name: 'n', value: n, type: 'primitive' }
+          ],
+          {}
+        )
+      });
+
+      if (!(await waitWithPause(speedRef.current * 0.7))) {
+        runner.stop();
+        return;
+      }
+
+      for (let i = 0; i < n; i++) {
+        if (shouldStopRef.current) {
+          runner.stop();
+          return;
+        }
+
+        for (let j = 0; j < n; j++) {
+          if (shouldStopRef.current) {
+            runner.stop();
+            return;
+          }
+
+          // 跳过对角线
+          if (i === j) continue;
+
+          setMatrixData(prev => ({ ...prev, currentI: i, currentJ: j, updated: false }));
+
+          const oldDist = dist[i][j];
+          const newDist = dist[i][k] + dist[k][j];
+          const willUpdate = newDist < oldDist;
+
+          runner.recordStep({
+            lineNumber: 13,
+            description: willUpdate 
+              ? `检查 dist[${i}][${j}]：${oldDist === Infinity ? '∞' : oldDist} > ${dist[i][k]} + ${dist[k][j]} = ${newDist}，需要更新！`
+              : `检查 dist[${i}][${j}]：${oldDist === Infinity ? '∞' : oldDist} ≤ ${dist[i][k] === Infinity ? '∞' : dist[i][k]} + ${dist[k][j] === Infinity ? '∞' : dist[k][j]}，无需更新`,
+            data: { 
+              nodes: cloneNodes(nodes), 
+              edges,
+              matrix: dist.map(row => [...row]),
+              k, i, j,
+              size: n,
+              checking: true,
+              willUpdate
+            },
+            variables: [
+              { name: 'k', value: k, type: 'primitive' },
+              { name: 'i', value: i, type: 'primitive' },
+              { name: 'j', value: j, type: 'primitive' },
+              { name: `dist[${i}][${j}]`, value: oldDist === Infinity ? '∞' : oldDist, type: 'primitive' },
+              { name: `dist[${i}][${k}]+dist[${k}][${j}]`, value: newDist === Infinity ? '∞' : newDist, type: 'primitive' }
+            ],
+            highlights: { nodes: [i, k, j], edges: [] },
+            memory: buildGraphMemoryState(
+              nodes,
+              edges,
+              [
+                { name: 'k', value: k, type: 'primitive' },
+                { name: 'i', value: i, type: 'primitive' },
+                { name: 'j', value: j, type: 'primitive' }
+              ],
+              {}
+            )
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.3))) {
+            runner.stop();
+            return;
+          }
+
+          // 状态转移：如果经过k可以缩短i到j的距离
+          if (newDist < oldDist) {
+            dist[i][j] = newDist;
+            next[i][j] = next[i][k];
+
+            setMatrixData(prev => ({ 
+              ...prev, 
+              dist: dist.map(row => [...row]),
+              next: next.map(row => [...row]),
+              updated: true 
+            }));
+
+            runner.recordStep({
+              lineNumber: 14,
+              description: `更新 dist[${i}][${j}] = ${newDist}，路径经过节点 ${k}`,
+              data: { 
+                nodes: cloneNodes(nodes), 
+                edges,
+                matrix: dist.map(row => [...row]),
+                k, i, j,
+                size: n,
+                checking: false,
+                updated: true
+              },
+              variables: [
+                { name: 'k', value: k, type: 'primitive' },
+                { name: 'i', value: i, type: 'primitive' },
+                { name: 'j', value: j, type: 'primitive' },
+                { name: `dist[${i}][${j}]`, value: newDist, type: 'primitive' }
+              ],
+              highlights: { nodes: [i, j], edges: [] },
+              memory: buildGraphMemoryState(
+                nodes,
+                edges,
+                [
+                  { name: 'k', value: k, type: 'primitive' },
+                  { name: 'i', value: i, type: 'primitive' },
+                  { name: 'j', value: j, type: 'primitive' },
+                  { name: `dist[${i}][${j}]`, value: newDist, type: 'primitive' }
+                ],
+                {}
+              )
+            });
+
+            if (!(await waitWithPause(speedRef.current * 0.4))) {
+              runner.stop();
+              return;
+            }
+          }
+        }
+      }
+
+      // 取消节点k的处理状态
+      if (nodeK) nodeK.isProcessing = false;
+    }
+
+    // 标记完成
+    setMatrixData(prev => ({ ...prev, completed: true, currentK: -1, currentI: -1, currentJ: -1 }));
+
+    runner.recordStep({
+      lineNumber: 18,
+      description: `Floyd-Warshall算法完成！所有节点对之间的最短距离已计算完毕`,
+      data: { 
+        nodes: cloneNodes(nodes), 
+        edges,
+        matrix: dist.map(row => [...row]),
+        size: n,
+        completed: true
+      },
+      variables: [],
+      highlights: { nodes: nodes.map(n => n.id), edges: [] },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [{ name: 'n', value: n, type: 'primitive' }],
+        {}
+      )
+    });
+
+    runner.setCompleted();
+  };
+
   // TimSort 执行
   const runTimSort = async () => {
     shouldStopRef.current = false;
@@ -3271,7 +4631,1438 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     }
   };
 
-  // 开始执行
+  // Tarjan 强连通分量算法执行
+  const runTarjanSCC = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // 初始化
+    const dfn: number[] = new Array(n).fill(0);
+    const low: number[] = new Array(n).fill(0);
+    const inStack: boolean[] = new Array(n).fill(false);
+    const stack: number[] = [];
+    const components: number[][] = [];
+    let timestamp = 0;
+    let componentId = 0;
+
+    // 构建邻接表
+    const adj = new Map<number, number[]>();
+    nodes.forEach(node => adj.set(node.id, []));
+    edges.forEach(edge => adj.get(edge.from)!.push(edge.to));
+
+    // 初始化节点状态
+    nodes.forEach(node => {
+      node.visited = false;
+      node.inStack = false;
+      node.component = -1;
+    });
+
+    setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set(), stack: [] });
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `初始化完成。dfn数组: [${dfn.join(', ')}], low数组: [${low.join(', ')}]`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'timestamp', value: timestamp, type: 'primitive' },
+        { name: 'stack', value: '[]', type: 'array' }
+      ],
+      highlights: { nodes: [], edges: [] },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [
+          { name: 'n', value: n, type: 'primitive' },
+          { name: 'timestamp', value: timestamp, type: 'primitive' },
+          { name: 'stack.size', value: 0, type: 'primitive' }
+        ],
+        { adjacencyList: adj }
+      )
+    });
+
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+
+    // DFS函数
+    const dfs = async (u: number): Promise<boolean> => {
+      if (shouldStopRef.current) return false;
+
+      timestamp++;
+      dfn[u] = timestamp;
+      low[u] = timestamp;
+      
+      const nodeU = nodes.find(n => n.id === u)!;
+      nodeU.visited = true;
+      
+      stack.push(u);
+      inStack[u] = true;
+      nodeU.inStack = true;
+
+      setGraphData(prev => ({ ...prev, nodes: cloneNodes(nodes) }));
+      setGraphState(prev => ({ ...prev, highlightedNodes: new Set([u]), stack: [...stack] }));
+
+      runner.recordStep({
+        lineNumber: 9,
+        description: `访问节点 ${u}，设置 dfn[${u}]=${dfn[u]}，low[${u}]=${low[u]}，入栈`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'u', value: u, type: 'primitive' },
+          { name: `dfn[${u}]`, value: dfn[u], type: 'primitive' },
+          { name: `low[${u}]`, value: low[u], type: 'primitive' },
+          { name: 'stack', value: `[${stack.join(', ')}]`, type: 'array' }
+        ],
+        highlights: { nodes: [u], edges: [] },
+        memory: buildGraphMemoryState(
+          nodes,
+          edges,
+          [
+            { name: 'u', value: u, type: 'primitive' },
+            { name: 'timestamp', value: timestamp, type: 'primitive' }
+          ],
+          { adjacencyList: adj }
+        )
+      });
+
+      if (!(await waitWithPause(speedRef.current))) return false;
+
+      // Traverse neighbors
+      for (const v of adj.get(u) || []) {
+        if (shouldStopRef.current) return false;
+
+        const edgeKey = `${u}-${v}`;
+
+        setGraphState(prev => ({
+          ...prev,
+          highlightedEdges: new Set([...prev.highlightedEdges, edgeKey]),
+          highlightedNodes: new Set([u, v])
+        }));
+
+        if (!dfn[v]) {
+          // v未被访问
+          runner.recordStep({
+            lineNumber: 17,
+            description: `节点 ${u} → ${v}: ${v} 未被访问，递归DFS`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'u', value: u, type: 'primitive' },
+              { name: 'v', value: v, type: 'primitive' }
+            ],
+            highlights: { nodes: [u, v], edges: [edgeKey] },
+            memory: buildGraphMemoryState(
+              nodes,
+              edges,
+              [{ name: 'v', value: v, type: 'primitive' }],
+              { adjacencyList: adj }
+            )
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.7))) return false;
+
+          if (!(await dfs(v))) return false;
+
+          // 回溯更新low[u]
+          const oldLow = low[u];
+          low[u] = Math.min(low[u], low[v]);
+
+          runner.recordStep({
+            lineNumber: 19,
+            description: `回溯: low[${u}] = min(${oldLow}, low[${v}]=${low[v]}) = ${low[u]}`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'u', value: u, type: 'primitive' },
+              { name: `low[${u}]`, value: low[u], type: 'primitive' }
+            ],
+            highlights: { nodes: [u, v], edges: [] },
+            memory: buildGraphMemoryState(
+              nodes,
+              edges,
+              [{ name: 'u', value: u, type: 'primitive' }],
+              { adjacencyList: adj }
+            )
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.7))) return false;
+        } else if (inStack[v]) {
+          // v在栈中，回边
+          const oldLow = low[u];
+          low[u] = Math.min(low[u], dfn[v]);
+
+          runner.recordStep({
+            lineNumber: 21,
+            description: `回边: 节点 ${v} 在栈中，low[${u}] = min(${oldLow}, dfn[${v}]=${dfn[v]}) = ${low[u]}`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'u', value: u, type: 'primitive' },
+              { name: 'v', value: v, type: 'primitive' },
+              { name: `low[${u}]`, value: low[u], type: 'primitive' }
+            ],
+            highlights: { nodes: [u, v], edges: [edgeKey] },
+            memory: buildGraphMemoryState(
+              nodes,
+              edges,
+              [{ name: 'u', value: u, type: 'primitive' }],
+              { adjacencyList: adj }
+            )
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.7))) return false;
+        }
+      }
+
+      // 找到一个SCC的根
+      if (low[u] === dfn[u]) {
+        const component: number[] = [];
+        let v: number;
+        
+        runner.recordStep({
+          lineNumber: 24,
+          description: `找到SCC根节点 ${u}: low[${u}]=${low[u]} == dfn[${u}]=${dfn[u]}，开始弹栈`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [{ name: 'u', value: u, type: 'primitive' }],
+          highlights: { nodes: [u], edges: [] },
+          memory: buildGraphMemoryState(
+            nodes,
+            edges,
+            [{ name: 'u', value: u, type: 'primitive' }],
+            { adjacencyList: adj }
+          )
+        });
+
+        if (!(await waitWithPause(speedRef.current * 0.7))) return false;
+
+        do {
+          v = stack.pop()!;
+          inStack[v] = false;
+          component.push(v);
+          
+          const nodeV = nodes.find(n => n.id === v)!;
+          nodeV.inStack = false;
+          nodeV.component = componentId;
+
+          setGraphState(prev => ({ ...prev, stack: [...stack] }));
+
+          runner.recordStep({
+            lineNumber: 26,
+            description: `弹出节点 ${v}，加入SCC #${componentId + 1}` + (v === u ? ' (SCC根节点)' : ''),
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'v', value: v, type: 'primitive' },
+              { name: 'stack', value: `[${stack.join(', ')}]`, type: 'array' }
+            ],
+            highlights: { nodes: component, edges: [] },
+            memory: buildGraphMemoryState(
+              nodes,
+              edges,
+              [{ name: 'v', value: v, type: 'primitive' }],
+              { adjacencyList: adj }
+            )
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.5))) return false;
+        } while (v !== u);
+
+        components.push(component);
+        componentId++;
+
+        setGraphData(prev => ({ ...prev, nodes: cloneNodes(nodes) }));
+
+        runner.recordStep({
+          lineNumber: 30,
+          description: `SCC #${componentId} 完成: [${component.join(', ')}]` + (component.length === 1 && !adj.get(component[0])?.includes(component[0]) ? ' (单个节点，无自环)' : ''),
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [
+            { name: 'component', value: `[${component.join(', ')}]`, type: 'array' },
+            { name: 'components.size', value: components.length, type: 'primitive' }
+          ],
+          highlights: { nodes: component, edges: [] },
+          memory: buildGraphMemoryState(
+            nodes,
+            edges,
+            [
+              { name: 'componentId', value: componentId, type: 'primitive' },
+              { name: 'components.size', value: components.length, type: 'primitive' }
+            ],
+            { adjacencyList: adj }
+          )
+        });
+
+        if (!(await waitWithPause(speedRef.current))) return false;
+      }
+
+      return true;
+    };
+
+    // 执行DFS
+    for (let i = 0; i < n; i++) {
+      if (!dfn[i]) {
+        runner.recordStep({
+          lineNumber: 34,
+          description: `从节点 ${i} 开始新的DFS遍历`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [{ name: 'i', value: i, type: 'primitive' }],
+          highlights: { nodes: [i], edges: [] },
+          memory: buildGraphMemoryState(
+            nodes,
+            edges,
+            [{ name: 'i', value: i, type: 'primitive' }],
+            { adjacencyList: adj }
+          )
+        });
+
+        if (!(await waitWithPause(speedRef.current * 0.5))) {
+          runner.stop();
+          return;
+        }
+
+        if (!(await dfs(i))) {
+          runner.stop();
+          return;
+        }
+      }
+    }
+
+    if (shouldStopRef.current) {
+      runner.stop();
+      return;
+    }
+
+    setGraphState({
+      highlightedEdges: new Set(),
+      highlightedNodes: new Set(),
+      stack: [],
+      phase: 'completed'
+    });
+
+    runner.recordStep({
+      lineNumber: 0,
+      description: `Tarjan算法完成！共找到 ${components.length} 个强连通分量: ${components.map((c, i) => `SCC${i + 1}=[${c.join(', ')}]`).join(', ')}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'components', value: components.map(c => `[${c.join(', ')}]`).join(', '), type: 'array' },
+        { name: 'components.length', value: components.length, type: 'primitive' }
+      ],
+      highlights: { nodes: nodes.map(n => n.id), edges: [] },
+      memory: buildGraphMemoryState(
+        nodes,
+        edges,
+        [{ name: 'components.length', value: components.length, type: 'primitive' }],
+        { adjacencyList: adj }
+      )
+    });
+
+    runner.setCompleted();
+  };
+
+  // 并查集 (DSU) 执行
+  const runDSU = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const n = nodes.length;
+
+    // DSU数据结构
+    const parent: number[] = new Array(n);
+    const rank: number[] = new Array(n).fill(0);
+
+    // 初始化：每个元素自成一个集合
+    for (let i = 0; i < n; i++) {
+      parent[i] = i;
+    }
+
+    // 清空边
+    const edges: typeof graphData.edges = [];
+
+    // 初始化节点状态
+    nodes.forEach(node => {
+      node.visited = false;
+      node.component = parent[node.id];
+    });
+
+    setGraphData(prev => ({ ...prev, nodes: [...nodes], edges: [] }));
+    setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set() });
+
+    runner.recordStep({
+      lineNumber: 6,
+      description: `初始化DSU：每个元素自成一个集合，父指针 parent[i] = i`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'parent', value: `[${parent.join(', ')}]`, type: 'array' },
+        { name: 'rank', value: `[${rank.join(', ')}]`, type: 'array' }
+      ],
+      highlights: { nodes: [], edges: [] },
+      memory: {
+        variables: [
+          { name: 'parent', value: parent, type: 'array' },
+          { name: 'rank', value: rank, type: 'array' }
+        ],
+        auxiliaryArrays: [
+          { name: 'parent数组', data: parent.map((p, i) => `${i}→${p}`), description: '父指针数组' },
+          { name: 'rank数组', data: rank.map((r, i) => `${i}:${r}`), description: '秩数组' }
+        ]
+      }
+    });
+
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+
+    // Find操作（带路径压缩）
+    const find = async (x: number, isDemo: boolean = false): Promise<number> => {
+      if (shouldStopRef.current) return -1;
+
+      if (!isDemo) {
+        setGraphState(prev => ({ ...prev, highlightedNodes: new Set([x]) }));
+        runner.recordStep({
+          lineNumber: 13,
+          description: `Find(${x}): 查找元素 ${x} 的根节点`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [
+            { name: 'x', value: x, type: 'primitive' },
+            { name: `parent[${x}]`, value: parent[x], type: 'primitive' }
+          ],
+          highlights: { nodes: [x], edges: [] },
+          memory: {
+            variables: [
+              { name: 'x', value: x, type: 'primitive' },
+              { name: 'parent', value: parent, type: 'array' }
+            ]
+          }
+        });
+
+        if (!(await waitWithPause(speedRef.current * 0.7))) return -1;
+      }
+
+      if (parent[x] !== x) {
+        if (!isDemo) {
+          runner.recordStep({
+            lineNumber: 14,
+            description: `parent[${x}]=${parent[x]} ≠ ${x}，递归查找 parent[${x}]`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [{ name: 'x', value: x, type: 'primitive' }],
+            highlights: { nodes: [x, parent[x]], edges: [] },
+            memory: { variables: [{ name: 'x', value: x, type: 'primitive' }] }
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.5))) return -1;
+        }
+
+        const root = await find(parent[x], isDemo);
+        if (root === -1) return -1;
+
+        if (!isDemo) {
+          const oldParent = parent[x];
+          parent[x] = root;
+
+          // 更新可视化边
+          const edgeIndex = edges.findIndex(e => e.from === x);
+          if (edgeIndex >= 0) {
+            edges[edgeIndex] = { from: x, to: root };
+          }
+
+          nodes.find(n => n.id === x)!.component = root;
+          setGraphData(prev => ({ ...prev, nodes: cloneNodes(nodes), edges: [...edges] }));
+
+          runner.recordStep({
+            lineNumber: 15,
+            description: `路径压缩: parent[${x}] = ${oldParent} → ${root}（直接指向根）`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'x', value: x, type: 'primitive' },
+              { name: `parent[${x}]`, value: parent[x], type: 'primitive' }
+            ],
+            highlights: { nodes: [x, root], edges: [] },
+            memory: {
+              variables: [
+                { name: 'x', value: x, type: 'primitive' },
+                { name: 'parent', value: parent, type: 'array' }
+              ],
+              auxiliaryArrays: [
+                { name: 'parent数组', data: parent.map((p, i) => `${i}→${p}`), description: '父指针数组' }
+              ]
+            }
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.7))) return -1;
+        }
+
+        return root;
+      }
+
+      if (!isDemo) {
+        runner.recordStep({
+          lineNumber: 13,
+          description: `Find(${x}): 找到根节点 ${x}`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [{ name: 'x', value: x, type: 'primitive' }],
+          highlights: { nodes: [x], edges: [] },
+          memory: { variables: [{ name: 'x', value: x, type: 'primitive' }] }
+        });
+
+        if (!(await waitWithPause(speedRef.current * 0.5))) return -1;
+      }
+
+      return x;
+    };
+
+    // Union操作（按秩合并）
+    const union = async (x: number, y: number): Promise<boolean> => {
+      if (shouldStopRef.current) return false;
+
+      setGraphState(prev => ({ ...prev, highlightedNodes: new Set([x, y]) }));
+
+      runner.recordStep({
+        lineNumber: 21,
+        description: `Union(${x}, ${y}): 合并包含 ${x} 和 ${y} 的集合`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'x', value: x, type: 'primitive' },
+          { name: 'y', value: y, type: 'primitive' }
+        ],
+        highlights: { nodes: [x, y], edges: [] },
+        memory: {
+          variables: [
+            { name: 'x', value: x, type: 'primitive' },
+            { name: 'y', value: y, type: 'primitive' }
+          ]
+        }
+      });
+
+      if (!(await waitWithPause(speedRef.current))) return false;
+
+      const rootX = await find(x);
+      if (rootX === -1) return false;
+
+      const rootY = await find(y);
+      if (rootY === -1) return false;
+
+      if (rootX === rootY) {
+        runner.recordStep({
+          lineNumber: 24,
+          description: `根节点相同(${rootX})，${x} 和 ${y} 已在同一集合，无需合并`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [
+            { name: 'rootX', value: rootX, type: 'primitive' },
+            { name: 'rootY', value: rootY, type: 'primitive' }
+          ],
+          highlights: { nodes: [rootX], edges: [] },
+          memory: {
+            variables: [
+              { name: 'rootX', value: rootX, type: 'primitive' },
+              { name: 'rootY', value: rootY, type: 'primitive' }
+            ]
+          }
+        });
+
+        if (!(await waitWithPause(speedRef.current))) return false;
+        return false;
+      }
+
+      // 按秩合并
+      runner.recordStep({
+        lineNumber: 27,
+        description: `按秩合并: rank[${rootX}]=${rank[rootX]}, rank[${rootY}]=${rank[rootY]}`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'rootX', value: rootX, type: 'primitive' },
+          { name: 'rootY', value: rootY, type: 'primitive' },
+          { name: `rank[${rootX}]`, value: rank[rootX], type: 'primitive' },
+          { name: `rank[${rootY}]`, value: rank[rootY], type: 'primitive' }
+        ],
+        highlights: { nodes: [rootX, rootY], edges: [] },
+        memory: {
+          variables: [
+            { name: 'rootX', value: rootX, type: 'primitive' },
+            { name: 'rootY', value: rootY, type: 'primitive' },
+            { name: 'rank', value: rank, type: 'array' }
+          ]
+        }
+      });
+
+      if (!(await waitWithPause(speedRef.current * 0.7))) return false;
+
+      if (rank[rootX] < rank[rootY]) {
+        parent[rootX] = rootY;
+        edges.push({ from: rootX, to: rootY });
+        nodes.find(n => n.id === rootX)!.component = rootY;
+
+        setGraphData(prev => ({ ...prev, nodes: cloneNodes(nodes), edges: [...edges] }));
+
+        runner.recordStep({
+          lineNumber: 28,
+          description: `rank[${rootX}] < rank[${rootY}]，将 ${rootX} 的父指向 ${rootY}`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [
+            { name: `parent[${rootX}]`, value: parent[rootX], type: 'primitive' }
+          ],
+          highlights: { nodes: [rootX, rootY], edges: [`${rootX}-${rootY}`] },
+          memory: {
+            variables: [
+              { name: 'parent', value: parent, type: 'array' },
+              { name: 'rank', value: rank, type: 'array' }
+            ],
+            auxiliaryArrays: [
+              { name: 'parent数组', data: parent.map((p, i) => `${i}→${p}`), description: '父指针数组' }
+            ]
+          }
+        });
+      } else if (rank[rootX] > rank[rootY]) {
+        parent[rootY] = rootX;
+        edges.push({ from: rootY, to: rootX });
+        nodes.find(n => n.id === rootY)!.component = rootX;
+
+        setGraphData(prev => ({ ...prev, nodes: cloneNodes(nodes), edges: [...edges] }));
+
+        runner.recordStep({
+          lineNumber: 30,
+          description: `rank[${rootX}] > rank[${rootY}]，将 ${rootY} 的父指向 ${rootX}`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [
+            { name: `parent[${rootY}]`, value: parent[rootY], type: 'primitive' }
+          ],
+          highlights: { nodes: [rootX, rootY], edges: [`${rootY}-${rootX}`] },
+          memory: {
+            variables: [
+              { name: 'parent', value: parent, type: 'array' },
+              { name: 'rank', value: rank, type: 'array' }
+            ],
+            auxiliaryArrays: [
+              { name: 'parent数组', data: parent.map((p, i) => `${i}→${p}`), description: '父指针数组' }
+            ]
+          }
+        });
+      } else {
+        parent[rootY] = rootX;
+        rank[rootX]++;
+        edges.push({ from: rootY, to: rootX });
+        nodes.find(n => n.id === rootY)!.component = rootX;
+
+        setGraphData(prev => ({ ...prev, nodes: cloneNodes(nodes), edges: [...edges] }));
+
+        runner.recordStep({
+          lineNumber: 33,
+          description: `rank相等，将 ${rootY} 的父指向 ${rootX}，rank[${rootX}]++ → ${rank[rootX]}`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [
+            { name: `parent[${rootY}]`, value: parent[rootY], type: 'primitive' },
+            { name: `rank[${rootX}]`, value: rank[rootX], type: 'primitive' }
+          ],
+          highlights: { nodes: [rootX, rootY], edges: [`${rootY}-${rootX}`] },
+          memory: {
+            variables: [
+              { name: 'parent', value: parent, type: 'array' },
+              { name: 'rank', value: rank, type: 'array' }
+            ],
+            auxiliaryArrays: [
+              { name: 'parent数组', data: parent.map((p, i) => `${i}→${p}`), description: '父指针数组' },
+              { name: 'rank数组', data: rank.map((r, i) => `${i}:${r}`), description: '秩数组' }
+            ]
+          }
+        });
+      }
+
+      if (!(await waitWithPause(speedRef.current))) return false;
+      return true;
+    };
+
+    // 执行一系列Union操作
+    const unionPairs = [
+      [0, 1], [2, 3], [4, 5], [6, 7], [8, 9],
+      [0, 2], [4, 6], [1, 3],
+      [0, 4], [5, 9],
+      [0, 8]
+    ];
+
+    let unionCount = 0;
+    for (const [x, y] of unionPairs) {
+      if (unionCount >= 6) break;
+      if (x >= n || y >= n) continue;
+
+      const result = await union(x, y);
+      if (!result && result !== false) {
+        runner.stop();
+        return;
+      }
+      
+      if (result) {
+        unionCount++;
+      }
+
+      // 暂停一下显示结果
+      runner.recordStep({
+        lineNumber: 0,
+        description: `Union(${x}, ${y}) 完成。当前父指针: [${parent.join(', ')}]`,
+        data: { nodes: cloneNodes(nodes), edges: [...edges] },
+        variables: [
+          { name: 'parent', value: `[${parent.join(', ')}]`, type: 'array' },
+          { name: 'rank', value: `[${rank.join(', ')}]`, type: 'array' }
+        ],
+        highlights: { nodes: [], edges: [] },
+        memory: {
+          variables: [
+            { name: 'parent', value: parent, type: 'array' },
+            { name: 'rank', value: rank, type: 'array' }
+          ],
+          auxiliaryArrays: [
+            { name: 'parent数组', data: parent.map((p, i) => `${i}→${p}`), description: '父指针数组' },
+            { name: 'rank数组', data: rank.map((r, i) => `${i}:${r}`), description: '秩数组' }
+          ]
+        }
+      });
+
+      if (!(await waitWithPause(speedRef.current))) {
+        runner.stop();
+        return;
+      }
+    }
+
+    // 演示路径压缩
+    runner.recordStep({
+      lineNumber: 0,
+      description: '演示路径压缩：对节点 3 执行 Find 操作',
+      data: { nodes: cloneNodes(nodes), edges: [...edges] },
+      variables: [],
+      highlights: { nodes: [3], edges: [] },
+      memory: { variables: [] }
+    });
+
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+
+    await find(3);
+
+    if (shouldStopRef.current) {
+      runner.stop();
+      return;
+    }
+
+    setGraphState({
+      highlightedEdges: new Set(),
+      highlightedNodes: new Set(),
+      phase: 'completed'
+    });
+
+    runner.recordStep({
+      lineNumber: 0,
+      description: `DSU操作完成！最终父指针: [${parent.join(', ')}]，秩数组: [${rank.join(', ')}]`,
+      data: { nodes: cloneNodes(nodes), edges: [...edges] },
+      variables: [
+        { name: 'parent', value: `[${parent.join(', ')}]`, type: 'array' },
+        { name: 'rank', value: `[${rank.join(', ')}]`, type: 'array' }
+      ],
+      highlights: { nodes: nodes.map(n => n.id), edges: edges.map(e => `${e.from}-${e.to}`) },
+      memory: {
+        variables: [
+          { name: 'parent', value: parent, type: 'array' },
+          { name: 'rank', value: rank, type: 'array' }
+        ],
+        auxiliaryArrays: [
+          { name: 'parent数组', data: parent.map((p, i) => `${i}→${p}`), description: '父指针数组' },
+          { name: 'rank数组', data: rank.map((r, i) => `${i}:${r}`), description: '秩数组' }
+        ]
+      }
+    });
+
+    runner.setCompleted();
+  };
+
+  // Bellman-Ford shortest path algorithm execution
+  const runBellmanFord = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // Build adjacency list
+    const adj = new Map<number, Array<{ to: number; weight: number }>>();
+    nodes.forEach(node => adj.set(node.id, []));
+    edges.forEach(edge => {
+      if (edge.weight !== undefined) {
+        adj.get(edge.from)!.push({ to: edge.to, weight: edge.weight });
+      }
+    });
+
+    // Initialize distances
+    const dist: number[] = new Array(n).fill(Infinity);
+    const parent: number[] = new Array(n).fill(-1);
+    const start = 0;
+    dist[start] = 0;
+
+    nodes.forEach(node => {
+      node.distance = node.id === start ? 0 : Infinity;
+      node.parent = null;
+    });
+
+    setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set([start]) });
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `初始化完成。起点: ${start}，距离数组初始化`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'start', value: start, type: 'primitive' },
+        { name: 'dist', value: `[${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`, type: 'array' }
+      ],
+      highlights: { nodes: [start], edges: [] },
+      memory: buildGraphMemoryState(nodes, edges, [{ name: 'start', value: start, type: 'primitive' }], {})
+    });
+
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+
+    // V-1 rounds of relaxation
+    for (let i = 0; i < n - 1; i++) {
+      let updated = false;
+
+      for (const edge of edges) {
+        if (shouldStopRef.current) {
+          runner.stop();
+          return;
+        }
+
+        const { from, to, weight } = edge;
+        if (weight === undefined) continue;
+
+        const edgeKey = `${from}-${to}`;
+        setGraphState(prev => ({
+          ...prev,
+          highlightedEdges: new Set([edgeKey]),
+          highlightedNodes: new Set([from, to])
+        }));
+
+        if (dist[from] !== Infinity && dist[from] + weight < dist[to]) {
+          const oldDist = dist[to];
+          dist[to] = dist[from] + weight;
+          parent[to] = from;
+          updated = true;
+
+          const nodeTo = nodes.find(n => n.id === to)!;
+          nodeTo.distance = dist[to];
+          nodeTo.parent = from;
+
+          setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+
+          runner.recordStep({
+            lineNumber: 8,
+            description: `松弛边 (${from}→${to}): dist[${to}] = min(${oldDist === Infinity ? '∞' : oldDist}, ${dist[from]} + ${weight}) = ${dist[to]}`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'round', value: i + 1, type: 'primitive' },
+              { name: `dist[${to}]`, value: dist[to], type: 'primitive' }
+            ],
+            highlights: { nodes: [from, to], edges: [edgeKey] },
+            memory: buildGraphMemoryState(nodes, edges, [{ name: 'round', value: i + 1, type: 'primitive' }], {})
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.7))) {
+            runner.stop();
+            return;
+          }
+        }
+      }
+
+      if (!updated) {
+        runner.recordStep({
+          lineNumber: 12,
+          description: `第 ${i + 1} 轮无更新，提前结束`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [{ name: 'round', value: i + 1, type: 'primitive' }],
+          highlights: { nodes: [], edges: [] },
+          memory: buildGraphMemoryState(nodes, edges, [], {})
+        });
+        break;
+      }
+    }
+
+    // Check for negative cycles
+    for (const edge of edges) {
+      const { from, to, weight } = edge;
+      if (weight === undefined) continue;
+
+      if (dist[from] !== Infinity && dist[from] + weight < dist[to]) {
+        runner.recordStep({
+          lineNumber: 15,
+          description: `检测到负权环！边 (${from}→${to}) 仍可松弛`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [{ name: 'hasNegativeCycle', value: true, type: 'primitive' }],
+          highlights: { nodes: [from, to], edges: [`${from}-${to}`] },
+          memory: buildGraphMemoryState(nodes, edges, [], {})
+        });
+        runner.setCompleted();
+        return;
+      }
+    }
+
+    runner.recordStep({
+      lineNumber: 18,
+      description: `Bellman-Ford完成！最短距离: [${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'dist', value: `[${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`, type: 'array' }],
+      highlights: { nodes: nodes.map(n => n.id), edges: [] },
+      memory: buildGraphMemoryState(nodes, edges, [], {})
+    });
+
+    runner.setCompleted();
+  };
+
+  // SPFA shortest path algorithm execution
+  const runSPFA = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // Build adjacency list
+    const adj = new Map<number, Array<{ to: number; weight: number }>>();
+    nodes.forEach(node => adj.set(node.id, []));
+    edges.forEach(edge => {
+      if (edge.weight !== undefined) {
+        adj.get(edge.from)!.push({ to: edge.to, weight: edge.weight });
+      }
+    });
+
+    // Initialize
+    const dist: number[] = new Array(n).fill(Infinity);
+    const parent: number[] = new Array(n).fill(-1);
+    const inQueue: boolean[] = new Array(n).fill(false);
+    const cnt: number[] = new Array(n).fill(0);
+    const queue: number[] = [];
+    const start = 0;
+
+    dist[start] = 0;
+    queue.push(start);
+    inQueue[start] = true;
+    cnt[start] = 1;
+
+    nodes.forEach(node => {
+      node.distance = node.id === start ? 0 : Infinity;
+      node.inQueue = node.id === start;
+    });
+
+    setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set([start]), queue: [...queue] });
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `初始化完成。起点 ${start} 入队`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'start', value: start, type: 'primitive' },
+        { name: 'queue', value: `[${queue.join(', ')}]`, type: 'array' }
+      ],
+      highlights: { nodes: [start], edges: [] },
+      memory: buildGraphMemoryState(nodes, edges, [{ name: 'queue', value: queue, type: 'array' }], { queue })
+    });
+
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+
+    while (queue.length > 0) {
+      if (shouldStopRef.current) {
+        runner.stop();
+        return;
+      }
+
+      const u = queue.shift()!;
+      inQueue[u] = false;
+      const nodeU = nodes.find(n => n.id === u)!;
+      nodeU.inQueue = false;
+      nodeU.isProcessing = true;
+
+      setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+      setGraphState(prev => ({ ...prev, queue: [...queue], currentNode: u }));
+
+      runner.recordStep({
+        lineNumber: 5,
+        description: `取出节点 ${u}，当前队列: [${queue.join(', ')}]`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'u', value: u, type: 'primitive' },
+          { name: 'dist[u]', value: dist[u], type: 'primitive' }
+        ],
+        highlights: { nodes: [u], edges: [] },
+        memory: buildGraphMemoryState(nodes, edges, [{ name: 'u', value: u, type: 'primitive' }], { queue })
+      });
+
+      if (!(await waitWithPause(speedRef.current))) {
+        runner.stop();
+        return;
+      }
+
+      for (const { to: v, weight } of adj.get(u) || []) {
+        if (shouldStopRef.current) {
+          runner.stop();
+          return;
+        }
+
+        const edgeKey = `${u}-${v}`;
+        setGraphState(prev => ({
+          ...prev,
+          highlightedEdges: new Set([edgeKey]),
+          highlightedNodes: new Set([u, v])
+        }));
+
+        if (dist[u] + weight < dist[v]) {
+          const oldDist = dist[v];
+          dist[v] = dist[u] + weight;
+          parent[v] = u;
+
+          const nodeV = nodes.find(n => n.id === v)!;
+          nodeV.distance = dist[v];
+          nodeV.parent = u;
+
+          if (!inQueue[v]) {
+            queue.push(v);
+            inQueue[v] = true;
+            cnt[v]++;
+            nodeV.inQueue = true;
+
+            if (cnt[v] >= n) {
+              runner.recordStep({
+                lineNumber: 15,
+                description: `检测到负权环！节点 ${v} 入队次数超过 ${n}`,
+                data: { nodes: cloneNodes(nodes), edges },
+                variables: [{ name: 'hasNegativeCycle', value: true, type: 'primitive' }],
+                highlights: { nodes: [v], edges: [] },
+                memory: buildGraphMemoryState(nodes, edges, [], { queue })
+              });
+              runner.setCompleted();
+              return;
+            }
+          }
+
+          setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+          setGraphState(prev => ({ ...prev, queue: [...queue] }));
+
+          runner.recordStep({
+            lineNumber: 10,
+            description: `松弛: dist[${v}] = ${oldDist === Infinity ? '∞' : oldDist} → ${dist[v]}，${inQueue[v] ? '已在队列' : '入队'}`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'v', value: v, type: 'primitive' },
+              { name: `dist[${v}]`, value: dist[v], type: 'primitive' }
+            ],
+            highlights: { nodes: [u, v], edges: [edgeKey] },
+            memory: buildGraphMemoryState(nodes, edges, [], { queue })
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.7))) {
+            runner.stop();
+            return;
+          }
+        }
+      }
+
+      nodeU.isProcessing = false;
+      setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    }
+
+    runner.recordStep({
+      lineNumber: 18,
+      description: `SPFA完成！最短距离: [${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'dist', value: `[${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`, type: 'array' }],
+      highlights: { nodes: nodes.map(n => n.id), edges: [] },
+      memory: buildGraphMemoryState(nodes, edges, [], {})
+    });
+
+    runner.setCompleted();
+  };
+
+  // Dijkstra shortest path algorithm execution
+  const runDijkstra = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // Build adjacency list
+    const adj = new Map<number, Array<{ to: number; weight: number }>>();
+    nodes.forEach(node => adj.set(node.id, []));
+    edges.forEach(edge => {
+      if (edge.weight !== undefined) {
+        adj.get(edge.from)!.push({ to: edge.to, weight: edge.weight });
+      }
+    });
+
+    // Initialize
+    const dist: number[] = new Array(n).fill(Infinity);
+    const parent: number[] = new Array(n).fill(-1);
+    const visited: boolean[] = new Array(n).fill(false);
+    const start = 0;
+
+    dist[start] = 0;
+
+    nodes.forEach(node => {
+      node.distance = node.id === start ? 0 : Infinity;
+      node.visited = false;
+      node.parent = null;
+    });
+
+    setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set([start]) });
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `初始化完成。起点: ${start}，距离设为0，其他为∞`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'start', value: start, type: 'primitive' },
+        { name: 'dist', value: `[${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`, type: 'array' }
+      ],
+      highlights: { nodes: [start], edges: [] },
+      memory: buildGraphMemoryState(nodes, edges, [{ name: 'start', value: start, type: 'primitive' }], {})
+    });
+
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+
+    // Main loop
+    for (let i = 0; i < n; i++) {
+      if (shouldStopRef.current) {
+        runner.stop();
+        return;
+      }
+
+      // Find minimum distance node
+      let minDist = Infinity;
+      let u = -1;
+      for (let j = 0; j < n; j++) {
+        if (!visited[j] && dist[j] < minDist) {
+          minDist = dist[j];
+          u = j;
+        }
+      }
+
+      if (u === -1) break;
+
+      visited[u] = true;
+      const nodeU = nodes.find(n => n.id === u)!;
+      nodeU.visited = true;
+      nodeU.isProcessing = true;
+
+      setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+      setGraphState(prev => ({ ...prev, highlightedNodes: new Set([u]), currentNode: u }));
+
+      runner.recordStep({
+        lineNumber: 5,
+        description: `选取最小距离节点 ${u}，距离 = ${dist[u]}`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'u', value: u, type: 'primitive' },
+          { name: 'dist[u]', value: dist[u], type: 'primitive' }
+        ],
+        highlights: { nodes: [u], edges: [] },
+        memory: buildGraphMemoryState(nodes, edges, [{ name: 'u', value: u, type: 'primitive' }], {})
+      });
+
+      if (!(await waitWithPause(speedRef.current))) {
+        runner.stop();
+        return;
+      }
+
+      // Relax neighbors
+      for (const { to: v, weight } of adj.get(u) || []) {
+        if (shouldStopRef.current) {
+          runner.stop();
+          return;
+        }
+
+        const edgeKey = `${u}-${v}`;
+        setGraphState(prev => ({
+          ...prev,
+          highlightedEdges: new Set([edgeKey]),
+          highlightedNodes: new Set([u, v])
+        }));
+
+        if (!visited[v] && dist[u] + weight < dist[v]) {
+          const oldDist = dist[v];
+          dist[v] = dist[u] + weight;
+          parent[v] = u;
+
+          const nodeV = nodes.find(n => n.id === v)!;
+          nodeV.distance = dist[v];
+          nodeV.parent = u;
+
+          setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+
+          runner.recordStep({
+            lineNumber: 9,
+            description: `松弛: dist[${v}] = min(${oldDist === Infinity ? '∞' : oldDist}, ${dist[u]} + ${weight}) = ${dist[v]}`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'v', value: v, type: 'primitive' },
+              { name: `dist[${v}]`, value: dist[v], type: 'primitive' }
+            ],
+            highlights: { nodes: [u, v], edges: [edgeKey] },
+            memory: buildGraphMemoryState(nodes, edges, [], {})
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.7))) {
+            runner.stop();
+            return;
+          }
+        }
+      }
+
+      nodeU.isProcessing = false;
+      setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    }
+
+    runner.recordStep({
+      lineNumber: 12,
+      description: `Dijkstra完成！最短距离: [${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [{ name: 'dist', value: `[${dist.map(d => d === Infinity ? '∞' : d).join(', ')}]`, type: 'array' }],
+      highlights: { nodes: nodes.map(n => n.id), edges: [] },
+      memory: buildGraphMemoryState(nodes, edges, [], {})
+    });
+
+    runner.setCompleted();
+  };
+
+  // A* pathfinding algorithm execution
+  const runAStar = async () => {
+    shouldStopRef.current = false;
+    isPausedRef.current = false;
+
+    runner.start();
+
+    const nodes = [...graphData.nodes];
+    const edges = [...graphData.edges];
+    const n = nodes.length;
+
+    // Build adjacency list
+    const adj = new Map<number, Array<{ to: number; weight: number }>>();
+    nodes.forEach(node => adj.set(node.id, []));
+    edges.forEach(edge => {
+      if (edge.weight !== undefined) {
+        adj.get(edge.from)!.push({ to: edge.to, weight: edge.weight });
+      }
+    });
+
+    // Initialize
+    const start = 0;
+    const goal = n - 1;
+
+    const gScore: number[] = new Array(n).fill(Infinity);
+    const fScore: number[] = new Array(n).fill(Infinity);
+    const parent: number[] = new Array(n).fill(-1);
+    const inOpenSet: boolean[] = new Array(n).fill(false);
+    const closedSet: Set<number> = new Set();
+
+    gScore[start] = 0;
+    // Heuristic: distance to goal (using node positions)
+    const heuristic = (node: number) => {
+      const nodeN = nodes.find(n => n.id === node);
+      const goalN = nodes.find(n => n.id === goal);
+      if (!nodeN || !goalN) return 0;
+      return Math.abs(nodeN.x - goalN.x) + Math.abs(nodeN.y - goalN.y);
+    };
+    fScore[start] = heuristic(start);
+    inOpenSet[start] = true;
+
+    nodes.forEach(node => {
+      node.distance = node.id === start ? 0 : Infinity;
+      node.visited = false;
+    });
+
+    setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set([start, goal]) });
+
+    runner.recordStep({
+      lineNumber: 1,
+      description: `初始化完成。起点: ${start}，终点: ${goal}`,
+      data: { nodes: cloneNodes(nodes), edges },
+      variables: [
+        { name: 'start', value: start, type: 'primitive' },
+        { name: 'goal', value: goal, type: 'primitive' },
+        { name: 'gScore[start]', value: 0, type: 'primitive' },
+        { name: 'fScore[start]', value: fScore[start], type: 'primitive' }
+      ],
+      highlights: { nodes: [start, goal], edges: [] },
+      memory: buildGraphMemoryState(nodes, edges, [], {})
+    });
+
+    if (!(await waitWithPause(speedRef.current))) {
+      runner.stop();
+      return;
+    }
+
+    let found = false;
+
+    while (Object.values(inOpenSet).some(v => v)) {
+      if (shouldStopRef.current) {
+        runner.stop();
+        return;
+      }
+
+      // Find node with minimum fScore in openSet
+      let minF = Infinity;
+      let current = -1;
+      for (let i = 0; i < n; i++) {
+        if (inOpenSet[i] && fScore[i] < minF) {
+          minF = fScore[i];
+          current = i;
+        }
+      }
+
+      if (current === -1) break;
+
+      // Check if reached goal
+      if (current === goal) {
+        found = true;
+        const path: number[] = [];
+        let node = goal;
+        while (node !== -1) {
+          path.unshift(node);
+          node = parent[node];
+        }
+
+        runner.recordStep({
+          lineNumber: 10,
+          description: `找到路径！路径: [${path.join(' → ')}]，总代价: ${gScore[goal]}`,
+          data: { nodes: cloneNodes(nodes), edges },
+          variables: [
+            { name: 'path', value: `[${path.join(', ')}]`, type: 'array' },
+            { name: 'cost', value: gScore[goal], type: 'primitive' }
+          ],
+          highlights: { nodes: path, edges: [] },
+          memory: buildGraphMemoryState(nodes, edges, [], {})
+        });
+        break;
+      }
+
+      inOpenSet[current] = false;
+      closedSet.add(current);
+
+      const nodeCurrent = nodes.find(n => n.id === current)!;
+      nodeCurrent.visited = true;
+      nodeCurrent.isProcessing = true;
+
+      setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+      setGraphState(prev => ({ ...prev, highlightedNodes: new Set([current]), currentNode: current }));
+
+      runner.recordStep({
+        lineNumber: 5,
+        description: `处理节点 ${current}，g=${gScore[current].toFixed(1)}，h=${heuristic(current).toFixed(1)}，f=${fScore[current].toFixed(1)}`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [
+          { name: 'current', value: current, type: 'primitive' },
+          { name: 'gScore[current]', value: gScore[current], type: 'primitive' },
+          { name: 'fScore[current]', value: fScore[current], type: 'primitive' }
+        ],
+        highlights: { nodes: [current], edges: [] },
+        memory: buildGraphMemoryState(nodes, edges, [], {})
+      });
+
+      if (!(await waitWithPause(speedRef.current))) {
+        runner.stop();
+        return;
+      }
+
+      // Process neighbors
+      for (const { to: neighbor, weight } of adj.get(current) || []) {
+        if (shouldStopRef.current) {
+          runner.stop();
+          return;
+        }
+
+        if (closedSet.has(neighbor)) continue;
+
+        const edgeKey = `${current}-${neighbor}`;
+        setGraphState(prev => ({
+          ...prev,
+          highlightedEdges: new Set([edgeKey]),
+          highlightedNodes: new Set([current, neighbor])
+        }));
+
+        const tentativeG = gScore[current] + weight;
+
+        if (tentativeG < gScore[neighbor]) {
+          parent[neighbor] = current;
+          gScore[neighbor] = tentativeG;
+          fScore[neighbor] = tentativeG + heuristic(neighbor);
+          inOpenSet[neighbor] = true;
+
+          const nodeNeighbor = nodes.find(n => n.id === neighbor)!;
+          nodeNeighbor.distance = tentativeG;
+          nodeNeighbor.parent = current;
+
+          setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+
+          runner.recordStep({
+            lineNumber: 8,
+            description: `更新邻居 ${neighbor}: g=${tentativeG.toFixed(1)}，h=${heuristic(neighbor).toFixed(1)}，f=${fScore[neighbor].toFixed(1)}`,
+            data: { nodes: cloneNodes(nodes), edges },
+            variables: [
+              { name: 'neighbor', value: neighbor, type: 'primitive' },
+              { name: 'gScore[neighbor]', value: gScore[neighbor], type: 'primitive' },
+              { name: 'fScore[neighbor]', value: fScore[neighbor], type: 'primitive' }
+            ],
+            highlights: { nodes: [current, neighbor], edges: [edgeKey] },
+            memory: buildGraphMemoryState(nodes, edges, [], {})
+          });
+
+          if (!(await waitWithPause(speedRef.current * 0.7))) {
+            runner.stop();
+            return;
+          }
+        }
+      }
+
+      nodeCurrent.isProcessing = false;
+      setGraphData(prev => ({ ...prev, nodes: [...nodes] }));
+    }
+
+    if (!found) {
+      runner.recordStep({
+        lineNumber: 15,
+        description: `未找到从 ${start} 到 ${goal} 的路径`,
+        data: { nodes: cloneNodes(nodes), edges },
+        variables: [],
+        highlights: { nodes: [], edges: [] },
+        memory: buildGraphMemoryState(nodes, edges, [], {})
+      });
+    }
+
+    runner.setCompleted();
+  };
+
+  // Start execution
   const handleStart = async () => {
     if (runner.isRunning) return;
     
@@ -3314,6 +6105,28 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       await runRadixSort();
     } else if (currentAlgo.id === 'topo') {
       await runTopologicalSort();
+    } else if (currentAlgo.id === 'kruskal') {
+      await runKruskal();
+    } else if (currentAlgo.id === 'prim') {
+      await runPrim();
+    } else if (currentAlgo.id === 'bfs') {
+      await runBFS();
+    } else if (currentAlgo.id === 'dfs') {
+      await runDFS();
+    } else if (currentAlgo.id === 'tarjan') {
+      await runTarjanSCC();
+    } else if (currentAlgo.id === 'dsu') {
+      await runDSU();
+    } else if (currentAlgo.id === 'bellmanford') {
+      await runBellmanFord();
+    } else if (currentAlgo.id === 'spfa') {
+      await runSPFA();
+    } else if (currentAlgo.id === 'dijkstra') {
+      await runDijkstra();
+    } else if (currentAlgo.id === 'astar') {
+      await runAStar();
+    } else if (currentAlgo.id === 'floyd') {
+      await runFloydWarshall();
     }
   };
 
@@ -3581,6 +6394,47 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                   >
                     <Upload size={18} />
                   </button>
+                </div>
+              </>
+            )}
+            
+            {(currentAlgo.id === 'bellmanford' || currentAlgo.id === 'spfa') && (
+              <>
+                <div className="toolbar-divider" />
+                <div className="toolbar-group">
+                  <span className="toolbar-label">图类型</span>
+                  <select
+                    className="toolbar-select"
+                    value={negativeGraphPattern}
+                    onChange={(e) => {
+                      setNegativeGraphPattern(e.target.value as any);
+                      if (!runner.isRunning) {
+                        const pattern = e.target.value as any;
+                        if (pattern === 'random') {
+                          const data = generateNegativeWeightGraph({
+                            nodeCount: 6,
+                            edgeCount: 10,
+                            minWeight: -8,
+                            maxWeight: 10,
+                            negativeRatio: 0.3,
+                            ensureNegativeCycle: false,
+                            pattern: 'random'
+                          });
+                          setGraphData(data);
+                        } else {
+                          const data = generateTeachingGraph(pattern);
+                          setGraphData(data);
+                        }
+                        runner.clearSteps();
+                      }
+                    }}
+                    disabled={runner.isRunning}
+                  >
+                    <option value="simple">简单教学图</option>
+                    <option value="complex">复杂多路径</option>
+                    <option value="negative-cycle">负权环检测</option>
+                    <option value="random">随机生成</option>
+                  </select>
                 </div>
               </>
             )}

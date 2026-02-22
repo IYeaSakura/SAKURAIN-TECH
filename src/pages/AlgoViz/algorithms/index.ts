@@ -6,6 +6,7 @@
  * - sorting/: 排序算法
  * - graph/: 图算法
  * - dp/: 动态规划算法
+ * - codes/: 图算法代码模板
  */
 
 import type { AlgorithmDefinition, AlgorithmId, AlgorithmCategory } from '../types';
@@ -14,6 +15,14 @@ import type { AlgorithmDefinition, AlgorithmId, AlgorithmCategory } from '../typ
 import { sortingAlgorithms, sortingTemplates } from './sorting';
 import { graphAlgorithms } from './graph';
 import { dpAlgorithms } from './dp';
+
+// 导出codes目录中的算法定义（供详细实现使用）
+export { dijkstraDefinition } from './codes/dijkstra';
+export { astarDefinition } from './codes/astar';
+
+// 导入图算法代码模板
+import { bfsCodeTemplates } from './codes/bfs';
+import { dfsCodeTemplates } from './codes/dfs';
 
 // 导出各算法模块
 export { sortingAlgorithms, sortingTemplates } from './sorting';
@@ -27,11 +36,22 @@ export const ALL_ALGORITHMS: AlgorithmDefinition[] = [
   ...dpAlgorithms
 ];
 
+// ============ 图算法代码模板 ============
+const graphCodeTemplates: Record<string, { language: string; label: string; code: string }[]> = {
+  bfs: bfsCodeTemplates,
+  dfs: dfsCodeTemplates
+};
+
 // ============ 代码模板获取函数 ============
 export function getCodeTemplates(algorithmId: string): { language: string; label: string; code: string }[] {
   // 排序算法模板
   if (sortingTemplates[algorithmId]) {
     return sortingTemplates[algorithmId];
+  }
+  
+  // 图算法代码模板
+  if (graphCodeTemplates[algorithmId]) {
+    return graphCodeTemplates[algorithmId];
   }
   
   // 默认返回冒泡排序模板

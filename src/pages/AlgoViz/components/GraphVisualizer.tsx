@@ -46,6 +46,30 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
 
   // 计算边的路径 - 使用贝塞尔曲线避免穿过节点
   const edgePaths = useMemo(() => {
+    // 检测点到线段距离的辅助函数
+    const pointToLineDistance = (px: number, py: number, x1: number, y1: number, x2: number, y2: number) => {
+      const A = px - x1;
+      const B = py - y1;
+      const C = x2 - x1;
+      const D = y2 - y1;
+      const dot = A * C + B * D;
+      const lenSq = C * C + D * D;
+      let param = -1;
+      if (lenSq !== 0) param = dot / lenSq;
+      let xx, yy;
+      if (param < 0) {
+        xx = x1; yy = y1;
+      } else if (param > 1) {
+        xx = x2; yy = y2;
+      } else {
+        xx = x1 + param * C;
+        yy = y1 + param * D;
+      }
+      const dx = px - xx;
+      const dy = py - yy;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
     return edges.map(edge => {
       const from = nodes.find(n => n.id === edge.from);
       const to = nodes.find(n => n.id === edge.to);
@@ -54,41 +78,55 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
       const dx = to.x - from.x;
       const dy = to.y - from.y;
       const len = Math.sqrt(dx * dx + dy * dy);
+      if (len === 0) return null;
       
       // 留出节点半径的空间
-      const offset = 28;
+      const offset = 30;
       const startX = from.x + (dx / len) * offset;
       const startY = from.y + (dy / len) * offset;
       const endX = to.x - (dx / len) * offset;
       const endY = to.y - (dy / len) * offset;
       
-      // 计算控制点创建贝塞尔曲线，避免直线穿过其他节点
-      // 根据边的方向和长度计算控制点
-      const midX = (startX + endX) / 2;
-      const midY = (startY + endY) / 2;
-      
-      // 检查是否有节点在这条边附近
-      const nodesOnPath = nodes.filter(n => {
+      // 检查是否有其他节点位于这条边的路径上
+      const nodeRadius = 35; // 节点半径 + 缓冲区
+      const intersectingNodes = nodes.filter(n => {
         if (n.id === from.id || n.id === to.id) return false;
-        // 计算点到线段的距离
-        const dist = Math.abs((endY - startY) * n.x - (endX - startX) * n.y + endX * startY - endY * startX) / len;
-        // 检查点是否在线段的投影范围内
-        const dot = (n.x - startX) * (endX - startX) + (n.y - startY) * (endY - startY);
-        return dist < 40 && dot > 0 && dot < len * len;
+        const dist = pointToLineDistance(n.x, n.y, startX, startY, endX, endY);
+        return dist < nodeRadius;
       });
       
       let path: string;
-      if (nodesOnPath.length > 0 && len > 100) {
-        // 如果有节点在路径上，使用弧形曲线绕开
-        const curveOffset = 60; // 弧形偏移量
-        // 根据边的方向决定偏移方向
-        const perpX = -(dy / len) * curveOffset;
-        const perpY = (dx / len) * curveOffset;
-        const cpX = midX + perpX;
-        const cpY = midY + perpY;
-        path = `M ${startX} ${startY} Q ${cpX} ${cpY} ${endX} ${endY}`;
+      
+      if (intersectingNodes.length > 0) {
+        // 有节点在路径上，使用三次贝塞尔曲线（S形）绕行
+        const midX = (startX + endX) / 2;
+        const midY = (startY + endY) / 2;
+        
+        // 计算垂直于边方向的单位向量
+        const perpX = -(dy / len);
+        const perpY = (dx / len);
+        
+        // 根据相交节点的位置决定偏移方向
+        // 计算所有相交节点到边的中点的位置
+        const avgNodeX = intersectingNodes.reduce((sum, n) => sum + n.x, 0) / intersectingNodes.length;
+        const avgNodeY = intersectingNodes.reduce((sum, n) => sum + n.y, 0) / intersectingNodes.length;
+        
+        // 判断节点在边的哪一侧
+        const crossProduct = (avgNodeX - midX) * perpX + (avgNodeY - midY) * perpY;
+        const direction = crossProduct > 0 ? 1 : -1;
+        
+        // 曲线偏移量（根据相交节点数量调整）
+        const curveOffset = 50 + intersectingNodes.length * 20;
+        
+        // 使用三次贝塞尔曲线，控制点分别在两侧
+        const cp1X = startX + (endX - startX) * 0.3 + perpX * curveOffset * direction;
+        const cp1Y = startY + (endY - startY) * 0.3 + perpY * curveOffset * direction;
+        const cp2X = startX + (endX - startX) * 0.7 + perpX * curveOffset * direction;
+        const cp2Y = startY + (endY - startY) * 0.7 + perpY * curveOffset * direction;
+        
+        path = `M ${startX} ${startY} C ${cp1X} ${cp1Y} ${cp2X} ${cp2Y} ${endX} ${endY}`;
       } else {
-        // 否则使用直线
+        // 没有相交节点，使用直线
         path = `M ${startX} ${startY} L ${endX} ${endY}`;
       }
 
