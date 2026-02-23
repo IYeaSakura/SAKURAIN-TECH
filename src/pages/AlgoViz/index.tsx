@@ -7957,6 +7957,34 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               </>
             )}
             
+            {/* BFS/DFS 起始节点选择（全屏模式）*/}
+            {(currentAlgo.id === 'bfs' || currentAlgo.id === 'dfs') && !useMazeMode && (
+              <>
+                <div className="toolbar-divider" />
+                <div className="toolbar-group">
+                  <span className="toolbar-label">起点</span>
+                  <select
+                    value={startNode}
+                    onChange={(e) => setStartNode(parseInt(e.target.value))}
+                    disabled={runner.isRunning}
+                    style={{
+                      padding: '4px 8px',
+                      fontSize: '13px',
+                      borderRadius: '4px',
+                      border: '1px solid var(--border-color)',
+                      background: 'var(--bg-secondary)',
+                      color: 'var(--text-primary)',
+                      cursor: runner.isRunning ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {graphData.nodes.map(node => (
+                      <option key={node.id} value={node.id}>节点 {node.id}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+            
             <div className="toolbar-spacer" />
             
             <div className="toolbar-group speed-group">
