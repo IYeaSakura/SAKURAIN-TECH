@@ -4,13 +4,29 @@
   <subtitle>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。</subtitle>
   <link href="https://sakurain.net/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://sakurain.net" rel="alternate" type="text/html"/>
-  <updated>2026-02-21T00:00:00.000Z</updated>
+  <updated>2026-02-23T00:00:00.000Z</updated>
   <id>https://sakurain.net/</id>
   <author>
     <name>SAKURAIN</name>
     <email>Yae_SakuRain@outlook.com</email>
   </author>
   <rights>© 2026 SAKURAIN 技术工作室</rights>
+  <entry>
+    <title>分层混合迷宫生成：从生成树到半结构化环境的拓扑构造</title>
+    <link href="https://sakurain.net/blog/layered-hybrid-maze-generation"/>
+    <id>https://sakurain.net/blog/layered-hybrid-maze-generation</id>
+    <published>2026-02-23T00:00:00.000Z</published>
+    <updated>2026-02-23T00:00:00.000Z</updated>
+    <author>
+      <name>SAKURAIN</name>
+      <email>Yae_SakuRain@outlook.com</email>
+    </author>
+    <summary>记录在开发寻路算法可视化时，如何通过分层混合策略生成既保证可解性、又有足够复杂度、还美观的随机迷宫，包含完整的数学原理和踩坑记录。</summary>
+    <category term="算法可视化"/>
+    <category term="搜索算法"/>
+    <category term="图论"/>
+  </entry>
+
   <entry>
     <title>重启鸽了三年的算法可视化项目：从工程需求到技术实现</title>
     <link href="https://sakurain.net/blog/algorithm-visualization-project-restart"/>

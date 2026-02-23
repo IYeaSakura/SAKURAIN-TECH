@@ -15,6 +15,7 @@ interface GraphVisualizerProps {
   height?: number;
   showWeights?: boolean;
   sccColors?: string[];
+  directed?: boolean;
 }
 
 const DEFAULT_SCC_COLORS = [
@@ -35,7 +36,8 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
   width = 800,
   height = 500,
   showWeights = false,
-  sccColors = DEFAULT_SCC_COLORS
+  sccColors = DEFAULT_SCC_COLORS,
+  directed = true
 }) => {
   const {
     highlightedEdges = new Set(),
@@ -248,7 +250,7 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
                 stroke={isHighlighted ? '#f59e0b' : isVisited ? '#10b981' : 'var(--text-secondary)'}
                 strokeWidth={isHighlighted ? 4 : 2}
                 strokeOpacity={isHighlighted ? 1 : isVisited ? 0.6 : 0.3}
-                markerEnd={isHighlighted ? 'url(#arrow-active)' : isVisited ? 'url(#arrow-visited)' : 'url(#arrow-default)'}
+                markerEnd={directed ? (isHighlighted ? 'url(#arrow-active)' : isVisited ? 'url(#arrow-visited)' : 'url(#arrow-default)') : undefined}
                 fill="none"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
