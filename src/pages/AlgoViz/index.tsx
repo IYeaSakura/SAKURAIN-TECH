@@ -149,9 +149,9 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
   
   // BFS/DFS 迷宫模式状态
   const [useMazeMode, setUseMazeMode] = useState<boolean>(false);
-  // 迷宫尺寸状态（可调整，默认20x30）
-  const [mazeRows, setMazeRows] = useState<number>(20);
-  const [mazeCols, setMazeCols] = useState<number>(30);
+  // 迷宫尺寸状态（可调整，默认为奇数以确保迷宫生成正确）
+  const [mazeRows, setMazeRows] = useState<number>(21);
+  const [mazeCols, setMazeCols] = useState<number>(31);
   const [mazeData, setMazeData] = useState<GridMapData | null>(null);
   const [mazeVisitedCells, setMazeVisitedCells] = useState<Set<string>>(new Set());
   const [mazeCurrentCell, setMazeCurrentCell] = useState<{ x: number; y: number } | null>(null);
@@ -7887,20 +7887,22 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                       <span className="toolbar-label">行</span>
                       <input
                         type="range"
-                        min="10"
+                        min="11"
                         max="35"
-                        step="1"
+                        step="2"
                         value={mazeRows}
                         onChange={(e) => {
                           const newRows = parseInt(e.target.value);
-                          setMazeRows(newRows);
+                          // 确保为奇数
+                          const oddRows = newRows % 2 === 0 ? newRows + 1 : newRows;
+                          setMazeRows(oddRows);
                           if (!runner.isRunning) {
                             setTimeout(() => generateData(), 0);
                           }
                         }}
                         disabled={runner.isRunning}
                         className="speed-slider"
-                        style={{ width: '60px', '--value': `${((mazeRows - 10) / 25) * 100}%` } as React.CSSProperties}
+                        style={{ width: '60px', '--value': `${((mazeRows - 11) / 24) * 100}%` } as React.CSSProperties}
                       />
                       <span className="toolbar-label" style={{ minWidth: '24px', textAlign: 'center' }}>{mazeRows}</span>
                     </div>
@@ -7909,19 +7911,21 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                       <input
                         type="range"
                         min="15"
-                        max="50"
-                        step="1"
+                        max="51"
+                        step="2"
                         value={mazeCols}
                         onChange={(e) => {
                           const newCols = parseInt(e.target.value);
-                          setMazeCols(newCols);
+                          // 确保为奇数
+                          const oddCols = newCols % 2 === 0 ? newCols + 1 : newCols;
+                          setMazeCols(oddCols);
                           if (!runner.isRunning) {
                             setTimeout(() => generateData(), 0);
                           }
                         }}
                         disabled={runner.isRunning}
                         className="speed-slider"
-                        style={{ width: '80px', '--value': `${((mazeCols - 15) / 35) * 100}%` } as React.CSSProperties}
+                        style={{ width: '80px', '--value': `${((mazeCols - 15) / 36) * 100}%` } as React.CSSProperties}
                       />
                       <span className="toolbar-label" style={{ minWidth: '24px', textAlign: 'center' }}>{mazeCols}</span>
                     </div>
