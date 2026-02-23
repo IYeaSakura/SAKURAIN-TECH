@@ -1,7 +1,7 @@
 /**
  * 网格迷宫可视化组件
  * 用于BFS/DFS等寻路算法的网格地图展示
- * 
+ *
  * 颜色说明：
  * - 黑色: 墙壁（障碍物）
  * - 白色: 未访问的路径
@@ -39,7 +39,7 @@ export const GridMazeVisualizer: React.FC<GridMazeVisualizerProps> = ({
   reviewStep = 0
 }) => {
   const { rows, cols, cells } = gridData;
-  
+
   // 计算格子大小以适应容器（支持更大的迷宫）
   const containerWidth = 800;
   const containerHeight = 550;
@@ -51,37 +51,37 @@ export const GridMazeVisualizer: React.FC<GridMazeVisualizerProps> = ({
 
   const getCellColor = (cell: GridCell, x: number, y: number): string => {
     const key = `${x},${y}`;
-    
+
     // 起点和终点
     if (cell.isStart) return '#ef4444'; // 红色起点
     if (cell.isGoal) return '#a855f7'; // 紫色终点
-    
+
     // 墙壁
     if (cell.isObstacle) return '#1f2937'; // 深灰/黑色
-    
+
     // 最终路径（最高优先级）
     if (pathCells.has(key)) return '#22c55e'; // 绿色
-    
+
     // 正在回溯的格子（红色）
     if (backtrackingCell && backtrackingCell.x === x && backtrackingCell.y === y) {
       return '#dc2626'; // 深红色
     }
-    
+
     // 当前正在访问的格子
     if (currentCell && currentCell.x === x && currentCell.y === y) {
       return '#eab308'; // 黄色
     }
-    
+
     // 已访问的格子
     if (visitedCells.has(key)) return '#3b82f6'; // 蓝色
-    
+
     // 未访问的路径
     return '#f3f4f6'; // 白色/浅灰
   };
 
   const getCellBorder = (cell: GridCell, x: number, y: number): string => {
     const key = `${x},${y}`;
-    
+
     if (cell.isObstacle) return '1px solid #374151';
     if (pathCells.has(key)) return '2px solid #16a34a';
     if (backtrackingCell && backtrackingCell.x === x && backtrackingCell.y === y) {
@@ -95,15 +95,15 @@ export const GridMazeVisualizer: React.FC<GridMazeVisualizerProps> = ({
   };
 
   return (
-    <div className="grid-maze-container" style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
+    <div className="grid-maze-container" style={{
+      display: 'flex',
+      justifyContent: 'center',
       alignItems: 'center',
       height: '100%',
       padding: '20px',
       position: 'relative'
     }}>
-      <div 
+      <div
         className="grid-maze"
         style={{
           display: 'grid',
@@ -121,19 +121,19 @@ export const GridMazeVisualizer: React.FC<GridMazeVisualizerProps> = ({
             const key = `${x},${y}`;
             const isCurrent = currentCell && currentCell.x === x && currentCell.y === y;
             const isBacktracking = backtrackingCell && backtrackingCell.x === x && backtrackingCell.y === y;
-            
+
             return (
               <motion.div
                 key={key}
                 className="grid-cell"
                 initial={showAnimation && !isReviewMode ? { scale: 0.8, opacity: 0 } : false}
-                animate={{ 
+                animate={{
                   scale: isCurrent || isBacktracking ? 1.15 : 1,
                   opacity: 1,
                   backgroundColor: getCellColor(cell, x, y),
                   border: getCellBorder(cell, x, y)
                 }}
-                transition={{ 
+                transition={{
                   duration: isReviewMode ? 0 : 0.2,
                   ease: 'easeOut'
                 }}
@@ -161,7 +161,7 @@ export const GridMazeVisualizer: React.FC<GridMazeVisualizerProps> = ({
           })
         )}
       </div>
-      
+
       {/* 复盘模式指示器 */}
       {isReviewMode && (
         <div style={{

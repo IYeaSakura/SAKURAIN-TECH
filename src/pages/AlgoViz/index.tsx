@@ -520,6 +520,16 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     generateData();
   }, [currentAlgo.id]);
 
+  // 切换迷宫尺寸时重新生成数据（模式切换已在按钮处理中直接生成数据）
+  useEffect(() => {
+    // 只有寻路算法且在迷宫模式下才需要重新生成
+    const pathfindingAlgos = ['bfs', 'dfs', 'dijkstra', 'astar', 'bellmanford', 'spfa'];
+    if (useMazeMode && pathfindingAlgos.includes(currentAlgo.id)) {
+      generateData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mazeRows, mazeCols]);
+
   // 校验并导入数组
   const handleImportArray = useCallback(() => {
     setImportError(null);
@@ -7795,8 +7805,69 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                     className={`toolbar-btn ${useMazeMode ? 'active' : ''}`}
                     onClick={() => {
                       if (!runner.isRunning) {
-                        setUseMazeMode(!useMazeMode);
-                        setTimeout(() => generateData(), 0);
+                        // 先停止并重置所有状态
+                        shouldStopRef.current = true;
+                        runner.stop();
+                        runner.clearSteps();
+                        
+                        // 目标模式：当前是迷宫则切到图，当前是图则切到迷宫
+                        const targetMazeMode = !useMazeMode;
+                        
+                        // 先生成目标模式的数据，再切换状态，避免中间形态
+                        if (targetMazeMode) {
+                          // 生成迷宫数据
+                          const maze = generateGridMap({ 
+                            rows: mazeRows, 
+                            cols: mazeCols, 
+                            pattern: currentAlgo.id === 'bfs' || currentAlgo.id === 'dfs' ? 'maze' : 'cave',
+                            ensurePath: true,
+                            randomStartGoal: true
+                          });
+                          setMazeData(maze);
+                          setGraphData(maze.graphData);
+                          setMazeVisitedCells(new Set());
+                          setMazeCurrentCell(null);
+                          setMazeBacktrackingCell(null);
+                          setMazePathCells(new Set());
+                          setMazeReviewStep(0);
+                          const startNodeId = maze.graphData.nodes.findIndex(
+                            n => Math.round((n.x - 50) / 40) === maze.start.x && 
+                                 Math.round((n.y - 50) / 40) === maze.start.y
+                          );
+                          setStartNode(startNodeId >= 0 ? startNodeId : 0);
+                          setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set() });
+                        } else {
+                          // 生成图数据
+                          let data: GraphData;
+                          if (currentAlgo.id === 'bellmanford' || currentAlgo.id === 'spfa') {
+                            data = generateNegativeWeightGraph({
+                              nodeCount: 6,
+                              edgeCount: 10,
+                              minWeight: -8,
+                              maxWeight: 10,
+                              negativeRatio: 0.3,
+                              ensureNegativeCycle: false,
+                              pattern: negativeGraphPattern === 'random' ? 'random' : 'chain'
+                            });
+                          } else if (currentAlgo.id === 'dijkstra') {
+                            data = generateWeightedGraph({ nodeCount: 8, edgeDensity: 0.5, positiveOnly: true });
+                          } else {
+                            data = generateRandomGraph({ 
+                              nodeCount: 12, 
+                              edgeCount: 15, 
+                              directed: false,
+                              connected: true 
+                            });
+                          }
+                          setGraphData(data);
+                          setMazeData(null);
+                          const randomStart = Math.floor(Math.random() * data.nodes.length);
+                          setStartNode(randomStart);
+                          setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set() });
+                        }
+                        
+                        // 数据生成完成后再切换模式状态
+                        setUseMazeMode(targetMazeMode);
                       }
                     }}
                     disabled={runner.isRunning}
@@ -7865,14 +7936,13 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               <span className="toolbar-label">速度</span>
               <input
                 type="range"
-                min="10"
-                max="1000"
-                step="10"
-                value={runner.speed}
-                onChange={(e) => runner.setSpeed(parseInt(e.target.value))}
+                min="1"
+                max="100"
+                value={Math.round((1001 - runner.speed) / 10)}
+                onChange={(e) => runner.setSpeed(1001 - parseInt(e.target.value) * 10)}
                 disabled={runner.isRunning}
                 className="speed-slider large"
-                style={{ '--value': `${((runner.speed - 10) / 990) * 100}%` } as React.CSSProperties}
+                style={{ '--value': `${Math.round((1001 - runner.speed) / 10)}%` } as React.CSSProperties}
               />
               <span className="speed-display">{runner.speed}ms/步</span>
             </div>
@@ -8100,14 +8170,64 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                       runner.stop();
                       runner.clearSteps();
                       
-                      // 切换模式并立即重新生成数据
-                      const newMode = !useMazeMode;
-                      setUseMazeMode(newMode);
+                      // 目标模式：当前是迷宫则切到图，当前是图则切到迷宫
+                      const targetMazeMode = !useMazeMode;
                       
-                      // 使用flushSync确保状态立即更新，然后生成数据
-                      setTimeout(() => {
-                        generateData();
-                      }, 0);
+                      // 先生成目标模式的数据，再切换状态，避免中间形态
+                      if (targetMazeMode) {
+                        // 生成迷宫数据
+                        const maze = generateGridMap({ 
+                          rows: mazeRows, 
+                          cols: mazeCols, 
+                          pattern: currentAlgo.id === 'bfs' || currentAlgo.id === 'dfs' ? 'maze' : 'cave',
+                          ensurePath: true,
+                          randomStartGoal: true
+                        });
+                        setMazeData(maze);
+                        setGraphData(maze.graphData);
+                        setMazeVisitedCells(new Set());
+                        setMazeCurrentCell(null);
+                        setMazeBacktrackingCell(null);
+                        setMazePathCells(new Set());
+                        setMazeReviewStep(0);
+                        const startNodeId = maze.graphData.nodes.findIndex(
+                          n => Math.round((n.x - 50) / 40) === maze.start.x && 
+                               Math.round((n.y - 50) / 40) === maze.start.y
+                        );
+                        setStartNode(startNodeId >= 0 ? startNodeId : 0);
+                        setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set() });
+                      } else {
+                        // 生成图数据
+                        let data: GraphData;
+                        if (currentAlgo.id === 'bellmanford' || currentAlgo.id === 'spfa') {
+                          data = generateNegativeWeightGraph({
+                            nodeCount: 6,
+                            edgeCount: 10,
+                            minWeight: -8,
+                            maxWeight: 10,
+                            negativeRatio: 0.3,
+                            ensureNegativeCycle: false,
+                            pattern: negativeGraphPattern === 'random' ? 'random' : 'chain'
+                          });
+                        } else if (currentAlgo.id === 'dijkstra') {
+                          data = generateWeightedGraph({ nodeCount: 8, edgeDensity: 0.5, positiveOnly: true });
+                        } else {
+                          data = generateRandomGraph({ 
+                            nodeCount: 12, 
+                            edgeCount: 15, 
+                            directed: false,
+                            connected: true 
+                          });
+                        }
+                        setGraphData(data);
+                        setMazeData(null);
+                        const randomStart = Math.floor(Math.random() * data.nodes.length);
+                        setStartNode(randomStart);
+                        setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set() });
+                      }
+                      
+                      // 数据生成完成后再切换模式状态
+                      setUseMazeMode(targetMazeMode);
                     }
                   }}
                   disabled={runner.isRunning}
@@ -8139,12 +8259,15 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               type="range"
               min="1"
               max="100"
-              value={Math.round((1010 - runner.speed) / 10)}
-              onChange={(e) => runner.setSpeed(1010 - parseInt(e.target.value) * 10)}
+              value={Math.round((1001 - runner.speed) / 10)}
+              onChange={(e) => runner.setSpeed(1001 - parseInt(e.target.value) * 10)}
               disabled={runner.isRunning}
               className="speed-slider"
-              style={{ '--value': `${Math.round((1010 - runner.speed) / 10)}%` } as React.CSSProperties}
+              style={{ '--value': `${Math.round((1001 - runner.speed) / 10)}%` } as React.CSSProperties}
             />
+            <span className="toolbar-label" style={{ marginLeft: '4px', fontSize: '11px', minWidth: '45px' }}>
+              {runner.speed}ms
+            </span>
           </div>
           
           <div className="toolbar-divider" />
