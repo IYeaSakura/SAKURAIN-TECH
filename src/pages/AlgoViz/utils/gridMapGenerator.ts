@@ -94,9 +94,9 @@ export function generateGridMap(options: GridMapOptions = {}): GridMapData {
       y: rows - margin - 1 - Math.floor(Math.random() * Math.floor(rows / 3))
     };
   } else {
-    // 固定在对角
-    start = { x: 0, y: 0 };
-    goal = { x: cols - 1, y: rows - 1 };
+    // 固定在对角（但避免在边界上，确保与迷宫生成兼容）
+    start = { x: 1, y: 1 };
+    goal = { x: cols - 2, y: rows - 2 };
   }
   
   cells[start.y][start.x].isStart = true;
@@ -172,7 +172,7 @@ function generateMaze(
   cells: GridCell[][], 
   rows: number, 
   cols: number,
-  _ensurePath: boolean,
+  ensurePath: boolean,
   start: { x: number; y: number },
   goal: { x: number; y: number }
 ): void {
@@ -185,6 +185,7 @@ function generateMaze(
   }
 
   // 递归回溯生成完美迷宫
+  // 从奇数坐标开始，确保迷宫单元格都在奇数位置
   const stack: { x: number; y: number }[] = [];
   const visited = new Set<string>();
   
@@ -209,8 +210,9 @@ function generateMaze(
       const nx = current.x + dir.x;
       const ny = current.y + dir.y;
       
-      // 修复：允许访问到边界（nx < cols 和 ny < rows），确保最后一行/列也能被处理
-      if (nx > 0 && nx < cols && ny > 0 && ny < rows && !visited.has(`${nx},${ny}`)) {
+      // 关键修复：确保不触及最外层边界（留出1格宽的墙）
+      // 这样最外层边界就是独立的一层墙，不会形成双层边界
+      if (nx > 0 && nx < cols - 1 && ny > 0 && ny < rows - 1 && !visited.has(`${nx},${ny}`)) {
         neighbors.push({ x: nx, y: ny, dx: dir.x / 2, dy: dir.y / 2 });
       }
     }
@@ -226,7 +228,7 @@ function generateMaze(
     }
   }
   
-  // 第二步：确保边界始终是墙（除了起点/终点附近）
+  // 第二步：确保边界始终是墙（最外层边界）
   // 上边界和下边界
   for (let x = 0; x < cols; x++) {
     cells[0][x].isObstacle = true;
@@ -238,16 +240,63 @@ function generateMaze(
     cells[y][cols - 1].isObstacle = true;
   }
 
-  // 第二步：添加洞穴般的额外开口（破坏一些墙创建环路和分支）
-  // 随机打通一些墙壁，增加路径复杂性
-  const extraOpenings = Math.floor(rows * cols * 0.08); // 8%的额外开口
+  // 修复双层边界问题：打通紧邻边界的内部墙
+  // 当网格尺寸为偶数时，迷宫生成会在边界前留下一层额外的墙
+  // 这里适当打通这些墙，避免双层边界效果
+  const fixDoubleBoundary = () => {
+    // 检查右边界附近的墙 (cols - 2)
+    for (let y = 1; y < rows - 1; y++) {
+      if (cells[y][cols - 2].isObstacle) {
+        // 如果左侧有通道，则打通这面墙
+        if (!cells[y][cols - 3].isObstacle) {
+          // 50%概率打通，保留一些墙保持迷宫复杂性
+          if (Math.random() < 0.5) {
+            cells[y][cols - 2].isObstacle = false;
+          }
+        }
+      }
+    }
+    
+    // 检查左边界附近的墙 (1)
+    for (let y = 1; y < rows - 1; y++) {
+      if (cells[y][1].isObstacle && !cells[y][2].isObstacle) {
+        if (Math.random() < 0.3) {
+          cells[y][1].isObstacle = false;
+        }
+      }
+    }
+    
+    // 检查下边界附近的墙 (rows - 2)
+    for (let x = 1; x < cols - 1; x++) {
+      if (cells[rows - 2][x].isObstacle && !cells[rows - 3][x].isObstacle) {
+        if (Math.random() < 0.5) {
+          cells[rows - 2][x].isObstacle = false;
+        }
+      }
+    }
+    
+    // 检查上边界附近的墙 (1)
+    for (let x = 1; x < cols - 1; x++) {
+      if (cells[1][x].isObstacle && !cells[2][x].isObstacle) {
+        if (Math.random() < 0.3) {
+          cells[1][x].isObstacle = false;
+        }
+      }
+    }
+  };
+  
+  fixDoubleBoundary();
+
+  // 第三步：添加环路 - 随机打通一些墙壁创建分支
+  // 降低比例避免太开放，同时避免成块空白
+  const extraOpenings = Math.floor(rows * cols * 0.04); // 4%的额外开口
   for (let i = 0; i < extraOpenings; i++) {
     const x = 2 + Math.floor(Math.random() * (cols - 4));
     const y = 2 + Math.floor(Math.random() * (rows - 4));
     
     // 只打通原本是墙的格子，且不是起点/终点
     if (cells[y][x].isObstacle && !(x === start.x && y === start.y) && !(x === goal.x && y === goal.y)) {
-      // 检查打通后是否会形成太开放的空间（保持一定复杂度）
+      // 限制条件更严格：避免形成大的开放区域
       let openNeighbors = 0;
       for (let dy = -1; dy <= 1; dy++) {
         for (let dx = -1; dx <= 1; dx++) {
@@ -259,62 +308,45 @@ function generateMaze(
           }
         }
       }
-      // 只有当周围有2-4个开放邻居时才打通（避免太开放或太孤立）
-      if (openNeighbors >= 2 && openNeighbors <= 4) {
+      // 只有当周围有1-3个开放邻居时才打通（更严格限制避免成块空白）
+      if (openNeighbors >= 1 && openNeighbors <= 3) {
         cells[y][x].isObstacle = false;
       }
     }
   }
 
-  // 第三步：添加一些小的洞穴簇
-  const caveClusters = Math.floor(rows * cols * 0.02);
-  for (let i = 0; i < caveClusters; i++) {
-    const cx = 3 + Math.floor(Math.random() * (cols - 6));
-    const cy = 3 + Math.floor(Math.random() * (rows - 6));
-    
-    // 创建2x2或3x3的小洞穴
-    const size = Math.random() < 0.5 ? 2 : 3;
-    for (let dy = 0; dy < size; dy++) {
-      for (let dx = 0; dx < size; dx++) {
-        const nx = cx + dx;
-        const ny = cy + dy;
-        if (nx < cols - 1 && ny < rows - 1) {
-          // 70%概率打通
-          if (Math.random() < 0.7) {
-            cells[ny][nx].isObstacle = false;
-          }
-        }
-      }
-    }
-  }
-
-  // 确保起点和终点是开放的
+  // 第四步：确保起点和终点是开放的
   cells[start.y][start.x].isObstacle = false;
   cells[goal.y][goal.x].isObstacle = false;
   
-  // 确保起点和终点周围至少有一个出口
+  // 第五步：确保起点和终点周围至少有一个出口
   const ensureExit = (x: number, y: number) => {
     const dirs = [{x:0,y:-1}, {x:0,y:1}, {x:-1,y:0}, {x:1,y:0}];
     let hasExit = false;
     for (const d of dirs) {
       const nx = x + d.x;
       const ny = y + d.y;
-      if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && !cells[ny][nx].isObstacle) {
+      if (nx > 0 && nx < cols - 1 && ny > 0 && ny < rows - 1 && !cells[ny][nx].isObstacle) {
         hasExit = true;
         break;
       }
     }
     if (!hasExit) {
-      // 随机打开一个邻居
+      // 随机打开一个邻居（确保不是边界）
       const d = dirs[Math.floor(Math.random() * dirs.length)];
-      const nx = Math.max(0, Math.min(cols - 1, x + d.x));
-      const ny = Math.max(0, Math.min(rows - 1, y + d.y));
+      const nx = Math.max(1, Math.min(cols - 2, x + d.x));
+      const ny = Math.max(1, Math.min(rows - 2, y + d.y));
       cells[ny][nx].isObstacle = false;
     }
   };
   
   ensureExit(start.x, start.y);
   ensureExit(goal.x, goal.y);
+  
+  // 第六步：严格确保起点到终点连通
+  if (ensurePath) {
+    ensurePathExists(cells, rows, cols, start, goal);
+  }
 }
 
 /**
@@ -508,7 +540,7 @@ function ensurePathExists(
     const current = queue.shift()!;
 
     if (current.x === goal.x && current.y === goal.y) {
-      // 找到路径
+      // 找到路径，无需处理
       return;
     }
 
@@ -526,21 +558,83 @@ function ensurePathExists(
     }
   }
 
-  // 如果没有找到路径，清除障碍物创建一条路径
-  let current: { x: number; y: number } | null = start;
-  while (current && (current.x !== goal.x || current.y !== goal.y)) {
-    // 朝着目标方向移动
-    if (current.x < goal.x) {
-      current = { x: current.x + 1, y: current.y };
-    } else if (current.x > goal.x) {
-      current = { x: current.x - 1, y: current.y };
-    } else if (current.y < goal.y) {
-      current = { x: current.x, y: current.y + 1 };
-    } else {
-      current = { x: current.x, y: current.y - 1 };
+  // 如果没有找到路径，使用BFS找到可达区域中最接近目标的点，然后打通路径
+  // 或者简单地在起点和终点之间创建一条L形或直线路径
+  
+  // 方法：从起点和终点同时进行BFS，找到最近的可以连接的两点
+  const startQueue: { x: number; y: number }[] = [start];
+  const startVisited = new Set<string>([`${start.x},${start.y}`]);
+  const startParent = new Map<string, { x: number; y: number } | null>();
+  startParent.set(`${start.x},${start.y}`, null);
+  
+  const goalQueue: { x: number; y: number }[] = [goal];
+  const goalVisited = new Set<string>([`${goal.x},${goal.y}`]);
+  const goalParent = new Map<string, { x: number; y: number } | null>();
+  goalParent.set(`${goal.x},${goal.y}`, null);
+  
+  let meetPoint: { x: number; y: number } | null = null;
+  let fromStart = true;
+  
+  // 双向BFS寻找连接点
+  while ((startQueue.length > 0 || goalQueue.length > 0) && !meetPoint) {
+    const queue = fromStart ? startQueue : goalQueue;
+    const visited = fromStart ? startVisited : goalVisited;
+    const otherVisited = fromStart ? goalVisited : startVisited;
+    const parent = fromStart ? startParent : goalParent;
+    
+    if (queue.length === 0) {
+      fromStart = !fromStart;
+      continue;
     }
     
-    if (current) {
+    const current = queue.shift()!;
+    
+    for (const dir of directions) {
+      const nx = current.x + dir.x;
+      const ny = current.y + dir.y;
+      const key = `${nx},${ny}`;
+      
+      if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && !visited.has(key)) {
+        if (otherVisited.has(key)) {
+          // 找到连接点
+          meetPoint = { x: nx, y: ny };
+          break;
+        }
+        
+        // 只遍历空地，如果是墙则跳过（但在下一步会考虑打通）
+        if (!cells[ny][nx].isObstacle) {
+          visited.add(key);
+          parent.set(key, current);
+          queue.push({ x: nx, y: ny });
+        }
+      }
+    }
+    
+    fromStart = !fromStart;
+  }
+  
+  if (meetPoint) {
+    // 找到了连接点，打通从起点到连接点的路径
+    let current: { x: number; y: number } | null = meetPoint;
+    while (current) {
+      cells[current.y][current.x].isObstacle = false;
+      current = startParent.get(`${current.x},${current.y}`) || null;
+    }
+    // 打通从终点到连接点的路径
+    current = meetPoint;
+    while (current) {
+      cells[current.y][current.x].isObstacle = false;
+      current = goalParent.get(`${current.x},${current.y}`) || null;
+    }
+  } else {
+    //  fallback：直接创建一条直线路径
+    let current = { ...start };
+    while (current.x !== goal.x || current.y !== goal.y) {
+      if (current.x < goal.x) current.x++;
+      else if (current.x > goal.x) current.x--;
+      else if (current.y < goal.y) current.y++;
+      else if (current.y > goal.y) current.y--;
+      
       cells[current.y][current.x].isObstacle = false;
     }
   }

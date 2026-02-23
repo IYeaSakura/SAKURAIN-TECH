@@ -158,9 +158,13 @@ export const GraphVisualizer: React.FC<GraphVisualizerProps> = ({
       return { fill: color, stroke: color };
     }
     
-    // 拓扑排序状态颜色（优先级：processing > visited > inQueue > default）
+    // 拓扑排序状态颜色（优先级：processing > inStack > visited > inQueue > default）
     if (node.isProcessing) {
       return { fill: '#f59e0b', stroke: '#f59e0b' };
+    }
+    // DFS栈中的节点（橙色高亮）
+    if (node.inStack) {
+      return { fill: '#f97316', stroke: '#f97316' };
     }
     if (node.visited) {
       return { fill: '#10b981', stroke: '#10b981' };
