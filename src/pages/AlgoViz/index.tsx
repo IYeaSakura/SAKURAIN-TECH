@@ -165,6 +165,12 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
   const speedRef = useRef<number>(runner.speed);
   const initialArrayRef = useRef<number[]>([]); // 保存初始数组
   
+  // 图数据Ref（用于在异步函数中获取最新节点状态）
+  const graphDataRef = useRef(graphData);
+  useEffect(() => {
+    graphDataRef.current = graphData;
+  }, [graphData]);
+  
   // 迷宫状态Refs（用于在异步函数中获取最新状态）
   const mazeVisitedCellsRef = useRef<Set<string>>(new Set());
   const mazeCurrentCellRef = useRef<{ x: number; y: number } | null>(null);
@@ -241,8 +247,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         ...prev,
         nodes: restoredNodes,
         edges: data.edges || prev.edges,
-        directed: true,
-        weighted: false
+        directed: prev.directed,
+        weighted: prev.weighted
       }));
       
       // 恢复图状态（高亮等）
@@ -499,6 +505,11 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         connected: true 
       });
       setGraphData(data);
+      // 如果当前起点不在新图范围内，随机选择一个
+      if (startNode >= data.nodes.length) {
+        const randomStart = Math.floor(Math.random() * data.nodes.length);
+        setStartNode(randomStart);
+      }
     }
     
     setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set() });
@@ -2966,7 +2977,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
 
       // 取出队首节点
       const u = queue.shift()!;
-      const nodeU = nodes.find(n => n.id === u)!;
+      // 始终从最新的 graphDataRef 中查找节点，确保状态同步
+      const nodeU = graphDataRef.current.nodes.find(n => n.id === u) || nodes.find(n => n.id === u)!;
       nodeU.inQueue = false;
       nodeU.visited = true;
       nodeU.isProcessing = true;
@@ -3252,7 +3264,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       
       // 取出队首节点
       const u = queue.shift()!;
-      const nodeU = nodes.find(n => n.id === u)!;
+      // 始终从最新的 graphDataRef 中查找节点，确保状态同步
+      const nodeU = graphDataRef.current.nodes.find(n => n.id === u) || nodes.find(n => n.id === u)!;
       nodeU.inQueue = false;
       nodeU.visited = true;
       nodeU.isProcessing = true;
@@ -3377,7 +3390,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
           return;
         }
         
-        const nodeV = nodes.find(n => n.id === v)!;
+        // 始终从最新的 graphDataRef 中查找节点，确保状态同步
+        const nodeV = graphDataRef.current.nodes.find(n => n.id === v) || nodes.find(n => n.id === v)!;
         
         if (!nodeV.visited && !nodeV.inQueue) {
           // 发现新节点
@@ -3622,7 +3636,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       
       // 查看栈顶（不弹出）
       const u = stack[stack.length - 1];
-      const nodeU = nodes.find(n => n.id === u)!;
+      // 始终从最新的 graphDataRef 中查找节点，确保状态同步
+      const nodeU = graphDataRef.current.nodes.find(n => n.id === u) || nodes.find(n => n.id === u)!;
       
       // 如果节点未访问，标记为正在处理
       if (!nodeU.visited) {
@@ -3752,7 +3767,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
           return;
         }
         
-        const nodeV = nodes.find(n => n.id === v)!;
+        // 始终从最新的 graphDataRef 中查找节点，确保状态同步
+        const nodeV = graphDataRef.current.nodes.find(n => n.id === v) || nodes.find(n => n.id === v)!;
         
         if (!nodeV.visited) {
           // 发现未访问的邻居，压入栈
@@ -5143,7 +5159,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       dfn[u] = timestamp;
       low[u] = timestamp;
       
-      const nodeU = nodes.find(n => n.id === u)!;
+      // 始终从最新的 graphDataRef 中查找节点，确保状态同步
+      const nodeU = graphDataRef.current.nodes.find(n => n.id === u) || nodes.find(n => n.id === u)!;
       nodeU.visited = true;
       
       stack.push(u);
@@ -6264,7 +6281,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
 
       const u = queue.shift()!;
       inQueue[u] = false;
-      const nodeU = nodes.find(n => n.id === u)!;
+      // 始终从最新的 graphDataRef 中查找节点，确保状态同步
+      const nodeU = graphDataRef.current.nodes.find(n => n.id === u) || nodes.find(n => n.id === u)!;
       nodeU.inQueue = false;
       nodeU.isProcessing = true;
 
@@ -6458,7 +6476,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
       if (u === -1) break;
 
       visited[u] = true;
-      const nodeU = nodes.find(n => n.id === u)!;
+      // 始终从最新的 graphDataRef 中查找节点，确保状态同步
+      const nodeU = graphDataRef.current.nodes.find(n => n.id === u) || nodes.find(n => n.id === u)!;
       nodeU.visited = true;
       nodeU.isProcessing = true;
 
@@ -7740,6 +7759,7 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                   nodes={graphData.nodes} 
                   edges={graphData.edges} 
                   state={graphState}
+                  directed={graphData.directed}
                 />
               )}
             </div>
@@ -7861,8 +7881,11 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                           }
                           setGraphData(data);
                           setMazeData(null);
-                          const randomStart = Math.floor(Math.random() * data.nodes.length);
-                          setStartNode(randomStart);
+                          // 如果当前起点不在新图范围内，随机选择一个
+                          if (startNode >= data.nodes.length) {
+                            const randomStart = Math.floor(Math.random() * data.nodes.length);
+                            setStartNode(randomStart);
+                          }
                           setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set() });
                         }
                         
@@ -8225,8 +8248,11 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
                         }
                         setGraphData(data);
                         setMazeData(null);
-                        const randomStart = Math.floor(Math.random() * data.nodes.length);
-                        setStartNode(randomStart);
+                        // 如果当前起点不在新图范围内，随机选择一个
+                        if (startNode >= data.nodes.length) {
+                          const randomStart = Math.floor(Math.random() * data.nodes.length);
+                          setStartNode(randomStart);
+                        }
                         setGraphState({ highlightedEdges: new Set(), highlightedNodes: new Set() });
                       }
                       
@@ -8304,13 +8330,18 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               nodes={graphData.nodes} 
               edges={graphData.edges} 
               state={graphState}
+              directed={graphData.directed}
             />
           )}
         </div>
         
         <div className="viz-status">
           <div className="status-message">
-            {runner.state.message || '准备就绪 - 点击"开始"运行算法'}
+            {runner.state.message || (
+              currentAlgo.category === 'graph' && !runner.isRunning
+                ? `准备就绪 - 可在右侧面板选择起始节点，然后点击"开始"运行算法`
+                : '准备就绪 - 点击"开始"运行算法'
+            )}
           </div>
           {currentAlgo.category === 'sorting' && (
             <div className="viz-status-control">
@@ -8356,6 +8387,35 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
             <span>时间: {currentAlgo.timeComplexity}</span>
             <span>空间: {currentAlgo.spaceComplexity}</span>
           </div>
+          
+          {/* BFS/DFS 起始节点选择 */}
+          {(currentAlgo.id === 'bfs' || currentAlgo.id === 'dfs') && !useMazeMode && (
+            <div className="start-node-selector" style={{ marginTop: '12px', padding: '10px', background: 'var(--bg-tertiary)', borderRadius: '8px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                <span>起始节点</span>
+                <span style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>(点击选择)</span>
+              </label>
+              <select
+                value={startNode}
+                onChange={(e) => setStartNode(parseInt(e.target.value))}
+                disabled={runner.isRunning}
+                style={{
+                  width: '100%',
+                  padding: '6px 10px',
+                  fontSize: '13px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-secondary)',
+                  color: 'var(--text-primary)',
+                  cursor: runner.isRunning ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {graphData.nodes.map(node => (
+                  <option key={node.id} value={node.id}>节点 {node.id}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         
         {/* 内存可视化面板 */}

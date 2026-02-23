@@ -2,57 +2,63 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://sakurain.net/</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1</priority>
   </url>
   <url>
     <loc>https://sakurain.net/blog</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://sakurain.net/friends</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/friends-circle</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://sakurain.net/about</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://sakurain.net/notes</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://sakurain.net/earth-online</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/studio</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://sakurain.net/blog/layered-hybrid-maze-generation</loc>
+    <lastmod>2026-02-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://sakurain.net/blog/algorithm-visualization-project-restart</loc>
@@ -146,145 +152,145 @@
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter00</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter01</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter02</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter03</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter04</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter05</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter06</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter07</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter08</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter09</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter10</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter11</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/react-tsx/chapter12</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/site-tech</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/site-tech/chapter01</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/webgl</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/webgl/ch01-basics</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/webgl/ch02-rendering-pipeline</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/webgl/ch03-texture-lighting</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/courses/webgl/ch04-advanced-rendering</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/rules</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://sakurain.net/docs/services</loc>
-    <lastmod>2026-02-22</lastmod>
+    <lastmod>2026-02-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

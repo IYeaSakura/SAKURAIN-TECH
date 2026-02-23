@@ -13,6 +13,21 @@
   ],
   "items": [
     {
+      "id": "https://sakurain.net/blog/layered-hybrid-maze-generation",
+      "url": "https://sakurain.net/blog/layered-hybrid-maze-generation",
+      "title": "分层混合迷宫生成：从生成树到半结构化环境的拓扑构造",
+      "content_text": "记录在开发寻路算法可视化时，如何通过分层混合策略生成既保证可解性、又有足够复杂度、还美观的随机迷宫，包含完整的数学原理和踩坑记录。",
+      "date_published": "2026-02-23T00:00:00.000Z",
+      "author": {
+        "name": "SAKURAIN"
+      },
+      "tags": [
+        "算法可视化",
+        "搜索算法",
+        "图论"
+      ]
+    },
+    {
       "id": "https://sakurain.net/blog/algorithm-visualization-project-restart",
       "url": "https://sakurain.net/blog/algorithm-visualization-project-restart",
       "title": "重启鸽了三年的算法可视化项目：从工程需求到技术实现",
