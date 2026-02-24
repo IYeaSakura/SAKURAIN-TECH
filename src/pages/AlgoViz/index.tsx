@@ -467,6 +467,11 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         const data = generateWeightedGraph({ nodeCount: 8, edgeDensity: 0.5, positiveOnly: true });
         setGraphData(data);
         setMazeData(null);
+        // 如果当前起点不在新图范围内，随机选择一个
+        if (startNode >= data.nodes.length) {
+          const randomStart = Math.floor(Math.random() * data.nodes.length);
+          setStartNode(randomStart);
+        }
       }
     } else if (currentAlgo.id === 'astar') {
       if (useMazeMode) {
@@ -6065,16 +6070,16 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     const dist: number[] = new Array(n).fill(Infinity);
     const parent: number[] = new Array(n).fill(-1);
     
-    // 迷宫模式：找到对应迷宫起点的节点ID
+    // 迷宫模式或图模式：确定起点
     let start: number;
     if (useMazeMode && mazeData) {
       start = nodes.findIndex(
         n => Math.round((n.x - 50) / 40) === mazeData.start.x && 
              Math.round((n.y - 50) / 40) === mazeData.start.y
       );
-      if (start === -1) start = 0;
+      if (start === -1) start = startNode % n;
     } else {
-      start = 0;
+      start = startNode % n;
     }
     dist[start] = 0;
 
@@ -7957,8 +7962,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
               </>
             )}
             
-            {/* BFS/DFS 起始节点选择（全屏模式）*/}
-            {(currentAlgo.id === 'bfs' || currentAlgo.id === 'dfs') && !useMazeMode && (
+            {/* BFS/DFS/Dijkstra 起始节点选择（全屏模式）*/}
+            {(['bfs', 'dfs', 'dijkstra'].includes(currentAlgo.id)) && !useMazeMode && (
               <>
                 <div className="toolbar-divider" />
                 <div className="toolbar-group">
@@ -8416,8 +8421,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
             <span>空间: {currentAlgo.spaceComplexity}</span>
           </div>
           
-          {/* BFS/DFS 起始节点选择 */}
-          {(currentAlgo.id === 'bfs' || currentAlgo.id === 'dfs') && !useMazeMode && (
+          {/* BFS/DFS/Dijkstra 起始节点选择 */}
+          {(['bfs', 'dfs', 'dijkstra'].includes(currentAlgo.id)) && !useMazeMode && (
             <div className="start-node-selector" style={{ marginTop: '12px', padding: '10px', background: 'var(--bg-tertiary)', borderRadius: '8px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
                 <span>起始节点</span>
