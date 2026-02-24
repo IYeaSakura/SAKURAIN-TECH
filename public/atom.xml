@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>SAKURAIN | 博弈算法与数据工程专家</title>
-  <subtitle>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。60天交付保证，100%源码交付。</subtitle>
+  <title>SAKURAIN TEAM | 2026</title>
+  <subtitle>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。</subtitle>
   <link href="https://sakurain.net/atom.xml" rel="self" type="application/atom+xml"/>
   <link href="https://sakurain.net" rel="alternate" type="text/html"/>
   <updated>2026-02-23T00:00:00.000Z</updated>
