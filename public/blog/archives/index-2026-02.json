@@ -1,5 +1,24 @@
 [
   {
+    "slug": "cross-platform-ad-tracking-rtb",
+    "title": "跨平台广告追踪的计算广告学原理：从设备指纹到实时竞价的完整技术链路",
+    "description": "从一次真实的广告重定向经历出发，深入剖析跨平台广告追踪的完整技术链路，涵盖设备指纹、实时竞价博弈论、CTR/CVR预估模型、联邦学习隐私计算等核心原理。",
+    "date": "2026-02-25",
+    "author": "SAKURAIN",
+    "tags": [
+      "计算广告",
+      "实时竞价",
+      "设备指纹",
+      "隐私计算",
+      "联邦学习",
+      "推荐系统"
+    ],
+    "cover": "/image/logo.webp",
+    "featured": false,
+    "wordCount": 6996,
+    "readingTime": "11 分钟阅读"
+  },
+  {
     "slug": "layered-hybrid-maze-generation",
     "title": "分层混合迷宫生成：从生成树到半结构化环境的拓扑构造",
     "description": "记录在开发寻路算法可视化时，如何通过分层混合策略生成既保证可解性、又有足够复杂度、还美观的随机迷宫，包含完整的数学原理和踩坑记录。",
