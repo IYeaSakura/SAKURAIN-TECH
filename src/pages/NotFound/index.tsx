@@ -2,7 +2,7 @@ import { useState, useEffect, memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router';
 import { ArrowLeft, Home, Ghost, Search, ArrowRight, Sparkles, Heart, RefreshCw } from 'lucide-react';
-import { 
+import {
   MagneticCursor, VelocityCursor,
   TwinklingStars, FlowingGradient, LightBeam
 } from '@/components/effects';
@@ -86,7 +86,7 @@ const FloatingGhost = memo(function FloatingGhost() {
   return (
     <motion.div
       initial={{ y: 20, opacity: 0 }}
-      animate={{ 
+      animate={{
         y: [20, -20, 20],
         opacity: 1
       }}
@@ -111,14 +111,14 @@ const FloatingGhost = memo(function FloatingGhost() {
           ease: 'easeInOut'
         }}
       >
-        <Ghost 
+        <Ghost
           className="w-32 h-32 sm:w-48 sm:h-48"
           style={{ color: 'var(--accent-primary)' }}
         />
       </motion.div>
-      
+
       {/* Glow effect */}
-      <div 
+      <div
         className="absolute inset-0 -m-8 rounded-full blur-3xl opacity-30"
         style={{ background: 'var(--accent-primary)' }}
       />
@@ -140,13 +140,13 @@ const ActionButton = memo(function ActionButton({
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const color = 'var(--accent-primary)';
-  
+
   return (
     <motion.button
       initial={{ opacity: 0, y: 20, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ 
-        duration: 0.6, 
+      transition={{
+        duration: 0.6,
         delay,
         type: 'spring',
         stiffness: 100,
@@ -158,8 +158,8 @@ const ActionButton = memo(function ActionButton({
       style={{
         background: `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 80%, var(--accent-secondary)))`,
         color: 'white',
-        boxShadow: isHovered 
-          ? `0 8px 30px var(--accent-glow), 0 0 60px ${color}40, inset 0 0 20px rgba(255,255,255,0.2)` 
+        boxShadow: isHovered
+          ? `0 8px 30px var(--accent-glow), 0 0 60px ${color}40, inset 0 0 20px rgba(255,255,255,0.2)`
           : '0 4px 20px var(--accent-glow)',
         transform: isHovered ? 'scale(1.05)' : 'scale(1)',
       }}
@@ -194,7 +194,7 @@ const SuggestionList = memo(function SuggestionList() {
     { icon: Search, label: '搜索文档', path: '/docs' },
     { icon: Heart, label: '友情链接', path: '/friends' },
   ];
-  
+
   const handleNavigate = (path: string) => {
     if (deploymentConfig.useWindowLocation) {
       window.location.href = path;
@@ -202,7 +202,7 @@ const SuggestionList = memo(function SuggestionList() {
       navigate(path);
     }
   };
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -210,7 +210,7 @@ const SuggestionList = memo(function SuggestionList() {
       transition={{ duration: 0.6, delay: 0.8 }}
       className="mt-12"
     >
-      <p 
+      <p
         className="text-center mb-6"
         style={{ color: 'var(--text-muted)' }}
       >
@@ -222,8 +222,8 @@ const SuggestionList = memo(function SuggestionList() {
             key={suggestion.path}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ 
-              duration: 0.5, 
+            transition={{
+              duration: 0.5,
               delay: 0.9 + index * 0.1,
               type: 'spring',
             }}
@@ -234,15 +234,15 @@ const SuggestionList = memo(function SuggestionList() {
               border: '2px solid var(--border-subtle)',
               color: 'var(--text-primary)',
             }}
-            whileHover={{ 
+            whileHover={{
               scale: 1.05,
               borderColor: 'var(--accent-primary)',
               boxShadow: '0 4px 20px var(--accent-glow)'
             }}
             whileTap={{ scale: 0.98 }}
           >
-            <suggestion.icon 
-              className="w-4 h-4" 
+            <suggestion.icon
+              className="w-4 h-4"
               style={{ color: 'var(--accent-primary)' } as React.CSSProperties}
             />
             {suggestion.label}
@@ -257,7 +257,7 @@ const SuggestionList = memo(function SuggestionList() {
 export default function NotFoundPage() {
   const [theme, setTheme] = useState<Theme>('dark');
   const THEME_STORAGE_KEY = 'sakurain-theme';
-  
+
   // Load theme from localStorage
   useEffect(() => {
     const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme;
@@ -266,7 +266,7 @@ export default function NotFoundPage() {
       document.documentElement.setAttribute('data-theme', savedTheme);
     }
   }, []);
-  
+
   // Listen for theme changes from other pages
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
@@ -280,7 +280,7 @@ export default function NotFoundPage() {
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
-  
+
   // Toggle theme
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
@@ -288,9 +288,9 @@ export default function NotFoundPage() {
     localStorage.setItem(THEME_STORAGE_KEY, newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
   };
-  
+
   const navigate = useNavigate();
-  
+
   const handleGoHome = useCallback(() => {
     if (deploymentConfig.useWindowLocation) {
       window.location.href = '/';
@@ -298,13 +298,13 @@ export default function NotFoundPage() {
       navigate('/');
     }
   }, [navigate]);
-  
+
   const handleRefresh = useCallback(() => {
     window.location.reload();
   }, []);
-  
+
   const isMobile = useMobile();
-  
+
   return (
     <div
       className="relative min-h-screen flex flex-col"
@@ -355,8 +355,8 @@ export default function NotFoundPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ 
-              duration: 0.8, 
+            transition={{
+              duration: 0.8,
               type: 'spring',
               stiffness: 100,
             }}
@@ -364,7 +364,7 @@ export default function NotFoundPage() {
           >
             <motion.h1
               className="font-pixel text-8xl sm:text-9xl md:text-[12rem] font-bold"
-              style={{ 
+              style={{
                 color: 'var(--accent-primary)',
                 textShadow: '0 0 40px var(--accent-primary)40, 0 0 80px var(--accent-primary)20',
               }}
@@ -463,7 +463,7 @@ export default function NotFoundPage() {
                   ease: 'easeInOut'
                 }}
               >
-                <Sparkles 
+                <Sparkles
                   className="w-5 h-5"
                   style={{ color: 'var(--accent-primary)' }}
                 />

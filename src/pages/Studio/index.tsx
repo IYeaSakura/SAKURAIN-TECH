@@ -1,8 +1,8 @@
 /**
  * 工作室子页
- * 
+ *
  * 原主页内容迁移至此，展示团队服务、技术栈、案例等商业信息
- * 
+ *
  * @author SAKURAIN
  */
 import { useState, useEffect, Suspense, lazy } from 'react';
@@ -89,20 +89,20 @@ function StaggeredFloatingButton() {
         animation: 'slideInLeft 0.5s ease-out',
       }}
     >
-      <svg 
-        className="w-4 h-4" 
+      <svg
+        className="w-4 h-4"
         style={{ color: 'white' }}
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
         strokeWidth="2"
       >
         <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
         <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
       </svg>
-      <span 
+      <span
         className="text-[9px] font-bold tracking-wider"
-        style={{ 
+        style={{
           color: 'white',
           writingMode: 'vertical-rl',
           textOrientation: 'mixed',

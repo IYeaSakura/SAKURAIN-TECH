@@ -49,6 +49,7 @@ const EarthOnlinePage = lazy(() => import('./pages/EarthOnline/index'));
 const StudioPage = lazy(() => import('./pages/Studio/index'));
 const NotFoundPage = lazy(() => import('./pages/NotFound/index'));
 const AlgoVizPage = lazy(() => import('./pages/AlgoViz/index'));
+const DevLogPage = lazy(() => import('./pages/DevLog/index'));
 
 // 预加载函数
 let docsLoader: Promise<any> | null = null;
@@ -178,8 +179,8 @@ function PageLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isReady]);
 
-  // 只在以下路径显示导航：首页、博客列表、文档列表、友链、朋友圈、关于、说说、地球Online、工作室
-  const showNavPaths = ['/', '/blog', '/docs', '/friends', '/friends-circle', '/about', '/notes', '/earth-online', '/studio', '/algo-viz'];
+  // 只在以下路径显示导航：首页、博客列表、文档列表、友链、朋友圈、关于、说说、地球Online、工作室、算法可视化、开发日志
+  const showNavPaths = ['/', '/blog', '/docs', '/friends', '/friends-circle', '/about', '/notes', '/earth-online', '/studio', '/algo-viz', '/dev-log'];
   const shouldShowNav = showNavPaths.includes(location.pathname);
   
   // 算法可视化页面导航不固定
@@ -356,6 +357,11 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="/algo-viz" element={
                   <Suspense fallback={<RouteLoader />}>
                     <AlgoVizPage />
+                  </Suspense>
+                } />
+                <Route path="/dev-log" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <DevLogPage />
                   </Suspense>
                 } />
                 <Route path="*" element={
