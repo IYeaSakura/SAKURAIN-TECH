@@ -38,128 +38,128 @@ import type { SiteData } from '@/types';
 // 技术栈词云数据 - 随机颜色版本
 const techCloudData = [
   // 基础设施 & DevOps
-  { name: 'Docker', level: 90, category: 'devops', color: '#FF6B6B' },
-  { name: 'Kubernetes', level: 75, category: 'devops', color: '#FF8E53' },
-  { name: 'Nginx', level: 88, category: 'devops', color: '#FF6B9D' },
-  { name: 'MySQL', level: 92, category: 'database', color: '#C44569' },
+  { name: 'Docker', level: 70, category: 'devops', color: '#FF6B6B' },
+  // { name: 'Kubernetes', level: 75, category: 'devops', color: '#FF8E53' },
+  { name: 'Nginx', level: 80, category: 'devops', color: '#FF6B9D' },
+  { name: 'MySQL', level: 80, category: 'database', color: '#C44569' },
   { name: 'ClickHouse', level: 70, category: 'database', color: '#F8B500' },
-  { name: 'Redis', level: 85, category: 'database', color: '#6C5CE7' },
-  { name: 'Oracle', level: 80, category: 'database', color: '#A29BFE' },
-  { name: 'MongoDB', level: 78, category: 'database', color: '#74B9FF' },
-  { name: 'PostgreSQL', level: 80, category: 'database', color: '#0984E3' },
+  { name: 'Redis', level: 70, category: 'database', color: '#6C5CE7' },
+  // { name: 'Oracle', level: 80, category: 'database', color: '#A29BFE' },
+  // { name: 'MongoDB', level: 78, category: 'database', color: '#74B9FF' },
+  // { name: 'PostgreSQL', level: 80, category: 'database', color: '#0984E3' },
   { name: 'Git', level: 95, category: 'tool', color: '#00B894' },
-  { name: 'GitHub Actions', level: 82, category: 'devops', color: '#00CEC9' },
-  { name: 'Linux', level: 90, category: 'system', color: '#55A3FF' },
-  { name: 'CI/CD', level: 85, category: 'system', color: '#FD79A8' },
-  { name: 'Shell', level: 87, category: 'system', color: '#FDCB6E' },
-  { name: 'DevOps', level: 85, category: 'system', color: '#E17055' },
+  { name: 'GitHub Actions', level: 80, category: 'devops', color: '#00CEC9' },
+  { name: 'Linux', level: 75, category: 'system', color: '#55A3FF' },
+  // { name: 'CI/CD', level: 85, category: 'system', color: '#FD79A8' },
+  { name: 'Shell', level: 80, category: 'system', color: '#FDCB6E' },
+  // { name: 'DevOps', level: 85, category: 'system', color: '#E17055' },
 
   // 后端语言
   { name: 'Python', level: 95, category: 'backend', color: '#6C5CE7' },
-  { name: 'FastAPI', level: 92, category: 'backend', color: '#00D2D3' },
-  { name: 'Flask', level: 88, category: 'backend', color: '#54A0FF' },
-  { name: 'Django', level: 85, category: 'backend', color: '#48DBFB' },
+  { name: 'FastAPI', level: 90, category: 'backend', color: '#00D2D3' },
+  { name: 'Flask', level: 80, category: 'backend', color: '#54A0FF' },
+  { name: 'Django', level: 75, category: 'backend', color: '#48DBFB' },
   { name: 'Node.js', level: 90, category: 'backend', color: '#1DD1A1' },
-  { name: 'NestJS', level: 78, category: 'backend', color: '#FECA57' },
-  { name: 'Go', level: 82, category: 'backend', color: '#FF9F43' },
+  { name: 'NestJS', level: 75, category: 'backend', color: '#FECA57' },
+  { name: 'Go', level: 70, category: 'backend', color: '#FF9F43' },
   { name: 'Gin', level: 70, category: 'backend', color: '#EE5A24' },
   { name: 'Java', level: 85, category: 'backend', color: '#F368E0' },
-  { name: 'Spring Boot', level: 83, category: 'backend', color: '#00D8D6' },
+  { name: 'Spring Boot', level: 75, category: 'backend', color: '#00D8D6' },
   { name: 'C/C++', level: 80, category: 'backend', color: '#5F27CD' },
-  { name: 'PHP', level: 88, category: 'backend', color: '#341F97' },
-  { name: 'WordPress', level: 75, category: 'backend', color: '#10AC84' },
+  { name: 'PHP', level: 90, category: 'backend', color: '#341F97' },
+  // { name: 'WordPress', level: 85, category: 'backend', color: '#10AC84' },
 
   // 前端技术
-  { name: 'TypeScript', level: 95, category: 'frontend', color: '#2E86DE' },
-  { name: 'JavaScript', level: 96, category: 'frontend', color: '#F6B93B' },
-  { name: 'React', level: 95, category: 'frontend', color: '#4A69BD' },
-  { name: 'Next.js', level: 88, category: 'frontend', color: '#1E3799' },
-  { name: 'Vue 3', level: 92, category: 'frontend', color: '#42B883' },
-  { name: 'Vite', level: 90, category: 'frontend', color: '#646CFF' },
-  { name: 'Tailwind CSS', level: 93, category: 'frontend', color: '#38BDF8' },
-  { name: 'Framer Motion', level: 85, category: 'frontend', color: '#FF6B81' },
-  { name: 'Three.js', level: 80, category: 'frontend', color: '#7BED9F' },
-  { name: 'WebGL', level: 78, category: 'frontend', color: '#70A1FF' },
-  { name: 'Cesium', level: 82, category: 'frontend', color: '#5352ED' },
+  { name: 'TypeScript', level: 90, category: 'frontend', color: '#2E86DE' },
+  { name: 'JavaScript', level: 95, category: 'frontend', color: '#F6B93B' },
+  { name: 'React', level: 90, category: 'frontend', color: '#4A69BD' },
+  // { name: 'Next.js', level: 88, category: 'frontend', color: '#1E3799' },
+  { name: 'Vue 3', level: 80, category: 'frontend', color: '#42B883' },
+  // { name: 'Vite', level: 80, category: 'frontend', color: '#646CFF' },
+  { name: 'Tailwind CSS', level: 80, category: 'frontend', color: '#38BDF8' },
+  { name: 'Framer Motion', level: 75, category: 'frontend', color: '#FF6B81' },
+  { name: 'Three.js', level: 75, category: 'frontend', color: '#7BED9F' },
+  { name: 'WebGL', level: 75, category: 'frontend', color: '#70A1FF' },
+  { name: 'Cesium', level: 75, category: 'frontend', color: '#5352ED' },
   { name: "echarts", level: 85, category: 'frontend', color: '#FF4757' },
-  { name: 'HTML5', level: 98, category: 'frontend', color: '#E15F41' },
-  { name: 'CSS3', level: 95, category: 'frontend', color: '#25CCF7' },
-  { name: 'Sass', level: 88, category: 'frontend', color: '#FD7272' },
-  { name: 'Webpack', level: 85, category: 'frontend', color: '#58B19F' },
-  { name: 'ESLint', level: 88, category: 'frontend', color: '#82589F' },
-  { name: 'Prettier', level: 90, category: 'frontend', color: '#2BCBBA' },
-  { name: 'shadcn/ui', level: 87, category: 'frontend', color: '#9AECDB' },
-  { name: 'TDesign', level: 85, category: 'frontend', color: '#D6A2E8' },
+  { name: 'HTML5', level: 95, category: 'frontend', color: '#E15F41' },
+  { name: 'CSS3', level: 85, category: 'frontend', color: '#25CCF7' },
+  // { name: 'Sass', level: 88, category: 'frontend', color: '#FD7272' },
+  // { name: 'Webpack', level: 85, category: 'frontend', color: '#58B19F' },
+  // { name: 'ESLint', level: 88, category: 'frontend', color: '#82589F' },
+  // { name: 'Prettier', level: 90, category: 'frontend', color: '#2BCBBA' },
+  // { name: 'shadcn/ui', level: 87, category: 'frontend', color: '#9AECDB' },
+  { name: 'TDesign', level: 75, category: 'frontend', color: '#D6A2E8' },
 
   // AI & 数据科学
-  { name: 'PyTorch', level: 88, category: 'ai', color: '#FF5252' },
-  { name: 'TensorFlow', level: 88, category: 'ai', color: '#FF793F' },
-  { name: 'OpenCV', level: 82, category: 'ai', color: '#34ACE0' },
+  { name: 'PyTorch', level: 85, category: 'ai', color: '#FF5252' },
+  { name: 'TensorFlow', level: 80, category: 'ai', color: '#FF793F' },
+  { name: 'OpenCV', level: 75, category: 'ai', color: '#34ACE0' },
   { name: 'NumPy', level: 90, category: 'ai', color: '#33D9B2' },
-  { name: 'Pandas', level: 92, category: 'ai', color: '#706FD3' },
+  { name: 'Pandas', level: 95, category: 'ai', color: '#706FD3' },
   { name: 'Scikit-learn', level: 85, category: 'ai', color: '#FF9FF3' },
-  { name: 'Matplotlib', level: 88, category: 'ai', color: '#48DBFB' },
-  { name: 'Seaborn', level: 92, category: 'ai', color: '#0ABDE3' },
-  { name: 'Pyecharts', level: 85, category: 'ai', color: '#10AC84' },
-  { name: 'LangChain', level: 85, category: 'ai', color: '#F368E0' },
-  { name: 'Hugging Face', level: 80, category: 'ai', color: '#FFC312' },
-  { name: 'ONNX', level: 72, category: 'ai', color: '#12CBC4' },
-  { name: 'TensorRT', level: 70, category: 'ai', color: '#FDA7DF' },
-  { name: 'CUDA', level: 68, category: 'ai', color: '#ED4C67' },
-  { name: 'YOLO', level: 78, category: 'ai', color: '#B53471' },
-  { name: "Transformer", level: 82, category: 'ai', color: '#6F1E51' },
+  { name: 'Matplotlib', level: 90, category: 'ai', color: '#48DBFB' },
+  { name: 'Seaborn', level: 90, category: 'ai', color: '#0ABDE3' },
+  { name: 'Pyecharts', level: 80, category: 'ai', color: '#10AC84' },
+  { name: 'LangChain', level: 75, category: 'ai', color: '#F368E0' },
+  // { name: 'Hugging Face', level: 80, category: 'ai', color: '#FFC312' },
+  { name: 'ONNX', level: 70, category: 'ai', color: '#12CBC4' },
+  // { name: 'TensorRT', level: 70, category: 'ai', color: '#FDA7DF' },
+  { name: 'CUDA', level: 60, category: 'ai', color: '#ED4C67' },
+  { name: 'YOLO', level: 80, category: 'ai', color: '#B53471' },
+  { name: "Transformer", level: 80, category: 'ai', color: '#6F1E51' },
   { name: "Diffusion Models", level: 85, category: 'ai', color: '#9980FA' },
-  { name: "GAN", level: 82, category: 'ai', color: '#D980FA' },
+  { name: "GAN", level: 80, category: 'ai', color: '#D980FA' },
   { name: "PPO", level: 85, category: 'ai', color: '#1289A7' },
-  { name: "Conversation", level: 82, category: 'ai', color: '#0652DD' },
+  { name: "Conversation", level: 85, category: 'ai', color: '#0652DD' },
   { name: "SVM", level: 85, category: 'ai', color: '#1B1464' },
 
   // 桌面 & 移动开发
-  { name: 'Qt C++', level: 78, category: 'desktop', color: '#009432' },
-  { name: 'PySide6', level: 82, category: 'desktop', color: '#A3CB38' },
-  { name: 'Electron', level: 85, category: 'desktop', color: '#1289A7' },
-  { name: 'React Native', level: 78, category: 'mobile', color: '#EA2027' },
-  { name: 'Flutter', level: 72, category: 'mobile', color: '#006266' },
-  { name: 'Kotlin', level: 70, category: 'mobile', color: '#5758BB' },
+  // { name: 'Qt C++', level: 78, category: 'desktop', color: '#009432' },
+  { name: 'PySide6', level: 85, category: 'desktop', color: '#A3CB38' },
+  { name: 'Electron', level: 75, category: 'desktop', color: '#1289A7' },
+  { name: 'React Native', level: 70, category: 'mobile', color: '#EA2027' },
+  // { name: 'Flutter', level: 72, category: 'mobile', color: '#006266' },
+  { name: 'Tkinter', level: 90, category: 'desktop', color: '#5758BB' },
 
   // WebAssembly & 性能
   { name: 'WebAssembly', level: 75, category: 'frontend', color: '#6F1E51' },
-  { name: 'Rust WASM', level: 72, category: 'frontend', color: '#833471' },
-  { name: 'AssemblyScript', level: 68, category: 'frontend', color: '#B53471' },
+  { name: 'Rust WASM', level: 75, category: 'frontend', color: '#833471' },
+  { name: 'AssemblyScript', level: 65, category: 'frontend', color: '#B53471' },
   { name: 'Web Workers', level: 85, category: 'frontend', color: '#40407A' },
-  { name: 'Service Worker', level: 82, category: 'frontend', color: '#2C2C54' },
-  { name: 'PWA', level: 88, category: 'frontend', color: '#227093' },
+  // { name: 'Service Worker', level: 82, category: 'frontend', color: '#2C2C54' },
+  // { name: 'PWA', level: 88, category: 'frontend', color: '#227093' },
 
   // 测试 & 工具
-  { name: 'Jest', level: 88, category: 'tool', color: '#218C74' },
-  { name: 'Vitest', level: 85, category: 'tool', color: '#34B3F1' },
-  { name: 'Cypress', level: 82, category: 'tool', color: '#6D214F' },
-  { name: 'Playwright', level: 80, category: 'tool', color: '#182C61' },
-  { name: 'Postman', level: 92, category: 'tool', color: '#FC5C65' },
-  { name: 'Insomnia', level: 85, category: 'tool', color: '#9B59B6' },
-  { name: 'Figma', level: 88, category: 'tool', color: '#E74C3C' },
+  // { name: 'Jest', level: 88, category: 'tool', color: '#218C74' },
+  // { name: 'Vitest', level: 85, category: 'tool', color: '#34B3F1' },
+  // { name: 'Cypress', level: 82, category: 'tool', color: '#6D214F' },
+  // { name: 'Playwright', level: 80, category: 'tool', color: '#182C61' },
+  { name: 'Postman', level: 90, category: 'tool', color: '#FC5C65' },
+  // { name: 'Insomnia', level: 85, category: 'tool', color: '#9B59B6' },
+  // { name: 'Figma', level: 88, category: 'tool', color: '#E74C3C' },
 
   // 云服务
-  { name: 'AWS', level: 78, category: 'cloud', color: '#F39C12' },
-  { name: 'Azure', level: 75, category: 'cloud', color: '#3498DB' },
-  { name: 'GCP', level: 72, category: 'cloud', color: '#E67E22' },
+  // { name: 'AWS', level: 78, category: 'cloud', color: '#F39C12' },
+  // { name: 'Azure', level: 75, category: 'cloud', color: '#3498DB' },
+  // { name: 'GCP', level: 72, category: 'cloud', color: '#E67E22' },
   { name: 'Cloud Functions', level: 85, category: 'cloud', color: '#1ABC9C' },
   { name: 'EdgeOne', level: 88, category: 'cloud', color: '#2ECC71' },
-  { name: 'Vercel', level: 92, category: 'cloud', color: '#34495E' },
+  // { name: 'Vercel', level: 92, category: 'cloud', color: '#34495E' },
   { name: 'Cloudflare', level: 85, category: 'cloud', color: '#F1C40F' },
-  { name: 'Supabase', level: 88, category: 'cloud', color: '#2ECC71' },
-  { name: 'Firebase', level: 82, category: 'cloud', color: '#E74C3C' },
+  // { name: 'Supabase', level: 88, category: 'cloud', color: '#2ECC71' },
+  // { name: 'Firebase', level: 82, category: 'cloud', color: '#E74C3C' },
 
   // 安全
-  { name: 'JWT', level: 90, category: 'security', color: '#9B59B6' },
-  { name: 'OAuth 2.0', level: 88, category: 'security', color: '#16A085' },
-  { name: 'OpenID Connect', level: 85, category: 'security', color: '#27AE60' },
-  { name: 'HTTPS/TLS', level: 92, category: 'security', color: '#2980B9' },
-  { name: 'CORS', level: 95, category: 'security', color: '#8E44AD' },
-  { name: 'CSP', level: 88, category: 'security', color: '#2C3E50' },
+  // { name: 'JWT', level: 90, category: 'security', color: '#9B59B6' },
+  // { name: 'OAuth 2.0', level: 88, category: 'security', color: '#16A085' },
+  // { name: 'OpenID Connect', level: 85, category: 'security', color: '#27AE60' },
+  // { name: 'HTTPS/TLS', level: 92, category: 'security', color: '#2980B9' },
+  // { name: 'CORS', level: 95, category: 'security', color: '#8E44AD' },
+  // { name: 'CSP', level: 88, category: 'security', color: '#2C3E50' },
   { name: 'WAF', level: 80, category: 'security', color: '#C0392B' },
   { name: "HMAC", level: 88, category: 'security', color: '#D35400' },
-  { name: 'DDoS Protection', level: 78, category: 'security', color: '#7F8C8D' },
+  // { name: 'DDoS Protection', level: 78, category: 'security', color: '#7F8C8D' },
 ];
 
 // 成就轮播图数据（图片 + 描述）
@@ -430,7 +430,7 @@ function GlassCard({
 // 星光背景容器 - 移动端特效降级
 function StarryBackground() {
   const isMobile = useMobile();
-  
+
   // 移动端不显示复杂特效，仅保留纯色背景
   if (isMobile) {
     return (
@@ -439,7 +439,7 @@ function StarryBackground() {
       </div>
     );
   }
-  
+
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
       {/* 深色背景层 */}
@@ -604,10 +604,10 @@ export default function AboutPage() {
               {/* 标签信息 - 下移与右侧卡片底部对齐 */}
               <div className="flex flex-wrap justify-center gap-2 px-2">
                 {[
-                  { icon: Briefcase, text: "中国移动工业互联网研究院" },
+                  { icon: Briefcase, text: "博弈算法专长" },
                   { icon: Calendar, text: "大四在读" },
                   { icon: Star, text: "中共党员" },
-                  { icon: GraduationCap, text: "软件工程" },
+                  { icon: GraduationCap, text: "独立开发者" },
                 ].map((item, index) => (
                   <motion.div
                     key={index}
@@ -674,9 +674,9 @@ export default function AboutPage() {
                   color="#60a5fa"
                   delay={0.5}
                 >
-                  热爱计算机技术的00后大学生，来自安徽宿州。中共党员，青年马克思主义者培养工程结业，在校期间担任班长。
+                  热爱计算机技术的00后大学生，中共党员，青年马克思主义者培养工程结业，在校期间担任班长。
                   <br /><br />
-                  中国人工智能学会机器博弈专委会成员，发表了一篇多智能体演化博弈领域的 SCI 三区论文，获得过计算机博弈大赛全国冠亚军。
+                  中国人工智能学会机器博弈专委会成员，获得过计算机博弈大赛全国冠亚军。
                 </InfoCard>
 
                 <InfoCard
@@ -687,7 +687,7 @@ export default function AboutPage() {
                 >
                   从中学时开发 LNMP 架构到大学深入学习 React、FastAPI、PyTorch 等框架，并积极参与科研项目。
                   <br /><br />
-                  先后在沈阳人工智能计算中心、合肥联想实习过，目前在中国移动通讯集团工业互联网创新研究院实习。
+                  {/* 先后在沈阳人工智能计算中心、合肥联想实习过，目前在中国移动通讯集团工业互联网创新研究院实习。 */}
                   坚信：代码构建未来，技术赋能社会。
                 </InfoCard>
               </div>
@@ -998,7 +998,7 @@ export default function AboutPage() {
                 <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">AI 实践探索</h3>
                 <div className="space-y-2 text-xs sm:text-sm text-gray-400">
                   {[
-                    "多智能体博弈研究 - SCI 论文",
+                    "多智能体博弈研究 - 持续专注算法",
                     "AI 辅助开发 workflow - 效率提升 300%",
                     "工业 AI 应用 - 设备预测性维护",
                     "持续学习跟踪前沿"
@@ -1468,7 +1468,7 @@ function InfoCard({ icon: Icon, title, color, delay, children }: InfoCardProps) 
   const [isHovered, setIsHovered] = useState(false);
 
   const isMobile = useMobile();
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

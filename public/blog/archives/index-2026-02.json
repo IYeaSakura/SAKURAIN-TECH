@@ -1,5 +1,22 @@
 [
   {
+    "slug": "support-vector-machine-from-geometric-intuition-to-optimization-algorithm",
+    "title": "支持向量机（SVM）：从几何直观到优化算法",
+    "description": "深入解析支持向量机的几何原理、数学基础和优化算法实现，从直观理解到工程应用的完整指南。",
+    "date": "2026-02-28",
+    "author": "SAKURAIN",
+    "tags": [
+      "机器学习理论",
+      "优化算法",
+      "深度学习",
+      "神经网络"
+    ],
+    "cover": "/image/logo.webp",
+    "featured": false,
+    "wordCount": 7602,
+    "readingTime": "15 分钟阅读"
+  },
+  {
     "slug": "cross-platform-ad-tracking-rtb",
     "title": "跨平台广告追踪的计算广告学原理：从设备指纹到实时竞价的完整技术链路",
     "description": "从一次真实的广告重定向经历出发，深入剖析跨平台广告追踪的完整技术链路，涵盖设备指纹、实时竞价博弈论、CTR/CVR预估模型、联邦学习隐私计算等核心原理。",
@@ -15,7 +32,7 @@
     ],
     "cover": "/image/logo.webp",
     "featured": false,
-    "wordCount": 6996,
+    "wordCount": 6887,
     "readingTime": "11 分钟阅读"
   },
   {
@@ -86,7 +103,7 @@
     ],
     "cover": "/image/logo.webp",
     "featured": true,
-    "wordCount": 13859,
+    "wordCount": 13862,
     "readingTime": "26 分钟阅读"
   },
   {

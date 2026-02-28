@@ -102,11 +102,11 @@ $$
    $$
 
    这确保了生成树完全位于内部区域 $\Omega = [1, m-2] \times [1, n-2]$，最外层边界由独立的初始化代码统一设置为墙。
-2. **后处理打通的概率模型**（`fixDoubleBoundary`）：  
+2. **后处理打通的概率模型**（`fixDoubleBoundary`）：
    对于紧邻边界的内部墙单元 $v \in \{(1,y), (m-2,y), (x,1), (x,n-2)\}$，若其内侧邻居 $u$ 满足 $W(u)=0$，则以概率 $p$ 打通：
 
    $$
-   P(W(v) \to 0) = \begin{cases} 
+   P(W(v) \to 0) = \begin{cases}
    0.5 & \text{if } v \in \text{Right/Bottom} \\
    0.3 & \text{if } v \in \text{Left/Top}
    \end{cases}
