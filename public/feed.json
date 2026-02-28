@@ -13,6 +13,22 @@
   ],
   "items": [
     {
+      "id": "https://sakurain.net/blog/support-vector-machine-from-geometric-intuition-to-optimization-algorithm",
+      "url": "https://sakurain.net/blog/support-vector-machine-from-geometric-intuition-to-optimization-algorithm",
+      "title": "支持向量机（SVM）：从几何直观到优化算法",
+      "content_text": "深入解析支持向量机的几何原理、数学基础和优化算法实现，从直观理解到工程应用的完整指南。",
+      "date_published": "2026-02-28T00:00:00.000Z",
+      "author": {
+        "name": "SAKURAIN"
+      },
+      "tags": [
+        "机器学习理论",
+        "优化算法",
+        "深度学习",
+        "神经网络"
+      ]
+    },
+    {
       "id": "https://sakurain.net/blog/cross-platform-ad-tracking-rtb",
       "url": "https://sakurain.net/blog/cross-platform-ad-tracking-rtb",
       "title": "跨平台广告追踪的计算广告学原理：从设备指纹到实时竞价的完整技术链路",

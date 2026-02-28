@@ -5,12 +5,22 @@
     <link>https://sakurain.net</link>
     <description>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。</description>
     <language>zh-CN</language>
-    <lastBuildDate>Wed, 25 Feb 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 28 Feb 2026 00:00:00 GMT</lastBuildDate>
     <copyright>© 2026 SAKURAIN 技术工作室</copyright>
     <generator>SAKURAIN Feed Generator</generator>
     <atom:link href="https://sakurain.net/feed.xml" rel="self" type="application/rss+xml"/>
     <atom:link href="https://sakurain.net/atom.xml" rel="alternate" type="application/atom+xml"/>
     
+    <item>
+      <title>支持向量机（SVM）：从几何直观到优化算法</title>
+      <link>https://sakurain.net/blog/support-vector-machine-from-geometric-intuition-to-optimization-algorithm</link>
+      <guid isPermaLink="true">https://sakurain.net/blog/support-vector-machine-from-geometric-intuition-to-optimization-algorithm</guid>
+      <pubDate>Sat, 28 Feb 2026 00:00:00 GMT</pubDate>
+      <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
+      <description>深入解析支持向量机的几何原理、数学基础和优化算法实现，从直观理解到工程应用的完整指南。</description>
+      <category>机器学习理论</category><category>优化算法</category><category>深度学习</category><category>神经网络</category>
+    </item>
+
     <item>
       <title>跨平台广告追踪的计算广告学原理：从设备指纹到实时竞价的完整技术链路</title>
       <link>https://sakurain.net/blog/cross-platform-ad-tracking-rtb</link>
