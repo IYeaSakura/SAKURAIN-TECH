@@ -23,6 +23,7 @@ import {
   Clock,
   X,
   AlertTriangle,
+  Shuffle,
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { AmbientGlow, LightBeam } from '@/components/effects';
@@ -1629,6 +1630,16 @@ export default function FriendsPage() {
     setRedirectModalOpen(true);
   }, []);
 
+  // 随机访问推荐友链
+  const handleRandomVisit = useCallback(() => {
+    if (!data) return;
+    const featuredFriends = data.friends.filter(f => f.featured && f.status === 'online');
+    if (featuredFriends.length === 0) return;
+    const randomFriend = featuredFriends[Math.floor(Math.random() * featuredFriends.length)];
+    setSelectedFriend(randomFriend);
+    setRedirectModalOpen(true);
+  }, [data]);
+
   const handleConfirmRedirect = useCallback(() => {
     if (selectedFriend) {
       window.open(selectedFriend.url, '_blank', 'noopener,noreferrer');
@@ -1845,6 +1856,21 @@ export default function FriendsPage() {
                 >
                   友链推荐
                 </h2>
+                <motion.button
+                  whileHover={animationEnabled ? { scale: 1.05 } : undefined}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleRandomVisit}
+                  className="flex items-center gap-2 px-4 py-2 ml-4 text-sm font-medium transition-colors"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    border: '2px solid var(--accent-primary)',
+                    color: 'var(--accent-primary)',
+                    clipPath: clipPathRounded(4),
+                  }}
+                >
+                  <Shuffle className="w-4 h-4" />
+                  随机访问
+                </motion.button>
               </motion.div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
                 {data.friends

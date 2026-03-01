@@ -19,7 +19,8 @@ import {
   Bug,
   AlertCircle,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Shuffle,
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { AmbientGlow, LightBeam } from '@/components/effects';
@@ -1646,6 +1647,13 @@ export default function FeedPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [allItems, updateDisplayItems]);
 
+  // 随机阅读功能
+  const handleRandomRead = useCallback(() => {
+    if (allItems.length === 0) return;
+    const randomItem = allItems[Math.floor(Math.random() * allItems.length)];
+    window.open(randomItem.link, '_blank', 'noopener,noreferrer');
+  }, [allItems]);
+
   const totalPages = useMemo(() =>
     Math.ceil(allItems.length / POSTS_PER_PAGE),
     [allItems.length]
@@ -1761,6 +1769,25 @@ export default function FeedPage() {
                 <span className="text-sm font-medium hidden sm:block">
                   {refreshCooldown > 0 ? `${refreshCooldown}s` : '刷新'}
                 </span>
+              </motion.button>
+
+              {/* 随机阅读按钮 */}
+              <motion.button
+                whileHover={animationEnabled ? { scale: 1.05 } : undefined}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleRandomRead}
+                disabled={allItems.length === 0}
+                className="flex items-center gap-2 px-3 py-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: 'var(--accent-secondary)',
+                  border: '1px solid var(--accent-secondary)',
+                  clipPath: clipPathRounded(4),
+                  color: 'white',
+                }}
+                title="随机阅读一篇文章"
+              >
+                <Shuffle className="w-4 h-4" />
+                <span className="text-sm font-medium hidden sm:block">随机阅读</span>
               </motion.button>
 
               {/* 订阅按钮 */}

@@ -1,6 +1,6 @@
 /**
  * Mobile Context - Unified mobile detection for the entire application
- * 
+ *
  * Design principles:
  * 1. Single source of truth for mobile state
  * 2. CSS-first approach with JS only for dynamic behavior
@@ -59,7 +59,7 @@ export function MobileProvider({ children }: { children: ReactNode }) {
     const updateState = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      
+
       setState(prev => {
         // Only update if values changed
         if (prev.screenWidth === width && prev.screenHeight === height) {

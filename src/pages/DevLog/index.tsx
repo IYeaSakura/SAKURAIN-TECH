@@ -7,6 +7,7 @@
  */
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router';
 import {
   GitCommit,
   Calendar,
@@ -26,6 +27,7 @@ import {
 import { Footer } from '@/components/sections/Footer';
 import { SectionTitle } from '@/components/atoms';
 import { GridBackground, AmbientGlow } from '@/components/effects';
+import { deploymentConfig } from '@/config/deployment-config';
 
 // 日志条目类型
 interface LogEntry {
@@ -323,9 +325,19 @@ const StatCard = ({ label, value, icon: Icon, color }: { label: string; value: s
 );
 
 export default function DevLogPage() {
+  const navigate = useNavigate();
   const [totalCommits] = useState(156);
   const [totalFeatures] = useState(48);
   const [totalFixes] = useState(92);
+
+  // 跳转到详细页
+  const handleViewDetails = () => {
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = '/notes';
+    } else {
+      navigate('/notes');
+    }
+  };
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
@@ -367,15 +379,13 @@ export default function DevLogPage() {
         >
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
             更多历史记录请查看
-            <a
-              href="https://github.com/your-repo/commits"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mx-1"
+            <button
+              onClick={handleViewDetails}
+              className="mx-1 underline hover:no-underline"
               style={{ color: 'var(--accent-primary)' }}
             >
-              GitHub提交历史
-            </a>
+              详细页
+            </button>
           </p>
         </motion.div>
       </div>

@@ -79,13 +79,13 @@
   /* ============================================
      TYPOGRAPHY SYSTEM
      ============================================ */
-  
+
   /* Font Families */
   --font-primary: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
   /* Zpix (最像素) - Chinese Bitmap Pixel Font, VT323 - English Pixel Font */
   --font-pixel: 'Zpix', '舟方日央型秀-A', 'VT323', 'Press Start 2P', monospace;
-  
+
   /* Font Weights */
   --font-light: 300;
   --font-regular: 400;
@@ -94,7 +94,7 @@
   --font-bold: 700;
   --font-extrabold: 800;
   --font-black: 900;
-  
+
   /* Font Sizes - Major Third Scale (1.25) */
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
@@ -108,7 +108,7 @@
   --text-6xl: 3.75rem;
   --text-7xl: 4.5rem;
   --text-8xl: 6rem;
-  
+
   /* Line Heights */
   --leading-none: 1;
   --leading-tight: 1.25;
@@ -116,7 +116,7 @@
   --leading-normal: 1.5;
   --leading-relaxed: 1.625;
   --leading-loose: 2;
-  
+
   /* Letter Spacing */
   --tracking-tighter: -0.05em;
   --tracking-tight: -0.025em;
@@ -352,7 +352,7 @@ strong, b {
 ::-webkit-scrollbar-thumb {
   background: var(--accent-primary);
   border: 2px solid;
-  border-color: 
+  border-color:
     color-mix(in srgb, var(--accent-primary) 120%, white)
     color-mix(in srgb, var(--accent-primary) 80%, black)
     color-mix(in srgb, var(--accent-primary) 80%, black)
@@ -374,16 +374,16 @@ strong, b {
   * {
     cursor: auto !important;
   }
-  
+
   /* Pointer cursor on interactive elements */
-  a, button, [role="button"], input[type="range"], select, textarea, 
+  a, button, [role="button"], input[type="range"], select, textarea,
   .cursor-pointer, [class*="slider"], [class*="thumb"] {
     cursor: pointer !important;
   }
-  
+
   /* Text cursor for text inputs */
-  input[type="text"], input[type="number"], input[type="email"], 
-  input[type="password"], input[type="search"], 
+  input[type="text"], input[type="number"], input[type="email"],
+  input[type="password"], input[type="search"],
   textarea, [contenteditable="true"] {
     cursor: text !important;
   }
@@ -460,11 +460,11 @@ strong, b {
 .theme-transitioning *,
 .theme-transitioning *::before,
 .theme-transitioning *::after {
-  transition: background-color 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
-              border-color 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
-              color 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
-              box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
-              fill 0.5s cubic-bezier(0.22, 1, 0.36, 1), 
+  transition: background-color 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              color 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              fill 0.5s cubic-bezier(0.22, 1, 0.36, 1),
               stroke 0.5s cubic-bezier(0.22, 1, 0.36, 1),
               opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
@@ -673,13 +673,13 @@ html.theme-transitioning {
 /* Neon Pulse */
 @keyframes neon-pulse {
   0%, 100% {
-    text-shadow: 
+    text-shadow:
       0 0 5px currentColor,
       0 0 10px currentColor,
       0 0 20px currentColor;
   }
   50% {
-    text-shadow: 
+    text-shadow:
       0 0 5px currentColor,
       0 0 10px currentColor,
       0 0 20px currentColor,
@@ -743,7 +743,7 @@ html.theme-transitioning {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 
+  box-shadow:
     0 8px 32px 0 rgba(0, 0, 0, 0.37),
     inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
@@ -774,13 +774,13 @@ html.theme-transitioning {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
   }
-  
+
   /* Typography scaling */
   h1 { font-size: var(--text-3xl); }
   h2 { font-size: var(--text-2xl); }
   h3 { font-size: var(--text-xl); }
   h4 { font-size: var(--text-lg); }
-  
+
   /* Disable complex animations */
   *,
   *::before,
@@ -789,14 +789,14 @@ html.theme-transitioning {
     animation-iteration-count: 1 !important;
     transition-duration: 0.15s !important;
   }
-  
+
   /* Simplify backdrop-filter */
   .glass,
   .glass-enhanced {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
-  
+
   /* Touch-friendly targets */
   button,
   a,
@@ -807,43 +807,43 @@ html.theme-transitioning {
     min-height: 44px;
     min-width: 44px;
   }
-  
+
   /* Prevent text selection on interactive elements */
   button,
   [role="button"] {
     -webkit-user-select: none;
     user-select: none;
   }
-  
+
   /* Scrollbar styling for mobile */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
-  
+
   /* Hide desktop-only elements */
   .desktop-only {
     display: none !important;
   }
-  
+
   /* Mobile-optimized spacing */
   .mobile-optimize {
     padding-left: 16px;
     padding-right: 16px;
   }
-  
+
   /* Full-width cards on mobile */
   .mobile-full-width {
     width: calc(100% - 32px);
     margin-left: 16px;
     margin-right: 16px;
   }
-  
+
   /* Stack layouts vertically */
   .mobile-stack {
     flex-direction: column !important;
   }
-  
+
   /* Hide overflow on mobile */
   .mobile-hide {
     display: none !important;
@@ -855,7 +855,7 @@ html.theme-transitioning {
   html {
     font-size: 15px;
   }
-  
+
   .mobile-only {
     display: none !important;
   }
@@ -866,7 +866,7 @@ html.theme-transitioning {
   .mobile-only {
     display: none !important;
   }
-  
+
   /* Hide mobile-only elements */
   .desktop-only {
     display: block !important;
@@ -881,15 +881,15 @@ html.theme-transitioning {
   html {
     font-size: 14px;
   }
-  
+
   h1 {
     font-size: var(--text-4xl);
   }
-  
+
   h2 {
     font-size: var(--text-3xl);
   }
-  
+
   h3 {
     font-size: var(--text-2xl);
   }
