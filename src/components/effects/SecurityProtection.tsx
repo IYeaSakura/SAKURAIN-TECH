@@ -68,40 +68,14 @@ export function SecurityProtection({ config }: SecurityProtectionProps) {
 }
 
 function disableCopy() {
-  const handleCopy = (e: ClipboardEvent) => {
-    e.preventDefault();
-  };
-
-  const handleCut = (e: ClipboardEvent) => {
-    e.preventDefault();
-  };
-
-  const handlePaste = (e: ClipboardEvent) => {
-    e.preventDefault();
-  };
-
-  const handleSelectStart = (e: Event) => {
-    e.preventDefault();
-  };
-
+  // Only disable context menu, allow copy/cut/paste for better UX
   const handleContextMenu = (e: Event) => {
     e.preventDefault();
   };
 
-  document.addEventListener('copy', handleCopy);
-  document.addEventListener('cut', handleCut);
-  document.addEventListener('paste', handlePaste);
-  document.addEventListener('selectstart', handleSelectStart);
   document.addEventListener('contextmenu', handleContextMenu);
 
-  document.body.style.userSelect = 'none';
-  (document.body.style as any).webkitUserSelect = 'none';
-
   return () => {
-    document.removeEventListener('copy', handleCopy);
-    document.removeEventListener('cut', handleCut);
-    document.removeEventListener('paste', handlePaste);
-    document.removeEventListener('selectstart', handleSelectStart);
     document.removeEventListener('contextmenu', handleContextMenu);
   };
 }
@@ -338,7 +312,6 @@ function disableDebug() {
     if (e.key === 'F12' || 
         (e.ctrlKey && e.shiftKey && e.key === 'I') || 
         (e.ctrlKey && e.shiftKey && e.key === 'J') || 
-        (e.ctrlKey && e.shiftKey && e.key === 'C') ||
         (e.ctrlKey && e.key === 'u') ||
         (e.ctrlKey && e.key === 'U')) {
       e.preventDefault();
@@ -359,16 +332,10 @@ function disableDebug() {
     e.preventDefault();
   };
 
-  const disableSelect = (e: Event) => {
-    e.preventDefault();
-  };
-
   document.addEventListener('contextmenu', disableRightClick, true);
   document.addEventListener('keydown', disableInspect, true);
   document.addEventListener('mouseup', disableMouseUp, true);
   document.addEventListener('dragstart', disableDragStart, true);
-  document.addEventListener('selectstart', disableSelect, true);
-  document.addEventListener('selectionchange', disableSelect, true);
 
   const disableInspectElement = () => {
     document.addEventListener('click', (e) => {
@@ -419,8 +386,6 @@ function disableDebug() {
     document.removeEventListener('keydown', disableInspect, true);
     document.removeEventListener('mouseup', disableMouseUp, true);
     document.removeEventListener('dragstart', disableDragStart, true);
-    document.removeEventListener('selectstart', disableSelect, true);
-    document.removeEventListener('selectionchange', disableSelect, true);
     window.removeEventListener('beforeunload', disableBeforeUnload);
   };
 }
