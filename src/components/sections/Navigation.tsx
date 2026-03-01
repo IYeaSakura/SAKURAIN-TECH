@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User, Rss, Globe, Briefcase } from 'lucide-react';
+import { BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User, Rss, Globe, Briefcase, Wrench } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router';
 import { cn } from '@/lib/utils';
 import type { SiteData } from '@/types';
@@ -93,6 +93,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
       case 'Rss': return Rss;
       case 'Globe': return Globe;
       case 'Briefcase': return Briefcase;
+      case 'Wrench': return Wrench;
       default: return null;
     }
   };

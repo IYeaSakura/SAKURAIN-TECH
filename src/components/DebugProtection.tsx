@@ -1,10 +1,18 @@
 "use client"
 
 import { useEffect } from 'react';
+import { useLocation } from 'react-router';
 import { securityConfig } from '@/config/security-config';
+
+// Check if current page should allow copy shortcut
+function shouldAllowCopyShortcut(): boolean {
+  const path = window.location.pathname;
+  return path.startsWith('/tools');
+}
 
 export function DebugProtection() {
   const config = securityConfig.debugProtection;
+  const location = useLocation();
 
   useEffect(() => {
     if (!config.enabled) return;
@@ -23,10 +31,14 @@ export function DebugProtection() {
       }
 
       if (config.disableDevToolsShortcuts) {
+        // Allow Ctrl+Shift+C in toolbox pages for copy functionality
+        const isCopyShortcut = ctrl && shift && key === 'c';
+        const isToolboxPage = shouldAllowCopyShortcut();
+        
         if (
           (ctrl && shift && key === 'i') ||
           (ctrl && shift && key === 'j') ||
-          (ctrl && shift && key === 'c') ||
+          (isCopyShortcut && !isToolboxPage) ||
           (meta && alt && key === 'i') ||
           (meta && alt && key === 'j') ||
           (meta && alt && key === 'c')
@@ -185,7 +197,7 @@ export function DebugProtection() {
         window.clearInterval(debuggerIntervalId);
       }
     };
-  }, [config]);
+  }, [config, location.pathname]);
 
   return null;
 }
