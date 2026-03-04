@@ -5,12 +5,15 @@
 
 export { knapsackDefinition } from './knapsack';
 export { lcsDefinition } from './lcs';
+export { lisDefinition } from './lis';
 
 // 统一导出所有动态规划算法定义
 import { knapsackDefinition } from './knapsack';
 import { lcsDefinition } from './lcs';
+import { lisDefinition } from './lis';
 
 export const dpAlgorithms = [
   knapsackDefinition,
-  lcsDefinition
+  lcsDefinition,
+  lisDefinition
 ];
