@@ -20,6 +20,8 @@ import { urlEncoderTool } from './url-encoder';
 import { numberBaseConverterTool } from './number-base-converter';
 import { textStatisticsTool } from './text-statistics';
 import { aiPackerTool } from './ai-packer';
+import { qrGeneratorTool } from './qr-generator';
+import { markdownEditorTool } from './markdown-editor';
 
 // Export all tools as array for easy registration
 export const allTools = [
@@ -35,6 +37,8 @@ export const allTools = [
   numberBaseConverterTool,
   textStatisticsTool,
   aiPackerTool,
+  qrGeneratorTool,
+  markdownEditorTool,
 ];
 
 // Re-export individual tools
@@ -51,4 +55,6 @@ export {
   numberBaseConverterTool,
   textStatisticsTool,
   aiPackerTool,
+  qrGeneratorTool,
+  markdownEditorTool,
 };
