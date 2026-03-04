@@ -1,9 +1,9 @@
 /**
  * AI Packer Tool
- * 
+ *
  * Pack multiple text files into a single Markdown or XML file
  * Supports folder upload, .gitignore exclusion, regex filtering, line numbers
- * 
+ *
  * @author SAKURAIN
  */
 
@@ -12,7 +12,7 @@ import { Package, Upload, Download, FileText, Code, FolderOpen, X } from 'lucide
 import type { ToolModule, ToolProps } from '../types';
 import { ToolCard } from '../components/shared';
 
-const clipPathRounded = (r: number) => 
+const clipPathRounded = (r: number) =>
   `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
 
 type OutputFormat = 'markdown' | 'xml';
@@ -83,22 +83,22 @@ function parseGitignoreRules(content: string): ExclusionRules {
     .split('\n')
     .map(line => line.trim())
     .filter(line => line && !line.startsWith('#'));
-  
+
   const dirPatterns: RegExp[] = [];
   const filePatterns: RegExp[] = [];
-  
+
   for (let line of lines) {
     // Skip negation patterns for now
     if (line.startsWith('!')) continue;
-    
+
     const isDirPattern = line.endsWith('/');
     if (isDirPattern) {
       line = line.slice(0, -1);
     }
-    
+
     // Check if it's a directory pattern (contains / or ends with /)
     const isDirectoryRule = isDirPattern || line.includes('/');
-    
+
     // Convert gitignore pattern to regex
     let regexPattern = line
       .replace(/[.+^${}()|[\]\\]/g, '\\$&')
@@ -106,7 +106,7 @@ function parseGitignoreRules(content: string): ExclusionRules {
       .replace(/\*/g, '[^/]*')
       .replace(/<<<DOUBLESTAR>>>/g, '.*')
       .replace(/\?/g, '[^/]');
-    
+
     try {
       if (isDirectoryRule) {
         // Directory pattern: match the directory and all contents
@@ -121,7 +121,7 @@ function parseGitignoreRules(content: string): ExclusionRules {
       // Invalid pattern, skip
     }
   }
-  
+
   return { dirPatterns, filePatterns };
 }
 
@@ -133,14 +133,14 @@ function isPathExcluded(path: string, rules: ExclusionRules): boolean {
       return true;
     }
   }
-  
+
   // Check file patterns
   for (const pattern of rules.filePatterns) {
     if (pattern.test(path)) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -163,21 +163,21 @@ function shouldIncludeFile(
 ): boolean {
   const fileName = filePath.split('/').pop() || '';
   const ext = '.' + fileName.split('.').pop()?.toLowerCase();
-  
+
   // Check binary exclusion
   if (BINARY_EXTENSIONS.has(ext)) {
     return false;
   }
-  
+
   // Check if it's a text file
-  const isTextLike = TEXT_EXTENSIONS.has(ext) || 
-    fileName.startsWith('.') || 
+  const isTextLike = TEXT_EXTENSIONS.has(ext) ||
+    fileName.startsWith('.') ||
     fileName.toLowerCase() === 'makefile' ||
     fileName.toLowerCase() === 'dockerfile' ||
     fileName.toLowerCase() === 'license' ||
     fileName.toLowerCase() === 'changelog' ||
     fileName.toLowerCase() === 'readme';
-  
+
   if (!isTextLike) {
     if (!ext || ext === '.' + fileName.toLowerCase()) {
       // Files without extension might still be text
@@ -185,12 +185,12 @@ function shouldIncludeFile(
       return false;
     }
   }
-  
+
   // Check gitignore patterns
   if (options.useGitignore && isPathExcluded(filePath, gitignoreRules)) {
     return false;
   }
-  
+
   // Check regex pattern
   if (options.filePattern) {
     try {
@@ -202,14 +202,14 @@ function shouldIncludeFile(
       // Invalid regex, ignore
     }
   }
-  
+
   return true;
 }
 
 // Format output as Markdown
 function formatAsMarkdown(files: FileItem[], options: PackerOptions): string {
   const lines: string[] = [];
-  
+
   lines.push('# AI Packer Output');
   lines.push('');
   lines.push(`Generated at: ${new Date().toISOString()}`);
@@ -218,23 +218,23 @@ function formatAsMarkdown(files: FileItem[], options: PackerOptions): string {
   lines.push('');
   lines.push('---');
   lines.push('');
-  
+
   for (const file of files) {
     if (options.includeFilePath) {
       lines.push(`## File: ${file.path}`);
       lines.push('');
     }
     lines.push('```');
-    
+
     let content = file.content;
-    
+
     if (options.removeEmptyLines) {
       content = content
         .split('\n')
         .filter(line => line.trim() !== '')
         .join('\n');
     }
-    
+
     if (options.addLineNumbers) {
       const contentLines = content.split('\n');
       const maxDigits = String(contentLines.length).length;
@@ -242,19 +242,19 @@ function formatAsMarkdown(files: FileItem[], options: PackerOptions): string {
         .map((line, i) => `${String(i + 1).padStart(maxDigits, ' ')}| ${line}`)
         .join('\n');
     }
-    
+
     lines.push(content);
     lines.push('```');
     lines.push('');
   }
-  
+
   return lines.join('\n');
 }
 
 // Format output as XML
 function formatAsXml(files: FileItem[], options: PackerOptions): string {
   const lines: string[] = [];
-  
+
   lines.push('<?xml version="1.0" encoding="UTF-8"?>');
   lines.push('<ai_packer>');
   lines.push('  <metadata>');
@@ -263,23 +263,23 @@ function formatAsXml(files: FileItem[], options: PackerOptions): string {
   lines.push(`    <total_lines>${files.reduce((sum, f) => sum + f.lineCount, 0)}</total_lines>`);
   lines.push('  </metadata>');
   lines.push('  <files>');
-  
+
   for (const file of files) {
     lines.push('    <file>');
     lines.push(`      <path>${escapeXml(file.path)}</path>`);
     lines.push(`      <size>${file.size}</size>`);
     lines.push(`      <line_count>${file.lineCount}</line_count>`);
     lines.push('      <content>');
-    
+
     let content = file.content;
-    
+
     if (options.removeEmptyLines) {
       content = content
         .split('\n')
         .filter(line => line.trim() !== '')
         .join('\n');
     }
-    
+
     if (options.addLineNumbers) {
       const contentLines = content.split('\n');
       const maxDigits = String(contentLines.length).length;
@@ -287,15 +287,15 @@ function formatAsXml(files: FileItem[], options: PackerOptions): string {
         .map((line, i) => `${String(i + 1).padStart(maxDigits, ' ')}| ${line}`)
         .join('\n');
     }
-    
+
     lines.push(`        <![CDATA[${content}]]>`);
     lines.push('      </content>');
     lines.push('    </file>');
   }
-  
+
   lines.push('  </files>');
   lines.push('</ai_packer>');
-  
+
   return lines.join('\n');
 }
 
@@ -351,13 +351,13 @@ function AIPacker({ className = '' }: ToolProps) {
     setError(null);
     const totalFiles = fileList.length;
     setProcessingProgress({ current: 0, total: totalFiles });
-    
+
     const filesArray = Array.from(fileList);
-    
+
     // Step 1: Find and read .gitignore files first
     const gitignoreFiles = filesArray.filter(f => f.name === '.gitignore');
     let collectedRules: ExclusionRules = { dirPatterns: [], filePatterns: [] };
-    
+
     for (const file of gitignoreFiles) {
       try {
         const content = await readFileContent(file);
@@ -370,77 +370,77 @@ function AIPacker({ className = '' }: ToolProps) {
         // Ignore read errors for gitignore
       }
     }
-    
+
     // Merge with existing rules
     const allRules: ExclusionRules = {
       dirPatterns: [...gitignoreRules.dirPatterns, ...collectedRules.dirPatterns],
       filePatterns: [...gitignoreRules.filePatterns, ...collectedRules.filePatterns],
     };
-    
+
     if (collectedRules.dirPatterns.length > 0 || collectedRules.filePatterns.length > 0) {
       setGitignoreRules(allRules);
     }
-    
+
     // Step 2: Process files with early exclusion
     const newFiles: FileItem[] = [];
     const BATCH_SIZE = 100;
     let processedCount = 0;
-    
+
     for (let i = 0; i < filesArray.length; i++) {
       const file = filesArray[i];
-      
+
       let relativePath = file.webkitRelativePath || file.name;
       if (basePath && relativePath.startsWith(basePath)) {
         relativePath = relativePath.slice(basePath.length);
       }
       relativePath = relativePath.replace(/^\/+/, '');
-      
+
       // Skip .gitignore files
       if (file.name === '.gitignore') {
         processedCount++;
         continue;
       }
-      
+
       // Early exclusion: check default excluded directories first (fastest)
       if (isInDefaultExcludedDir(relativePath)) {
         processedCount++;
         continue;
       }
-      
+
       // Early exclusion: check file size
       if (file.size > options.maxFileSize) {
         processedCount++;
         continue;
       }
-      
+
       // Early exclusion: check binary files
       const ext = '.' + (file.name.split('.').pop()?.toLowerCase() || '');
       if (BINARY_EXTENSIONS.has(ext)) {
         processedCount++;
         continue;
       }
-      
+
       // Check gitignore rules
       if (options.useGitignore && isPathExcluded(relativePath, allRules)) {
         processedCount++;
         continue;
       }
-      
+
       // Check if it's a text file
       const fileName = file.name;
-      const isTextLike = TEXT_EXTENSIONS.has(ext) || 
-        fileName.startsWith('.') || 
+      const isTextLike = TEXT_EXTENSIONS.has(ext) ||
+        fileName.startsWith('.') ||
         fileName.toLowerCase() === 'makefile' ||
         fileName.toLowerCase() === 'dockerfile' ||
         fileName.toLowerCase() === 'license' ||
         fileName.toLowerCase() === 'changelog' ||
         fileName.toLowerCase() === 'readme';
-      
+
       if (!isTextLike && ext !== '.' + fileName.toLowerCase()) {
         processedCount++;
         continue;
       }
-      
+
       // Check regex pattern
       if (options.filePattern) {
         try {
@@ -453,12 +453,12 @@ function AIPacker({ className = '' }: ToolProps) {
           // Invalid regex, ignore
         }
       }
-      
+
       // Read file content
       try {
         const content = await readFileContent(file);
         const lineCount = content.split('\n').length;
-        
+
         newFiles.push({
           path: relativePath,
           content,
@@ -468,9 +468,9 @@ function AIPacker({ className = '' }: ToolProps) {
       } catch {
         // Skip files that can't be read
       }
-      
+
       processedCount++;
-      
+
       // Update progress every BATCH_SIZE files
       if (processedCount % BATCH_SIZE === 0 || processedCount === filesArray.length) {
         setProcessingProgress({ current: processedCount, total: totalFiles });
@@ -480,7 +480,7 @@ function AIPacker({ className = '' }: ToolProps) {
         }
       }
     }
-    
+
     setProcessingProgress(null);
     return newFiles;
   }, [options, gitignoreRules, readFileContent]);
@@ -489,14 +489,14 @@ function AIPacker({ className = '' }: ToolProps) {
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.target.files;
     if (!fileList || fileList.length === 0) return;
-    
+
     try {
       const newFiles = await processFiles(fileList);
       setFiles(prev => [...prev, ...newFiles]);
     } catch (err) {
       setError((err as Error).message);
     }
-    
+
     // Reset input
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (folderInputRef.current) folderInputRef.current.value = '';
@@ -516,12 +516,12 @@ function AIPacker({ className = '' }: ToolProps) {
 
   // Generate output
   const output = useMemo(() => {
-    const filteredFiles = files.filter(file => 
+    const filteredFiles = files.filter(file =>
       shouldIncludeFile(file.path, options, gitignoreRules)
     );
-    
+
     if (filteredFiles.length === 0) return '';
-    
+
     if (options.format === 'markdown') {
       return formatAsMarkdown(filteredFiles, options);
     } else {
@@ -532,14 +532,14 @@ function AIPacker({ className = '' }: ToolProps) {
   // Download output
   const handleDownload = useCallback(() => {
     if (!output) return;
-    
+
     const extension = options.format === 'markdown' ? 'md' : 'xml';
     const filename = `ai-packed.${extension}`;
     const mimeType = options.format === 'markdown' ? 'text/markdown' : 'application/xml';
-    
+
     const blob = new Blob([output], { type: mimeType });
     const url = URL.createObjectURL(blob);
-    
+
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
@@ -558,10 +558,10 @@ function AIPacker({ className = '' }: ToolProps) {
 
   // Statistics
   const stats = useMemo(() => {
-    const filteredFiles = files.filter(file => 
+    const filteredFiles = files.filter(file =>
       shouldIncludeFile(file.path, options, gitignoreRules)
     );
-    
+
     return {
       totalFiles: filteredFiles.length,
       totalLines: filteredFiles.reduce((sum, f) => sum + f.lineCount, 0),
@@ -571,8 +571,8 @@ function AIPacker({ className = '' }: ToolProps) {
 
   return (
     <div className={`ai-packer ${className}`}>
-      <ToolCard 
-        title="AI 打包工具" 
+      <ToolCard
+        title="AI 打包工具"
         description="将多个文本文件打包成单个 Markdown 或 XML 文件"
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -818,9 +818,9 @@ function AIPacker({ className = '' }: ToolProps) {
                 <input
                   type="number"
                   value={Math.floor(options.maxFileSize / 1024)}
-                  onChange={(e) => setOptions(prev => ({ 
-                    ...prev, 
-                    maxFileSize: Math.max(1, parseInt(e.target.value) || 500) * 1024 
+                  onChange={(e) => setOptions(prev => ({
+                    ...prev,
+                    maxFileSize: Math.max(1, parseInt(e.target.value) || 500) * 1024
                   }))}
                   className="w-24 px-3 py-1.5 text-sm focus:outline-none"
                   style={{
@@ -894,7 +894,7 @@ function AIPacker({ className = '' }: ToolProps) {
                 </div>
               )}
             </div>
-            
+
             {output ? (
               <div
                 className="flex-1 p-3 overflow-auto"
