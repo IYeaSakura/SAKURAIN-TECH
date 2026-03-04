@@ -5,15 +5,21 @@
 
 export { knapsackDefinition } from './knapsack';
 export { lcsDefinition } from './lcs';
-export { lisDefinition } from './lis';
+
+// 以下算法待实现后 uncomment
+// export { lisDefinition } from './lis';
+// export { editDistanceDefinition } from './edit-distance';
+// export { matrixChainDefinition } from './matrix-chain';
 
 // 统一导出所有动态规划算法定义
 import { knapsackDefinition } from './knapsack';
 import { lcsDefinition } from './lcs';
-import { lisDefinition } from './lis';
 
 export const dpAlgorithms = [
   knapsackDefinition,
   lcsDefinition,
-  lisDefinition
+  // 待实现的算法:
+  // lisDefinition,
+  // editDistanceDefinition,
+  // matrixChainDefinition,
 ];
