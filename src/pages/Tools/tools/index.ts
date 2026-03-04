@@ -1,13 +1,8 @@
 /**
  * Tools Index - Export all tools
- * 
- * Add new tools here to register them in the toolbox
- * Each tool is self-contained and can be easily added/removed
- * 
- * @author SAKURAIN
  */
 
-// Import all tools
+// Import existing tools
 import { regexTesterTool } from './regex-tester';
 import { hashGeneratorTool } from './hash-generator';
 import { base64Tool } from './base64-tool';
@@ -21,7 +16,7 @@ import { numberBaseConverterTool } from './number-base-converter';
 import { textStatisticsTool } from './text-statistics';
 import { aiPackerTool } from './ai-packer';
 
-// Export all tools as array for easy registration
+// Export all tools
 export const allTools = [
   regexTesterTool,
   hashGeneratorTool,
@@ -37,7 +32,6 @@ export const allTools = [
   aiPackerTool,
 ];
 
-// Re-export individual tools
 export {
   regexTesterTool,
   hashGeneratorTool,
