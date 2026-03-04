@@ -1,0 +1,21 @@
+[
+  {
+    "id": "20260302001351",
+    "slug": "20260302001351",
+    "title": "feat: 添加随机阅读功能并优化友链页面",
+    "content": "- 在Feed页面添加随机阅读按钮\n- 在Friends页面添加随机访问推荐友链功能\n- 更新DevLog页面跳转逻辑使用useNavigate",
+    "date": "2026-03-02 00:13:51 +0800",
+    "mood": "sad",
+    "wordCount": 40,
+    "readingTime": "1 分钟阅读",
+    "year": 2026,
+    "month": "03",
+    "day": "02",
+    "hours": "00",
+    "minutes": "13",
+    "seconds": "51",
+    "yearMonth": "2026-03",
+    "fullDate": "2026-03-02",
+    "fullTime": "00:13:51"
+  }
+]
