@@ -22,6 +22,12 @@ import { textStatisticsTool } from './text-statistics';
 import { aiPackerTool } from './ai-packer';
 import { qrGeneratorTool } from './qr-generator';
 import { markdownEditorTool } from './markdown-editor';
+import { ipLookupTool } from './ip-lookup';
+import { cssUnitConverterTool } from './css-unit-converter';
+import { httpStatusLookupTool } from './http-status-lookup';
+import { pomodoroTool } from './pomodoro';
+import { imageToBase64Tool } from './image-to-base64';
+import { codeMinifierTool } from './code-minifier';
 
 // Export all tools as array for easy registration
 export const allTools = [
@@ -39,6 +45,12 @@ export const allTools = [
   aiPackerTool,
   qrGeneratorTool,
   markdownEditorTool,
+  ipLookupTool,
+  cssUnitConverterTool,
+  httpStatusLookupTool,
+  pomodoroTool,
+  imageToBase64Tool,
+  codeMinifierTool,
 ];
 
 // Re-export individual tools
@@ -57,4 +69,10 @@ export {
   aiPackerTool,
   qrGeneratorTool,
   markdownEditorTool,
+  ipLookupTool,
+  cssUnitConverterTool,
+  httpStatusLookupTool,
+  pomodoroTool,
+  imageToBase64Tool,
+  codeMinifierTool,
 };
