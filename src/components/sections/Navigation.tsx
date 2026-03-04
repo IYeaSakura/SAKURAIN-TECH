@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User, Rss, Globe, Briefcase, Wrench } from 'lucide-react';
+import { BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User, Rss, Globe, Briefcase, Wrench, Gamepad2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router';
 import { cn } from '@/lib/utils';
 import type { SiteData } from '@/types';
-import { preloadDocs, preloadFriends, preloadBlog } from '@/main';
+import { preloadDocs, preloadFriends, preloadBlog, preloadEarthOnline } from '@/main';
 import { deploymentConfig } from '@/config/deployment-config';
 import type { LucideIcon } from 'lucide-react';
 
@@ -21,6 +21,7 @@ interface NavigationProps {
 const dockItems = [
   { label: '首页', href: '/', icon: Home },
   { label: '博客', href: '/blog', icon: FileText },
+  { label: '地球Online', href: '/earth-online', icon: Gamepad2 },
   { label: '朋友圈', href: '/friends-circle', icon: Rss },
   { label: '友链', href: '/friends', icon: Heart },
   { label: '关于', href: '/about', icon: User, isCustom: true },
@@ -82,6 +83,15 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
     }
   };
 
+  const handleEarthOnlineClick = () => {
+    preloadEarthOnline();
+    if (deploymentConfig.useWindowLocation) {
+      window.location.href = '/earth-online';
+    } else {
+      navigate('/earth-online');
+    }
+  };
+
   const getIcon = (iconName?: string): LucideIcon | null => {
     switch (iconName) {
       case 'Home': return Home;
@@ -116,6 +126,8 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
       handleNotesClick();
     } else if (href === '/friends') {
       handleFriendsClick();
+    } else if (href === '/earth-online') {
+      handleEarthOnlineClick();
     } else {
       handleNavClick(href);
     }
