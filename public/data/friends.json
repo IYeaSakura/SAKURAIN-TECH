@@ -862,6 +862,16 @@
         "isJsChallenge": false,
         "jsChallengeIndicator": null
       }
+    },
+    {
+      "id": "0aa52540",
+      "name": "谶的博客",
+      "url": "https://blog.fohok.xin/",
+      "icon": "https://blog.fohok.xin/wp-content/uploads/2025/08/a91fabf8a49526b0ab7941fb2659297e1755339178171.jpg",
+      "feed": "https://blog.fohok.xin/feed",
+      "description": "生活会越来越好的",
+      "category": "blogs",
+      "featured": true
     }
   ],
   "lastUpdated": "2026-03-01T15:58:23.371Z"
