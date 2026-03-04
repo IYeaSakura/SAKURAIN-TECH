@@ -75,18 +75,22 @@ export default function NotesPage() {
         setArchiveData(archive);
 
         const allNotes: Note[] = [];
-        const monthsToLoad = archive.months.slice(0, Math.ceil(NOTES_PER_LOAD / 10));
-
-        for (const month of monthsToLoad) {
+        let monthsIndex = 0;
+        
+        // 持续加载直到达到 NOTES_PER_LOAD 条数据或没有更多月份
+        while (allNotes.length < NOTES_PER_LOAD && monthsIndex < archive.months.length) {
+          const month = archive.months[monthsIndex];
           const monthResponse = await fetch(`/notes/archives/index-${month}.json?v=${Date.now()}`, { cache: 'no-store' });
           if (monthResponse.ok) {
             const monthNotes = await monthResponse.json();
             allNotes.push(...monthNotes);
           }
+          monthsIndex++;
         }
 
         setNotes(allNotes);
-        setLoadedMonths(new Set(monthsToLoad));
+        setLoadedMonths(new Set(archive.months.slice(0, monthsIndex)));
+        setLoadedCount(Math.max(NOTES_PER_LOAD, allNotes.length));
         setLoading(false);
       } catch (error) {
         console.error('Failed to load notes:', error);
@@ -636,7 +640,7 @@ export default function NotesPage() {
                 </div>
 
                 {/* 加载更多按钮 */}
-                {notes.length > loadedCount && (
+                {archiveData && loadedMonths.size < archiveData.months.length && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}

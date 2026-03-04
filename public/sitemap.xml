@@ -55,6 +55,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://sakurain.net/blog/vibe-coder-transition</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://sakurain.net/blog/support-vector-machine-from-geometric-intuition-to-optimization-algorithm</loc>
     <lastmod>2026-02-28</lastmod>
     <changefreq>monthly</changefreq>

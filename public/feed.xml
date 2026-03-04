@@ -5,12 +5,22 @@
     <link>https://sakurain.net</link>
     <description>SAKURAIN技术团队，专注博弈论算法工程化与大规模数据分析。</description>
     <language>zh-CN</language>
-    <lastBuildDate>Sat, 28 Feb 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 04 Mar 2026 00:00:00 GMT</lastBuildDate>
     <copyright>© 2026 SAKURAIN 技术工作室</copyright>
     <generator>SAKURAIN Feed Generator</generator>
     <atom:link href="https://sakurain.net/feed.xml" rel="self" type="application/rss+xml"/>
     <atom:link href="https://sakurain.net/atom.xml" rel="alternate" type="application/atom+xml"/>
     
+    <item>
+      <title>跟随大模型一同发展的一代大学生：从Developer向Vibe Coder的转型</title>
+      <link>https://sakurain.net/blog/vibe-coder-transition</link>
+      <guid isPermaLink="true">https://sakurain.net/blog/vibe-coder-transition</guid>
+      <pubDate>Wed, 04 Mar 2026 00:00:00 GMT</pubDate>
+      <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
+      <description>记录2022-2026年间，一个9人大学生工作室从传统Developer向Vibe Coder转型的完整历程，包括AI工具链演进、多智能体协作架构搭建与工程化实践。</description>
+      <category>软件工程</category><category>深度学习</category><category>系统架构</category><category>前端工程</category>
+    </item>
+
     <item>
       <title>支持向量机（SVM）：从几何直观到优化算法</title>
       <link>https://sakurain.net/blog/support-vector-machine-from-geometric-intuition-to-optimization-algorithm</link>

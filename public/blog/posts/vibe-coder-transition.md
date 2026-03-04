@@ -137,7 +137,7 @@ featured: true
 **Kimi CLI的发布恰好解决了这些痛点：**
 
 - ​**原生中文优化**：基于Kimi K2.5模型，对中文编程场景理解更深，生成的代码注释和变量命名更符合国内团队习惯
-- ​**开源可控**​：GitHub开源（[https://github.com/MoonshotAI/kimi-cli），我们可以自托管、修改源码适配内部流程](https://github.com/MoonshotAI/kimi-cli%EF%BC%89%EF%BC%8C%E6%88%91%E4%BB%AC%E5%8F%AF%E4%BB%A5%E8%87%AA%E6%89%98%E7%AE%A1%E3%80%81%E4%BF%AE%E6%94%B9%E6%BA%90%E7%A0%81%E9%80%82%E9%85%8D%E5%86%85%E9%83%A8%E6%B5%81%E7%A8%8B)
+- ​**开源可控**​：GitHub开源（[https://github.com/MoonshotAI/kimi-cli](https://github.com/MoonshotAI/kimi-cli%EF%BC%89%EF%BC%8C%E6%88%91%E4%BB%AC%E5%8F%AF%E4%BB%A5%E8%87%AA%E6%89%98%E7%AE%A1%E3%80%81%E4%BF%AE%E6%94%B9%E6%BA%90%E7%A0%81%E9%80%82%E9%85%8D%E5%86%85%E9%83%A8%E6%B5%81%E7%A8%8B)），我们可以自托管、修改源码适配内部流程
 - **成本优势**：接入DeepSeek API或Moonshot API，成本比OpenAI/Anthropic低约60%
 - **MCP原生支持**：Kimi CLI从设计之初就考虑了MCP集成
 

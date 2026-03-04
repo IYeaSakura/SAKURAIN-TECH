@@ -49,13 +49,13 @@ const EarthOnlinePage = lazy(() => import('./pages/EarthOnline/index'));
 const StudioPage = lazy(() => import('./pages/Studio/index'));
 const NotFoundPage = lazy(() => import('./pages/NotFound/index'));
 const AlgoVizPage = lazy(() => import('./pages/AlgoViz/index'));
-const DevLogPage = lazy(() => import('./pages/DevLog/index'));
 const ToolboxPage = lazy(() => import('./pages/Tools/index'));
 
 // 预加载函数
 let docsLoader: Promise<any> | null = null;
 let friendsLoader: Promise<any> | null = null;
 let blogLoader: Promise<any> | null = null;
+let earthOnlineLoader: Promise<any> | null = null;
 
 export function preloadDocs() {
   if (!docsLoader) {
@@ -76,6 +76,13 @@ export function preloadBlog() {
     blogLoader = import('./pages/Blog/index');
   }
   return blogLoader;
+}
+
+export function preloadEarthOnline() {
+  if (!earthOnlineLoader) {
+    earthOnlineLoader = import('./pages/EarthOnline/index');
+  }
+  return earthOnlineLoader;
 }
 
 /**
@@ -182,7 +189,9 @@ function PageLayout({ children }: { children: React.ReactNode }) {
 
   // Only show navigation on specified paths
   const showNavPaths = ['/', '/blog', '/docs', '/friends', '/friends-circle', '/about', '/notes', '/earth-online', '/studio', '/algo-viz', '/dev-log', '/tools'];
-  const shouldShowNav = showNavPaths.includes(location.pathname) || location.pathname.startsWith('/tools/') || location.pathname.startsWith('/docs/') || location.pathname.startsWith('/blog/');
+  // 对于 /blog 路径，只显示列表页，不显示文章详情页
+  const isBlogListPage = location.pathname === '/blog';
+  const shouldShowNav = showNavPaths.includes(location.pathname) || location.pathname.startsWith('/tools/') || location.pathname.startsWith('/docs/') || isBlogListPage;
   
   // 算法可视化页面导航不固定
   const isStickyNav = location.pathname !== '/algo-viz';
@@ -358,11 +367,6 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="/algo-viz" element={
                   <Suspense fallback={<RouteLoader />}>
                     <AlgoVizPage />
-                  </Suspense>
-                } />
-                <Route path="/dev-log" element={
-                  <Suspense fallback={<RouteLoader />}>
-                    <DevLogPage />
                   </Suspense>
                 } />
                 <Route path="/tools" element={
