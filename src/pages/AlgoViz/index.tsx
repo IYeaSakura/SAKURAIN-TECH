@@ -8482,8 +8482,8 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
         isOpen={isChartModalOpen}
         onClose={() => setIsChartModalOpen(false)}
         algorithmName={currentAlgo.name}
-        timeComplexity={currentAlgo.timeComplexity}
-        spaceComplexity={currentAlgo.spaceComplexity}
+        timeComplexity={currentAlgo.timeComplexity || 'Unknown'}
+        spaceComplexity={currentAlgo.spaceComplexity || 'Unknown'}
       />
       
       {/* 数组导入弹窗 */}

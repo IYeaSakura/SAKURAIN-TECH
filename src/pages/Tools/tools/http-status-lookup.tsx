@@ -6,7 +6,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { Globe, Search } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
