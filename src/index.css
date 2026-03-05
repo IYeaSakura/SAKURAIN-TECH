@@ -4,87 +4,224 @@
 
 @layer base {
   :root {
-    /* Light Theme as Default */
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.625rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* ===== 新粗野主义 - 暗黑高对比 (VSCode 风格) ===== */
+    --bg-primary: #000000;
+    --bg-secondary: #1a1a1a;
+    --bg-card: #0d0d0d;
+    --bg-hover: #262626;
+    --bg-active: #37373d;
+    
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --text-muted: #858585;
+    
+    /* VSCode 高对比强调色 */
+    --accent: #007acc;
+    --accent-bright: #0098ff;
+    --accent-dim: #005f99;
+    
+    --success: #89d185;
+    --warning: #ffcc00;
+    --error: #f14c4c;
+    --info: #75beff;
+    
+    /* 粗野主义边框 */
+    --border: #6b6b6b;
+    --border-thick: #ffffff;
+    --border-dim: #3c3c3c;
+    
+    /* 粗野主义硬阴影 */
+    --shadow-hard: 4px 4px 0px #000000;
+    --shadow-hard-white: 4px 4px 0px #ffffff;
+    --shadow-hard-accent: 4px 4px 0px #007acc;
+    
+    /* 间距系统 - 粗野主义大间距 */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 32px;
+    --space-2xl: 48px;
+    
+    /* 圆角 - 极小或无 */
+    --radius: 2px;
+    --radius-lg: 4px;
+    
+    /* 字体 */
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    --font-pixel: 'Zpix', 'VT323', 'Press Start 2P', monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
-  .dark {
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 5%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 5%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 10%;
-    --muted-foreground: 0 0% 50%;
-    --accent: 217 91% 60%;
-    --accent-foreground: 0 0% 0%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 24%;
-    --input: 0 0% 24%;
-    --ring: 217 91% 60%;
-    --sidebar-background: 0 0% 5%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 10%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 24%;
-    --sidebar-ring: 217 91% 60%;
+  .light {
+    /* ===== 新粗野主义 - 明亮高对比 ===== */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f0f0f0;
+    --bg-card: #ffffff;
+    --bg-hover: #e8e8e8;
+    --bg-active: #dcdcdc;
+    
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-muted: #666666;
+    
+    --accent: #005f99;
+    --accent-bright: #007acc;
+    --accent-dim: #004070;
+    
+    --success: #16825d;
+    --warning: #bf8803;
+    --error: #c75450;
+    --info: #007acc;
+    
+    --border: #000000;
+    --border-thick: #000000;
+    --border-dim: #c0c0c0;
+    
+    --shadow-hard: 4px 4px 0px #000000;
+    --shadow-hard-white: 4px 4px 0px #333333;
+    --shadow-hard-accent: 4px 4px 0px #005f99;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
   
-  /* 基础颜色变量过渡 */
-  *, *::before, *::after {
-    transition-property: background-color, border-color, color, fill, stroke;
-    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
-    transition-duration: 0ms; /* 默认无过渡，由 theme-transitioning 类控制 */
+  html {
+    font-family: var(--font-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
   }
   
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    /* 优化主题切换时的渲染性能 */
-    backface-visibility: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply antialiased;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-feature-settings: "liga" 1, "calt" 1;
+  }
+  
+  /* 选中文本高对比 */
+  ::selection {
+    background: var(--accent);
+    color: #ffffff;
+  }
+  
+  /* 滚动条 - 粗野主义 */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-left: 2px solid var(--border);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border: 2px solid var(--bg-secondary);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+  }
+}
+
+@layer components {
+  /* 粗野主义卡片 */
+  .brutalist-card {
+    background: var(--bg-card);
+    border: 3px solid var(--border-thick);
+    box-shadow: var(--shadow-hard);
+    padding: var(--space-md);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  
+  .brutalist-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #000000;
+  }
+  
+  .brutalist-card:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px #000000;
+  }
+  
+  /* 粗野主义按钮 */
+  .brutalist-button {
+    background: var(--bg-secondary);
+    border: 3px solid var(--border-thick);
+    box-shadow: var(--shadow-hard);
+    padding: var(--space-sm) var(--space-md);
+    font-family: var(--font-mono);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  
+  .brutalist-button:hover {
+    background: var(--accent);
+    color: white;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #000000;
+  }
+  
+  .brutalist-button:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px #000000;
+  }
+  
+  /* 粗野主义输入框 */
+  .brutalist-input {
+    background: var(--bg-primary);
+    border: 3px solid var(--border-thick);
+    padding: var(--space-sm);
+    font-family: var(--font-mono);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  
+  .brutalist-input:focus {
+    border-color: var(--accent-bright);
+    box-shadow: 0 0 0 2px var(--accent-dim);
+  }
+  
+  /* 高对比文字 */
+  .text-glow {
+    text-shadow: 0 0 10px var(--accent-dim);
+  }
+  
+  /* 像素字体 */
+  .font-pixel {
+    font-family: var(--font-pixel);
+  }
+  
+  /* 等宽字体 */
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+  
+  /* 粗边框 */
+  .border-brutal {
+    border: 3px solid var(--border-thick);
+  }
+  
+  .border-brutal-thick {
+    border: 4px solid var(--border-thick);
+  }
+  
+  /* 硬阴影 */
+  .shadow-hard {
+    box-shadow: var(--shadow-hard);
+  }
+  
+  .shadow-hard-accent {
+    box-shadow: var(--shadow-hard-accent);
   }
 }
 
@@ -95,146 +232,4 @@ html.lenis, html.lenis body {
 
 .lenis.lenis-smooth {
   scroll-behavior: auto !important;
-}
-
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
-}
-
-.lenis.lenis-stopped {
-  overflow: hidden;
-}
-
-/* 防止页面切换时滚动条消失导致跳动 */
-html {
-  overflow-y: scroll;
-}
-
-/* Lenis 初始化前的占位，防止滚动条闪烁 */
-html:not(.lenis) {
-  scrollbar-gutter: stable;
-}
-
-.lenis.lenis-scrolling iframe {
-  pointer-events: none;
-}
-
-/* ============================================
-   PERFORMANCE OPTIMIZATIONS
-   ============================================ */
-
-/* 1. 启用 GPU 加速 */
-.gpu-accelerated {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-/* 2. 动画优化 - 尊重用户偏好 */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* 3. 图片懒加载占位 */
-.img-placeholder {
-  background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-primary) 50%, var(--bg-secondary) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* 4. 内容可见性优化 - 仅在视口内渲染 */
-.content-visibility-auto {
-  content-visibility: auto;
-  contain-intrinsic-size: 0 500px;
-}
-
-/* 5. 防止布局抖动 */
-.contain-layout {
-  contain: layout;
-}
-
-/* 6. 防止重绘 */
-.contain-paint {
-  contain: paint;
-}
-
-/* 7. 滚动优化 */
-.scroll-smooth {
-  scroll-behavior: smooth;
-}
-
-/* 8. 字体渲染优化 */
-body {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-/* 9. 减少动画时的重排 */
-.will-change-transform {
-  will-change: transform;
-}
-
-.will-change-opacity {
-  will-change: opacity;
-}
-
-/* 10. 隐藏滚动条但保持功能 */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* 11. 禁用文本选择 - 用于动画元素 */
-.no-select {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-/* 12. 强制硬件加速 */
-.hardware-accelerate {
-  transform: translate3d(0, 0, 0);
-  will-change: transform;
-}
-
-/* ============================================
-   iOS SAFE AREA SUPPORT
-   ============================================ */
-
-/* iOS 安全区域内边距支持 */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .h-safe-area-inset-bottom {
-    height: env(safe-area-inset-bottom);
-  }
-  
-  .pb-safe-area {
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-}
-
-/* 回退值 */
-.h-safe-area-inset-bottom {
-  height: 0px;
-}
-
-.pb-safe-area {
-  padding-bottom: 0px;
 }
