@@ -12,7 +12,7 @@ export type AlgorithmId =
   | 'bfs' | 'dfs' | 'dijkstra' | 'astar' | 'bellmanford' | 'spfa' | 'floyd'
   | 'topo' | 'scc' | 'kosaraju' | 'tarjan' | 'dsu'
   | 'kruskal' | 'prim'
-  | 'knapsack' | 'lcs' | 'lis'
+  | 'knapsack' | 'knapsack-complete' | 'lcs' | 'lis' | 'edit-distance' | 'lc-substring' | 'matrix-chain' | 'rod-cutting' | 'triangle-path'
   | 'bst' | 'avl' | 'rb-tree'
   | 'perceptron' | 'kmeans' | 'gradient' | 'neuralnet'
   | 'adjacency-matrix' | 'adjacency-list' | 'chain-forward-star'
@@ -23,17 +23,22 @@ export type AlgorithmId =
   | 'lct' | 'stoer-wagner';
 
 // ============ 算法定义 ============
-export interface AlgorithmDefinition {
+export interface AlgorithmDefinition<TState = any, TParams = any> {
   id: AlgorithmId;
   name: string;
   description: string;
   category: AlgorithmCategory;
-  timeComplexity: string;
-  spaceComplexity: string;
+  timeComplexity?: string;
+  spaceComplexity?: string;
   code: string;
   codeLanguage?: string;
   supportedViews: ViewType[];
   parameters?: AlgorithmParameter[];
+  // 可视化算法扩展字段
+  initialParams?: TParams;
+  getInitialState?: (params: TParams) => TState;
+  execute?: (state: TState) => Generator<TState, void, unknown>;
+  getCode?: () => string;
 }
 
 export interface AlgorithmParameter {

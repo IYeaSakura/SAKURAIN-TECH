@@ -11,9 +11,8 @@
  */
 
 import { useState, useCallback } from 'react';
-import { QrCode, Download, Copy, Check, RefreshCcw, Settings } from 'lucide-react';
+import { QrCode, Download, Copy, Check, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Textarea } from '@/components/ui/textarea';
@@ -40,7 +39,7 @@ const ERROR_LEVELS = [
 ];
 
 // Generate QR code using qrcode-generator library pattern
-function generateQRDataURL(text: string, size: number, level: string): string {
+function generateQRDataURL(text: string, size: number, _level: string): string {
   // Simple SVG QR code pattern (for demo, actual implementation would use qrcode library)
   const canvas = document.createElement('canvas');
   canvas.width = size;
