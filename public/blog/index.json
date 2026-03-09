@@ -1,23 +1,6 @@
 {
   "posts": [
     {
-      "slug": "vibe-coder-transition",
-      "title": "跟随大模型一同发展的一代大学生：从Developer向Vibe Coder的转型",
-      "description": "记录2022-2026年间，一个9人大学生工作室从传统Developer向Vibe Coder转型的完整历程，包括AI工具链演进、多智能体协作架构搭建与工程化实践。",
-      "date": "2026-03-04",
-      "author": "SAKURAIN",
-      "tags": [
-        "软件工程",
-        "深度学习",
-        "系统架构",
-        "前端工程"
-      ],
-      "cover": "/image/logo.webp",
-      "featured": true,
-      "wordCount": 6869,
-      "readingTime": "16 分钟阅读"
-    },
-    {
       "slug": "shell-sort-time-complexity-analysis",
       "title": "希尔排序时间复杂度深度解析：从经验估计到严格证明",
       "description": "系统梳理希尔排序时间复杂度分析从经验估计到严格证明的完整演进脉络，深入剖析不同增量序列的数学结构，重建关键定理的证明过程。",
@@ -32,24 +15,6 @@
       "featured": true,
       "wordCount": 13818,
       "readingTime": "25 分钟阅读"
-    },
-    {
-      "slug": "x-com-recommendation-algorithm-grok",
-      "title": "解剖X.com推荐算法：当3140亿参数的Grok-1成为你的\"数字策展人\"",
-      "description": "深入剖析X.com开源的\"For You\"推荐系统技术栈，从双源内容融合机制到Grok-1 Transformer排序模型，探索MoE架构如何实现314B参数容量下的高效推理。",
-      "date": "2026-02-19",
-      "author": "SAKURAIN",
-      "tags": [
-        "深度学习",
-        "神经网络",
-        "推荐系统",
-        "大语言模型",
-        "MoE架构"
-      ],
-      "cover": "/image/logo.webp",
-      "featured": true,
-      "wordCount": 13862,
-      "readingTime": "26 分钟阅读"
     },
     {
       "slug": "machine-learning-theory",
