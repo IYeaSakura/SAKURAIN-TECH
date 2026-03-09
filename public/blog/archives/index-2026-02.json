@@ -1,22 +1,5 @@
 [
   {
-    "slug": "support-vector-machine-from-geometric-intuition-to-optimization-algorithm",
-    "title": "支持向量机（SVM）：从几何直观到优化算法",
-    "description": "深入解析支持向量机的几何原理、数学基础和优化算法实现，从直观理解到工程应用的完整指南。",
-    "date": "2026-02-28",
-    "author": "SAKURAIN",
-    "tags": [
-      "机器学习理论",
-      "优化算法",
-      "深度学习",
-      "神经网络"
-    ],
-    "cover": "/image/logo.webp",
-    "featured": false,
-    "wordCount": 7602,
-    "readingTime": "15 分钟阅读"
-  },
-  {
     "slug": "cross-platform-ad-tracking-rtb",
     "title": "跨平台广告追踪的计算广告学原理：从设备指纹到实时竞价的完整技术链路",
     "description": "从一次真实的广告重定向经历出发，深入剖析跨平台广告追踪的完整技术链路，涵盖设备指纹、实时竞价博弈论、CTR/CVR预估模型、联邦学习隐私计算等核心原理。",
@@ -89,24 +72,6 @@
     "readingTime": "25 分钟阅读"
   },
   {
-    "slug": "x-com-recommendation-algorithm-grok",
-    "title": "解剖X.com推荐算法：当3140亿参数的Grok-1成为你的\"数字策展人\"",
-    "description": "深入剖析X.com开源的\"For You\"推荐系统技术栈，从双源内容融合机制到Grok-1 Transformer排序模型，探索MoE架构如何实现314B参数容量下的高效推理。",
-    "date": "2026-02-19",
-    "author": "SAKURAIN",
-    "tags": [
-      "深度学习",
-      "神经网络",
-      "推荐系统",
-      "大语言模型",
-      "MoE架构"
-    ],
-    "cover": "/image/logo.webp",
-    "featured": true,
-    "wordCount": 13862,
-    "readingTime": "26 分钟阅读"
-  },
-  {
     "slug": "rss-serverless-boundary-exploration",
     "title": "RSS 抓取的迷雾：一次 Serverless 架构的边界探索",
     "description": "记录在开发朋友圈 RSS 聚合功能时遇到的反爬机制问题，以及 Serverless 架构下的工程权衡与优雅降级策略。",
@@ -123,42 +88,6 @@
     "featured": false,
     "wordCount": 1951,
     "readingTime": "5 分钟阅读"
-  },
-  {
-    "slug": "kimi-k25-moe-mla-parl-derivation",
-    "title": "Kimi K2.5 的数学骨架：MoE、MLA 与 PARL 推导",
-    "description": "深入解析 Kimi K2.5 的核心技术架构，包括万亿参数 MoE 路由算法、MLA 注意力机制以及 PARL 多代理强化学习框架的数学推导。",
-    "date": "2026-02-15",
-    "author": "SAKURAIN",
-    "tags": [
-      "深度学习",
-      "机器学习理论",
-      "优化算法",
-      "数值稳定性"
-    ],
-    "cover": "/image/logo.webp",
-    "featured": false,
-    "wordCount": 5791,
-    "readingTime": "10 分钟阅读"
-  },
-  {
-    "slug": "mcts-distributed-implementation-mathematics",
-    "title": "从单线程到纳秒级分布式：实现一个工业级MCTS系统的完整数学 journey",
-    "description": "深入探讨MCTS系统的数学原理和工程实现，从单线程到分布式系统的完整实现过程，包括置信区间、并行计算、实时约束等方面的数学推导和代码实现。",
-    "date": "2026-02-12",
-    "author": "SAKURAIN",
-    "tags": [
-      "蒙特卡洛树搜索",
-      "深度学习",
-      "强化学习",
-      "实时系统",
-      "系统架构",
-      "并行计算"
-    ],
-    "cover": "/image/logo.webp",
-    "featured": false,
-    "wordCount": 8042,
-    "readingTime": "13 分钟阅读"
   },
   {
     "slug": "machine-learning-theory",

@@ -22,16 +22,6 @@
     </item>
 
     <item>
-      <title>支持向量机（SVM）：从几何直观到优化算法</title>
-      <link>https://sakurain.net/blog/support-vector-machine-from-geometric-intuition-to-optimization-algorithm</link>
-      <guid isPermaLink="true">https://sakurain.net/blog/support-vector-machine-from-geometric-intuition-to-optimization-algorithm</guid>
-      <pubDate>Sat, 28 Feb 2026 00:00:00 GMT</pubDate>
-      <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
-      <description>深入解析支持向量机的几何原理、数学基础和优化算法实现，从直观理解到工程应用的完整指南。</description>
-      <category>机器学习理论</category><category>优化算法</category><category>深度学习</category><category>神经网络</category>
-    </item>
-
-    <item>
       <title>跨平台广告追踪的计算广告学原理：从设备指纹到实时竞价的完整技术链路</title>
       <link>https://sakurain.net/blog/cross-platform-ad-tracking-rtb</link>
       <guid isPermaLink="true">https://sakurain.net/blog/cross-platform-ad-tracking-rtb</guid>
@@ -72,16 +62,6 @@
     </item>
 
     <item>
-      <title>解剖X.com推荐算法：当3140亿参数的Grok-1成为你的&quot;数字策展人&quot;</title>
-      <link>https://sakurain.net/blog/x-com-recommendation-algorithm-grok</link>
-      <guid isPermaLink="true">https://sakurain.net/blog/x-com-recommendation-algorithm-grok</guid>
-      <pubDate>Thu, 19 Feb 2026 00:00:00 GMT</pubDate>
-      <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
-      <description>深入剖析X.com开源的&quot;For You&quot;推荐系统技术栈，从双源内容融合机制到Grok-1 Transformer排序模型，探索MoE架构如何实现314B参数容量下的高效推理。</description>
-      <category>深度学习</category><category>神经网络</category><category>推荐系统</category><category>大语言模型</category><category>MoE架构</category>
-    </item>
-
-    <item>
       <title>RSS 抓取的迷雾：一次 Serverless 架构的边界探索</title>
       <link>https://sakurain.net/blog/rss-serverless-boundary-exploration</link>
       <guid isPermaLink="true">https://sakurain.net/blog/rss-serverless-boundary-exploration</guid>
@@ -89,26 +69,6 @@
       <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
       <description>记录在开发朋友圈 RSS 聚合功能时遇到的反爬机制问题，以及 Serverless 架构下的工程权衡与优雅降级策略。</description>
       <category>RSS</category><category>Serverless</category><category>系统架构</category><category>边缘函数</category><category>反爬虫</category>
-    </item>
-
-    <item>
-      <title>Kimi K2.5 的数学骨架：MoE、MLA 与 PARL 推导</title>
-      <link>https://sakurain.net/blog/kimi-k25-moe-mla-parl-derivation</link>
-      <guid isPermaLink="true">https://sakurain.net/blog/kimi-k25-moe-mla-parl-derivation</guid>
-      <pubDate>Sun, 15 Feb 2026 00:00:00 GMT</pubDate>
-      <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
-      <description>深入解析 Kimi K2.5 的核心技术架构，包括万亿参数 MoE 路由算法、MLA 注意力机制以及 PARL 多代理强化学习框架的数学推导。</description>
-      <category>深度学习</category><category>机器学习理论</category><category>优化算法</category><category>数值稳定性</category>
-    </item>
-
-    <item>
-      <title>从单线程到纳秒级分布式：实现一个工业级MCTS系统的完整数学 journey</title>
-      <link>https://sakurain.net/blog/mcts-distributed-implementation-mathematics</link>
-      <guid isPermaLink="true">https://sakurain.net/blog/mcts-distributed-implementation-mathematics</guid>
-      <pubDate>Thu, 12 Feb 2026 00:00:00 GMT</pubDate>
-      <author>Yae_SakuRain@outlook.com (SAKURAIN)</author>
-      <description>深入探讨MCTS系统的数学原理和工程实现，从单线程到分布式系统的完整实现过程，包括置信区间、并行计算、实时约束等方面的数学推导和代码实现。</description>
-      <category>蒙特卡洛树搜索</category><category>深度学习</category><category>强化学习</category><category>实时系统</category><category>系统架构</category><category>并行计算</category>
     </item>
 
     <item>

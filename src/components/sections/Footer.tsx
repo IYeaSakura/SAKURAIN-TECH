@@ -17,18 +17,18 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
   return (
     <footer
       className="relative overflow-hidden"
-      style={{ 
+      style={{
         backgroundColor: 'var(--bg-primary)',
       }}
     >
       {/* 顶部分割线 */}
       <div className="flex justify-center pt-8 pb-10">
-        <div 
+        <div
           className="w-3/4 max-w-4xl h-px"
-          style={{ 
+          style={{
             background: 'linear-gradient(90deg, transparent, var(--accent-primary), var(--accent-secondary), transparent)',
             opacity: 0.6,
-          }} 
+          }}
         />
       </div>
 
@@ -120,7 +120,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
                 color: 'var(--text-muted)',
               }}
             >
-              © {currentYear} SAKURAIN 技术工作室
+              © {currentYear} SAKURAIN
               <Heart className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
               用代码构建未来
             </p>

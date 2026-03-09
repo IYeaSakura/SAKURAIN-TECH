@@ -19,13 +19,13 @@ import {
   Heart,
   Rss,
   Globe,
-  Briefcase,
   User,
   Code2,
   Terminal,
   Cpu,
   Sparkles,
   MessageCircle,
+  GitGraph,
 } from 'lucide-react';
 import {
   ScrollProgress,
@@ -1127,7 +1127,7 @@ const HeroSection = () => {
   const subNavs = [
     { title: '朋友圈', href: '/friends-circle', icon: MessageCircle },
     { title: '友链', href: '/friends', icon: Heart },
-    { title: '工作室', href: '/studio', icon: Briefcase },
+    { title: '算法可视化', href: '/algo-viz', icon: GitGraph },
   ];
 
   return (
@@ -1480,10 +1480,10 @@ const QuickLinksSection = () => {
       color: '#f59e0b',
     },
     {
-      title: '工作室',
-      desc: '服务与合作',
-      icon: Briefcase,
-      href: '/studio',
+      title: '算法可视化',
+      desc: '探索算法的动态之美',
+      icon: GitGraph,
+      href: '/algo-viz',
       color: '#ec4899',
     },
     {
