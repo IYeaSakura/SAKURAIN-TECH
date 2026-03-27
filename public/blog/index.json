@@ -15,38 +15,6 @@
       "featured": true,
       "wordCount": 13818,
       "readingTime": "25 分钟阅读"
-    },
-    {
-      "slug": "machine-learning-theory",
-      "title": "《机器学习》（下）：深入理论的密林",
-      "description": "探讨周志华教授《机器学习》后半部分的核心理论，包括特征选择与稀疏学习、计算学习理论（PAC框架、VC维）、半监督学习等进阶主题。",
-      "date": "2026-02-10",
-      "author": "SAKURAIN",
-      "tags": [
-        "机器学习理论",
-        "深度学习",
-        "神经网络"
-      ],
-      "cover": "/image/logo.webp",
-      "featured": true,
-      "wordCount": 8147,
-      "readingTime": "16 分钟阅读"
-    },
-    {
-      "slug": "machine-learning-book-review",
-      "title": "《机器学习》（上）：我的人工智能启蒙教材",
-      "description": "分享周志华教授《机器学习》教材的阅读心得，重点解析NFL定理等核心概念，以及这些理论如何塑造了对机器学习的理解。",
-      "date": "2026-01-03",
-      "author": "SAKURAIN",
-      "tags": [
-        "深度学习",
-        "神经网络",
-        "机器学习理论"
-      ],
-      "cover": "/image/logo.webp",
-      "featured": true,
-      "wordCount": 18586,
-      "readingTime": "33 分钟阅读"
     }
   ]
 }

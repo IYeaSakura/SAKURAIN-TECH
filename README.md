@@ -7,7 +7,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Personal portfolio and blog website built with modern web technologies. Features a modern, animated UI with 3D visualizations, a comprehensive blog system, documentation, algorithm visualizations, and developer tools.
+A modern personal portfolio and blog featuring interactive 3D visualizations, algorithm animations, developer tools, and a complete content management system — built with React 19, TypeScript, and Vite.
 
 **Live Site**: [https://sakurain.net](https://sakurain.net)
 
