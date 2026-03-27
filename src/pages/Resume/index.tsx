@@ -1,17 +1,17 @@
 /**
  * 简历页面
- * 
+ *
  * 非对称布局设计，左侧固定个人信息/技能，右侧滚动展示项目经历
  * 采用Studio页面的动画效果：AmbientGlow、粒子效果、滚动动画
- * 
+ *
  * @author SAKURAIN
  */
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { 
-  Github, 
-  Globe, 
-  Code2, 
+import {
+  Github,
+  Globe,
+  Code2,
   Cpu,
   Sparkles,
   ChevronLeft,
@@ -26,13 +26,44 @@ import {
   Award,
   Mail
 } from 'lucide-react';
-import { 
-  AmbientGlow, 
+import {
+  AmbientGlow,
   TwinklingStars,
-  ScrollProgress 
+  ScrollProgress
 } from '@/components/effects';
 import { GradientText } from '@/components/effects/TextEffects';
 import { usePrefersReducedMotion } from '@/lib/performance';
+
+// 鼠标位置追踪 Hook（用于 3D 卡片效果）
+function useMousePosition(ref: React.RefObject<HTMLElement | null>) {
+  const [position, setPosition] = useState({ x: 0, y: 0, isInside: false });
+  
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = element.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      setPosition({ x, y, isInside: true });
+    };
+    
+    const handleMouseLeave = () => {
+      setPosition({ x: 0.5, y: 0.5, isInside: false });
+    };
+    
+    element.addEventListener('mousemove', handleMouseMove);
+    element.addEventListener('mouseleave', handleMouseLeave);
+    
+    return () => {
+      element.removeEventListener('mousemove', handleMouseMove);
+      element.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [ref]);
+  
+  return position;
+}
 import { RouteLoader } from '@/components/RouterTransition';
 import { MarkdownRenderer } from '@/pages/Docs/components/MarkdownRenderer';
 
@@ -110,9 +141,9 @@ interface ResumeData {
 function ImageCarousel({ images, alt }: { images?: string[]; alt: string }) {
   const [current, setCurrent] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  
+
   if (!images || images.length === 0) return null;
-  
+
   // 单张图片直接展示
   if (images.length === 1) {
     return (
@@ -125,12 +156,12 @@ function ImageCarousel({ images, alt }: { images?: string[]; alt: string }) {
       </div>
     );
   }
-  
+
   const next = () => setCurrent((prev) => (prev + 1) % images.length);
   const prev = () => setCurrent((prev) => (prev - 1 + images.length) % images.length);
-  
+
   return (
-    <div 
+    <div
       className="relative w-full h-48 md:h-64 rounded-xl overflow-hidden group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -147,14 +178,14 @@ function ImageCarousel({ images, alt }: { images?: string[]; alt: string }) {
           transition={{ duration: 0.4 }}
         />
       </AnimatePresence>
-      
+
       {/* 悬停遮罩 */}
-      <motion.div 
+      <motion.div
         className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"
         initial={{ opacity: 0 }}
         animate={{ opacity: isHovered ? 1 : 0 }}
       />
-      
+
       {/* 导航按钮 */}
       <motion.button
         className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white"
@@ -172,7 +203,7 @@ function ImageCarousel({ images, alt }: { images?: string[]; alt: string }) {
       >
         <ChevronRight className="w-5 h-5" />
       </motion.button>
-      
+
       {/* 指示器 */}
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
         {images.map((_, idx) => (
@@ -185,7 +216,7 @@ function ImageCarousel({ images, alt }: { images?: string[]; alt: string }) {
           />
         ))}
       </div>
-      
+
       {/* 图片计数 */}
       <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/50 text-white text-xs">
         {current + 1} / {images.length}
@@ -195,8 +226,8 @@ function ImageCarousel({ images, alt }: { images?: string[]; alt: string }) {
 }
 
 // 图片预览模态框
-function ImagePreviewModal({ images, title, isOpen, onClose }: { 
-  images: string[]; 
+function ImagePreviewModal({ images, title, isOpen, onClose }: {
+  images: string[];
   title: string;
   isOpen: boolean;
   onClose: () => void;
@@ -204,7 +235,7 @@ function ImagePreviewModal({ images, title, isOpen, onClose }: {
   const [current, setCurrent] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set([0]));
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // 重置状态当模态框打开时
   useEffect(() => {
     if (isOpen) {
@@ -215,7 +246,7 @@ function ImagePreviewModal({ images, title, isOpen, onClose }: {
       preloadImage(0);
     }
   }, [isOpen]);
-  
+
   // 预加载图片
   const preloadImage = (index: number) => {
     if (index < 0 || index >= images.length) return;
@@ -226,7 +257,7 @@ function ImagePreviewModal({ images, title, isOpen, onClose }: {
     };
     img.src = images[index];
   };
-  
+
   // 当前图片变化时标记加载状态
   useEffect(() => {
     if (loadedImages.has(current)) {
@@ -238,7 +269,7 @@ function ImagePreviewModal({ images, title, isOpen, onClose }: {
     // 预加载下一张
     preloadImage(current + 1);
   }, [current]);
-  
+
   // 键盘导航
   useEffect(() => {
     if (!isOpen) return;
@@ -250,17 +281,17 @@ function ImagePreviewModal({ images, title, isOpen, onClose }: {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, current, images.length]);
-  
+
   const goToNext = () => {
     setCurrent((prev) => (prev + 1) % images.length);
   };
-  
+
   const goToPrev = () => {
     setCurrent((prev) => (prev - 1 + images.length) % images.length);
   };
-  
+
   if (!isOpen || !images.length) return null;
-  
+
   return (
     <AnimatePresence>
       <motion.div
@@ -269,11 +300,11 @@ function ImagePreviewModal({ images, title, isOpen, onClose }: {
         exit={{ opacity: 0 }}
         className="fixed z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-md"
         onClick={onClose}
-        style={{ 
+        style={{
           position: 'fixed',
-          top: 0, 
-          left: 0, 
-          width: '100vw', 
+          top: 0,
+          left: 0,
+          width: '100vw',
           height: '100vh',
           margin: 0,
           padding: 0
@@ -292,14 +323,14 @@ function ImagePreviewModal({ images, title, isOpen, onClose }: {
             <h3 className="text-lg font-bold text-[var(--text-primary)] truncate pr-4">
               {title} - 项目预览
             </h3>
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="flex-shrink-0 p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
             >
               <X className="w-5 h-5 text-[var(--text-muted)]" />
             </button>
           </div>
-          
+
           {/* 图片区域 - 固定高度，居中显示 */}
           <div className="flex-1 relative bg-black/60 flex items-center justify-center overflow-hidden">
             {/* 加载状态 */}
@@ -311,7 +342,7 @@ function ImagePreviewModal({ images, title, isOpen, onClose }: {
                 </div>
               </div>
             )}
-            
+
             {/* 图片容器 - 固定尺寸 */}
             <AnimatePresence mode="wait">
               <motion.div
@@ -332,7 +363,7 @@ function ImagePreviewModal({ images, title, isOpen, onClose }: {
                 )}
               </motion.div>
             </AnimatePresence>
-            
+
             {/* 导航按钮 */}
             {images.length > 1 && (
               <>
@@ -351,7 +382,7 @@ function ImagePreviewModal({ images, title, isOpen, onClose }: {
               </>
             )}
           </div>
-          
+
           {/* 底部指示器 - 固定高度 */}
           <div className="flex-shrink-0 px-6 py-4 border-t border-[var(--border-subtle)] bg-[var(--bg-card)] flex items-center justify-center gap-4">
             <span className="text-sm text-[var(--text-muted)] font-medium min-w-[3rem] text-center">
@@ -364,8 +395,8 @@ function ImagePreviewModal({ images, title, isOpen, onClose }: {
                     key={idx}
                     onClick={() => setCurrent(idx)}
                     className={`h-2 rounded-full transition-all duration-300 ${
-                      idx === current 
-                        ? 'bg-[var(--accent-primary)] w-6' 
+                      idx === current
+                        ? 'bg-[var(--accent-primary)] w-6'
                         : 'bg-[var(--border-subtle)] w-2 hover:bg-[var(--text-muted)]'
                     }`}
                   />
@@ -380,7 +411,7 @@ function ImagePreviewModal({ images, title, isOpen, onClose }: {
 }
 
 // README 模态框
-function ReadmeModal({ readmeUrl, title, isOpen, onClose }: { 
+function ReadmeModal({ readmeUrl, title, isOpen, onClose }: {
   readmeUrl: string;
   title: string;
   isOpen: boolean;
@@ -388,7 +419,7 @@ function ReadmeModal({ readmeUrl, title, isOpen, onClose }: {
 }) {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     if (isOpen && readmeUrl) {
       setLoading(true);
@@ -404,7 +435,7 @@ function ReadmeModal({ readmeUrl, title, isOpen, onClose }: {
         });
     }
   }, [isOpen, readmeUrl]);
-  
+
   // 键盘交互 - ESC关闭
   useEffect(() => {
     if (!isOpen) return;
@@ -414,9 +445,9 @@ function ReadmeModal({ readmeUrl, title, isOpen, onClose }: {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
-  
+
   if (!isOpen) return null;
-  
+
   return (
     <AnimatePresence>
       <motion.div
@@ -425,11 +456,11 @@ function ReadmeModal({ readmeUrl, title, isOpen, onClose }: {
         exit={{ opacity: 0 }}
         className="fixed z-[9999] flex items-center justify-center bg-black/95 backdrop-blur-md"
         onClick={onClose}
-        style={{ 
+        style={{
           position: 'fixed',
-          top: 0, 
-          left: 0, 
-          width: '100vw', 
+          top: 0,
+          left: 0,
+          width: '100vw',
           height: '100vh',
           margin: 0,
           padding: 0
@@ -449,14 +480,14 @@ function ReadmeModal({ readmeUrl, title, isOpen, onClose }: {
               <FileText className="w-5 h-5 text-[var(--accent-primary)]" />
               <h3 className="text-lg font-bold text-[var(--text-primary)] truncate pr-4">{title} - 设计文档</h3>
             </div>
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="flex-shrink-0 p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
             >
               <X className="w-5 h-5 text-[var(--text-muted)]" />
             </button>
           </div>
-          
+
           {/* 内容区域 */}
           <div className="flex-1 overflow-y-auto p-6">
             {loading ? (
@@ -473,71 +504,200 @@ function ReadmeModal({ readmeUrl, title, isOpen, onClose }: {
   );
 }
 
-// 技能条组件
-function SkillBar({ name, level, color = 'var(--accent-primary)', delay = 0 }: { 
-  name: string; 
-  level: number; 
-  color?: string;
-  delay?: number;
+// 磁吸按钮组件
+function MagneticButton({ children, className, onClick, title }: { 
+  children: React.ReactNode; 
+  className?: string; 
+  onClick?: () => void;
+  title?: string;
 }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const prefersReducedMotion = usePrefersReducedMotion();
-  
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (prefersReducedMotion || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const distanceX = (e.clientX - centerX) * 0.15;
+    const distanceY = (e.clientY - centerY) * 0.15;
+    setPosition({ x: distanceX, y: distanceY });
+  }, [prefersReducedMotion]);
+
+  const handleMouseLeave = useCallback(() => {
+    setPosition({ x: 0, y: 0 });
+  }, []);
+
   return (
-    <div className="group">
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--accent-primary)] transition-colors">
-          {name}
-        </span>
-        <span className="text-xs text-[var(--text-muted)]">{level}%</span>
-      </div>
-      <div className="h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
-        <motion.div
-          className="h-full rounded-full"
-          style={{ background: color }}
-          initial={{ width: prefersReducedMotion ? `${level}%` : 0 }}
-          whileInView={{ width: `${level}%` }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay, ease: 'easeOut' }}
-        />
-      </div>
-    </div>
+    <motion.button
+      ref={ref}
+      className={className}
+      onClick={onClick}
+      title={title}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: 'spring', stiffness: 350, damping: 15 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      {children}
+    </motion.button>
   );
 }
 
-// 技能标签云
+// 磁吸链接组件
+function MagneticLink({ children, className, href, target, rel, title }: { 
+  children: React.ReactNode; 
+  className?: string; 
+  href: string;
+  target?: string;
+  rel?: string;
+  title?: string;
+}) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (prefersReducedMotion || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const distanceX = (e.clientX - centerX) * 0.15;
+    const distanceY = (e.clientY - centerY) * 0.15;
+    setPosition({ x: distanceX, y: distanceY });
+  }, [prefersReducedMotion]);
+
+  const handleMouseLeave = useCallback(() => {
+    setPosition({ x: 0, y: 0 });
+  }, []);
+
+  return (
+    <motion.a
+      ref={ref}
+      className={className}
+      href={href}
+      target={target}
+      rel={rel}
+      title={title}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: 'spring', stiffness: 350, damping: 15 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      {children}
+    </motion.a>
+  );
+}
+
+// 技能熟练度标识 - 更克制的样式
+function SkillLevelBadge({ level }: { level: number }) {
+  if (level >= 90) return (
+    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--accent-primary)]/15 text-[var(--accent-primary)] font-medium">
+      精通
+    </span>
+  );
+  if (level >= 75) return (
+    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--accent-secondary)]/15 text-[var(--accent-secondary)] font-medium">
+      熟练
+    </span>
+  );
+  return (
+    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)]">
+      掌握
+    </span>
+  );
+}
+
+// 核心语言展示 - 带悬停浮起效果
+function CoreLanguageItem({ name, level, delay = 0 }: {
+  name: string;
+  level: number;
+  delay?: number;
+  category?: string;
+}) {
+  return (
+    <motion.div
+      className="flex items-center justify-between py-2.5 border-b border-[var(--border-subtle)] last:border-0 group cursor-default"
+      initial={{ opacity: 0, x: -10 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.3, delay }}
+      whileHover={{ 
+        x: 6,
+        transition: { type: 'spring', stiffness: 400, damping: 17 }
+      }}
+    >
+      <div className="flex items-center gap-2">
+        <motion.span 
+          className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] group-hover:bg-[var(--accent-primary)] transition-colors"
+          whileHover={{ scale: 1.5 }}
+        />
+        <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
+          {name}
+        </span>
+      </div>
+      <SkillLevelBadge level={level} />
+    </motion.div>
+  );
+}
+
+// 技能标签云 - 弹性悬停 + 微光效果
 function SkillTagCloud({ skills }: { skills: { name: string; level: number; category?: string }[] }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       {skills.map((skill, idx) => (
         <motion.span
           key={skill.name}
-          className="px-3 py-1 text-xs rounded-full border transition-all cursor-default"
-          style={{ 
-            borderColor: skill.level >= 85 ? 'var(--accent-primary)' : 'var(--border-subtle)',
-            background: skill.level >= 85 ? 'var(--accent-primary)15' : 'var(--bg-card)',
-            color: skill.level >= 85 ? 'var(--accent-primary)' : 'var(--text-secondary)'
-          }}
-          initial={{ opacity: 0, scale: 0.8 }}
-          whileInView={{ opacity: 1, scale: 1 }}
+          className="relative px-2.5 py-1 text-xs rounded border border-[var(--border-subtle)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] overflow-hidden cursor-default"
+          initial={{ opacity: 0, y: 8 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: idx * 0.03 }}
-          whileHover={{ scale: 1.05, y: -2 }}
+          whileHover={{ 
+            scale: 1.08, 
+            y: -2,
+            borderColor: 'var(--accent-primary)50',
+            color: 'var(--accent-primary)',
+            backgroundColor: 'var(--accent-primary)10',
+            transition: { type: 'spring', stiffness: 400, damping: 17 }
+          }}
         >
-          {skill.name}
+          {/* 微光扫过效果 */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+            initial={{ x: '-100%' }}
+            whileHover={{ x: '100%' }}
+            transition={{ duration: 0.5 }}
+          />
+          <span className="relative z-10">{skill.name}</span>
         </motion.span>
       ))}
     </div>
   );
 }
 
-// 项目卡片
+// 项目卡片 - 3D 倾斜 + 流光边框
 function ProjectCard({ project, index }: { project: ResumeData['projects'][0]; index: number }) {
   const [showImages, setShowImages] = useState(false);
   const [showReadme, setShowReadme] = useState(false);
-  
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { x, y, isInside } = useMousePosition(cardRef);
+  const prefersReducedMotion = usePrefersReducedMotion();
+
   const hasImages = project.images && project.images.length > 0;
   const hasReadme = project.readme && project.readme.trim() !== '';
-  
+
+  // 3D 倾斜计算
+  const rotateX = prefersReducedMotion ? 0 : (isInside ? (y - 0.5) * -10 : 0);
+  const rotateY = prefersReducedMotion ? 0 : (isInside ? (x - 0.5) * 10 : 0);
+  const glowX = isInside ? x * 100 : 50;
+  const glowY = isInside ? y * 100 : 50;
+
   return (
     <>
       <motion.div
@@ -546,30 +706,57 @@ function ProjectCard({ project, index }: { project: ResumeData['projects'][0]; i
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-50px' }}
         transition={{ delay: index * 0.1 }}
+        style={{ perspective: '1000px' }}
       >
-        <div 
-          className="relative p-6 rounded-2xl border transition-all duration-300 overflow-hidden"
+        <motion.div
+          ref={cardRef}
+          className="relative p-6 rounded-2xl border overflow-hidden cursor-pointer"
           style={{
             background: 'var(--bg-card)',
             borderColor: 'var(--border-subtle)',
-            boxShadow: '0 4px 20px -10px rgba(0,0,0,0.2)'
+            boxShadow: isInside 
+              ? '0 20px 40px -20px rgba(0,0,0,0.4), 0 0 20px -5px var(--accent-primary)20' 
+              : '0 4px 20px -10px rgba(0,0,0,0.2)',
+            transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+            transformStyle: 'preserve-3d',
           }}
+          animate={{
+            rotateX,
+            rotateY,
+          }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         >
-          {/* 发光效果 */}
+          {/* 流光边框效果 */}
           <div 
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+            className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
             style={{
-              background: 'radial-gradient(ellipse at top right, var(--accent-primary)10, transparent 50%)'
+              background: `radial-gradient(600px circle at ${glowX}% ${glowY}%, var(--accent-primary)20, transparent 40%)`,
             }}
           />
           
+          {/* 顶部光晕 */}
+          <div
+            className="absolute -top-20 left-1/2 -translate-x-1/2 w-40 h-20 opacity-0 group-hover:opacity-100 transition-all duration-700 blur-2xl pointer-events-none"
+            style={{
+              background: 'var(--accent-primary)',
+            }}
+          />
+          
+          {/* 边框高亮 */}
+          <div 
+            className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+            style={{
+              boxShadow: 'inset 0 1px 0 0 var(--accent-primary)30, inset 0 -1px 0 0 var(--accent-primary)10',
+            }}
+          />
+
           {/* 项目图片 - 卡片内预览 */}
           {hasImages && (
             <div className="mb-4">
               <ImageCarousel images={project.images} alt={project.name} />
             </div>
           )}
-          
+
           {/* 头部信息 */}
           <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
             <div>
@@ -582,17 +769,17 @@ function ProjectCard({ project, index }: { project: ResumeData['projects'][0]; i
             </div>
             <div className="flex gap-2">
               {hasImages && (
-                <button
+                <MagneticButton
                   onClick={() => setShowImages(true)}
-                  className="p-2 rounded-lg border border-[var(--border-subtle)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] transition-all flex items-center gap-1"
+                  className="p-2 rounded-lg border border-[var(--border-subtle)] hover:border-[var(--accent-primary)] hover:text-[var(--accent-primary)] transition-all flex items-center gap-1.5"
                   title="项目预览"
                 >
                   <Eye className="w-4 h-4" />
-                  <span className="text-xs">预览</span>
-                </button>
+                  <span className="text-xs font-medium">预览</span>
+                </MagneticButton>
               )}
               {project.url && (
-                <a
+                <MagneticLink
                   href={project.url}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -600,10 +787,10 @@ function ProjectCard({ project, index }: { project: ResumeData['projects'][0]; i
                   title="访问网站"
                 >
                   <Globe className="w-4 h-4" />
-                </a>
+                </MagneticLink>
               )}
               {project.repo && (
-                <a
+                <MagneticLink
                   href={project.repo}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -611,23 +798,32 @@ function ProjectCard({ project, index }: { project: ResumeData['projects'][0]; i
                   title="查看源码"
                 >
                   <Github className="w-4 h-4" />
-                </a>
+                </MagneticLink>
               )}
             </div>
           </div>
-          
-          {/* 技术栈 */}
+
+          {/* 技术栈 - 弹性标签 */}
           <div className="flex flex-wrap gap-2 mb-4">
-            {project.tech.map((t) => (
-              <span 
+            {project.tech.map((t, idx) => (
+              <motion.span
                 key={t}
-                className="px-2 py-0.5 text-xs rounded bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-subtle)]"
+                className="px-2.5 py-1 text-xs rounded-md bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-subtle)] group-hover:border-[var(--accent-primary)]/30 group-hover:text-[var(--accent-primary)] transition-colors cursor-default"
+                whileHover={{ 
+                  scale: 1.1, 
+                  y: -2,
+                  transition: { type: 'spring', stiffness: 400, damping: 17 }
+                }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.05 }}
               >
                 {t}
-              </span>
+              </motion.span>
             ))}
           </div>
-          
+
           {/* 亮点 */}
           <div className="space-y-2">
             {project.highlights.map((highlight, idx) => (
@@ -637,22 +833,22 @@ function ProjectCard({ project, index }: { project: ResumeData['projects'][0]; i
               </div>
             ))}
           </div>
-          
+
           {/* 操作按钮 */}
           <div className="mt-4 flex flex-wrap gap-2">
             {hasReadme && (
-              <button
+              <MagneticButton
                 onClick={() => setShowReadme(true)}
                 className="px-4 py-2 text-sm rounded-lg bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/20 transition-all flex items-center gap-2"
               >
                 <FileText className="w-4 h-4" />
                 查看设计文档
-              </button>
+              </MagneticButton>
             )}
           </div>
-        </div>
+        </motion.div>
       </motion.div>
-      
+
       {/* 图片预览模态框 */}
       {hasImages && (
         <ImagePreviewModal
@@ -662,7 +858,7 @@ function ProjectCard({ project, index }: { project: ResumeData['projects'][0]; i
           onClose={() => setShowImages(false)}
         />
       )}
-      
+
       {/* README 模态框 */}
       {hasReadme && (
         <ReadmeModal
@@ -676,106 +872,184 @@ function ProjectCard({ project, index }: { project: ResumeData['projects'][0]; i
   );
 }
 
-// 实习经历卡片
+// 实习经历卡片 - 增强时间线动效
 function InternshipCard({ internship, index }: { internship: ResumeData['internships'][0]; index: number }) {
   return (
     <motion.div
-      className="relative pl-8 pb-8 last:pb-0"
+      className="relative pl-8 pb-8 last:pb-0 group"
       initial={{ opacity: 0, x: -20 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
     >
-      {/* 时间线 */}
-      <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-[var(--accent-primary)] to-transparent" />
-      <div 
-        className="absolute left-0 top-0 w-2 h-2 -translate-x-[3px] rounded-full"
-        style={{ background: 'var(--accent-primary)', boxShadow: '0 0 10px var(--accent-primary)' }}
-      />
-      
-      <div className="p-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:border-[var(--accent-primary)]/50 transition-all">
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-          <h4 className="font-bold text-[var(--text-primary)]">{internship.company}</h4>
-          <span className="text-xs text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 px-2 py-0.5 rounded">
-            {internship.duration}
-          </span>
-        </div>
-        <p className="text-sm text-[var(--text-muted)] mb-3">{internship.position}</p>
-        
-        {/* 技能标签 */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {internship.highlights.map((h) => (
-            <span key={h} className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)]">
-              {h}
-            </span>
-          ))}
-        </div>
-        
-        {/* 成果 */}
-        <ul className="space-y-1.5">
-          {internship.achievements.map((achievement, idx) => (
-            <li key={idx} className="text-sm text-[var(--text-secondary)] flex items-start gap-2">
-              <span className="text-[var(--accent-secondary)] mt-1">•</span>
-              <span>{achievement}</span>
-            </li>
-          ))}
-        </ul>
+      {/* 时间线 - 带脉冲效果 */}
+      <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-[var(--accent-primary)] to-transparent">
+        <motion.div 
+          className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-[var(--accent-primary)] to-transparent"
+          animate={{ 
+            top: ['0%', '100%'],
+            opacity: [1, 0]
+          }}
+          transition={{ 
+            duration: 2, 
+            repeat: Infinity, 
+            repeatDelay: 1,
+            ease: 'easeInOut'
+          }}
+        />
       </div>
+      
+      {/* 时间节点 - 悬停发光 */}
+      <motion.div
+        className="absolute left-0 top-0 w-2 h-2 -translate-x-[3px] rounded-full z-10"
+        style={{ background: 'var(--accent-primary)' }}
+        whileHover={{ 
+          scale: 1.5,
+          boxShadow: '0 0 20px var(--accent-primary)',
+        }}
+        transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+      />
+
+      <motion.div 
+        className="p-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] overflow-hidden relative"
+        whileHover={{ 
+          borderColor: 'var(--accent-primary)50',
+          x: 4,
+        }}
+        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      >
+        {/* 悬停背景光效 */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[var(--accent-primary)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+        
+        <div className="relative">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <h4 className="font-bold text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">
+              {internship.company}
+            </h4>
+            <span className="text-xs text-[var(--accent-primary)] bg-[var(--accent-primary)]/10 px-2 py-0.5 rounded group-hover:bg-[var(--accent-primary)]/20 transition-colors">
+              {internship.duration}
+            </span>
+          </div>
+          <p className="text-sm text-[var(--text-muted)] mb-3">{internship.position}</p>
+
+          {/* 技能标签 - 弹性悬停 */}
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {internship.highlights.map((h, idx) => (
+              <motion.span 
+                key={h} 
+                className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-transparent hover:border-[var(--accent-primary)]/30 hover:text-[var(--accent-primary)] transition-colors cursor-default"
+                whileHover={{ scale: 1.1, y: -1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              >
+                {h}
+              </motion.span>
+            ))}
+          </div>
+
+          {/* 成果 - 逐行滑入 */}
+          <ul className="space-y-1.5">
+            {internship.achievements.map((achievement, idx) => (
+              <motion.li 
+                key={idx} 
+                className="text-sm text-[var(--text-secondary)] flex items-start gap-2 group/item"
+                initial={{ opacity: 0, x: -10 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 + idx * 0.1 }}
+                whileHover={{ x: 4 }}
+              >
+                <span className="text-[var(--accent-secondary)] mt-1 group-hover/item:text-[var(--accent-primary)] transition-colors">▸</span>
+                <span className="group-hover/item:text-[var(--text-primary)] transition-colors">{achievement}</span>
+              </motion.li>
+            ))}
+          </ul>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }
 
-// 核心优势项 - 简洁列表样式
+// 核心优势项 - 增强悬停动效
 function AdvantageItem({ advantage, index }: { advantage: ResumeData['advantages'][0]; index: number }) {
   return (
     <motion.div
-      className="relative group py-3 border-b border-[var(--border-subtle)] last:border-0"
+      className="relative group py-3 border-b border-[var(--border-subtle)] last:border-0 cursor-default"
       initial={{ opacity: 0, x: -20 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
+      whileHover={{ x: 4 }}
     >
-      {/* 左侧渐变装饰线 */}
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-0 group-hover:h-full bg-gradient-to-b from-[var(--accent-primary)] to-[var(--accent-secondary)] transition-all duration-300 rounded-full" />
+      {/* 左侧渐变装饰线 - 带发光动画 */}
+      <motion.div 
+        className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 bg-gradient-to-b from-[var(--accent-primary)] to-[var(--accent-secondary)] rounded-full"
+        initial={{ height: 0 }}
+        whileHover={{ height: '100%' }}
+        transition={{ duration: 0.3 }}
+      />
       
+      {/* 发光点 */}
+      <motion.div
+        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-[3px] w-2 h-2 rounded-full bg-[var(--accent-primary)] opacity-0 group-hover:opacity-100"
+        animate={{ 
+          boxShadow: [
+            '0 0 5px var(--accent-primary)',
+            '0 0 15px var(--accent-primary)',
+            '0 0 5px var(--accent-primary)'
+          ]
+        }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+      />
+
       <div className="pl-4">
         {/* 标题行：分类标签 + 亮点 */}
         <div className="flex items-center gap-2 mb-1.5 flex-wrap">
           <span className="text-xs text-[var(--text-muted)]">
             {advantage.title}
           </span>
-          <span className="w-1 h-1 rounded-full bg-[var(--border-subtle)]" />
-          <span className="text-sm font-semibold text-[var(--text-primary)]">
+          <motion.span 
+            className="w-1 h-1 rounded-full bg-[var(--border-subtle)] group-hover:bg-[var(--accent-primary)] transition-colors"
+          />
+          <span className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">
             {advantage.highlight}
           </span>
         </div>
-        
-        {/* 技术栈 - 简洁标签 */}
-        <div className="flex flex-wrap gap-1 mb-1.5">
-          {advantage.tech.map((t) => (
-            <span 
-              key={t} 
-              className="text-xs text-[var(--accent-primary)]"
+
+        {/* 技术栈 - 标签动画 */}
+        <div className="flex flex-wrap gap-1.5 mb-1.5">
+          {advantage.tech.map((t, idx) => (
+            <motion.span
+              key={t}
+              className="text-xs px-1.5 py-0.5 rounded bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] cursor-default"
+              whileHover={{ 
+                scale: 1.1, 
+                backgroundColor: 'var(--accent-primary)',
+                color: 'var(--bg-primary)'
+              }}
+              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
             >
-              #{t}
-            </span>
+              {t}
+            </motion.span>
           ))}
         </div>
-        
-        {/* 描述 - 更紧凑 */}
-        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+
+        {/* 描述 - 淡入效果 */}
+        <motion.p 
+          className="text-xs text-[var(--text-secondary)] leading-relaxed group-hover:text-[var(--text-muted)] transition-colors"
+        >
           {advantage.description}
-        </p>
+        </motion.p>
       </div>
     </motion.div>
   );
 }
 
-// 获奖证书轮播组件
+// 获奖证书轮播组件 - 增强图片悬停效果
 function AwardCarousel({ awards }: { awards: ResumeData['awards'] }) {
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  
+  const prefersReducedMotion = usePrefersReducedMotion();
+
   // 获取所有图片的扁平化数组，包含award索引
   const allImages = useMemo(() => {
     const images: { awardIdx: number; imageIdx: number; src: string; title: string }[] = [];
@@ -786,10 +1060,10 @@ function AwardCarousel({ awards }: { awards: ResumeData['awards'] }) {
     });
     return images;
   }, [awards]);
-  
+
   const totalImages = allImages.length;
   const currentImage = allImages[currentImageIdx];
-  
+
   // 自动轮播
   useEffect(() => {
     if (isHovered || totalImages <= 1) return;
@@ -798,89 +1072,138 @@ function AwardCarousel({ awards }: { awards: ResumeData['awards'] }) {
     }, 3000);
     return () => clearInterval(timer);
   }, [isHovered, totalImages]);
-  
+
   if (totalImages === 0) return null;
-  
+
   return (
     <motion.section
-      className="p-5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
+      className="p-5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] group"
       initial={{ opacity: 0, x: -30 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.35 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      whileHover={{ borderColor: 'var(--accent-primary)40' }}
     >
       <h2 className="text-lg font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2">
         <Award className="w-5 h-5 text-[var(--accent-primary)]" />
         获奖证书
       </h2>
-      
+
       <div className="relative">
-        {/* 图片容器 */}
-        <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[var(--bg-secondary)]">
+        {/* 图片容器 - 悬停缩放 */}
+        <motion.div 
+          className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[var(--bg-secondary)] cursor-pointer"
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+        >
           <AnimatePresence mode="wait">
-            <motion.img
+            <motion.div
               key={currentImageIdx}
-              src={currentImage.src}
-              alt={currentImage.title}
-              className="w-full h-full object-cover cursor-pointer"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.3 }}
+              className="w-full h-full"
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.4, ease: 'easeOut' }}
               onClick={() => window.open(currentImage.src, '_blank')}
-            />
+            >
+              <motion.img
+                src={currentImage.src}
+                alt={currentImage.title}
+                className="w-full h-full object-cover"
+                whileHover={{ scale: 1.08 }}
+                transition={{ duration: 0.4 }}
+              />
+            </motion.div>
           </AnimatePresence>
-          
-          {/* 图片计数器 */}
-          <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/60 text-white text-xs">
+
+          {/* 悬停遮罩 */}
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-center pb-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isHovered ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <span className="text-white text-xs font-medium">点击查看大图</span>
+          </motion.div>
+
+          {/* 图片计数器 - 动态样式 */}
+          <motion.div 
+            className="absolute top-2 right-2 px-2 py-1 rounded-full text-white text-xs font-medium"
+            style={{ background: 'rgba(0,0,0,0.6)' }}
+            animate={{
+              background: isHovered ? 'var(--accent-primary)' : 'rgba(0,0,0,0.6)'
+            }}
+            transition={{ duration: 0.3 }}
+          >
             {currentImageIdx + 1} / {totalImages}
-          </div>
-          
-          {/* 左右切换按钮 */}
+          </motion.div>
+
+          {/* 左右切换按钮 - 磁吸效果 */}
           {totalImages > 1 && (
             <>
-              <button
+              <motion.button
                 onClick={(e) => {
                   e.stopPropagation();
                   setCurrentImageIdx((prev) => (prev - 1 + totalImages) % totalImages);
                 }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors opacity-0 group-hover:opacity-100"
-                style={{ opacity: isHovered ? 1 : 0 }}
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full text-white"
+                style={{ background: 'rgba(0,0,0,0.5)' }}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : -10 }}
+                whileHover={{ scale: 1.15, background: 'var(--accent-primary)' }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.2 }}
               >
                 <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={(e) => {
                   e.stopPropagation();
                   setCurrentImageIdx((prev) => (prev + 1) % totalImages);
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
-                style={{ opacity: isHovered ? 1 : 0 }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full text-white"
+                style={{ background: 'rgba(0,0,0,0.5)' }}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : 10 }}
+                whileHover={{ scale: 1.15, background: 'var(--accent-primary)' }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.2 }}
               >
                 <ChevronRight className="w-4 h-4" />
-              </button>
+              </motion.button>
             </>
           )}
-        </div>
-        
-        {/* 当前奖项标题 */}
-        <p className="mt-2 text-sm text-[var(--text-secondary)] text-center truncate">
+        </motion.div>
+
+        {/* 当前奖项标题 - 渐变文字 */}
+        <motion.p 
+          className="mt-3 text-sm text-[var(--text-secondary)] text-center truncate font-medium"
+          animate={{ 
+            color: isHovered ? 'var(--accent-primary)' : 'var(--text-secondary)'
+          }}
+          transition={{ duration: 0.3 }}
+        >
           {currentImage.title}
-        </p>
-        
-        {/* 底部指示器 */}
+        </motion.p>
+
+        {/* 底部指示器 - 弹性动画 */}
         {totalImages > 1 && (
           <div className="flex justify-center gap-1.5 mt-3">
             {allImages.map((_, idx) => (
-              <button
+              <motion.button
                 key={idx}
                 onClick={() => setCurrentImageIdx(idx)}
-                className={`h-1.5 rounded-full transition-all ${
-                  idx === currentImageIdx 
-                    ? 'w-4 bg-[var(--accent-primary)]' 
-                    : 'w-1.5 bg-[var(--border-subtle)] hover:bg-[var(--text-muted)]'
+                className={`h-1.5 rounded-full ${
+                  idx === currentImageIdx
+                    ? 'bg-[var(--accent-primary)]'
+                    : 'bg-[var(--border-subtle)] hover:bg-[var(--text-muted)]'
                 }`}
+                animate={{
+                  width: idx === currentImageIdx ? 16 : 6,
+                }}
+                whileHover={{ scale: 1.3 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
               />
             ))}
           </div>
@@ -895,10 +1218,10 @@ export default function ResumePage() {
   const [loading, setLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
-  
+
   const { scrollYProgress } = useScroll({ container: containerRef });
   const headerOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0.8]);
-  
+
   useEffect(() => {
     fetch(`/resume/resume-data.json?v=${Date.now()}`, { cache: 'no-store' })
       .then((res) => res.json())
@@ -908,25 +1231,25 @@ export default function ResumePage() {
       })
       .catch(() => setLoading(false));
   }, []);
-  
+
   if (loading) return <RouteLoader />;
   if (!data) return <div className="p-10 text-center">加载失败</div>;
-  
+
   return (
     <div className="relative min-h-screen bg-[var(--bg-primary)] overflow-hidden">
       <ScrollProgress />
-      
+
       {/* 背景效果 */}
       <div className="fixed inset-0 pointer-events-none">
         <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.08} />
         <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.06} />
         <TwinklingStars count={30} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
       </div>
-      
+
       {/* 主容器 */}
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* 头部横幅 */}
-        <motion.header 
+        <motion.header
           className="relative px-6 py-12 md:py-16"
           style={{ opacity: prefersReducedMotion ? 1 : headerOpacity }}
         >
@@ -939,8 +1262,8 @@ export default function ResumePage() {
               <Sparkles className="w-4 h-4 text-[var(--accent-primary)]" />
               <span className="text-sm text-[var(--accent-primary)]">求职意向：{data.profile.title}</span>
             </motion.div>
-            
-            <motion.h1 
+
+            <motion.h1
               className="text-4xl md:text-6xl font-bold mb-4"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -948,8 +1271,8 @@ export default function ResumePage() {
             >
               <GradientText>{data.profile.name}</GradientText>
             </motion.h1>
-            
-            <motion.p 
+
+            <motion.p
               className="text-lg text-[var(--text-muted)]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -959,235 +1282,380 @@ export default function ResumePage() {
             </motion.p>
           </div>
         </motion.header>
-        
+
         {/* 非对称布局主体 */}
         <div className="px-6 pb-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
+
             {/* 左侧：个人信息与技能（固定） */}
             <div className="lg:col-span-4 space-y-6">
               <div className="lg:sticky lg:top-6 space-y-6">
-                
-                {/* 基本信息卡片 */}
+
+                {/* 基本信息卡片 - 微浮动效果 */}
                 <motion.section
-                  className="p-5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
+                  className="p-5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] group relative overflow-hidden"
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 }}
+                  whileHover={{ 
+                    y: -2,
+                    boxShadow: '0 10px 30px -10px rgba(0,0,0,0.3), 0 0 0 1px var(--accent-primary)20'
+                  }}
                 >
+                  {/* 顶部光效 */}
+                  <motion.div 
+                    className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-0 group-hover:opacity-100"
+                    initial={{ scaleX: 0 }}
+                    whileHover={{ scaleX: 1 }}
+                    transition={{ duration: 0.5 }}
+                  />
+
                   <div className="mb-4">
-                    <h2 className="text-lg font-bold text-[var(--text-primary)]">{data.profile.name}</h2>
+                    <motion.h2 
+                      className="text-lg font-bold text-[var(--text-primary)]"
+                      whileHover={{ x: 2 }}
+                      transition={{ type: 'spring', stiffness: 400 }}
+                    >
+                      {data.profile.name}
+                    </motion.h2>
                     <p className="text-sm text-[var(--text-muted)]">{data.profile.title}</p>
                   </div>
-                  
+
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                    <motion.div 
+                      className="flex items-center gap-2 text-[var(--text-secondary)]"
+                      whileHover={{ x: 4 }}
+                      transition={{ type: 'spring', stiffness: 400 }}
+                    >
                       <span className="w-16 text-[var(--text-muted)]">年龄</span>
                       <span>{data.profile.age}岁 · {data.profile.gender} · {data.profile.political}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                      <span className="w-16 text-[var(--text-muted)]">所在地</span>
+                    </motion.div>
+                    <motion.div 
+                      className="flex items-center gap-2 text-[var(--text-secondary)]"
+                      whileHover={{ x: 4 }}
+                      transition={{ type: 'spring', stiffness: 400 }}
+                    >
+                      <span className="w-16 text-[var(--text-muted)]">籍贯</span>
                       <span>{data.profile.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                    </motion.div>
+                    <motion.div 
+                      className="flex items-center gap-2 text-[var(--text-secondary)]"
+                      whileHover={{ x: 4 }}
+                      transition={{ type: 'spring', stiffness: 400 }}
+                    >
                       <span className="w-16 text-[var(--text-muted)]">期望薪资</span>
                       <span className="text-[var(--accent-primary)] font-medium">{data.profile.salary}</span>
-                    </div>
+                    </motion.div>
                   </div>
-                  
+
                   <div className="mt-4 pt-4 border-t border-[var(--border-subtle)] space-y-2">
-                    <a 
+                    <MagneticLink
                       href={`mailto:${data.profile.email}`}
-                      className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors"
+                      className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors group/link"
                     >
-                      <Mail className="w-4 h-4" />
-                      {data.profile.email}
-                    </a>
-                    <a 
+                      <motion.div whileHover={{ rotate: 15, scale: 1.1 }}>
+                        <Mail className="w-4 h-4" />
+                      </motion.div>
+                      <span className="group-hover/link:underline decoration-[var(--accent-primary)]/50 underline-offset-2">{data.profile.email}</span>
+                    </MagneticLink>
+                    <MagneticLink
                       href={data.profile.github}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors truncate"
+                      className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors group/link"
                     >
-                      <Github className="w-4 h-4 flex-shrink-0" />
-                      <span className="truncate">{data.profile.github}</span>
-                    </a>
-                    <a 
+                      <motion.div whileHover={{ rotate: 15, scale: 1.1 }}>
+                        <Github className="w-4 h-4 flex-shrink-0" />
+                      </motion.div>
+                      <span className="truncate group-hover/link:underline decoration-[var(--accent-primary)]/50 underline-offset-2">{data.profile.github}</span>
+                    </MagneticLink>
+                    <MagneticLink
                       href={data.profile.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors"
+                      className="flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors group/link"
                     >
-                      <Globe className="w-4 h-4" />
-                      {data.profile.website}
-                    </a>
+                      <motion.div whileHover={{ rotate: 15, scale: 1.1 }}>
+                        <Globe className="w-4 h-4" />
+                      </motion.div>
+                      <span className="group-hover/link:underline decoration-[var(--accent-primary)]/50 underline-offset-2">{data.profile.website}</span>
+                    </MagneticLink>
                   </div>
                 </motion.section>
-                
-                {/* 核心优势 - 简洁列表 */}
+
+                {/* 核心优势 - 增强悬停 */}
                 <motion.section
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <h2 className="text-lg font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-[var(--accent-primary)]" />
-                    核心优势
-                  </h2>
-                  <div className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)] px-4">
+                  <motion.h2 
+                    className="text-lg font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2 group cursor-default"
+                    whileHover={{ x: 4 }}
+                    transition={{ type: 'spring', stiffness: 400 }}
+                  >
+                    <motion.div whileHover={{ rotate: 15, scale: 1.2 }} transition={{ type: 'spring' }}>
+                      <Zap className="w-5 h-5 text-[var(--accent-primary)]" />
+                    </motion.div>
+                    <span className="group-hover:text-[var(--accent-primary)] transition-colors">核心优势</span>
+                  </motion.h2>
+                  <motion.div 
+                    className="bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)] px-4"
+                    whileHover={{ borderColor: 'var(--accent-primary)30' }}
+                    transition={{ duration: 0.3 }}
+                  >
                     {data.advantages.map((adv, idx) => (
                       <AdvantageItem key={idx} advantage={adv} index={idx} />
                     ))}
-                  </div>
+                  </motion.div>
                 </motion.section>
-                
-                {/* 技能图谱 */}
+
+                {/* 技术栈 - 增强悬停效果 */}
                 <motion.section
-                  className="p-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
+                  className="p-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] group"
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 }}
+                  whileHover={{ 
+                    y: -2,
+                    boxShadow: '0 10px 30px -10px rgba(0,0,0,0.3)'
+                  }}
                 >
-                  <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-                    <Code2 className="w-5 h-5 text-[var(--accent-primary)]" />
-                    技能图谱
+                  <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2 group-hover:text-[var(--accent-primary)] transition-colors">
+                    <motion.div whileHover={{ rotate: 10 }}>
+                      <Code2 className="w-5 h-5 text-[var(--accent-primary)]" />
+                    </motion.div>
+                    技术栈
                   </h2>
-                  
+
                   {/* 核心语言 */}
-                  <div className="mb-4">
-                    <h4 className="text-xs text-[var(--text-muted)] mb-2 uppercase tracking-wider">核心语言</h4>
-                    <div className="space-y-2">
+                  <div className="mb-6">
+                    <h4 className="text-xs text-[var(--text-muted)] mb-3 uppercase tracking-wider flex items-center gap-2">
+                      <span className="w-4 h-px bg-[var(--border-subtle)]" />
+                      主要开发语言
+                    </h4>
+                    <div className="px-1">
                       {data.skills.languages.slice(0, 3).map((skill, idx) => (
-                        <SkillBar key={skill.name} {...skill} delay={idx * 0.1} />
+                        <CoreLanguageItem key={skill.name} {...skill} delay={idx * 0.1} />
                       ))}
                     </div>
                   </div>
-                  
+
                   {/* 技术栈标签云 */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
-                      <h4 className="text-xs text-[var(--text-muted)] mb-2 uppercase tracking-wider">前端</h4>
+                      <h4 className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-2">
+                        <span className="w-4 h-px bg-[var(--border-subtle)]" />
+                        前端技术
+                      </h4>
                       <SkillTagCloud skills={data.skills.frontend} />
                     </div>
+                    
                     <div>
-                      <h4 className="text-xs text-[var(--text-muted)] mb-2 uppercase tracking-wider">后端</h4>
+                      <h4 className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-2">
+                        <span className="w-4 h-px bg-[var(--border-subtle)]" />
+                        后端框架
+                      </h4>
                       <SkillTagCloud skills={data.skills.backend} />
                     </div>
+                    
                     <div>
-                      <h4 className="text-xs text-[var(--text-muted)] mb-2 uppercase tracking-wider">AI/ML</h4>
+                      <h4 className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-2">
+                        <span className="w-4 h-px bg-[var(--border-subtle)]" />
+                        AI / 大模型
+                      </h4>
                       <SkillTagCloud skills={data.skills.ai} />
                     </div>
+                    
                     <div>
-                      <h4 className="text-xs text-[var(--text-muted)] mb-2 uppercase tracking-wider">DevOps</h4>
+                      <h4 className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-2">
+                        <span className="w-4 h-px bg-[var(--border-subtle)]" />
+                        运维 & 工具
+                      </h4>
                       <SkillTagCloud skills={data.skills.devops} />
                     </div>
+                    
                     <div>
-                      <h4 className="text-xs text-[var(--text-muted)] mb-2 uppercase tracking-wider">数据库</h4>
+                      <h4 className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-2">
+                        <span className="w-4 h-px bg-[var(--border-subtle)]" />
+                        数据存储
+                      </h4>
                       <SkillTagCloud skills={data.skills.databases} />
                     </div>
                   </div>
                 </motion.section>
-                
+
                 {/* 获奖证书轮播 */}
                 {data.awards && data.awards.length > 0 && (
                   <AwardCarousel awards={data.awards} />
                 )}
-                
-                {/* 教育背景 */}
+
+                {/* 教育背景 - 增强悬停效果 */}
                 <motion.section
-                  className="p-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
+                  className="p-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] group relative overflow-hidden"
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4 }}
+                  whileHover={{ 
+                    y: -2,
+                    boxShadow: '0 10px 30px -10px rgba(0,0,0,0.3)'
+                  }}
                 >
-                  <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-                    <GraduationCap className="w-5 h-5 text-[var(--accent-primary)]" />
+                  {/* 装饰背景 */}
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[var(--accent-primary)]/5 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2 group-hover:text-[var(--accent-primary)] transition-colors">
+                    <motion.div whileHover={{ rotate: 15, scale: 1.1 }} transition={{ type: 'spring' }}>
+                      <GraduationCap className="w-5 h-5 text-[var(--accent-primary)]" />
+                    </motion.div>
                     教育背景
                   </h2>
-                  <div className="mb-3">
+                  
+                  <motion.div 
+                    className="mb-3"
+                    whileHover={{ x: 4 }}
+                    transition={{ type: 'spring', stiffness: 400 }}
+                  >
                     <h4 className="font-medium text-[var(--text-primary)]">{data.education.school}</h4>
                     <p className="text-sm text-[var(--text-muted)]">
                       {data.education.degree} · {data.education.major}
                     </p>
                     <p className="text-xs text-[var(--text-muted)]">{data.education.duration}</p>
-                  </div>
+                  </motion.div>
+                  
                   <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-3">
                     {data.education.description}
                   </p>
-                  <div className="flex flex-wrap gap-1">
-                    {data.education.honors.map((h) => (
-                      <span key={h} className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]">
+                  
+                  <div className="flex flex-wrap gap-1.5">
+                    {data.education.honors.map((h, idx) => (
+                      <motion.span 
+                        key={h} 
+                        className="text-xs px-2 py-0.5 rounded-full bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border border-transparent hover:border-[var(--accent-primary)]/30 cursor-default"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: idx * 0.05 }}
+                        whileHover={{ scale: 1.1, y: -1 }}
+                      >
                         {h}
-                      </span>
+                      </motion.span>
                     ))}
                   </div>
                 </motion.section>
-                
-                {/* 社团经历 */}
+
+                {/* 社团经历 - 增强悬停效果 */}
                 <motion.section
-                  className="p-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)]"
+                  className="p-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] group relative overflow-hidden"
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.5 }}
+                  whileHover={{ 
+                    y: -2,
+                    boxShadow: '0 10px 30px -10px rgba(0,0,0,0.3)'
+                  }}
                 >
-                  <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-                    <Users className="w-5 h-5 text-[var(--accent-primary)]" />
+                  {/* 装饰背景 */}
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-[var(--accent-secondary)]/5 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2 group-hover:text-[var(--accent-secondary)] transition-colors">
+                    <motion.div whileHover={{ rotate: -15, scale: 1.1 }} transition={{ type: 'spring' }}>
+                      <Users className="w-5 h-5 text-[var(--accent-primary)]" />
+                    </motion.div>
                     社团经历
                   </h2>
-                  <div className="mb-2">
+                  
+                  <motion.div 
+                    className="mb-2"
+                    whileHover={{ x: 4 }}
+                    transition={{ type: 'spring', stiffness: 400 }}
+                  >
                     <h4 className="font-medium text-[var(--text-primary)]">{data.club.name}</h4>
                     <p className="text-sm text-[var(--text-muted)]">{data.club.position}</p>
                     <p className="text-xs text-[var(--text-muted)]">{data.club.duration}</p>
-                  </div>
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  </motion.div>
+                  
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed group-hover:text-[var(--text-muted)] transition-colors">
                     {data.club.description}
                   </p>
                 </motion.section>
 
               </div>
             </div>
-            
+
             {/* 右侧：项目经历与实习（滚动） */}
             <div className="lg:col-span-8 space-y-8">
-              
+
               {/* 实习经历 */}
               <motion.section
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
               >
-                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6 flex items-center gap-3">
-                  <Briefcase className="w-6 h-6 text-[var(--accent-primary)]" />
-                  实习经历
-                </h2>
+                <motion.h2 
+                  className="text-2xl font-bold text-[var(--text-primary)] mb-6 flex items-center gap-3 group cursor-default"
+                  whileHover={{ x: 4 }}
+                  transition={{ type: 'spring', stiffness: 400 }}
+                >
+                  <motion.div
+                    whileHover={{ rotate: 10, scale: 1.1 }}
+                    transition={{ type: 'spring', stiffness: 400 }}
+                  >
+                    <Briefcase className="w-6 h-6 text-[var(--accent-primary)]" />
+                  </motion.div>
+                  <span className="group-hover:text-[var(--accent-primary)] transition-colors">实习经历</span>
+                  <motion.div 
+                    className="h-px flex-1 bg-gradient-to-r from-[var(--border-subtle)] to-transparent ml-4"
+                    initial={{ scaleX: 0, originX: 0 }}
+                    whileInView={{ scaleX: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.3, duration: 0.6 }}
+                  />
+                </motion.h2>
                 <div className="space-y-0">
                   {data.internships.map((internship, idx) => (
                     <InternshipCard key={idx} internship={internship} index={idx} />
                   ))}
                 </div>
               </motion.section>
-              
+
               {/* 项目经历 */}
               <motion.section
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
               >
-                <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6 flex items-center gap-3">
-                  <Cpu className="w-6 h-6 text-[var(--accent-primary)]" />
-                  项目经历
-                </h2>
+                <motion.h2 
+                  className="text-2xl font-bold text-[var(--text-primary)] mb-6 flex items-center gap-3 group cursor-default"
+                  whileHover={{ x: 4 }}
+                  transition={{ type: 'spring', stiffness: 400 }}
+                >
+                  <motion.div
+                    whileHover={{ rotate: 10, scale: 1.1 }}
+                    transition={{ type: 'spring', stiffness: 400 }}
+                  >
+                    <Cpu className="w-6 h-6 text-[var(--accent-primary)]" />
+                  </motion.div>
+                  <span className="group-hover:text-[var(--accent-primary)] transition-colors">项目经历</span>
+                  <motion.div 
+                    className="h-px flex-1 bg-gradient-to-r from-[var(--border-subtle)] to-transparent ml-4"
+                    initial={{ scaleX: 0, originX: 0 }}
+                    whileInView={{ scaleX: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.3, duration: 0.6 }}
+                  />
+                </motion.h2>
                 <div className="space-y-6">
                   {data.projects.map((project, idx) => (
                     <ProjectCard key={idx} project={project} index={idx} />
                   ))}
                 </div>
               </motion.section>
-              
+
             </div>
           </div>
         </div>
-        
+
 
       </div>
     </div>
