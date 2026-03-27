@@ -50,6 +50,7 @@ const StudioPage = lazy(() => import('./pages/Studio/index'));
 const NotFoundPage = lazy(() => import('./pages/NotFound/index'));
 const AlgoVizPage = lazy(() => import('./pages/AlgoViz/index'));
 const ToolboxPage = lazy(() => import('./pages/Tools/index'));
+const ResumePage = lazy(() => import('./pages/Resume/index'));
 
 // 预加载函数
 let docsLoader: Promise<any> | null = null;
@@ -367,6 +368,11 @@ createRoot(document.getElementById('root')!).render(
                 <Route path="/algo-viz" element={
                   <Suspense fallback={<RouteLoader />}>
                     <AlgoVizPage />
+                  </Suspense>
+                } />
+                <Route path="/resume" element={
+                  <Suspense fallback={<RouteLoader />}>
+                    <ResumePage />
                   </Suspense>
                 } />
                 <Route path="/tools" element={

@@ -114,21 +114,6 @@
       ]
     },
     {
-      "id": "https://sakurain.net/blog/machine-learning-theory",
-      "url": "https://sakurain.net/blog/machine-learning-theory",
-      "title": "《机器学习》（下）：深入理论的密林",
-      "content_text": "探讨周志华教授《机器学习》后半部分的核心理论，包括特征选择与稀疏学习、计算学习理论（PAC框架、VC维）、半监督学习等进阶主题。",
-      "date_published": "2026-02-10T00:00:00.000Z",
-      "author": {
-        "name": "SAKURAIN"
-      },
-      "tags": [
-        "机器学习理论",
-        "深度学习",
-        "神经网络"
-      ]
-    },
-    {
       "id": "https://sakurain.net/blog/api-security-edgeone",
       "url": "https://sakurain.net/blog/api-security-edgeone",
       "title": "在腾讯云 EO 上实现 API 安全验证系统",

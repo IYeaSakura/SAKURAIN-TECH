@@ -15,7 +15,7 @@
     ],
     "cover": "/image/logo.webp",
     "featured": false,
-    "wordCount": 6887,
+    "wordCount": 6882,
     "readingTime": "11 分钟阅读"
   },
   {
@@ -88,22 +88,6 @@
     "featured": false,
     "wordCount": 1951,
     "readingTime": "5 分钟阅读"
-  },
-  {
-    "slug": "machine-learning-theory",
-    "title": "《机器学习》（下）：深入理论的密林",
-    "description": "探讨周志华教授《机器学习》后半部分的核心理论，包括特征选择与稀疏学习、计算学习理论（PAC框架、VC维）、半监督学习等进阶主题。",
-    "date": "2026-02-10",
-    "author": "SAKURAIN",
-    "tags": [
-      "机器学习理论",
-      "深度学习",
-      "神经网络"
-    ],
-    "cover": "/image/logo.webp",
-    "featured": true,
-    "wordCount": 8147,
-    "readingTime": "16 分钟阅读"
   },
   {
     "slug": "api-security-edgeone",
