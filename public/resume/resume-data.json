@@ -9,7 +9,7 @@
     "phone": "159xxxx4794",
     "email": "wangyuyang2004@foxmail.com",
     "salary": "7-12K",
-    "location": "安徽宿州",
+    "location": "安徽濉溪",
     "website": "https://sakurain.net",
     "github": "https://github.com/IYeaSakura"
   },
@@ -38,8 +38,9 @@
       { "name": "Python", "level": 90, "category": "core" },
       { "name": "TypeScript", "level": 85, "category": "core" },
       { "name": "Java", "level": 80, "category": "core" },
-      { "name": "C/C++", "level": 65, "category": "base" },
-      { "name": "SQL", "level": 85, "category": "core" }
+      { "name": "SQL", "level": 85, "category": "core" },
+      { "name": "C/C++", "level": 75, "category": "base" },
+      { "name": "PHP", "level": 65, "category": "base" }
     ],
     "frontend": [
       { "name": "React", "level": 90 },
@@ -62,14 +63,16 @@
       { "name": "MCP协议", "level": 75 }
     ],
     "devops": [
-      { "name": "Docker", "level": 90 },
+      { "name": "Docker", "level": 85 },
       { "name": "Kubernetes", "level": 75 },
       { "name": "Linux", "level": 85 },
-      { "name": "EdgeOne", "level": 80 }
+      { "name": "EdgeOne", "level": 90 }
     ],
     "databases": [
       { "name": "PostgreSQL", "level": 80 },
       { "name": "MySQL", "level": 85 },
+      { "name": "ClickHouse", "level": 85 },
+      { "name": "SQLServer", "level": 85 },
       { "name": "ChromaDB", "level": 80 },
       { "name": "SQLite", "level": 85 }
     ]
