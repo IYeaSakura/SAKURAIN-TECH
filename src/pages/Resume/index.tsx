@@ -33,6 +33,8 @@ import {
 } from '@/components/effects';
 import { GradientText } from '@/components/effects/TextEffects';
 import { usePrefersReducedMotion } from '@/lib/performance';
+import { ThemeToggle } from '@/components/atoms/ThemeToggle';
+import { useTheme } from '@/hooks';
 
 // 鼠标位置追踪 Hook（用于 3D 卡片效果）
 function useMousePosition(ref: React.RefObject<HTMLElement | null>) {
@@ -151,7 +153,8 @@ function ImageCarousel({ images, alt }: { images?: string[]; alt: string }) {
         <img
           src={images[0]}
           alt={alt}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-all duration-300"
+          style={{ filter: 'brightness(var(--image-brightness, 1))' }}
         />
       </div>
     );
@@ -171,7 +174,8 @@ function ImageCarousel({ images, alt }: { images?: string[]; alt: string }) {
           key={current}
           src={images[current]}
           alt={`${alt} - ${current + 1}`}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-all duration-300"
+          style={{ filter: 'brightness(var(--image-brightness, 1))' }}
           initial={{ opacity: 0, scale: 1.05 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
@@ -594,6 +598,78 @@ function MagneticLink({ children, className, href, target, rel, title }: {
   );
 }
 
+// 技能分类区块 - 带颜色主题（柔和彩色配色）
+function SkillCategorySection({ 
+  title, 
+  skills, 
+  color = 'blue' 
+}: { 
+  title: string; 
+  skills: { name: string; level: number }[];
+  color?: 'blue' | 'emerald' | 'violet' | 'amber' | 'rose';
+}) {
+  // 柔和彩色配色 - 平衡饱和度
+  const colorMap = {
+    blue: { text: 'text-sky-500/80', bg: 'bg-sky-500/8', border: 'border-sky-500/20', hover: 'hover:bg-sky-500/15', accent: 'bg-sky-400/60' },
+    emerald: { text: 'text-teal-500/80', bg: 'bg-teal-500/8', border: 'border-teal-500/20', hover: 'hover:bg-teal-500/15', accent: 'bg-teal-400/60' },
+    violet: { text: 'text-indigo-500/80', bg: 'bg-indigo-500/8', border: 'border-indigo-500/20', hover: 'hover:bg-indigo-500/15', accent: 'bg-indigo-400/60' },
+    amber: { text: 'text-amber-600/80', bg: 'bg-amber-500/8', border: 'border-amber-500/20', hover: 'hover:bg-amber-500/15', accent: 'bg-amber-400/60' },
+    rose: { text: 'text-rose-500/80', bg: 'bg-rose-500/8', border: 'border-rose-500/20', hover: 'hover:bg-rose-500/15', accent: 'bg-rose-400/60' },
+  };
+
+  const theme = colorMap[color];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+    >
+      <h4 className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-2">
+        <span className={`w-4 h-px ${theme.accent}`} />
+        <span className="text-[var(--text-secondary)]">{title}</span>
+        <span className="text-[10px] text-[var(--text-muted)]">({skills.length})</span>
+      </h4>
+      <div className="flex flex-wrap gap-1.5">
+        {skills.map((skill, idx) => (
+          <motion.span
+            key={skill.name}
+            className={`relative px-2.5 py-1 text-xs rounded-md border cursor-default overflow-hidden ${theme.bg} ${theme.border} ${theme.text} ${theme.hover} transition-all duration-300`}
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: idx * 0.03, type: 'spring', stiffness: 300 }}
+            whileHover={{ 
+              scale: 1.05, 
+              y: -2,
+              transition: { type: 'spring', stiffness: 400, damping: 17 }
+            }}
+          >
+            {/* 微光扫过效果 */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
+              initial={{ x: '-100%' }}
+              whileHover={{ x: '100%' }}
+              transition={{ duration: 0.5 }}
+            />
+            <span className="relative z-10 flex items-center gap-1.5">
+              {skill.name}
+              {/* 熟练度指示点 - 低饱和度 */}
+              <span 
+                className={`w-1 h-1 rounded-full ${
+                  skill.level >= 90 ? 'bg-emerald-400/60' : 
+                  skill.level >= 80 ? 'bg-blue-400/60' : 
+                  skill.level >= 70 ? 'bg-amber-400/60' : 'bg-gray-400/60'
+                }`}
+              />
+            </span>
+          </motion.span>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 // 技能熟练度标识 - 更克制的样式
 function SkillLevelBadge({ level }: { level: number }) {
   if (level >= 90) return (
@@ -613,35 +689,114 @@ function SkillLevelBadge({ level }: { level: number }) {
   );
 }
 
-// 核心语言展示 - 带悬停浮起效果
-function CoreLanguageItem({ name, level, delay = 0 }: {
+// 核心语言展示 - 3D倾斜卡片 + 流光边框 + 动态进度
+function CoreLanguageCard({ name, level, delay = 0, index = 0 }: {
   name: string;
   level: number;
   delay?: number;
-  category?: string;
+  index?: number;
 }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { x, y, isInside } = useMousePosition(cardRef);
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  // 3D倾斜计算
+  const rotateX = prefersReducedMotion ? 0 : (isInside ? (y - 0.5) * -12 : 0);
+  const rotateY = prefersReducedMotion ? 0 : (isInside ? (x - 0.5) * 12 : 0);
+  const glowX = isInside ? x * 100 : 50;
+  const glowY = isInside ? y * 100 : 50;
+
+  // 根据熟练度获取颜色
+  const getLevelColor = (lvl: number) => {
+    if (lvl >= 90) return 'from-emerald-400 to-teal-500';
+    if (lvl >= 80) return 'from-blue-400 to-indigo-500';
+    if (lvl >= 70) return 'from-violet-400 to-purple-500';
+    return 'from-amber-400 to-orange-500';
+  };
+
+  const levelColor = getLevelColor(level);
+
   return (
     <motion.div
-      className="flex items-center justify-between py-2.5 border-b border-[var(--border-subtle)] last:border-0 group cursor-default"
-      initial={{ opacity: 0, x: -10 }}
-      whileInView={{ opacity: 1, x: 0 }}
+      ref={cardRef}
+      className="relative group"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.3, delay }}
-      whileHover={{ 
-        x: 6,
-        transition: { type: 'spring', stiffness: 400, damping: 17 }
-      }}
+      transition={{ duration: 0.4, delay }}
+      style={{ perspective: '1000px' }}
     >
-      <div className="flex items-center gap-2">
-        <motion.span 
-          className="w-1.5 h-1.5 rounded-full bg-[var(--text-muted)] group-hover:bg-[var(--accent-primary)] transition-colors"
-          whileHover={{ scale: 1.5 }}
+      <motion.div
+        className="relative p-4 rounded-xl border cursor-default overflow-hidden"
+        style={{
+          background: 'var(--bg-card)',
+          borderColor: 'var(--border-subtle)',
+          boxShadow: isInside
+            ? '0 20px 40px -20px rgba(0,0,0,0.4), 0 0 30px -5px var(--accent-primary)15'
+            : '0 4px 15px -10px rgba(0,0,0,0.2)',
+          transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
+          transformStyle: 'preserve-3d',
+        }}
+        animate={{ rotateX, rotateY }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      >
+        {/* 流光边框效果 */}
+        <div
+          className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+          style={{
+            background: `radial-gradient(400px circle at ${glowX}% ${glowY}%, var(--accent-primary)20, transparent 40%)`,
+          }}
         />
-        <span className="text-sm font-medium text-[var(--text-secondary)] group-hover:text-[var(--text-primary)] transition-colors">
-          {name}
-        </span>
-      </div>
-      <SkillLevelBadge level={level} />
+
+        {/* 顶部渐变线 */}
+        <motion.div
+          className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r ${levelColor}`}
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: delay + 0.2 }}
+        />
+
+        {/* 内容 */}
+        <div className="relative z-10">
+          {/* 头部：语言名 + 熟练度标签 */}
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-semibold text-[var(--text-primary)] group-hover:text-[var(--accent-primary)] transition-colors">
+              {name}
+            </span>
+            <SkillLevelBadge level={level} />
+          </div>
+
+          {/* 进度条 */}
+          <div className="relative">
+            <div className="h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+              <motion.div
+                className={`h-full rounded-full bg-gradient-to-r ${levelColor}`}
+                initial={{ width: 0 }}
+                whileInView={{ width: `${level}%` }}
+                viewport={{ once: true }}
+                transition={{ duration: 1, delay: delay + 0.3, ease: 'easeOut' }}
+              />
+            </div>
+            {/* 进度百分比 */}
+            <motion.span
+              className="absolute -top-5 right-0 text-[10px] font-mono text-[var(--text-muted)] opacity-0 group-hover:opacity-100 transition-opacity"
+              initial={{ y: 5 }}
+              whileHover={{ y: 0 }}
+            >
+              {level}%
+            </motion.span>
+          </div>
+        </div>
+
+        {/* 角落装饰 */}
+        <motion.div
+          className="absolute -bottom-2 -right-2 w-12 h-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{
+            background: `radial-gradient(circle, var(--accent-primary)20, transparent 70%)`,
+          }}
+        />
+      </motion.div>
     </motion.div>
   );
 }
@@ -1110,7 +1265,8 @@ function AwardCarousel({ awards }: { awards: ResumeData['awards'] }) {
               <motion.img
                 src={currentImage.src}
                 alt={currentImage.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-all duration-300"
+                style={{ filter: 'brightness(var(--image-brightness, 1))' }}
                 whileHover={{ scale: 1.08 }}
                 transition={{ duration: 0.4 }}
               />
@@ -1218,6 +1374,7 @@ export default function ResumePage() {
   const [loading, setLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { theme, isTransitioning, toggleTheme } = useTheme();
 
   const { scrollYProgress } = useScroll({ container: containerRef });
   const headerOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0.8]);
@@ -1236,21 +1393,53 @@ export default function ResumePage() {
   if (!data) return <div className="p-10 text-center">加载失败</div>;
 
   return (
-    <div className="relative min-h-screen bg-[var(--bg-primary)] overflow-hidden">
+    <div 
+      className="relative min-h-screen overflow-hidden" 
+      style={{ 
+        background: 'var(--bg-primary)',
+        '--image-brightness': theme === 'dark' ? '0.75' : '1',
+      } as React.CSSProperties}
+    >
       <ScrollProgress />
 
-      {/* 背景效果 */}
+      {/* 背景效果 - 与其他页面保持一致 */}
       <div className="fixed inset-0 pointer-events-none">
-        <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.08} />
-        <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.06} />
-        <TwinklingStars count={30} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
+        {/* 网格背景 */}
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255, 0.1) 1px, transparent 1px),
+                             linear-gradient(90deg, rgba(255,255,255, 0.1) 1px, transparent 1px)`,
+            backgroundSize: '80px 80px'
+          }}
+        />
+        {/* 柔和渐变光效 */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full blur-[120px]" style={{ background: 'radial-gradient(circle, var(--accent-primary)20 0%, transparent 70%)' }} />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, var(--accent-secondary)15 0%, transparent 70%)' }} />
+        </div>
+        <TwinklingStars count={20} color="rgba(148, 163, 184, 0.4)" secondaryColor="rgba(99, 102, 241, 0.3)" />
       </div>
+
+      {/* 固定导航栏 - 主题切换 */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="fixed top-4 right-4 z-50"
+      >
+        <ThemeToggle 
+          theme={theme} 
+          onToggle={toggleTheme} 
+          isTransitioning={isTransitioning}
+        />
+      </motion.div>
 
       {/* 主容器 */}
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* 头部横幅 */}
         <motion.header
-          className="relative px-6 py-12 md:py-16"
+          className="relative px-6 py-12 md:py-16 pt-20 md:pt-24"
           style={{ opacity: prefersReducedMotion ? 1 : headerOpacity }}
         >
           <div className="text-center">
@@ -1410,78 +1599,73 @@ export default function ResumePage() {
                   </motion.div>
                 </motion.section>
 
-                {/* 技术栈 - 增强悬停效果 */}
+                {/* 技术栈 - 3D卡片 + 动态光效 */}
                 <motion.section
-                  className="p-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] group"
+                  className="p-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] group relative overflow-hidden"
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 }}
                   whileHover={{ 
                     y: -2,
-                    boxShadow: '0 10px 30px -10px rgba(0,0,0,0.3)'
+                    boxShadow: '0 20px 40px -20px rgba(0,0,0,0.4), 0 0 0 1px var(--accent-primary)20'
                   }}
                 >
-                  <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2 group-hover:text-[var(--accent-primary)] transition-colors">
+                  {/* 背景光效 */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+                    <div className="absolute top-0 left-1/4 w-32 h-32 bg-[var(--accent-primary)]/5 rounded-full blur-3xl" />
+                    <div className="absolute bottom-0 right-1/4 w-32 h-32 bg-[var(--accent-secondary)]/5 rounded-full blur-3xl" />
+                  </div>
+
+                  <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2 group-hover:text-[var(--accent-primary)] transition-colors relative z-10">
                     <motion.div whileHover={{ rotate: 10 }}>
                       <Code2 className="w-5 h-5 text-[var(--accent-primary)]" />
                     </motion.div>
                     技术栈
                   </h2>
 
-                  {/* 核心语言 */}
-                  <div className="mb-6">
+                  {/* 核心语言 - 3D卡片网格 */}
+                  <div className="mb-6 relative z-10">
                     <h4 className="text-xs text-[var(--text-muted)] mb-3 uppercase tracking-wider flex items-center gap-2">
-                      <span className="w-4 h-px bg-[var(--border-subtle)]" />
+                      <motion.span 
+                        className="w-4 h-px bg-[var(--border-subtle)] group-hover:bg-[var(--accent-primary)]/50 transition-colors"
+                      />
                       主要开发语言
+                      <span className="text-[10px] text-[var(--text-muted)]">({data.skills.languages.length})</span>
                     </h4>
-                    <div className="px-1">
-                      {data.skills.languages.slice(0, 3).map((skill, idx) => (
-                        <CoreLanguageItem key={skill.name} {...skill} delay={idx * 0.1} />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {data.skills.languages.map((skill, idx) => (
+                        <CoreLanguageCard key={skill.name} {...skill} delay={idx * 0.08} index={idx} />
                       ))}
                     </div>
                   </div>
 
                   {/* 技术栈标签云 */}
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-2">
-                        <span className="w-4 h-px bg-[var(--border-subtle)]" />
-                        前端技术
-                      </h4>
-                      <SkillTagCloud skills={data.skills.frontend} />
-                    </div>
-                    
-                    <div>
-                      <h4 className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-2">
-                        <span className="w-4 h-px bg-[var(--border-subtle)]" />
-                        后端框架
-                      </h4>
-                      <SkillTagCloud skills={data.skills.backend} />
-                    </div>
-                    
-                    <div>
-                      <h4 className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-2">
-                        <span className="w-4 h-px bg-[var(--border-subtle)]" />
-                        AI / 大模型
-                      </h4>
-                      <SkillTagCloud skills={data.skills.ai} />
-                    </div>
-                    
-                    <div>
-                      <h4 className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-2">
-                        <span className="w-4 h-px bg-[var(--border-subtle)]" />
-                        运维 & 工具
-                      </h4>
-                      <SkillTagCloud skills={data.skills.devops} />
-                    </div>
-                    
-                    <div>
-                      <h4 className="text-xs text-[var(--text-muted)] mb-2 flex items-center gap-2">
-                        <span className="w-4 h-px bg-[var(--border-subtle)]" />
-                        数据存储
-                      </h4>
-                      <SkillTagCloud skills={data.skills.databases} />
-                    </div>
+                  <div className="space-y-4 relative z-10">
+                    <SkillCategorySection 
+                      title="前端技术" 
+                      skills={data.skills.frontend} 
+                      color="blue"
+                    />
+                    <SkillCategorySection 
+                      title="后端框架" 
+                      skills={data.skills.backend} 
+                      color="emerald"
+                    />
+                    <SkillCategorySection 
+                      title="AI / 大模型" 
+                      skills={data.skills.ai} 
+                      color="violet"
+                    />
+                    <SkillCategorySection 
+                      title="运维 & 工具" 
+                      skills={data.skills.devops} 
+                      color="amber"
+                    />
+                    <SkillCategorySection 
+                      title="数据存储" 
+                      skills={data.skills.databases} 
+                      color="rose"
+                    />
                   </div>
                 </motion.section>
 
