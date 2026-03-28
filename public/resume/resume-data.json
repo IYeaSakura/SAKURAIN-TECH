@@ -35,17 +35,18 @@
   ],
   "skills": {
     "languages": [
-      { "name": "Python", "level": 90, "category": "core" },
-      { "name": "TypeScript", "level": 85, "category": "core" },
+      { "name": "Python", "level": 95, "category": "core" },
+      { "name": "TypeScript", "level": 80, "category": "core" },
       { "name": "Java", "level": 80, "category": "core" },
       { "name": "SQL", "level": 85, "category": "core" },
-      { "name": "C/C++", "level": 75, "category": "base" },
+      { "name": "C/C++", "level": 70, "category": "base" },
       { "name": "PHP", "level": 65, "category": "base" }
     ],
     "frontend": [
       { "name": "React", "level": 90 },
       { "name": "Vue3", "level": 75 },
       { "name": "TypeScript", "level": 85 },
+      { "name": "Tailwind CSS", "level": 85 },
       { "name": "Three.js", "level": 70 },
       { "name": "WebGL", "level": 70 },
       { "name": "HTML/CSS/JS", "level": 85 }
@@ -54,25 +55,30 @@
       { "name": "FastAPI", "level": 90 },
       { "name": "SpringBoot", "level": 75 },
       { "name": "Django", "level": 75 },
+      { "name": "Flask", "level": 75 },
       { "name": "Node.js", "level": 70 }
     ],
     "ai": [
       { "name": "PyTorch", "level": 85 },
-      { "name": "LangChain", "level": 85 },
-      { "name": "RAG系统", "level": 80 },
-      { "name": "MCP协议", "level": 75 }
+      { "name": "LangChain", "level": 80 },
+      { "name": "Prompt Engineering", "level": 80 },
+      { "name": "RAG", "level": 75 },
+      { "name": "MCP", "level": 75 },
+      { "name": "LLM", "level": 75 }
     ],
     "devops": [
       { "name": "Docker", "level": 85 },
       { "name": "Kubernetes", "level": 75 },
       { "name": "Linux", "level": 85 },
-      { "name": "EdgeOne", "level": 90 }
+      { "name": "EdgeOne", "level": 90 },
+      { "name": "Cloudflare", "level": 90 },
+      { "name": "CI/CD", "level": 85 }
     ],
     "databases": [
       { "name": "PostgreSQL", "level": 80 },
       { "name": "MySQL", "level": 85 },
       { "name": "ClickHouse", "level": 85 },
-      { "name": "SQLServer", "level": 85 },
+      { "name": "SQL Server", "level": 85 },
       { "name": "ChromaDB", "level": 80 },
       { "name": "SQLite", "level": 85 }
     ]
@@ -209,7 +215,7 @@
   "club": {
     "name": "计算机技术派协会",
     "position": "技术部副部长",
-    "duration": "2023.09 - 至今",
+    "duration": "2023.09 - 2024.09",
     "description": "组织并主讲了多次人工智能与网络安全专题活动。精心策划活动内容，吸引众多学生参与，有效提升社团影响力。通过深入浅出的讲解和互动答疑，帮助成员快速掌握核心知识点，激发学习兴趣。同时，与团队紧密协作，锻炼了组织、沟通和领导能力。"
   },
   "awards": [
