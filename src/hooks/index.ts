@@ -35,9 +35,4 @@ export {
   debounce,
 } from '@/lib/performance';
 
-// 保留原有的性能 hooks 以兼容旧代码
-export {
-  usePerformanceMonitor,
-  useIdleCallback,
-  useVirtualList
-} from './usePerformance';
+
