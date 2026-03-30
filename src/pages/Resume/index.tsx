@@ -27,7 +27,6 @@ import {
   Mail
 } from 'lucide-react';
 import {
-  AmbientGlow,
   TwinklingStars,
   ScrollProgress
 } from '@/components/effects';
@@ -690,11 +689,11 @@ function SkillLevelBadge({ level }: { level: number }) {
 }
 
 // 核心语言展示 - 3D倾斜卡片 + 流光边框 + 动态进度
-function CoreLanguageCard({ name, level, delay = 0, index = 0 }: {
+function CoreLanguageCard({ name, level, delay = 0 }: {
   name: string;
   level: number;
   delay?: number;
-  index?: number;
+
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const { x, y, isInside } = useMousePosition(cardRef);
@@ -798,41 +797,6 @@ function CoreLanguageCard({ name, level, delay = 0, index = 0 }: {
         />
       </motion.div>
     </motion.div>
-  );
-}
-
-// 技能标签云 - 弹性悬停 + 微光效果
-function SkillTagCloud({ skills }: { skills: { name: string; level: number; category?: string }[] }) {
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {skills.map((skill, idx) => (
-        <motion.span
-          key={skill.name}
-          className="relative px-2.5 py-1 text-xs rounded border border-[var(--border-subtle)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] overflow-hidden cursor-default"
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: idx * 0.03 }}
-          whileHover={{ 
-            scale: 1.08, 
-            y: -2,
-            borderColor: 'var(--accent-primary)50',
-            color: 'var(--accent-primary)',
-            backgroundColor: 'var(--accent-primary)10',
-            transition: { type: 'spring', stiffness: 400, damping: 17 }
-          }}
-        >
-          {/* 微光扫过效果 */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
-            initial={{ x: '-100%' }}
-            whileHover={{ x: '100%' }}
-            transition={{ duration: 0.5 }}
-          />
-          <span className="relative z-10">{skill.name}</span>
-        </motion.span>
-      ))}
-    </div>
   );
 }
 
@@ -1089,7 +1053,7 @@ function InternshipCard({ internship, index }: { internship: ResumeData['interns
 
           {/* 技能标签 - 弹性悬停 */}
           <div className="flex flex-wrap gap-1.5 mb-3">
-            {internship.highlights.map((h, idx) => (
+            {internship.highlights.map((h) => (
               <motion.span 
                 key={h} 
                 className="text-xs px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-transparent hover:border-[var(--accent-primary)]/30 hover:text-[var(--accent-primary)] transition-colors cursor-default"
@@ -1172,7 +1136,7 @@ function AdvantageItem({ advantage, index }: { advantage: ResumeData['advantages
 
         {/* 技术栈 - 标签动画 */}
         <div className="flex flex-wrap gap-1.5 mb-1.5">
-          {advantage.tech.map((t, idx) => (
+          {advantage.tech.map((t) => (
             <motion.span
               key={t}
               className="text-xs px-1.5 py-0.5 rounded bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] cursor-default"
@@ -1634,7 +1598,7 @@ export default function ResumePage() {
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {data.skills.languages.map((skill, idx) => (
-                        <CoreLanguageCard key={skill.name} {...skill} delay={idx * 0.08} index={idx} />
+                        <CoreLanguageCard key={skill.name} {...skill} delay={idx * 0.08} />
                       ))}
                     </div>
                   </div>
