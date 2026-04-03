@@ -890,6 +890,15 @@
     },
     {
       "id": "0aa52540",
+      "name": "for_the_zero的小站",
+      "url": "https://ftz.is-a.dev/",
+      "icon": "https://ftz.is-a.dev/assets/intro/avatar.png",
+      "description": "想要成为一个有趣的、厉害的、快乐的、善良的、……能被你记住的人",
+      "category": "blogs",
+      "featured": true
+    },
+    {
+      "id": "0aa52540",
       "name": "安知鱼",
       "url": "https://blog.anheyu.com/",
       "icon": "https://npm.elemecdn.com/anzhiyu-blog-static@1.0.4/img/avatar.jpg",
