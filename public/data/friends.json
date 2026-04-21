@@ -936,6 +936,16 @@
         "isJsChallenge": false,
         "jsChallengeIndicator": null
       }
+    },
+    {
+      "id": "52d35178",
+      "name": "Liseezn'blog",
+      "url": "https://blog.liseezn.top",
+      "icon": "https://blog.liseezn.top/logo.webp",
+      "feed": "https://blog.liseezn.top/feed/",
+      "description": "分享学习，项目，及一些教程",
+      "category": "blogs",
+      "featured": true
     }
   ],
   "lastUpdated": "2026-04-07T08:38:44.761Z"
