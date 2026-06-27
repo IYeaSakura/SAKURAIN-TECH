@@ -23,7 +23,7 @@ A modern personal portfolio and blog featuring interactive 3D visualizations, al
 
 Special thanks to my supporters:
 
-- **@ge~** — My best buddy during my undergraduate years, who has always accompanied me in various competitions and is the greatest supporter behind my CAAI Computer Game Championship title.
+- **@ge~** — My best buddy during my undergraduate years, who has always accompanied me in various competitions.
 - **@FuFu今天也要憨 / @小樱雨 / @秋绘家的豌豆** — My younger sister, whose constant support and encouragement have been the driving force behind the continuous iteration of this project.
 
 ---
