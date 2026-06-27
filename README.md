@@ -1,4 +1,6 @@
-# SAKURAIN Tech
+# SAKURAIN TEAM
+
+<div align="center">
 
 [![Website](https://img.shields.io/badge/Website-sakurain.net-blue)](https://sakurain.net)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
@@ -6,6 +8,8 @@
 [![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+</div>
 
 A modern personal portfolio and blog featuring interactive 3D visualizations, algorithm animations, developer tools, and a complete content management system — built with React 19, TypeScript, and Vite.
 
@@ -30,6 +34,15 @@ A modern personal portfolio and blog featuring interactive 3D visualizations, al
 - [Changelog](#changelog)
 - [Contributing](#contributing)
 - [License](#license)
+
+---
+
+## Acknowledgments
+
+Special thanks to my supporters:
+
+- **@ge~** — My best buddy during my undergraduate years, who has always accompanied me in various competitions and is the greatest supporter behind my CAAI Computer Game Championship title.
+- **@FuFu今天也要憨 / @小樱雨 / @秋绘家的豌豆** — My younger sister, whose constant support and encouragement have been the driving force behind the continuous iteration of this project.
 
 ---
 
@@ -219,7 +232,7 @@ SAKURAIN-TECH/
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/IYeaSakura/SAKURAIN-TECH.git
 cd SAKURAIN-TECH
 
 # Install dependencies
@@ -706,6 +719,7 @@ registerTool({
 **Problem**: `npm run build` fails with TypeScript errors
 
 **Solution**:
+
 ```bash
 # Check TypeScript errors
 npx tsc --noEmit
@@ -721,6 +735,7 @@ npm install
 **Problem**: Build fails during script execution
 
 **Solution**:
+
 ```bash
 # Run individual scripts to identify the issue
 node scripts/generate-blog-tags.js
@@ -736,6 +751,7 @@ ls -la public/notes/posts/
 **Problem**: Hot reload not working
 
 **Solution**:
+
 - Check that `vite.config.ts` HMR is enabled
 - Ensure no syntax errors in the file being edited
 - Try refreshing the browser manually
@@ -743,6 +759,7 @@ ls -la public/notes/posts/
 **Problem**: Environment variables not loading
 
 **Solution**:
+
 - Ensure `.env` file exists in project root
 - Variable names must start with `VITE_` to be exposed to client
 - Restart the dev server after changing `.env`
@@ -752,6 +769,7 @@ ls -la public/notes/posts/
 **Problem**: API returns 401 Unauthorized
 
 **Solution**:
+
 - Check that `VITE_API_SECRET_KEY` is set correctly
 - Verify timestamp is within 5-minute window
 - Ensure nonce is unique and not reused
@@ -759,6 +777,7 @@ ls -la public/notes/posts/
 **Problem**: KV storage errors
 
 **Solution**:
+
 - Verify KV namespace bindings are configured
 - Check that KV namespaces exist in EdgeOne/Cloudflare dashboard
 
