@@ -5,11 +5,11 @@
     "subtitle": "全栈开发 | AI应用 | 云原生",
     "age": 22,
     "gender": "男",
-    "political": "共产党员",
-    "phone": "159xxxx4794",
+    "political": "中共党员",
+    "phone": "保密",
     "email": "wangyuyang2004@foxmail.com",
-    "salary": "7-12K",
-    "location": "安徽濉溪",
+    "salary": "根据地区和岗位决定",
+    "location": "安徽宿州",
     "website": "https://sakurain.net",
     "github": "https://github.com/IYeaSakura"
   },
@@ -204,7 +204,7 @@
     }
   ],
   "education": {
-    "school": "辽宁石油化工大学",
+    "school": "生产环境保密",
     "degree": "本科",
     "major": "软件工程",
     "duration": "2022 - 2026",
