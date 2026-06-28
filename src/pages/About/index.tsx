@@ -605,9 +605,9 @@ export default function AboutPage() {
               <div className="flex flex-wrap justify-center gap-2 px-2">
                 {[
                   { icon: Briefcase, text: "博弈算法专长" },
-                  { icon: Calendar, text: "大四在读" },
+                  { icon: Calendar, text: "软件工程师" },
                   { icon: Star, text: "中共党员" },
-                  { icon: GraduationCap, text: "独立开发者" },
+                  { icon: GraduationCap, text: "26届本科毕业" },
                 ].map((item, index) => (
                   <motion.div
                     key={index}
@@ -663,7 +663,7 @@ export default function AboutPage() {
                 transition={{ delay: 0.4 }}
                 className="text-base sm:text-xl text-gray-400 mb-6 sm:mb-10 text-center lg:text-right"
               >
-                00后 | 大四在读 | 软件工程专业
+                00后 | 26届本科毕业 | 软件工程专业
               </motion.p>
 
               {/* 双栏介绍 */}
@@ -674,7 +674,7 @@ export default function AboutPage() {
                   color="#60a5fa"
                   delay={0.5}
                 >
-                  热爱计算机技术的00后大学生，中共党员，青年马克思主义者培养工程结业，在校期间担任班长。
+                  中共党员，青年马克思主义者培养工程结业，在校期间担任班长、校计算机协会技术部部长。
                   <br /><br />
                   中国人工智能学会机器博弈专委会成员，获得过计算机博弈大赛全国冠亚军。
                 </InfoCard>
