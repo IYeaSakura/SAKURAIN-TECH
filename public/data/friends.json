@@ -593,7 +593,7 @@
     {
       "id": "9704d1a4",
       "name": "Serenity's Blog",
-      "url": "www.aobp.cn",
+      "url": "https://www.aobp.cn",
       "icon": "https://www.aobp.cn/upload/%E5%A4%B4%E5%83%8F.png",
       "feed": "https://www.aobp.cn/rss.xml",
       "description": "热爱可抵岁月漫长",
@@ -619,7 +619,7 @@
     {
       "id": "0cca9c5f",
       "name": "manyJ'sBlog",
-      "url": "https://blog.jsoftstudio.top/",
+      "url": "https://blog.jsoftstudio.top",
       "icon": "https://blog.jsoftstudio.top/css/all/favicon.ico",
       "description": "manyJ'sBlog - 个人博客",
       "category": "blogs",
@@ -668,7 +668,7 @@
     {
       "id": "c211091a",
       "name": "云海花瑶",
-      "url": "https://www.moeyao.cn/",
+      "url": "https://www.moeyao.cn",
       "icon": "https://dn-qiniu-avatar.qbox.me/avatar/d00de9fbffe50946b950a3fd0cd1bfdb",
       "feed": "https://www.moeyao.cn/feed",
       "description": "白头并非雪可替,相遇已是上上签",
@@ -743,7 +743,7 @@
     {
       "id": "ca9a1f56",
       "name": "ATao-Blog",
-      "url": "https://blog.atao.cyou/",
+      "url": "https://blog.atao.cyou",
       "icon": "https://cdn.atao.cyou/Web/Avatar.png",
       "description": "做自己喜欢的事",
       "category": "blogs",
@@ -816,7 +816,7 @@
     {
       "id": "cbf95edd",
       "name": "天海博客",
-      "url": "https://woolyun.com/",
+      "url": "https://woolyun.com",
       "icon": "https://woolyun.com/wp-content/uploads/2025/05/yyl-e1746698677584.jpg",
       "feed": "https://woolyun.com/feed/",
       "description": "建站经验记录，实用工具推荐，免费资源分享。",
@@ -841,7 +841,7 @@
     {
       "id": "d880e1ba",
       "name": "谶的博客",
-      "url": "https://blog.fohok.xin/",
+      "url": "https://blog.fohok.xin",
       "icon": "https://blog.fohok.xin/wp-content/uploads/2025/08/a91fabf8a49526b0ab7941fb2659297e1755339178171.jpg",
       "feed": "https://blog.fohok.xin/feed",
       "description": "生活会越来越好的",
@@ -892,7 +892,7 @@
     {
       "id": "6ff7e307",
       "name": "for_the_zero的小站",
-      "url": "https://ftz.is-a.dev/",
+      "url": "https://ftz.is-a.dev",
       "icon": "https://ftz.is-a.dev/assets/intro/avatar.png",
       "description": "想要成为一个有趣的、厉害的、快乐的、善良的、……能被你记住的人",
       "category": "blogs",
@@ -916,7 +916,7 @@
     {
       "id": "52d35178",
       "name": "小慧博客",
-      "url": "https://www.itxiaohui.top/",
+      "url": "https://www.itxiaohui.top",
       "icon": "https://blogoss.itxiaohui.top/logo%20-uhlgnmrf.png",
       "feed": "https://www.itxiaohui.top/rss.xml",
       "description": "小慧的技术博客",
