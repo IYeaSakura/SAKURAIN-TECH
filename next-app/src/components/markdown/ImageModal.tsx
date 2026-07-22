@@ -185,14 +185,16 @@ export function ClickableImage({ src, alt }: { src?: string; alt?: string }) {
 
   return (
     <>
-      <div className="overflow-x-auto my-4" style={{ maxWidth: '100%' }}>
+      {/* 使用 span + display:block 而非 div：markdown 图片常位于 <p> 内，
+          div 会造成 <p> 非法嵌套（div-in-p 水合错误）；span 是合法 phrasing content */}
+      <span className="block overflow-x-auto my-4" style={{ maxWidth: '100%' }}>
         <img 
           src={src} 
           alt={alt || ''} 
           className="max-w-full rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity"
           onClick={() => setIsModalOpen(true)}
         />
-      </div>
+      </span>
       {isModalOpen && (
         <ImageModal 
           imageUrl={src} 

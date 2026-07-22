@@ -4,7 +4,6 @@ import { BookOpen, ChevronRight, FileText, FolderOpen, Search, BookMarked, Gradu
 import { SearchModal } from './SearchModal';
 import { ThemeToggleButton } from './ThemeToggleButton';
 import { AmbientGlow } from '@/components/effects';
-import { useAnimationEnabled, useMobile } from '@/hooks';
 import type { DocCategory, DocItem, DocSeries, SingleDoc, IconMap } from '../types';
 
 interface DocListViewProps {
@@ -41,27 +40,26 @@ const SeriesCard = memo(({
   onClick: () => void;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const animationEnabled = useAnimationEnabled();
-  const isMobile = useMobile();
 
   return (
     <motion.button
-      initial={animationEnabled ? { opacity: 0, y: 30 } : undefined}
-      animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
-      transition={{ duration: 0.5, delay: animationEnabled ? index * 0.08 : 0, ease: [0.25, 0.1, 0.25, 1] }}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.08, ease: [0.25, 0.1, 0.25, 1] }}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="group text-left relative cursor-pointer"
       style={{ perspective: '1000px' }}
     >
-      {/* 发光边框效果 */}
+      {/* 发光边框效果（统一使用非简写属性，避免 background 简写与 backgroundSize 冲突） */}
       <div
         className="absolute -inset-[2px] rounded-xl transition-opacity duration-500"
         style={{
-          background: isHovered 
+          backgroundImage: isHovered
             ? `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))`
-            : 'transparent',
+            : 'none',
+          backgroundColor: 'transparent',
           backgroundSize: '300% 300%',
           animation: isHovered ? 'gradient-shift 3s ease infinite' : 'none',
           opacity: isHovered ? 1 : 0,
@@ -81,30 +79,26 @@ const SeriesCard = memo(({
             : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
         }}
       >
-        {/* Glow background - 仅桌面端显示 */}
-        {!isMobile && (
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: `radial-gradient(circle at 50% 0%, var(--accent-primary)15, transparent 60%)`,
-            }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
-          />
-        )}
-        
-        {/* Shine effect - 仅桌面端显示 */}
-        {!isMobile && (
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: `linear-gradient(105deg, transparent 40%, var(--accent-primary)10 45%, var(--accent-primary)20 50%, var(--accent-primary)10 55%, transparent 60%)`,
-              transform: 'translateX(-100%)',
-            }}
-            animate={isHovered ? { x: '200%' } : { x: '-100%' }}
-            transition={{ duration: 0.6 }}
-          />
-        )}
+        {/* Glow background - 仅桌面端显示（CSS 断点控制，保证 SSR/CSR DOM 一致） */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none hidden md:block"
+          style={{
+            background: `radial-gradient(circle at 50% 0%, var(--accent-primary)15, transparent 60%)`,
+          }}
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+        />
+
+        {/* Shine effect - 仅桌面端显示（CSS 断点控制，保证 SSR/CSR DOM 一致） */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none hidden md:block"
+          style={{
+            background: `linear-gradient(105deg, transparent 40%, var(--accent-primary)10 45%, var(--accent-primary)20 50%, var(--accent-primary)10 55%, transparent 60%)`,
+            transform: 'translateX(-100%)',
+          }}
+          animate={isHovered ? { x: '200%' } : { x: '-100%' }}
+          transition={{ duration: 0.6 }}
+        />
 
         <div className="flex items-start justify-between mb-4 relative z-10">
           <div 
@@ -171,27 +165,26 @@ const DocCard = memo(({
   onClick: () => void;
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const animationEnabled = useAnimationEnabled();
-  const isMobile = useMobile();
 
   return (
     <motion.button
-      initial={animationEnabled ? { opacity: 0, y: 30 } : undefined}
-      animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
-      transition={{ duration: 0.5, delay: animationEnabled ? index * 0.08 : 0, ease: [0.25, 0.1, 0.25, 1] }}
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: index * 0.08, ease: [0.25, 0.1, 0.25, 1] }}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="group text-left relative cursor-pointer"
       style={{ perspective: '1000px' }}
     >
-      {/* 发光边框效果 */}
+      {/* 发光边框效果（统一使用非简写属性，避免 background 简写与 backgroundSize 冲突） */}
       <div
         className="absolute -inset-[2px] rounded-xl transition-opacity duration-500"
         style={{
-          background: isHovered 
+          backgroundImage: isHovered
             ? `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))`
-            : 'transparent',
+            : 'none',
+          backgroundColor: 'transparent',
           backgroundSize: '300% 300%',
           animation: isHovered ? 'gradient-shift 3s ease infinite' : 'none',
           opacity: isHovered ? 1 : 0,
@@ -211,30 +204,26 @@ const DocCard = memo(({
             : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
         }}
       >
-        {/* Glow background - 仅桌面端显示 */}
-        {!isMobile && (
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: `radial-gradient(circle at 50% 0%, var(--accent-primary)15, transparent 60%)`,
-            }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
-          />
-        )}
-        
-        {/* Shine effect - 仅桌面端显示 */}
-        {!isMobile && (
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: `linear-gradient(105deg, transparent 40%, var(--accent-primary)10 45%, var(--accent-primary)20 50%, var(--accent-primary)10 55%, transparent 60%)`,
-              transform: 'translateX(-100%)',
-            }}
-            animate={isHovered ? { x: '200%' } : { x: '-100%' }}
-            transition={{ duration: 0.6 }}
-          />
-        )}
+        {/* Glow background - 仅桌面端显示（CSS 断点控制，保证 SSR/CSR DOM 一致） */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none hidden md:block"
+          style={{
+            background: `radial-gradient(circle at 50% 0%, var(--accent-primary)15, transparent 60%)`,
+          }}
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+        />
+
+        {/* Shine effect - 仅桌面端显示（CSS 断点控制，保证 SSR/CSR DOM 一致） */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none hidden md:block"
+          style={{
+            background: `linear-gradient(105deg, transparent 40%, var(--accent-primary)10 45%, var(--accent-primary)20 50%, var(--accent-primary)10 55%, transparent 60%)`,
+            transform: 'translateX(-100%)',
+          }}
+          animate={isHovered ? { x: '200%' } : { x: '-100%' }}
+          transition={{ duration: 0.6 }}
+        />
 
         <div className="flex items-start justify-between mb-4 relative z-10">
           <FileText 

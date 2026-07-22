@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { usePrefersReducedMotion, usePageVisibility } from '@/lib/performance';
 import { usePerformance } from '@/contexts/PerformanceContext';
@@ -20,7 +20,15 @@ export const AmbientGlow = memo(({
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisible = usePageVisibility();
   const { effectiveQuality } = usePerformance();
-  
+
+  // 水合一致性：SSR 时设备能力检测返回兜底值（medium 质量、非低性能、
+  // 不减少动画），而客户端首次渲染会读到真实设备能力（可能为 low）。
+  // 挂载前强制走与 SSR 一致的「非低质量」分支，挂载后再应用真实质量，
+  // 保证首次客户端渲染与 SSR 输出完全一致，避免 Hydration failed。
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const lowQuality = mounted && (prefersReducedMotion || effectiveQuality === 'low');
+
   const positionStyles = {
     'top-left': { top: '10%', left: '10%' },
     'top-right': { top: '10%', right: '10%' },
@@ -29,12 +37,12 @@ export const AmbientGlow = memo(({
     'center': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
   };
 
-  // 低性能模式降低模糊度和大小
-  const actualSize = effectiveQuality === 'low' ? size * 0.7 : size;
-  const actualOpacity = effectiveQuality === 'low' ? opacity * 0.7 : opacity;
-  const blurAmount = effectiveQuality === 'low' ? 60 : 80;
+  // 低性能模式降低模糊度和大小（挂载后才生效，见上）
+  const actualSize = lowQuality ? size * 0.7 : size;
+  const actualOpacity = lowQuality ? opacity * 0.7 : opacity;
+  const blurAmount = lowQuality ? 60 : 80;
 
-  if (prefersReducedMotion || effectiveQuality === 'low') {
+  if (lowQuality) {
     return (
       <div
         className={`absolute pointer-events-none ${className}`}

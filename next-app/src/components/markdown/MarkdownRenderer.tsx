@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, memo, useRef } from 'react';
+import { useState, useEffect, useMemo, memo, useRef, Children, cloneElement } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -16,6 +16,54 @@ import '@/styles/code-block.css';
 // 破坏 MathML 命名空间上下文（导致 <mi>/<mo> 等报 "unrecognized tag"），且若该组件
 // 渲染 <div> 还会造成 <p> 内非法嵌套。display 公式的横向滚动由 code-block.css 中
 // .katex-display 的 overflow-x 规则负责。
+
+// ==================== 共享渲染辅助 ====================
+// 判断 child 是否为 markdown 图片（或仅包裹图片的链接）。
+// react-markdown v10 会把 hast 节点挂在自定义组件元素的 props.node 上。
+const isImageElement = (child: any): boolean => {
+  if (!child || typeof child !== 'object' || !child.props) return false;
+  const tagName = child.props.node?.tagName;
+  if (tagName === 'img') return true;
+  if (tagName === 'a') return isImageOnlyChildren(child.props.children);
+  return false;
+};
+
+// 段落 children 是否仅包含图片（忽略纯空白文本节点）
+const isImageOnlyChildren = (children: any): boolean => {
+  const items = Children.toArray(children).filter(
+    (c) => !(typeof c === 'string' && c.trim() === '')
+  );
+  return items.length > 0 && items.every(isImageElement);
+};
+
+// 自定义段落：内容仅为图片时不包裹 <p>——图片 wrapper 是块级元素，
+// 嵌入 <p> 属于非法嵌套，会触发 React 水合错误（div-in-p）。
+const MarkdownParagraph = ({ children }: { children?: any }) => {
+  if (isImageOnlyChildren(children)) return <>{children}</>;
+  return <p className="my-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{children}</p>;
+};
+
+// 表格单元格 children 处理：将 <br> 转换为换行符以配合 whitespace-pre-line。
+// 必须用 cloneElement 递归保留元素树结构，不能用 flatMap 拍平——拍平会把
+// KaTeX 渲染出的多棵 span/math 子树合并为同级数组，hast-util-to-jsx-runtime
+// 在各子树内部生成的 key（span-0、math-0 等）随之重复，触发 React 重复 key 警告。
+const processCellChildren = (children: any): any =>
+  Children.map(children, (child: any) => {
+    if (child == null || typeof child !== 'object') return child;
+    if (child.type === 'br') return '\n';
+    if (child.props?.children != null) {
+      return cloneElement(child, undefined, processCellChildren(child.props.children));
+    }
+    return child;
+  });
+
+const MarkdownTh = ({ children }: { children?: any }) => (
+  <th className="border px-4 py-3 text-left font-semibold" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>{children}</th>
+);
+
+const MarkdownTd = ({ children }: { children?: any }) => (
+  <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>{processCellChildren(children)}</td>
+);
 
 // Heading Anchor Component - rendered immediately with math support
 const HeadingAnchorElement = memo(({ heading }: { heading: HeadingAnchor }) => {
@@ -50,7 +98,7 @@ HeadingAnchorElement.displayName = 'HeadingAnchorElement';
 
 // Content-only components (no headings, to avoid duplicates)
 const contentOnlyComponents = {
-  p: ({ children }: any) => <p className="my-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{children}</p>,
+  p: MarkdownParagraph,
   ul: ({ children }: { children?: any }) => <ul className="my-4 ml-6 list-disc" style={{ color: 'var(--text-secondary)' }}>{children}</ul>,
   ol: ({ children }: { children?: any }) => <ol className="my-4 ml-6 list-decimal" style={{ color: 'var(--text-secondary)' }}>{children}</ol>,
   li: ({ children }: { children?: any }) => <li className="my-1">{children}</li>,
@@ -68,69 +116,8 @@ const contentOnlyComponents = {
   },
   table: ({ children }: { children?: any }) => <div className="overflow-x-auto my-6 rounded-lg border" style={{ borderColor: 'var(--border-color)' }}><table className="min-w-full border" style={{ borderColor: 'var(--border-color)' }}>{children}</table></div>,
   thead: ({ children }: { children?: any }) => <thead style={{ background: 'var(--bg-secondary)' }}>{children}</thead>,
-  th: ({ children }: { children?: any }) => {
-    // 将 children 转换为字符串检查是否包含数学公式
-    const extractText = (child: any): string => {
-      if (typeof child === 'string') return child;
-      if (Array.isArray(child)) return child.map(extractText).join('');
-      if (child?.props?.children) return extractText(child.props.children);
-      return '';
-    };
-    const text = extractText(children);
-    
-    // 如果包含数学公式标记，使用 ReactMarkdown 重新渲染
-    if (text.includes('$')) {
-      return (
-        <th className="border px-4 py-3 text-left font-semibold" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>
-          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={{
-            p: ({ children }: any) => <>{children}</>,
-          } as any}>
-            {text}
-          </ReactMarkdown>
-        </th>
-      );
-    }
-    
-    return <th className="border px-4 py-3 text-left font-semibold" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>{children}</th>;
-  },
-  td: ({ children }: { children?: any }) => {
-    // 将 children 转换为字符串检查是否包含数学公式
-    const extractText = (child: any): string => {
-      if (typeof child === 'string') return child;
-      if (Array.isArray(child)) return child.map(extractText).join('');
-      if (child?.props?.children) return extractText(child.props.children);
-      return '';
-    };
-    const text = extractText(children);
-    
-    // 如果包含数学公式标记，使用 ReactMarkdown 重新渲染
-    if (text.includes('$')) {
-      return (
-        <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
-          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={{
-            p: ({ children }: any) => <>{children}</>,
-          } as any}>
-            {text}
-          </ReactMarkdown>
-        </td>
-      );
-    }
-    
-    // 普通内容直接渲染
-    const processCellChildren = (child: any): any => {
-      if (typeof child === 'string') return child;
-      if (Array.isArray(child)) {
-        return child.flatMap((c: any) => {
-          if (c?.type === 'br') return '\n';
-          if (typeof c === 'object' && c?.props?.children) return processCellChildren(c.props.children);
-          return c;
-        });
-      }
-      if (child?.type === 'br') return '\n';
-      return child;
-    };
-    return <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>{processCellChildren(children)}</td>;
-  },
+  th: MarkdownTh,
+  td: MarkdownTd,
   blockquote: ({ children }: { children?: any }) => <blockquote className="border-l-4 pl-4 my-6 py-3 pr-4 rounded-r" style={{ borderColor: 'var(--accent-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{children}</blockquote>,
   hr: () => <hr className="my-8" style={{ borderColor: 'var(--border-color)' }} />,
   img: ({ src, alt }: { src?: string | Blob; alt?: string }) => <ClickableImage src={typeof src === 'string' ? src : undefined} alt={alt} />,
@@ -194,24 +181,6 @@ const MarkdownCode = ({ inline, className, children }: any) => {
   return <CodeBlock language="text" value={codeString} />;
 };
 
-// Process table cell children to handle <br /> while preserving math elements
-const processCellChildren = (child: any): any => {
-  if (typeof child === 'string') return child;
-  if (Array.isArray(child)) {
-    return child.flatMap((c) => {
-      if (c?.type === 'br') return '\n';
-      // 保留 math 元素（KaTeX MathML 根节点），不递归处理
-      if (c?.type === 'math') return c;
-      if (typeof c === 'object' && c?.props?.children) return processCellChildren(c.props.children);
-      return c;
-    });
-  }
-  if (child?.type === 'br') return '\n';
-  // 保留 math 元素（KaTeX MathML 根节点）
-  if (child?.type === 'math') return child;
-  return child;
-};
-
 const MarkdownH1 = ({ children }: { children?: any }) => {
   const text = extractTextFromChildren(children);
   const id = generateHeadingId(text);
@@ -223,7 +192,7 @@ const markdownComponents = {
   h2: MarkdownH2,
   h3: MarkdownH3,
   h4: MarkdownH4,
-  p: ({ children }: { children?: any }) => <p className="my-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{children}</p>,
+  p: MarkdownParagraph,
   ul: ({ children }: { children?: any }) => <ul className="my-4 ml-6 list-disc" style={{ color: 'var(--text-secondary)' }}>{children}</ul>,
   ol: ({ children }: { children?: any }) => <ol className="my-4 ml-6 list-decimal" style={{ color: 'var(--text-secondary)' }}>{children}</ol>,
   li: ({ children }: { children?: any }) => <li className="my-1">{children}</li>,
@@ -231,56 +200,8 @@ const markdownComponents = {
   code: MarkdownCode,
   table: ({ children }: { children?: any }) => <div className="overflow-x-auto my-6 rounded-lg border" style={{ borderColor: 'var(--border-color)' }}><table className="min-w-full border" style={{ borderColor: 'var(--border-color)' }}>{children}</table></div>,
   thead: ({ children }: { children?: any }) => <thead style={{ background: 'var(--bg-secondary)' }}>{children}</thead>,
-  th: ({ children }: { children?: any }) => {
-    // 将 children 转换为字符串检查是否包含数学公式
-    const extractText = (child: any): string => {
-      if (typeof child === 'string') return child;
-      if (Array.isArray(child)) return child.map(extractText).join('');
-      if (child?.props?.children) return extractText(child.props.children);
-      return '';
-    };
-    const text = extractText(children);
-    
-    // 如果包含数学公式标记，使用 ReactMarkdown 重新渲染
-    if (text.includes('$')) {
-      return (
-        <th className="border px-4 py-3 text-left font-semibold" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>
-          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={{
-            p: ({ children }: any) => <>{children}</>,
-          } as any}>
-            {text}
-          </ReactMarkdown>
-        </th>
-      );
-    }
-    
-    return <th className="border px-4 py-3 text-left font-semibold" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>{children}</th>;
-  },
-  td: ({ children }: { children?: any }) => {
-    // 将 children 转换为字符串检查是否包含数学公式
-    const extractText = (child: any): string => {
-      if (typeof child === 'string') return child;
-      if (Array.isArray(child)) return child.map(extractText).join('');
-      if (child?.props?.children) return extractText(child.props.children);
-      return '';
-    };
-    const text = extractText(children);
-    
-    // 如果包含数学公式标记，使用 ReactMarkdown 重新渲染
-    if (text.includes('$')) {
-      return (
-        <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
-          <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={{
-            p: ({ children }: any) => <>{children}</>,
-          } as any}>
-            {text}
-          </ReactMarkdown>
-        </td>
-      );
-    }
-    
-    return <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>{processCellChildren(children)}</td>;
-  },
+  th: MarkdownTh,
+  td: MarkdownTd,
   blockquote: ({ children }: { children?: any }) => <blockquote className="border-l-4 pl-4 my-6 py-3 pr-4 rounded-r" style={{ borderColor: 'var(--accent-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>{children}</blockquote>,
   hr: () => <hr className="my-8" style={{ borderColor: 'var(--border-color)' }} />,
   img: ({ src, alt }: { src?: string | Blob; alt?: string }) => <ClickableImage src={typeof src === 'string' ? src : undefined} alt={alt} />,
@@ -346,4 +267,4 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
   );
 };
 
-export { markdownComponents };
+export { markdownComponents, finalMarkdownComponents, finalContentOnlyComponents };
