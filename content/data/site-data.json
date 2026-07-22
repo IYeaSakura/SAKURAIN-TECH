@@ -14,13 +14,41 @@
   "navigation": {
     "logo": "SAKURAIN",
     "links": [
-      { "label": "首页", "href": "/", "icon": "Home" },
-      { "label": "博客", "href": "/blog", "icon": "BookOpen" },
-      { "label": "项目", "href": "/projects", "icon": "Briefcase" },
-      { "label": "友链", "href": "/friends", "icon": "Heart" },
-      { "label": "朋友圈", "href": "/friends-circle", "icon": "Rss" },
-      { "label": "地球Online", "href": "/earth-online", "icon": "Globe" },
-      { "label": "关于", "href": "/about", "icon": "User" }
+      {
+        "label": "首页",
+        "href": "/",
+        "icon": "Home"
+      },
+      {
+        "label": "博客",
+        "href": "/blog",
+        "icon": "BookOpen"
+      },
+      {
+        "label": "项目",
+        "href": "/projects",
+        "icon": "Briefcase"
+      },
+      {
+        "label": "友链",
+        "href": "/friends",
+        "icon": "Heart"
+      },
+      {
+        "label": "朋友圈",
+        "href": "/friends-circle",
+        "icon": "Rss"
+      },
+      {
+        "label": "地球Online",
+        "href": "/earth-online",
+        "icon": "Globe"
+      },
+      {
+        "label": "关于",
+        "href": "/about",
+        "icon": "User"
+      }
     ]
   },
   "hero": {
@@ -29,14 +57,64 @@
     "subtitle": "专注博弈论算法工程化与大规模数据分析",
     "description": "60天交付保证 · 100%源码交付 · 自主运维方案",
     "cta": [
-      { "text": "探索业务", "link": "#services", "primary": true },
-      { "text": "联系我们", "link": "#contact", "primary": false }
+      {
+        "text": "探索业务",
+        "link": "#services",
+        "primary": true
+      },
+      {
+        "text": "联系我们",
+        "link": "#contact",
+        "primary": false
+      }
     ],
     "stats": [
-      { "value": "50+", "label": "交付项目" },
-      { "value": "100%", "label": "源码交付" },
-      { "value": "60天", "label": "最迟期限" },
-      { "value": "24h", "label": "响应时间" }
+      {
+        "value": "50+",
+        "label": "交付项目"
+      },
+      {
+        "value": "100%",
+        "label": "源码交付"
+      },
+      {
+        "value": "60天",
+        "label": "最迟期限"
+      },
+      {
+        "value": "24h",
+        "label": "响应时间"
+      }
+    ]
+  },
+  "footer": {
+    "copyright": "© 2026 SAKURAIN 技术工作室",
+    "slogan": "更专业，更可靠，更高效",
+    "links": [
+      {
+        "label": "服务",
+        "href": "#services"
+      },
+      {
+        "label": "技术栈",
+        "href": "#tech-stack"
+      },
+      {
+        "label": "定价",
+        "href": "#pricing"
+      },
+      {
+        "label": "流程",
+        "href": "#process"
+      },
+      {
+        "label": "联系",
+        "href": "#contact"
+      },
+      {
+        "label": "算法可视化",
+        "href": "/algo-viz"
+      }
     ]
   },
   "services": [
@@ -58,7 +136,13 @@
         "C++高性能核心引擎",
         "Python策略接口层"
       ],
-      "tech": ["C++", "Python", "Go", "AVX512", "PyTorch"],
+      "tech": [
+        "C++",
+        "Python",
+        "Go",
+        "AVX512",
+        "PyTorch"
+      ],
       "popular": true,
       "details": {
         "sections": [
@@ -120,7 +204,14 @@
         "Redis热数据缓存",
         "Vue3数据可视化看板"
       ],
-      "tech": ["Python", "ClickHouse", "Kafka", "Flink", "Redis", "Vue3"],
+      "tech": [
+        "Python",
+        "ClickHouse",
+        "Kafka",
+        "Flink",
+        "Redis",
+        "Vue3"
+      ],
       "popular": true,
       "details": {
         "sections": [
@@ -157,7 +248,11 @@
                 "desc": "WebSocket实时推送",
                 "price": "¥800"
               },
-              { "name": "部署方案", "desc": "K8s Helm Chart", "price": "¥720" },
+              {
+                "name": "部署方案",
+                "desc": "K8s Helm Chart",
+                "price": "¥720"
+              },
               {
                 "name": "压测验证",
                 "desc": "JMeter，1000并发",
@@ -188,7 +283,14 @@
         "Docker一键部署",
         "Nginx负载均衡"
       ],
-      "tech": ["Vue3", "React", "FastAPI", "Go", "MySQL", "Docker"]
+      "tech": [
+        "Vue3",
+        "React",
+        "FastAPI",
+        "Go",
+        "MySQL",
+        "Docker"
+      ]
     },
     {
       "id": "graduation",
@@ -208,7 +310,13 @@
         "答辩指导",
         "保过承诺"
       ],
-      "tech": ["Python", "Java", "Go", "Vue3", "MySQL"]
+      "tech": [
+        "Python",
+        "Java",
+        "Go",
+        "Vue3",
+        "MySQL"
+      ]
     },
     {
       "id": "mc-plugin",
@@ -227,7 +335,12 @@
         "异步性能优化",
         "JMH基准测试"
       ],
-      "tech": ["Java", "Kotlin", "Redis", "MySQL"]
+      "tech": [
+        "Java",
+        "Kotlin",
+        "Redis",
+        "MySQL"
+      ]
     },
     {
       "id": "waf",
@@ -246,75 +359,14 @@
         "日志分析（实时统计）",
         "Vue3管理后台"
       ],
-      "tech": ["Python", "Redis", "Nginx", "Vue3"]
+      "tech": [
+        "Python",
+        "Redis",
+        "Nginx",
+        "Vue3"
+      ]
     }
   ],
-  "techStack": {
-    "title": "技术栈",
-    "subtitle": "全栈技术能力，从底层优化到上层应用",
-    "categories": [
-      {
-        "name": "高性能计算",
-        "icon": "Cpu",
-        "skills": [
-          { "name": "C/C++", "level": 95 },
-          { "name": "AVX512 SIMD", "level": 90 },
-          { "name": "CUDA", "level": 75 },
-          { "name": "OpenMP", "level": 80 }
-        ]
-      },
-      {
-        "name": "后端开发",
-        "icon": "Server",
-        "skills": [
-          { "name": "Python", "level": 98 },
-          { "name": "Go", "level": 90 },
-          { "name": "FastAPI", "level": 95 },
-          { "name": "Gin", "level": 88 }
-        ]
-      },
-      {
-        "name": "数据存储",
-        "icon": "Database",
-        "skills": [
-          { "name": "ClickHouse", "level": 92 },
-          { "name": "PostgreSQL", "level": 90 },
-          { "name": "Redis", "level": 95 },
-          { "name": "Kafka", "level": 85 }
-        ]
-      },
-      {
-        "name": "前端开发",
-        "icon": "Layout",
-        "skills": [
-          { "name": "Vue3", "level": 92 },
-          { "name": "React", "level": 85 },
-          { "name": "TypeScript", "level": 90 },
-          { "name": "TailwindCSS", "level": 95 }
-        ]
-      },
-      {
-        "name": "机器学习",
-        "icon": "Brain",
-        "skills": [
-          { "name": "PyTorch", "level": 88 },
-          { "name": "NumPy", "level": 95 },
-          { "name": "Pandas", "level": 95 },
-          { "name": "Scikit-learn", "level": 85 }
-        ]
-      },
-      {
-        "name": "运维部署",
-        "icon": "Cloud",
-        "skills": [
-          { "name": "Docker", "level": 92 },
-          { "name": "Kubernetes", "level": 80 },
-          { "name": "Nginx", "level": 90 },
-          { "name": "Linux", "level": 95 }
-        ]
-      }
-    ]
-  },
   "pricing": {
     "title": "技术服务方案",
     "subtitle": "专注高性能计算与博弈算法工程化，源码透明交付",
@@ -710,7 +762,12 @@
         "title": "技术方案",
         "description": "设计系统架构与技术方案，包括数据库设计、API接口设计",
         "icon": "Lightbulb",
-        "details": ["系统架构设计", "数据库建模", "API接口设计", "UI/UX设计"],
+        "details": [
+          "系统架构设计",
+          "数据库建模",
+          "API接口设计",
+          "UI/UX设计"
+        ],
         "duration": "2-5天"
       },
       {
@@ -718,7 +775,12 @@
         "title": "敏捷开发",
         "description": "采用敏捷开发模式，每两周一个迭代周期，实时同步进度",
         "icon": "Code",
-        "details": ["迭代开发", "代码审查", "持续集成", "进度同步"],
+        "details": [
+          "迭代开发",
+          "代码审查",
+          "持续集成",
+          "进度同步"
+        ],
         "duration": "主要阶段"
       },
       {
@@ -726,7 +788,12 @@
         "title": "测试交付",
         "description": "全面的测试覆盖，包括单元测试、集成测试、性能测试",
         "icon": "CheckCircle",
-        "details": ["单元测试", "集成测试", "性能测试", "安全审计"],
+        "details": [
+          "单元测试",
+          "集成测试",
+          "性能测试",
+          "安全审计"
+        ],
         "duration": "3-7天"
       },
       {
@@ -734,7 +801,12 @@
         "title": "运维支持",
         "description": "提供完善的运维文档与技术支持，确保系统稳定运行",
         "icon": "Headphones",
-        "details": ["部署上线", "监控配置", "文档交付", "技术支持"],
+        "details": [
+          "部署上线",
+          "监控配置",
+          "文档交付",
+          "技术支持"
+        ],
         "duration": "持续"
       }
     ]
@@ -781,27 +853,161 @@
       }
     ]
   },
+  "techStack": {
+    "title": "技术栈",
+    "subtitle": "全栈技术能力，从底层优化到上层应用",
+    "categories": [
+      {
+        "name": "高性能计算",
+        "icon": "Cpu",
+        "skills": [
+          {
+            "name": "C/C++",
+            "level": 95
+          },
+          {
+            "name": "AVX512 SIMD",
+            "level": 90
+          },
+          {
+            "name": "CUDA",
+            "level": 75
+          },
+          {
+            "name": "OpenMP",
+            "level": 80
+          }
+        ]
+      },
+      {
+        "name": "后端开发",
+        "icon": "Server",
+        "skills": [
+          {
+            "name": "Python",
+            "level": 98
+          },
+          {
+            "name": "Go",
+            "level": 90
+          },
+          {
+            "name": "FastAPI",
+            "level": 95
+          },
+          {
+            "name": "Gin",
+            "level": 88
+          }
+        ]
+      },
+      {
+        "name": "数据存储",
+        "icon": "Database",
+        "skills": [
+          {
+            "name": "ClickHouse",
+            "level": 92
+          },
+          {
+            "name": "PostgreSQL",
+            "level": 90
+          },
+          {
+            "name": "Redis",
+            "level": 95
+          },
+          {
+            "name": "Kafka",
+            "level": 85
+          }
+        ]
+      },
+      {
+        "name": "前端开发",
+        "icon": "Layout",
+        "skills": [
+          {
+            "name": "Vue3",
+            "level": 92
+          },
+          {
+            "name": "React",
+            "level": 85
+          },
+          {
+            "name": "TypeScript",
+            "level": 90
+          },
+          {
+            "name": "TailwindCSS",
+            "level": 95
+          }
+        ]
+      },
+      {
+        "name": "机器学习",
+        "icon": "Brain",
+        "skills": [
+          {
+            "name": "PyTorch",
+            "level": 88
+          },
+          {
+            "name": "NumPy",
+            "level": 95
+          },
+          {
+            "name": "Pandas",
+            "level": 95
+          },
+          {
+            "name": "Scikit-learn",
+            "level": 85
+          }
+        ]
+      },
+      {
+        "name": "运维部署",
+        "icon": "Cloud",
+        "skills": [
+          {
+            "name": "Docker",
+            "level": 92
+          },
+          {
+            "name": "Kubernetes",
+            "level": 80
+          },
+          {
+            "name": "Nginx",
+            "level": 90
+          },
+          {
+            "name": "Linux",
+            "level": 95
+          }
+        ]
+      }
+    ]
+  },
   "contact": {
     "title": "准备好开始您的项目了吗？",
     "subtitle": "告诉我们您的需求，我们将在24小时内回复",
     "email": "Yae_SakuRain@outlook.com",
     "responseTime": "24小时内回复",
     "social": [
-      { "platform": "GitHub", "url": "#", "icon": "Github" },
-      { "platform": "Telegram", "url": "#", "icon": "Send" }
+      {
+        "platform": "GitHub",
+        "url": "#",
+        "icon": "Github"
+      },
+      {
+        "platform": "Telegram",
+        "url": "#",
+        "icon": "Send"
+      }
     ],
     "note": "请添加技术负责人QQ: 2059511644，并注明来意"
-  },
-  "footer": {
-    "copyright": "© 2026 SAKURAIN 技术工作室",
-    "slogan": "更专业，更可靠，更高效",
-    "links": [
-      { "label": "服务", "href": "#services" },
-      { "label": "技术栈", "href": "#tech-stack" },
-      { "label": "定价", "href": "#pricing" },
-      { "label": "流程", "href": "#process" },
-      { "label": "联系", "href": "#contact" },
-      { "label": "算法可视化", "href": "/algo-viz" }
-    ]
   }
 }
