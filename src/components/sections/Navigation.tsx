@@ -97,7 +97,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16 lg:h-20">
             <motion.button
-              onClick={() => window.location.href = '/'}
+              onClick={() => handleNavClick('/')}
               className="flex items-center gap-2 sm:gap-3 flex-shrink-0"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

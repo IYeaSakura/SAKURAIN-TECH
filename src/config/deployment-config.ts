@@ -3,7 +3,7 @@
 
 export const deploymentConfig = {
   mode: 'edgeone',
-  useWindowLocation: true,
+  useWindowLocation: false,
   useNavigate: false,
 } as const;
 
