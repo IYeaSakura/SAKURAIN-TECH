@@ -15,9 +15,12 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body>
-        {children}
-        {/* 布局级客户端特效挂载点（占位，见 ClientEffects 注释） */}
-        <ClientEffects />
+        {/*
+          全局布局层（迁移自旧版 main.tsx 的 GlobalLayout/PageLayout）：
+          Provider、Navigation、MusicPlayer、右键菜单、特效、首屏 Loading
+          均在 ClientEffects 内挂载，children 保持 SSR 传递。
+        */}
+        <ClientEffects>{children}</ClientEffects>
       </body>
     </html>
   );
