@@ -14,8 +14,8 @@
  * - Zpix（舟方日央型秀-A）：npm 包 @chinese-fonts/zpix 已下架，原 unpkg 地址 404，故移除，
  *   像素字体回退到 VT323 / Press Start 2P（见 --font-pixel）。
  */
-/* 注意：/fonts/google/fonts.css 通过 app/layout.tsx 中的 <link> 标签引入，
- * 不在此 @import —— Turbopack dev 不支持 CSS 中的根绝对路径（server-relative）@import。 */
+/* 注意：本地化的 Google Fonts 已迁移到 app/fonts/google-fonts.css，
+ * 由 app/layout.tsx 直接 import，避免手动 <link> 样式表导致的 Next.js 警告。 */
 
 @tailwind base;
 @tailwind components;

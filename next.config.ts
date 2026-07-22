@@ -4,6 +4,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Keep tracing root at the project root now that next-app/ has been promoted.
   outputFileTracingRoot: path.join(__dirname),
+  // EdgeOne Pages packages the SSR runtime from the standalone output,
+  // so we explicitly enable it to control what gets traced.
+  output: "standalone",
   // Suppress cross-origin dev warnings when accessing localhost via 127.0.0.1.
   allowedDevOrigins: ["localhost", "127.0.0.1"],
   compiler: {
@@ -16,6 +19,21 @@ const nextConfig: NextConfig = {
     // 按需重写具名导入为深路径导入，避免 barrel 全量打包；
     // 注意：cesium 不能加入（依赖侧效导入，会被破坏）
     optimizePackageImports: ["lucide-react", "framer-motion", "@react-three/drei"],
+  },
+  // Exclude build-time-only packages from the standalone server bundle to
+  // keep the EdgeOne deployment image small and avoid disk-space failures.
+  outputFileTracingExcludes: {
+    "*": [
+      "node_modules/typescript/**/*",
+      "node_modules/@types/**/*",
+      "node_modules/eslint/**/*",
+      "node_modules/eslint-config-next/**/*",
+      "node_modules/postcss/**/*",
+      "node_modules/autoprefixer/**/*",
+      "node_modules/tailwindcss/**/*",
+      "node_modules/tailwindcss-animate/**/*",
+      "node_modules/edgeone/**/*",
+    ],
   },
   // 预留：需要 transpile 的 ESM-only 包在此追加
   transpilePackages: [],
