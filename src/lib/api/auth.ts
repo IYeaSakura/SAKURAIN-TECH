@@ -8,6 +8,17 @@ const TIMESTAMP_TOLERANCE = 5 * 60 * 1000;
 const NONCE_TTL = 300;
 
 /**
+ * Security headers required for all edge API responses.
+ * Applied by response helpers to satisfy project security rules.
+ */
+export const SECURITY_HEADERS = {
+  'Content-Security-Policy': "default-src 'none'; frame-ancestors 'none'",
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+};
+
+/**
  * EdgeOne KV namespaces are injected as global variables.
  * Type them here so consumers do not need to redeclare them.
  */
@@ -61,9 +72,7 @@ export interface AuthVerifyResult {
 
 /**
  * Verify X-Timestamp / X-Nonce / X-Signature headers.
- * Reads the secret from process.env.API_SECRET_KEY,
- * with a legacy fallback to process.env.API_SECRET_KEY for the
- * migration window from the old Vite SPA.
+ * Reads the secret from process.env.API_SECRET_KEY.
  */
 export async function verifyAuthHeaders(headers: Headers): Promise<AuthVerifyResult> {
   const timestamp = headers.get('X-Timestamp');
@@ -109,7 +118,7 @@ export async function verifyAuthHeaders(headers: Headers): Promise<AuthVerifyRes
     }
   }
 
-  const secretKey = process.env.API_SECRET_KEY || process.env.API_SECRET_KEY;
+  const secretKey = process.env.API_SECRET_KEY;
   if (!secretKey) {
     return {
       success: false,
@@ -153,6 +162,7 @@ export function createAuthErrorResponse(result: AuthVerifyResult): Response {
       status: 401,
       headers: {
         'Content-Type': 'application/json',
+        ...SECURITY_HEADERS,
       },
     }
   );
@@ -165,6 +175,7 @@ export function createCorsHeaders(): Record<string, string> {
     'Access-Control-Allow-Headers':
       'Content-Type, X-Timestamp, X-Nonce, X-Signature, Authorization',
     'Access-Control-Max-Age': '86400',
+    ...SECURITY_HEADERS,
   };
 }
 
