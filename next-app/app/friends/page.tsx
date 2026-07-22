@@ -1,9 +1,15 @@
-export default function FriendsPage() {
-  return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <p className="font-mono text-sm text-gray-500">/friends</p>
-      <h1 className="mt-2 text-3xl font-bold">友链</h1>
-      <p className="mt-4 text-gray-600">迁移进行中</p>
-    </main>
-  );
+import type { Metadata } from "next";
+import FriendsPageLoader from "@/components/friends/FriendsPageLoader";
+
+/**
+ * 友情链接 —— Server Component 外壳。
+ * 实际内容为迁移自旧 Vite 项目 src/pages/Friends/index.tsx 的整页客户端组件。
+ */
+export const metadata: Metadata = {
+  title: "友情链接 —— SAKURAIN",
+  description: "友情链接：与我相关的朋友们、友链推荐与演示站点。",
+};
+
+export default function Page() {
+  return <FriendsPageLoader />;
 }

@@ -1,16 +1,15 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import NotFoundLoader from "@/components/notfound/NotFoundLoader";
+
+/**
+ * 全局 404 页面 —— 迁移自旧 Vite 项目 src/pages/NotFound。
+ * 全局导航与特效层由根布局 ClientEffects 提供，此处仅渲染 404 主体内容。
+ */
+export const metadata: Metadata = {
+  title: "404 页面未找到 —— SAKURAIN",
+  description: "页面不存在或已被移动。",
+};
 
 export default function NotFound() {
-  return (
-    <main className="mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center px-6 text-center">
-      <h1 className="text-6xl font-bold tracking-tight">404</h1>
-      <p className="mt-4 text-gray-600">页面不存在或尚未迁移完成。</p>
-      <Link
-        href="/"
-        className="mt-8 rounded-lg border border-gray-300 px-5 py-2 transition-colors hover:bg-gray-50"
-      >
-        返回首页
-      </Link>
-    </main>
-  );
+  return <NotFoundLoader />;
 }

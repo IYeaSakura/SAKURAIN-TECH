@@ -1,0 +1,89 @@
+{
+  "title": "技术实力统计",
+  "subtitle": "用数据说话，展现我们的技术实力",
+  "stats": [
+    {
+      "title": "项目完成率",
+      "value": 98,
+      "unit": "%",
+      "color": "blue",
+      "description": "按时交付率",
+      "trend": "+5%"
+    },
+    {
+      "title": "客户满意度",
+      "value": 96,
+      "unit": "%",
+      "color": "green",
+      "description": "客户好评率",
+      "trend": "+8%"
+    },
+    {
+      "title": "技术覆盖率",
+      "value": 85,
+      "unit": "%",
+      "color": "purple",
+      "description": "技术栈覆盖",
+      "trend": "+12%"
+    },
+    {
+      "title": "响应速度",
+      "value": 99,
+      "unit": "%",
+      "color": "cyan",
+      "description": "24小时响应",
+      "trend": "+3%"
+    }
+  ],
+  "charts": [
+    {
+      "title": "技术栈分布",
+      "type": "pie",
+      "data": [
+        { "label": "React", "value": 35, "color": "#0E639C" },
+        { "label": "Vue", "value": 25, "color": "#6A9955" },
+        { "label": "Node.js", "value": 20, "color": "#9B59B6" },
+        { "label": "Python", "value": 15, "color": "#4EC9B0" },
+        { "label": "其他", "value": 5, "color": "#CE9178" }
+      ]
+    },
+    {
+      "title": "项目类型分布",
+      "type": "bar",
+      "data": [
+        { "label": "Web应用", "value": 45, "color": "#0E639C" },
+        { "label": "移动应用", "value": 25, "color": "#6A9955" },
+        { "label": "后端服务", "value": 20, "color": "#9B59B6" },
+        { "label": "数据分析", "value": 10, "color": "#4EC9B0" }
+      ]
+    },
+    {
+      "title": "技术能力雷达图",
+      "type": "radar",
+      "data": [
+        { "label": "前端开发", "value": 95, "color": "#0E639C" },
+        { "label": "后端开发", "value": 88, "color": "#6A9955" },
+        { "label": "数据库", "value": 82, "color": "#9B59B6" },
+        { "label": "DevOps", "value": 85, "color": "#4EC9B0" },
+        { "label": "UI/UX设计", "value": 78, "color": "#CE9178" },
+        { "label": "性能优化", "value": 90, "color": "#D4A017" }
+      ]
+    },
+    {
+      "title": "技术深度分析",
+      "type": "heatmap",
+      "data": [
+        { "label": "React", "value": 95, "color": "#0E639C" },
+        { "label": "Vue", "value": 88, "color": "#6A9955" },
+        { "label": "Node.js", "value": 90, "color": "#9B59B6" },
+        { "label": "Python", "value": 85, "color": "#4EC9B0" },
+        { "label": "TypeScript", "value": 92, "color": "#CE9178" },
+        { "label": "Docker", "value": 80, "color": "#D4A017" },
+        { "label": "K8s", "value": 75, "color": "#0E639C" },
+        { "label": "Redis", "value": 88, "color": "#6A9955" },
+        { "label": "MongoDB", "value": 82, "color": "#9B59B6" },
+        { "label": "GraphQL", "value": 78, "color": "#4EC9B0" }
+      ]
+    }
+  ]
+}

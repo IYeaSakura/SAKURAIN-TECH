@@ -22,6 +22,9 @@ const eslintConfig = [
       "src/components/markdown/**/*.{ts,tsx}",
       "src/components/BlogTagCloud.tsx",
       "src/hooks/useBlogArchive.ts",
+      // Phase 1 迁移的 AlgoViz 算法可视化模块沿用旧版大量 any 类型，
+      // 待 Phase 2 类型化后再收紧。
+      "src/components/algoviz/**/*.{ts,tsx}",
     ],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",

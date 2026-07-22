@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
+import ToolsLoader from "@/components/tools/ToolsLoader";
+
+/**
+ * 工具箱首页 —— Server Component 外壳。
+ * 实际内容为迁移自旧 Vite 项目 src/pages/Tools 的整页客户端组件（Phase 1 务实起步）。
+ */
+export const metadata: Metadata = {
+  title: "开发者工具箱 —— SAKURAIN",
+  description:
+    "高效便捷的在线开发者工具集合：JSON 格式化、Base64 编解码、哈希生成、正则测试、时间戳转换等 20+ 实用工具。",
+};
+
 export default function ToolsPage() {
-  return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <p className="font-mono text-sm text-gray-500">/tools</p>
-      <h1 className="mt-2 text-3xl font-bold">工具箱</h1>
-      <p className="mt-4 text-gray-600">迁移进行中</p>
-    </main>
-  );
+  return <ToolsLoader />;
 }

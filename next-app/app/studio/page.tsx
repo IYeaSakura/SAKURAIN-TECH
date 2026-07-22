@@ -1,9 +1,16 @@
-export default function StudioPage() {
-  return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <p className="font-mono text-sm text-gray-500">/studio</p>
-      <h1 className="mt-2 text-3xl font-bold">工作室</h1>
-      <p className="mt-4 text-gray-600">迁移进行中</p>
-    </main>
-  );
+import type { Metadata } from 'next';
+import StudioPageLoader from '@/components/studio/StudioPageLoader';
+
+/**
+ * /studio —— Server Component 外壳。
+ * 实际内容为迁移自旧 Vite 项目 src/pages/Studio 的整页客户端组件（Phase 1 务实起步）。
+ */
+export const metadata: Metadata = {
+  title: '工作室 | SAKURAIN',
+  description:
+    'SAKURAIN TEAM 工作室：服务、技术栈、统计数据、工作流程与联系方式展示。',
+};
+
+export default function Page() {
+  return <StudioPageLoader />;
 }

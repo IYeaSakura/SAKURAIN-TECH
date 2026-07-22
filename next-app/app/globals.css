@@ -1800,3 +1800,54 @@ html.theme-transitioning {
     font-size: var(--text-2xl);
   }
 }
+
+/* ============================================
+   STYLE FUSION — refact.cc 极简工程风
+   语义化工具类（@layer components，只增不删）
+   与上方像素风 mc-* 体系并存，可自由混用。
+   依赖 tailwind.config.ts 中语义色的 <alpha-value>
+   支持（bg-border/40 等透明度修饰符）。
+   用法与迁移建议见 next-app/STYLE_FUSION.md。
+   ============================================ */
+
+@layer components {
+  /* 发丝线网格容器：gap-px + 背景色形成 1px 分隔线。
+     子项需自带底色（bg-background / bg-card 等）才会显线。 */
+  .hairline-grid {
+    @apply grid gap-px border border-border/40 bg-border/40;
+  }
+
+  /* 分区发丝底线（section 之间、header 之下） */
+  .hairline-b {
+    @apply border-b border-border/40;
+  }
+
+  /* 分区发丝顶线（footer 之上、吸底条之上） */
+  .hairline-t {
+    @apply border-t border-border/40;
+  }
+
+  /* 等宽大写小标签：工程图纸式标注，如 "PROJECTS / 01" */
+  .mono-label {
+    @apply font-mono text-xs uppercase tracking-widest text-muted-foreground;
+  }
+
+  /* 分区头部：左标题、右链接/操作，基线对齐 */
+  .section-head {
+    @apply flex flex-wrap items-end justify-between gap-4;
+  }
+
+  /* 编号徽章：01 / 02 / 03 … */
+  .num-badge {
+    @apply inline-flex items-center justify-center border border-primary/20 bg-primary/10 px-2 py-1 font-mono text-xs font-medium leading-none text-primary;
+  }
+
+  /* 极简卡片：细边框 + 半透明底 + 柔和 hover 过渡 */
+  .card-minimal {
+    @apply border border-border/40 bg-background/50 transition-colors duration-200;
+  }
+
+  .card-minimal:hover {
+    @apply border-border/60 bg-muted/10;
+  }
+}
