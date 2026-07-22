@@ -12,15 +12,26 @@ The npm build workflow is defined in `package.json` and runs the following steps
 npm run build
 ```
 
-1. `node scripts/check-friends-connectivity.js`
-   - Checks the connectivity of friend links listed in `public/data/friends.json` and updates their `status` field.
+1. `node scripts/copy-cesium.mjs`
+   - Copies Cesium runtime assets from `node_modules/cesium/Build/Cesium` to `public/cesium/`.
+   - `CesiumGlobe.tsx` sets `window.CESIUM_BASE_URL = '/cesium/'`, so the browser must be able to fetch Workers and Assets from this directory.
+
+2. `node scripts/sync-content-to-public.js`
+   - Copies all managed content from `content/` to `public/` so the static build can consume it.
+   - Managed paths include `content/data/*`, `content/docs/*`, `content/config/*`, and `content/resume/*`.
+   - Generates `public/data/docs.json` from `content/docs-index.json`; the index stores only metadata and file names, while the script fills in public paths.
+   - Validates that every file referenced by `content/docs-index.json` exists under `content/docs` and warns about missing entries.
+   - Preserves auto-generated friend link check info in `public/data/friends.json` when possible.
+
+3. `node scripts/check-friends-connectivity.js`
+   - Checks the connectivity of friend links listed in `public/data/friends.json` and updates their `status` and `checkInfo` fields.
    - Runs before `next build` so the friends page reflects the latest statuses.
 
-2. `next build`
+4. `next build`
    - Runs Next.js production build with `output: "export"`, exporting 46 static pages and the RSS/Atom/JSON feed files to `dist/`.
    - Because the site is fully static, there is no SSR Node function package and no `.next/standalone` output.
 
-3. `node scripts/submit-sitemap.js`
+5. `node scripts/submit-sitemap.js`
    - Submits the generated sitemap to search engines.
    - Reads `dist/sitemap.xml` first, falling back to `.next/server/app/sitemap.xml.body` for legacy setups.
 
@@ -32,12 +43,21 @@ npm run build:fast
 
 ## Auxiliary Scripts
 
-> Notes:
-> - `prune-standalone.js` was removed after the project switched to `output: "export"`. There is no longer a `.next/standalone` directory to prune.
-> - `git-commits-to-notes.js` was removed because it generated noise notes from every Git commit. Notes should now be created manually under `content/notes/posts/`.
-> - `generate-deployment-config.js` and `public/config/deployment.json` were removed. Deployment mode is now configured directly in `src/config/deployment-config.ts`.
+### 1. `sync-content-to-public.js`
 
-### 1. `check-friends-connectivity.js`
+**Purpose**: Copy managed content from `content/` to `public/` before the static build, and generate derived catalogs that are not stored in `content/`.
+
+**Usage**: Automatically runs as the first step of `npm run build`.
+
+**Input**: `content/data/*`, `content/docs/*`, `content/config/*`, `content/resume/*`, plus `content/docs-index.json`.
+
+**Output**: Corresponding paths under `public/`. `public/data/docs.json` is generated from `content/docs-index.json`. All generated files are listed in `.gitignore` and should not be edited directly.
+
+**Validation**: After generating `public/data/docs.json`, the script verifies that every file referenced by `content/docs-index.json` exists under `content/docs`. Missing files are reported with warnings so broken links can be fixed before the static build.
+
+---
+
+### 2. `check-friends-connectivity.js`
 
 **Purpose**: Check the connectivity status of friend links and update their online/offline/maintenance status.
 
@@ -49,7 +69,7 @@ npm run build:fast
 
 ---
 
-### 2. `submit-sitemap.js`
+### 3. `submit-sitemap.js`
 
 **Purpose**: Submit sitemap URLs to search engines. Currently supports Baidu; Google and Bing require manual submission.
 
@@ -77,7 +97,7 @@ The automatic build integration is defined in `package.json`:
 {
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/check-friends-connectivity.js && next build && node scripts/submit-sitemap.js",
+    "build": "node scripts/copy-cesium.mjs && node scripts/sync-content-to-public.js && node scripts/check-friends-connectivity.js && next build && node scripts/submit-sitemap.js",
     "build:fast": "next build",
     "submit-sitemap": "node scripts/submit-sitemap.js",
     "start": "next start",
@@ -91,3 +111,4 @@ The automatic build integration is defined in `package.json`:
 - Scripts use ES modules syntax (`import`/`export`). `"type": "module"` is set in `package.json`.
 - The `&&` chain in the `build` script ensures that each step succeeds before the next one starts. If a step fails, npm exits with a non-zero status code and prints the error.
 - `submit-sitemap.js` is intentionally placed after `next build` because it depends on the generated sitemap output.
+- `public/data/friends.json` is generated from `content/data/friends.json`. Friend link statuses are overwritten by `check-friends-connectivity.js` on every full build, so always edit the source file under `content/`.
