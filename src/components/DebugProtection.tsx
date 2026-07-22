@@ -155,7 +155,7 @@ export function DebugProtection() {
         const blockExecution = () => {
           try {
             (function() {}).constructor('debugger')();
-          } catch (e) {
+          } catch (_e) {
             setTimeout(blockExecution, 100);
           }
         };
@@ -167,8 +167,8 @@ export function DebugProtection() {
         const start = Date.now();
         try {
           (function() {}).constructor('debugger')();
-        } catch (e) {}
-        
+        } catch (_e) {}
+
         const executionTime = Date.now() - start;
         
         if (executionTime > 200) {

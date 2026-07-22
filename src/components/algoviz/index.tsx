@@ -527,7 +527,6 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
   // 初始化数据 - 只执行一次
   useEffect(() => {
     generateData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 切换算法时重新生成数据
@@ -547,7 +546,6 @@ const AlgorithmPlayground: React.FC<AlgorithmPlaygroundProps> = ({ currentAlgo, 
     if (useMazeMode && pathfindingAlgos.includes(currentAlgo.id)) {
       generateData();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mazeRows, mazeCols]);
 
   // 校验并导入数组

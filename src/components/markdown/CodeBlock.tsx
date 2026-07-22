@@ -36,7 +36,7 @@ export const CodeBlock = ({ language, value }: CodeBlockProps) => {
       await navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) { }
+    } catch (_err) { }
   };
 
   const lineCount = value.split('\n').filter(line => line.trim() !== '').length;

@@ -462,17 +462,14 @@ function generateCave(
         
         // 计算邻居中的障碍物数量（包括对角线）
         let obstacleCount = 0;
-        let totalNeighbors = 0;
-        
         for (let dy = -1; dy <= 1; dy++) {
           for (let dx = -1; dx <= 1; dx++) {
             if (dx === 0 && dy === 0) continue;
-            
+
             const nx = x + dx;
             const ny = y + dy;
-            
+
             if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
-              totalNeighbors++;
               if (cells[ny][nx].isObstacle) {
                 obstacleCount++;
               }
