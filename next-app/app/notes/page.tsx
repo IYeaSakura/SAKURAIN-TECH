@@ -1,9 +1,15 @@
-export default function NotesPage() {
-  return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <p className="font-mono text-sm text-gray-500">/notes</p>
-      <h1 className="mt-2 text-3xl font-bold">随记</h1>
-      <p className="mt-4 text-gray-600">迁移进行中</p>
-    </main>
-  );
+import type { Metadata } from "next";
+import NotesPageLoader from "@/components/notes/NotesPageLoader";
+
+/**
+ * 随记 —— Server Component 外壳。
+ * 实际内容为迁移自旧 Vite 项目 src/pages/Notes/index.tsx 的整页客户端组件。
+ */
+export const metadata: Metadata = {
+  title: "随记 —— SAKURAIN",
+  description: "记录日常灵感、心情与碎碎念。",
+};
+
+export default function Page() {
+  return <NotesPageLoader />;
 }

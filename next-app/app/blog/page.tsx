@@ -1,9 +1,15 @@
-export default function BlogPage() {
-  return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <p className="font-mono text-sm text-gray-500">/blog</p>
-      <h1 className="mt-2 text-3xl font-bold">博客</h1>
-      <p className="mt-4 text-gray-600">迁移进行中</p>
-    </main>
-  );
+import type { Metadata } from "next";
+import BlogPageLoader from "@/components/blog/BlogPageLoader";
+
+/**
+ * 博客列表 —— Server Component 外壳。
+ * 实际内容为迁移自旧 Vite 项目 src/pages/Blog/index.tsx 的整页客户端组件。
+ */
+export const metadata: Metadata = {
+  title: "博客 —— SAKURAIN",
+  description: "技术博客：探索前端、可视化与创作。有用、有料、有趣。",
+};
+
+export default function Page() {
+  return <BlogPageLoader />;
 }
