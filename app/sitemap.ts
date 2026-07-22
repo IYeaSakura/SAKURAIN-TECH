@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL, formatDate, getBlogPosts, getDocPagePaths } from "@/lib/feeds";
 
+export const dynamic = "force-static";
+
 /**
  * 全站 sitemap（构建期静态生成）
  * 对齐旧版 scripts/generate-sitemap.js 的 URL 结构，保持外链兼容：

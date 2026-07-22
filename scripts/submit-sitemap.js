@@ -21,11 +21,12 @@ const BATCH_SIZE = 2000;
 
 /**
  * Locate the generated sitemap.xml.
- * Next.js metadata routes emit the rendered body to .next/server/app/<route>.body.
- * Fallback to public/sitemap.xml for legacy/manual setups.
+ * Static export writes it to dist/sitemap.xml; legacy builds may keep it in
+ * .next/server/app/sitemap.xml.body or public/sitemap.xml.
  */
 function resolveSitemapPath() {
   const candidates = [
+    path.join(__dirname, '../dist/sitemap.xml'),
     path.join(__dirname, '../.next/server/app/sitemap.xml.body'),
     path.join(__dirname, '../public/sitemap.xml'),
   ];
