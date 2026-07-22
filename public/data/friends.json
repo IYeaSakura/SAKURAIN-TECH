@@ -61,18 +61,17 @@
       "featured": false,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:48.532Z",
-        "statusCode": 200,
+        "lastChecked": "2026-07-22T18:06:46.670Z",
+        "statusCode": 206,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 396,
-        "isAntiBot": false,
+        "usedCurl": false,
+        "responseTime": 196,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -85,18 +84,17 @@
       "featured": false,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:48.547Z",
+        "lastChecked": "2026-07-22T18:06:50.290Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 361,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 3811,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -109,18 +107,17 @@
       "featured": false,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:48.530Z",
+        "lastChecked": "2026-07-22T18:06:49.145Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 344,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 2664,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -131,21 +128,21 @@
       "description": "世界本就浑浊，罪与爱同歌",
       "category": "blogs",
       "featured": true,
-      "status": "online",
+      "status": "offline",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:49.678Z",
-        "statusCode": 200,
-        "error": null,
+        "lastChecked": "2026-07-22T18:06:49.490Z",
+        "statusCode": null,
+        "error": "DNS failed: DNS timeout",
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 1491,
-        "isAntiBot": false,
-        "hasProtection": "a124d3631c3d48f6-HKG",
+        "usedCurl": false,
+        "responseTime": 3010,
+        "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
-      }
+        "hasContent": false
+      },
+      "offlineSince": "2026-07-23"
     },
     {
       "id": "89efd92d",
@@ -157,18 +154,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:48.883Z",
-        "statusCode": 200,
+        "lastChecked": "2026-07-22T18:06:46.920Z",
+        "statusCode": 206,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 694,
-        "isAntiBot": false,
+        "usedCurl": false,
+        "responseTime": 440,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -182,18 +178,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:49.060Z",
-        "statusCode": 200,
+        "lastChecked": "2026-07-22T18:06:46.834Z",
+        "statusCode": 206,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 528,
-        "isAntiBot": false,
+        "usedCurl": false,
+        "responseTime": 354,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -207,18 +202,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:49.094Z",
+        "lastChecked": "2026-07-22T18:06:51.607Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 562,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 5127,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -231,18 +225,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:50.159Z",
-        "statusCode": 200,
+        "lastChecked": "2026-07-22T18:06:46.795Z",
+        "statusCode": 206,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 1612,
-        "isAntiBot": false,
+        "usedCurl": false,
+        "responseTime": 315,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -256,18 +249,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:50.846Z",
+        "lastChecked": "2026-07-22T18:06:49.009Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 1963,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 2529,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -280,18 +272,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:49.776Z",
-        "statusCode": 200,
+        "lastChecked": "2026-07-22T18:06:53.222Z",
+        "statusCode": 206,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 715,
-        "isAntiBot": false,
+        "usedCurl": false,
+        "responseTime": 6742,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -305,18 +296,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:50.435Z",
+        "lastChecked": "2026-07-22T18:06:47.541Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
-        "usedHttpFallback": false,
-        "responseTime": 1341,
-        "isAntiBot": false,
+        "usedHttpFallback": true,
+        "usedCurl": false,
+        "responseTime": 869,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -330,18 +320,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:50.835Z",
+        "lastChecked": "2026-07-22T18:06:47.163Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 1157,
-        "isAntiBot": false,
+        "usedCurl": false,
+        "responseTime": 368,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -354,18 +343,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:50.405Z",
-        "statusCode": 200,
+        "lastChecked": "2026-07-22T18:06:47.145Z",
+        "statusCode": 206,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 629,
-        "isAntiBot": false,
-        "hasProtection": "a0d06c6db851ddca-HKG",
+        "usedCurl": false,
+        "responseTime": 311,
+        "hasProtection": true,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -378,18 +366,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:51.181Z",
+        "lastChecked": "2026-07-22T18:06:49.692Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 1021,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 2772,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -403,18 +390,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:51.151Z",
+        "lastChecked": "2026-07-22T18:06:50.953Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 745,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 3808,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -428,18 +414,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:52.929Z",
+        "lastChecked": "2026-07-22T18:06:57.762Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 2493,
-        "isAntiBot": false,
-        "hasProtection": "a124d3701dff3dc4-LAX",
+        "usedCurl": true,
+        "responseTime": 10599,
+        "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -453,18 +438,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:51.795Z",
-        "statusCode": 403,
+        "lastChecked": "2026-07-22T18:06:51.790Z",
+        "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 960,
-        "isAntiBot": true,
+        "usedCurl": true,
+        "responseTime": 4249,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -477,18 +461,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:52.973Z",
-        "statusCode": 200,
+        "lastChecked": "2026-07-22T18:06:49.805Z",
+        "statusCode": 206,
         "error": null,
         "attempts": 1,
-        "usedHttpFallback": false,
-        "responseTime": 2127,
-        "isAntiBot": false,
+        "usedHttpFallback": true,
+        "usedCurl": false,
+        "responseTime": 796,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -501,18 +484,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:53.064Z",
-        "statusCode": 200,
+        "lastChecked": "2026-07-22T18:06:52.185Z",
+        "statusCode": 206,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 1913,
-        "isAntiBot": false,
-        "hasProtection": "a124d3745cea8b9e-SJC",
+        "usedCurl": false,
+        "responseTime": 3040,
+        "hasProtection": true,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -526,18 +508,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:51.824Z",
+        "lastChecked": "2026-07-22T18:06:54.408Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 643,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 4917,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -551,18 +532,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:52.137Z",
+        "lastChecked": "2026-07-22T18:06:55.296Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 341,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 5604,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -576,18 +556,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:52.930Z",
+        "lastChecked": "2026-07-22T18:06:50.478Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 1105,
-        "isAntiBot": false,
+        "usedCurl": false,
+        "responseTime": 673,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -599,22 +578,20 @@
       "description": "热爱可抵岁月漫长",
       "category": "blogs",
       "featured": true,
-      "status": "offline",
+      "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:53.884Z",
-        "statusCode": null,
-        "error": "Invalid URL",
-        "attempts": 3,
+        "lastChecked": "2026-07-22T18:06:56.237Z",
+        "statusCode": 200,
+        "error": null,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 1747,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 5947,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
-      },
-      "offlineSince": "2026-04-07"
+        "hasContent": true
+      }
     },
     {
       "id": "0cca9c5f",
@@ -626,18 +603,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:53.579Z",
+        "lastChecked": "2026-07-22T18:06:55.665Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 649,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 5187,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -651,18 +627,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:55.202Z",
+        "lastChecked": "2026-07-22T18:07:18.775Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 2271,
-        "isAntiBot": false,
-        "hasProtection": "a124d3852895fb4c-SJC",
+        "usedCurl": true,
+        "responseTime": 27822,
+        "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -676,18 +651,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:54.385Z",
+        "lastChecked": "2026-07-22T18:06:55.921Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 1412,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 4314,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -701,18 +675,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:34:55.041Z",
+        "lastChecked": "2026-07-22T18:07:02.062Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 2,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 61977,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 10272,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -726,18 +699,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:58.202Z",
+        "lastChecked": "2026-07-22T18:06:59.171Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 4623,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 6986,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -750,18 +722,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:54.360Z",
+        "lastChecked": "2026-07-22T18:06:58.723Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 469,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 5501,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -774,18 +745,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:55.200Z",
-        "statusCode": 200,
+        "lastChecked": "2026-07-22T18:06:56.238Z",
+        "statusCode": 206,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 839,
-        "isAntiBot": false,
-        "hasProtection": "a124d385dd56b98d-SEA",
+        "usedCurl": false,
+        "responseTime": 1830,
+        "hasProtection": true,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -797,20 +767,19 @@
       "description": "记录 ztr 的学习与生活。",
       "category": "blogs",
       "featured": true,
-      "status": "maintenance",
+      "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:55.427Z",
-        "statusCode": 502,
+        "lastChecked": "2026-07-22T18:07:02.928Z",
+        "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 1042,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 7632,
         "hasProtection": false,
-        "isMaintenance": true,
-        "maintenanceReason": "网站维护",
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "isMaintenance": false,
+        "maintenanceReason": null,
+        "hasContent": true
       }
     },
     {
@@ -824,18 +793,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:59.151Z",
+        "lastChecked": "2026-07-22T18:07:04.152Z",
         "statusCode": 200,
         "error": null,
         "attempts": 1,
-        "usedHttpFallback": false,
-        "responseTime": 3951,
-        "isAntiBot": true,
+        "usedHttpFallback": true,
+        "usedCurl": false,
+        "responseTime": 8487,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": true,
-        "jsChallengeIndicator": "javascript"
+        "hasContent": true
       }
     },
     {
@@ -847,22 +815,20 @@
       "description": "生活会越来越好的",
       "category": "blogs",
       "featured": true,
-      "status": "offline",
+      "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:58.667Z",
-        "statusCode": null,
-        "error": "getaddrinfo ENOTFOUND blog.fohok.xin",
-        "attempts": 3,
+        "lastChecked": "2026-07-22T18:07:03.701Z",
+        "statusCode": 200,
+        "error": null,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 3465,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 7780,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
-      },
-      "offlineSince": "2026-06-27"
+        "hasContent": true
+      }
     },
     {
       "id": "ff2bea7d",
@@ -875,18 +841,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:55.837Z",
+        "lastChecked": "2026-07-22T18:07:01.226Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 409,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 4989,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -899,18 +864,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:57.462Z",
-        "statusCode": 200,
+        "lastChecked": "2026-07-22T18:06:58.188Z",
+        "statusCode": 206,
         "error": null,
         "attempts": 1,
         "usedHttpFallback": false,
-        "responseTime": 1625,
-        "isAntiBot": false,
+        "usedCurl": false,
+        "responseTime": 1950,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -924,18 +888,17 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:58.666Z",
+        "lastChecked": "2026-07-22T18:07:03.259Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 1204,
-        "isAntiBot": false,
+        "usedCurl": true,
+        "responseTime": 5497,
         "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     },
     {
@@ -949,20 +912,19 @@
       "featured": true,
       "status": "online",
       "checkInfo": {
-        "lastChecked": "2026-06-27T13:33:59.784Z",
+        "lastChecked": "2026-07-22T18:07:10.826Z",
         "statusCode": 200,
         "error": null,
-        "attempts": 1,
+        "attempts": 4,
         "usedHttpFallback": false,
-        "responseTime": 1582,
-        "isAntiBot": false,
-        "hasProtection": "a124d39e1ffec38b-SJC",
+        "usedCurl": true,
+        "responseTime": 12638,
+        "hasProtection": false,
         "isMaintenance": false,
         "maintenanceReason": null,
-        "isJsChallenge": false,
-        "jsChallengeIndicator": null
+        "hasContent": true
       }
     }
   ],
-  "lastUpdated": "2026-06-27T13:34:55.041Z"
+  "lastUpdated": "2026-07-22T18:07:18.775Z"
 }

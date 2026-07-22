@@ -3,7 +3,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import https from 'https';
 import http from 'http';
+import dns from 'dns';
 import crypto from 'crypto';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,7 +14,7 @@ const FRIENDS_FILE = path.join(__dirname, '../public/data/friends.json');
 
 const TIMEOUT = 15000;
 const MAX_RETRIES = 2;
-const CONCURRENCY_LIMIT = 5;
+const CONCURRENCY_LIMIT = 10;
 
 const ALLOW_UNSAFE_HTTPS = process.env.ALLOW_UNSAFE_HTTPS === 'true';
 
@@ -38,13 +40,13 @@ function getRandomUserAgent() {
   return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 }
 
-function getRandomDelay(min = 200, max = 800) {
+function getRandomDelay(min = 50, max = 200) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function getBackoffDelay(attempt, baseDelay = 500) {
-  const jitter = Math.random() * 300;
-  return Math.min(baseDelay * Math.pow(2, attempt) + jitter, 5000);
+function getBackoffDelay(attempt, baseDelay = 300) {
+  const jitter = Math.random() * 200;
+  return Math.min(baseDelay * Math.pow(2, attempt) + jitter, 2000);
 }
 
 function getBuildTimestamp() {
@@ -129,12 +131,14 @@ function buildHeaders() {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,en-US;q=0.7',
     'Accept-Encoding': 'gzip, deflate, br',
+    'Range': 'bytes=0-8191',
+    'Referer': 'https://sakurain.net/friends',
     'DNT': '1',
     'Connection': 'keep-alive',
     'Upgrade-Insecure-Requests': '1',
     'Sec-Fetch-Dest': 'document',
     'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-Site': 'same-origin',
     'Sec-Fetch-User': '?1',
     'Cache-Control': 'max-age=0',
   };
@@ -181,135 +185,42 @@ function getHttpAlternative(url) {
   return null;
 }
 
-function checkUrl(url, attempt = 0, isFallback = false) {
+function dnsLookup(hostname, timeout = 3000) {
   return new Promise((resolve) => {
-    const isHttps = url.startsWith('https');
-    const protocol = isHttps ? https : http;
-    const headers = buildHeaders();
-    const proxy = getProxyForUrl(url);
+    const timer = setTimeout(() => {
+      resolve({ success: false, error: 'DNS timeout' });
+    }, timeout);
 
-    const options = {
-      method: 'HEAD',
-      timeout: TIMEOUT,
-      headers,
-      followRedirect: true,
-      maxRedirects: 5,
-    };
-
-    if (isHttps) {
-      options.agent = createHttpsAgent();
-    }
-
-    if (proxy) {
-      options.host = proxy.host;
-      options.port = proxy.port;
-      options.path = url;
-      options.headers['Host'] = new URL(url).host;
-      if (proxy.auth) {
-        options.headers['Proxy-Authorization'] = `Basic ${Buffer.from(proxy.auth).toString('base64')}`;
+    dns.lookup(hostname, { all: false }, (error, address) => {
+      clearTimeout(timer);
+      if (error) {
+        resolve({ success: false, error: error.message });
+      } else {
+        resolve({ success: true, address });
       }
-    }
-
-    const req = protocol.request(proxy ? options : new URL(url), options, (res) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        req.destroy();
-        const redirectUrl = new URL(res.headers.location, url).toString();
-        if (attempt < 3) {
-          checkUrl(redirectUrl, attempt + 1, isFallback).then(resolve);
-          return;
-        }
-      }
-
-      req.destroy();
-
-      // Check for anti-bot indicators (403, 429, 404 can all be anti-bot responses)
-      const isAntiBot =
-        res.statusCode === 403 ||
-        res.statusCode === 429 ||
-        res.statusCode === 404 ||
-        (res.headers['x-frame-options'] === 'DENY' && res.statusCode === 403);
-
-      // Check for CDN protection
-      const hasProtection =
-        res.headers['cf-ray'] ||
-        res.headers['x-sucuri-id'] ||
-        res.headers['x-sucuri-cache'] ||
-        res.headers.server?.toLowerCase().includes('cloudflare');
-
-      // 4xx means site is reachable (could be anti-bot, page not found, etc.)
-      const isClientError = res.statusCode >= 400 && res.statusCode < 500;
-
-      // Consider online if: 2xx, 3xx, or 4xx
-      const isSuccess = res.statusCode >= 200 && res.statusCode < 400;
-      const isReachable = isSuccess || isClientError;
-      const needRetry = res.statusCode === 429 || res.statusCode === 503 || res.statusCode === 502;
-
-      resolve({
-        success: isReachable,
-        statusCode: res.statusCode,
-        statusMessage: res.statusMessage,
-        needRetry: needRetry,
-        headers: res.headers,
-        usedHttpFallback: isFallback,
-        isAntiBot,
-        hasProtection,
-      });
     });
-
-    req.on('error', (error) => {
-      req.destroy();
-
-      if (isHttps && !isFallback) {
-        const httpUrl = getHttpAlternative(url);
-        if (httpUrl) {
-          setTimeout(() => {
-            checkUrl(httpUrl, 0, true).then(resolve);
-          }, 300);
-          return;
-        }
-      }
-
-      resolve({
-        success: false,
-        error: error.message,
-        needRetry: !error.message.includes('certificate'),
-      });
-    });
-
-    req.on('timeout', () => {
-      req.destroy();
-      resolve({
-        success: false,
-        error: 'Timeout',
-        needRetry: true,
-      });
-    });
-
-    setTimeout(() => req.end(), Math.random() * 100);
   });
 }
 
-function analyzePageContent(body, statusCode, headers) {
+function hasHtmlStructure(body) {
+  if (!body || body.length < 10) return false;
+  const lowerBody = body.toLowerCase();
+  return lowerBody.includes('<html') && lowerBody.includes('<title');
+}
+
+function analyzePageContent(body) {
   const result = {
     isMaintenance: false,
-    isJsChallenge: false,
-    hasValidContent: false,
+    hasHtmlStructure: false,
     reason: null,
   };
 
-  if (!body || body.length < 50) {
+  if (!body || body.length < 10) {
     return result;
   }
 
   const lowerBody = body.toLowerCase();
-  const contentType = headers['content-type'] || '';
-
-  if (!contentType.includes('text/html') && !contentType.includes('application/xhtml')) {
-    result.hasValidContent = body.length > 100;
-    return result;
-  }
-
-  result.hasValidContent = true;
+  result.hasHtmlStructure = lowerBody.includes('<html') && lowerBody.includes('<title');
 
   const maintenanceIndicators = [
     'maintenance',
@@ -336,14 +247,6 @@ function analyzePageContent(body, statusCode, headers) {
     'maintenance mode',
   ];
 
-  for (const indicator of maintenanceIndicators) {
-    if (lowerBody.includes(indicator)) {
-      result.isMaintenance = true;
-      result.reason = indicator;
-      return result;
-    }
-  }
-
   const titleMatch = body.match(/<title[^>]*>([^<]+)<\/title>/i);
   if (titleMatch) {
     const title = titleMatch[1].toLowerCase();
@@ -368,77 +271,15 @@ function analyzePageContent(body, statusCode, headers) {
     }
   }
 
-  const jsChallengeIndicators = [
-    'cloudflare',
-    'cf-browser-verification',
-    'challenge-platform',
-    'jschl_vc',
-    'jschl_answer',
-    'checking your browser',
-    'please wait...',
-    'please wait…',
-    'just a moment',
-    'ddos protection',
-    'ray id:',
-    'enable javascript',
-    'checking if the site connection is secure',
-    'browser check',
-    'security check',
-    'captcha',
-    'recaptcha',
-    'hcaptcha',
-    'turnstile',
-    'javascript',
-    'script',
-    'challenge',
-    'verify',
-    'verification',
-  ];
-
-  for (const indicator of jsChallengeIndicators) {
-    if (lowerBody.includes(indicator)) {
-      result.isJsChallenge = true;
-      result.jsChallengeIndicator = indicator;
-      break;
-    }
-  }
-
-  if (statusCode !== 200 && body.length > 500) {
-    const hasHtmlStructure = lowerBody.includes('<html') || lowerBody.includes('<!doctype');
-    const hasBody = lowerBody.includes('<body') || lowerBody.includes('<div') || lowerBody.includes('<main');
-    const hasContent = body.length > 1000;
-
-    if (hasHtmlStructure && hasBody && hasContent) {
-      result.hasValidContent = true;
-    }
-
-    if ((statusCode === 503 || statusCode === 502 || statusCode === 504) && hasContent && !result.isMaintenance) {
-      result.hasValidContent = true;
-      result.isMaintenance = true;
-      result.reason = `HTTP ${statusCode} with valid content`;
-    }
-
-    if (hasContent && !result.isMaintenance && !result.isJsChallenge) {
-      const scriptCount = (lowerBody.match(/<script/g) || []).length;
-      const hasChallengeKeywords = lowerBody.includes('challenge') || 
-                                    lowerBody.includes('verify') || 
-                                    lowerBody.includes('captcha') ||
-                                    lowerBody.includes('cloudflare');
-      if (scriptCount > 3 || hasChallengeKeywords) {
-        result.isJsChallenge = true;
-        result.jsChallengeIndicator = 'detected from content structure';
-      }
-    }
-  }
-
   return result;
 }
 
-function checkUrlWithGet(url, timeout = TIMEOUT) {
+function checkUrlWithGet(url, timeout = TIMEOUT, isFallback = false, redirectDepth = 0) {
   return new Promise((resolve) => {
     const isHttps = url.startsWith('https');
     const protocol = isHttps ? https : http;
     const headers = buildHeaders();
+    const proxy = getProxyForUrl(url);
 
     const options = {
       method: 'GET',
@@ -450,24 +291,35 @@ function checkUrlWithGet(url, timeout = TIMEOUT) {
       options.agent = createHttpsAgent();
     }
 
-    const req = protocol.request(new URL(url), options, (res) => {
-      // Check for anti-bot indicators (403, 429, 404 can all be anti-bot responses)
-      const isAntiBot =
-        res.statusCode === 403 ||
-        res.statusCode === 429 ||
-        res.statusCode === 404 ||
-        (res.headers['x-frame-options'] === 'DENY' && res.statusCode === 403);
+    if (proxy) {
+      options.host = proxy.host;
+      options.port = proxy.port;
+      options.path = url;
+      options.headers['Host'] = new URL(url).host;
+      if (proxy.auth) {
+        options.headers['Proxy-Authorization'] = `Basic ${Buffer.from(proxy.auth).toString('base64')}`;
+      }
+    }
 
-      // Check for Cloudflare or similar protection
+    const req = protocol.request(proxy ? options : new URL(url), options, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        req.destroy();
+        const redirectUrl = new URL(res.headers.location, url).toString();
+        if (redirectUrl !== url && redirectDepth < 5) {
+          checkUrlWithGet(redirectUrl, timeout, isFallback, redirectDepth + 1).then(resolve);
+          return;
+        }
+      }
+
       const hasProtection =
-        res.headers['cf-ray'] ||
-        res.headers['x-sucuri-id'] ||
-        res.headers['x-sucuri-cache'] ||
+        !!res.headers['cf-ray'] ||
+        !!res.headers['x-sucuri-id'] ||
+        !!res.headers['x-sucuri-cache'] ||
         res.headers.server?.toLowerCase().includes('cloudflare');
 
       let body = '';
       let bodyLength = 0;
-      const maxBodyLength = 50000;
+      const maxBodyLength = 8192;
 
       res.on('data', (chunk) => {
         bodyLength += chunk.length;
@@ -477,75 +329,43 @@ function checkUrlWithGet(url, timeout = TIMEOUT) {
       });
 
       res.on('end', () => {
-        const contentInfo = analyzePageContent(body, res.statusCode, res.headers);
+        req.destroy();
+        const contentInfo = analyzePageContent(body);
 
         if (contentInfo.isMaintenance) {
           resolve({
             success: true,
             statusCode: res.statusCode,
             statusMessage: res.statusMessage,
-            isAntiBot,
-            hasProtection: !!hasProtection,
+            hasProtection,
             isMaintenance: true,
             maintenanceReason: contentInfo.reason,
             hasContent: bodyLength > 0,
+            usedHttpFallback: isFallback,
           });
           return;
         }
 
-        if (contentInfo.isJsChallenge) {
+        // A site is considered alive if it returns a valid HTML structure,
+        // regardless of the HTTP status code (403/404/503 are all acceptable).
+        if (contentInfo.hasHtmlStructure) {
           resolve({
             success: true,
             statusCode: res.statusCode,
             statusMessage: res.statusMessage,
-            isAntiBot: true,
-            hasProtection: !!hasProtection,
-            isJsChallenge: true,
-            jsChallengeIndicator: contentInfo.jsChallengeIndicator,
+            hasProtection,
             hasContent: bodyLength > 0,
-          });
-          return;
-        }
-
-        if (isAntiBot || hasProtection) {
-          resolve({
-            success: true,
-            statusCode: res.statusCode,
-            statusMessage: res.statusMessage,
-            isAntiBot: true,
-            hasProtection: !!hasProtection,
-            hasContent: bodyLength > 0,
-            isJsChallenge: contentInfo.isJsChallenge || false,
-            jsChallengeIndicator: contentInfo.jsChallengeIndicator || null,
-          });
-          return;
-        }
-
-        if (res.statusCode >= 500 && !contentInfo.hasValidContent) {
-          resolve({
-            success: false,
-            statusCode: res.statusCode,
-            statusMessage: res.statusMessage,
-          });
-          return;
-        }
-
-        if (res.statusCode >= 500 && contentInfo.hasValidContent) {
-          resolve({
-            success: true,
-            statusCode: res.statusCode,
-            statusMessage: res.statusMessage,
-            hasContent: bodyLength > 0,
-            isMaintenance: contentInfo.isMaintenance,
+            usedHttpFallback: isFallback,
           });
           return;
         }
 
         resolve({
-          success: res.statusCode >= 200 && res.statusCode < 400,
+          success: false,
           statusCode: res.statusCode,
           statusMessage: res.statusMessage,
-          hasContent: bodyLength > 0,
+          error: 'Empty response',
+          usedHttpFallback: isFallback,
         });
       });
     });
@@ -555,6 +375,7 @@ function checkUrlWithGet(url, timeout = TIMEOUT) {
       resolve({
         success: false,
         error: error.message,
+        usedHttpFallback: isFallback,
       });
     });
 
@@ -563,6 +384,7 @@ function checkUrlWithGet(url, timeout = TIMEOUT) {
       resolve({
         success: false,
         error: 'Timeout',
+        usedHttpFallback: isFallback,
       });
     });
 
@@ -570,10 +392,64 @@ function checkUrlWithGet(url, timeout = TIMEOUT) {
   });
 }
 
+function curlRequest(url) {
+  return new Promise((resolve) => {
+    try {
+      const output = execSync(
+        `curl -sL --max-time ${Math.floor(TIMEOUT / 1000)} ` +
+        `-H "User-Agent: ${getRandomUserAgent()}" ` +
+        `-H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" ` +
+        `-H "Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-US;q=0.7" ` +
+        `-H "Range: bytes=0-8191" ` +
+        `-H "Referer: https://sakurain.net/friends" ` +
+        `--compressed "${url}"`,
+        {
+          encoding: 'utf-8',
+          timeout: TIMEOUT + 2000,
+          stdio: ['pipe', 'pipe', 'pipe'],
+        }
+      );
+
+      const contentInfo = analyzePageContent(output);
+      resolve({
+        success: contentInfo.hasHtmlStructure,
+        statusCode: contentInfo.hasHtmlStructure ? 200 : null,
+        usedCurl: true,
+        isMaintenance: contentInfo.isMaintenance,
+        maintenanceReason: contentInfo.reason,
+        hasContent: output.length > 0,
+      });
+    } catch (error) {
+      resolve({
+        success: false,
+        error: `curl failed: ${error.message}`,
+        usedCurl: true,
+      });
+    }
+  });
+}
+
 async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
-  let usedHttpFallback = false;
   const startTime = Date.now();
 
+  // Step 1: DNS precheck
+  try {
+    const parsed = new URL(url);
+    const dnsResult = await dnsLookup(parsed.hostname);
+    if (!dnsResult.success) {
+      return {
+        success: false,
+        status: 'offline',
+        error: `DNS failed: ${dnsResult.error}`,
+        attempts: 1,
+        responseTime: Date.now() - startTime,
+      };
+    }
+  } catch {
+    // Invalid URL will be caught by HTTP request error.
+  }
+
+  // Step 2: Node.js GET with Range header
   for (let i = 0; i <= retries; i++) {
     try {
       if (i > 0) {
@@ -581,90 +457,74 @@ async function checkUrlWithRetry(url, retries = MAX_RETRIES) {
         await new Promise(resolve => setTimeout(resolve, delay));
       }
 
-      let result = await checkUrl(url);
+      await new Promise(resolve => setTimeout(resolve, getRandomDelay()));
 
-      if (!result.success || result.statusCode >= 400) {
-        await new Promise(resolve => setTimeout(resolve, getRandomDelay(100, 300)));
-        result = await checkUrlWithGet(result.usedHttpFallback ? getHttpAlternative(url) || url : url);
-        if (result.usedHttpFallback) {
-          usedHttpFallback = true;
+      let result = await checkUrlWithGet(url);
+
+      if (!result.success && url.startsWith('https://')) {
+        const httpUrl = getHttpAlternative(url);
+        if (httpUrl) {
+          await new Promise(resolve => setTimeout(resolve, getRandomDelay()));
+          const httpResult = await checkUrlWithGet(httpUrl, TIMEOUT, true);
+          if (httpResult.success) {
+            result = httpResult;
+          }
         }
       }
 
-      const responseTime = Date.now() - startTime;
-
-      if (result.isMaintenance) {
-        return {
-          success: true,
-          status: 'maintenance',
-          statusCode: result.statusCode,
-          attempts: i + 1,
-          usedHttpFallback,
-          responseTime,
-          isAntiBot: result.isAntiBot || false,
-          hasProtection: result.hasProtection || false,
-          isMaintenance: true,
-          maintenanceReason: result.maintenanceReason,
-          isJsChallenge: result.isJsChallenge || false,
-          jsChallengeIndicator: result.jsChallengeIndicator || null,
-        };
-      }
-
       if (result.success) {
-        return {
-          success: true,
-          status: 'online',
-          statusCode: result.statusCode,
-          attempts: i + 1,
-          usedHttpFallback,
-          responseTime,
-          isAntiBot: result.isAntiBot || false,
-          hasProtection: result.hasProtection || false,
-          isJsChallenge: result.isJsChallenge || false,
-          jsChallengeIndicator: result.jsChallengeIndicator || null,
-        };
-      }
-
-      // 5xx server errors - offline
-      if (result.statusCode >= 500) {
-        return {
-          success: false,
-          status: 'offline',
-          statusCode: result.statusCode,
-          error: result.statusMessage || 'Server Error',
-          attempts: i + 1,
-          usedHttpFallback,
-          responseTime,
-        };
-      }
-
-      if (i === retries) {
-        return {
-          success: false,
-          status: 'offline',
-          statusCode: result.statusCode,
-          error: result.error || result.statusMessage || 'Failed after retries',
-          attempts: i + 1,
-          usedHttpFallback,
-          responseTime,
-        };
-      }
-    } catch (error) {
-      if (i === retries) {
         const responseTime = Date.now() - startTime;
         return {
-          success: false,
-          status: 'offline',
-          error: error.message,
+          success: true,
+          status: result.isMaintenance ? 'maintenance' : 'online',
+          statusCode: result.statusCode,
           attempts: i + 1,
-          usedHttpFallback,
           responseTime,
+          hasProtection: result.hasProtection || false,
+          isMaintenance: result.isMaintenance || false,
+          maintenanceReason: result.maintenanceReason || null,
+          usedHttpFallback: result.usedHttpFallback || false,
+          hasContent: result.hasContent || false,
         };
       }
+
+      // On the last Node.js retry, fall through to curl.
+      if (i === retries) break;
+    } catch (error) {
+      if (i === retries) break;
     }
   }
 
-  return { success: false, status: 'offline', error: 'Unknown error', attempts: retries + 1, usedHttpFallback };
+  // Step 3: System curl fallback
+  try {
+    await new Promise(resolve => setTimeout(resolve, getRandomDelay()));
+    const curlResult = await curlRequest(url);
+    const responseTime = Date.now() - startTime;
+
+    if (curlResult.success) {
+      return {
+        success: true,
+        status: curlResult.isMaintenance ? 'maintenance' : 'online',
+        statusCode: curlResult.statusCode,
+        attempts: retries + 2,
+        responseTime,
+        usedCurl: true,
+        isMaintenance: curlResult.isMaintenance || false,
+        maintenanceReason: curlResult.maintenanceReason || null,
+        hasContent: curlResult.hasContent || false,
+      };
+    }
+  } catch {
+    // Fall through to offline.
+  }
+
+  return {
+    success: false,
+    status: 'offline',
+    error: 'Failed after DNS, Node.js GET and curl fallback',
+    attempts: retries + 2,
+    responseTime: Date.now() - startTime,
+  };
 }
 
 async function runWithConcurrency(tasks, concurrencyLimit) {
@@ -717,22 +577,21 @@ async function checkFriendsConnectivity() {
     const completedCount = { value: 0 };
     const total = friendsToCheck.length;
 
-    const tasks = friendsToCheck.map((friend, index) => async () => {
+    const tasks = friendsToCheck.map((friend) => async () => {
       const result = await checkUrlWithRetry(friend.url);
 
       completedCount.value++;
       const progress = Math.round((completedCount.value / total) * 100);
       const maintenanceLabel = result.isMaintenance ? ' [维护]' : '';
-      const antiBotLabel = result.isAntiBot ? ' [反爬]' : '';
       const protectionLabel = result.hasProtection ? ' [防护]' : '';
       const httpFallbackLabel = result.usedHttpFallback ? ' [HTTP]' : '';
-      const jsChallengeLabel = result.isJsChallenge ? ' [JS验证]' : '';
+      const curlLabel = result.usedCurl ? ' [curl]' : '';
 
       let status;
       if (result.isMaintenance) {
         status = `⚠ Maintenance (${result.statusCode})${maintenanceLabel}`;
       } else if (result.success) {
-        status = `✓ Online (${result.statusCode})${httpFallbackLabel}${antiBotLabel}${protectionLabel}${jsChallengeLabel}`;
+        status = `✓ Online (${result.statusCode})${httpFallbackLabel}${curlLabel}${protectionLabel}`;
       } else {
         status = `✗ Offline (${result.error || result.statusCode || 'unknown'})`;
       }
@@ -745,13 +604,12 @@ async function checkFriendsConnectivity() {
         error: result.error || null,
         attempts: result.attempts,
         usedHttpFallback: result.usedHttpFallback || false,
+        usedCurl: result.usedCurl || false,
         responseTime: result.responseTime || null,
-        isAntiBot: result.isAntiBot || false,
         hasProtection: result.hasProtection || false,
         isMaintenance: result.isMaintenance || false,
         maintenanceReason: result.maintenanceReason || null,
-        isJsChallenge: result.isJsChallenge || false,
-        jsChallengeIndicator: result.jsChallengeIndicator || null,
+        hasContent: result.hasContent || false,
       };
 
       if (result.isMaintenance) {
@@ -818,4 +676,7 @@ async function checkFriendsConnectivity() {
   }
 }
 
-checkFriendsConnectivity();
+checkFriendsConnectivity().catch((error) => {
+  console.error('✘ Unexpected error during friends connectivity check:', error.message);
+  process.exit(1);
+});

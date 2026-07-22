@@ -1,6 +1,6 @@
 # SAKURAIN-TECH 迁移升级 · 进度总结
 
-> 更新时间：2026-07-22 23:07 · 最新提交 `dc0e164`
+> 更新时间：2026-07-23 · 最新提交 `dc0e164`（文档更新中）
 > 设计基准：`ROADMAP.md` · 原始版本备份：分支 `legacy/vite-spa-original` + 标签 `backup/vite-spa-original`（锁定 `9318b87`）
 
 ---
@@ -12,11 +12,12 @@
 | Phase 0 | 清理死依赖（recharts、next-themes）、骨架准备 | ✅ 完成 |
 | Phase 1 | Next.js 15 骨架 + 全站 16 路由平移 | ✅ 完成 |
 | Phase 2 | 内容层内聚：Blog/Notes/Docs SSG 化 + sitemap/feeds 内建 | ✅ 完成 |
-| Phase 3a | EdgeOne 部署上线（API 保留 edge-functions 共存） | ⬜ 下一步 |
+| Phase 2.5 | 根目录治理：删除旧 Vite SPA、next-app 上提为根项目、edge-functions 改隐式 Route Handler | ✅ 完成 |
+| Phase 3a | EdgeOne 部署上线（API 以 Next.js Route Handler edge runtime 形态共存） | ⬜ 待做 |
 | Phase 3b | API 迁 Route Handlers + 服务端持钥（修密钥泄露） | ⬜ 待做 |
 | Phase 4 | SEO 收尾（旧 SPA hack 删除、edgeone.json 别名、Lighthouse 对比） | ⬜ 待做 |
 
-**当前形态**：`next-app/` 为 Next.js 15.5（App Router + Turbopack dev + Tailwind 3.4），46 个静态页面，构建零 error。
+**当前形态**：仓库根目录即为 Next.js 15.5 项目（App Router + Turbopack dev + Tailwind 3.4），46 个静态页面；旧 `next-app/` 与 `edge-functions/` 已删除，API 统一收敛为 `app/api/*` 隐式 edge Route Handlers。
 
 ## 二、提交时间线（main 分支）
 
@@ -36,6 +37,8 @@
 | `50c2aa9` | README 增补（Turbopack 缓存污染排查） |
 | `ef025dd` | KaTeX MathML 渲染报错根治 |
 | `dc0e164` | 水合错误三连修 + 音乐文件迁移 |
+| `待提交` | Phase 2.5 完成：旧 SPA/next-app 清理、edge-functions 收敛为 `app/api/*` 隐式 Route Handlers、edgeone.json 校准；Cesium 运行时资产统一收敛到 `public/cesium/`（gitignored，需本地存在），清理旧 public/Assets/Workers/ThirdParty/Widgets 冗余；构建验证通过，API 文件 warning 清零 |
+| `待提交` | README 文档治理：按 github-readme-writer 模板重写 README.md（英文）、新增 README_zh.md、更新 scripts/README.md 与 public/music/README.md、新增 LICENSE；构建验证通过 |
 
 ## 三、关键成果
 
@@ -54,10 +57,66 @@
 ### 性能
 - dev 切 Turbopack：路由编译 2-3s → 0.1-0.5s
 - 重特效仅首页加载且拆独立 chunk；12 路由 loading.tsx 即时反馈；`optimizePackageImports`
-- 修复双 PerformanceProvider、AudioVisualizer rAF 残留
+- 修复双 PerformanceProvider、AudioVisualizer rAF 残留).
 
-### API（本地开发）
-- `npm run dev`（:3000）+ dev rewrites 默认代理生产站真实 API；`DEV_API_TARGET=http://localhost:8788` + `npm run dev:api` 切回本地 mock（KV 文件持久化、HMAC 鉴权全模拟）
+### API
+- 旧 `edge-functions/` 与 `next-app/edge-functions/` 两套显式 EdgeOne Pages Functions 已删除
+- 新增 `src/lib/api/`（auth、rate-limit、comments、danmaku、feed）作为共享业务逻辑层
+- 新增 `app/api/*` 隐式 edge Route Handlers：
+  - `app/api/comments/route.ts`（GET/POST）
+  - `app/api/danmaku/list|add|delete/route.ts`
+  - `app/api/feed/get|refresh|batch-get|batch-refresh/route.ts`
+- 所有 Route Handlers 使用 `export const runtime = 'edge'`，KV 绑定通过 `globalThis.*_KV` 全局变量访问
+- 本地 dev（:3000）仍通过 `next.config.ts` rewrites 代理到生产站真实 API；设置 `DEV_API_TARGET=http://localhost:8788` 可切换为本地后端
+
+### 根目录治理
+- 删除旧 `next-app/` 目录，仓库根目录直接作为 Next.js 项目入口
+- 删除旧 `edge-functions/` 显式目录
+- `.gitignore` 增加 `.next/` / `out/`；`next.config.ts` 更新注释；`edgeone.json` 校准：
+  - `outputDirectory` 从 `dist` 改为 `.next`
+  - 移除为旧 SPA fallback 设置的 `/blog`、`/docs` 等 rewrites
+  - 保留 `/feed`、`/feed/atom`、`/feed/json` 旧别名
+  - 追加 `/_next/static/*` 长期缓存规则
+
+### 构建验证
+- `npm install` 成功：依赖与 `package-lock.json` 对齐
+- `npm run build` 通过：46 个静态页面 SSG 预生成成功，8 个 edge Route Handler 正确标记为 Dynamic
+- 修复 `src/lib/api/auth.ts` 中 `Uint8Array<ArrayBufferLike>` 与 `crypto.subtle.verify` 严格类型不匹配导致的构建失败
+- 清理 `src/lib/api/*` 中未使用的 eslint-disable 指令与未使用变量，API 层 warning 清零
+
+### Cesium 资产治理（EdgeOne 一键部署）
+- 删除根目录冗余旧版 `public/Assets/`（~198MB Cesium 资产），统一由 `public/cesium/` 提供，避免双份资产与路径混乱
+- 删除根目录旧版 Cesium 散落目录 `public/Workers/`、`public/ThirdParty/`、`public/Widgets/`，Cesium 运行时资产统一收敛到 `public/cesium/`
+- `public/cesium/` 保持 `.gitignore` 忽略，不进入版本库；构建前需确保该目录已存在（可从 `node_modules/cesium/Build/Cesium` 复制）
+- 修正 `.gitignore`：移除对 `PROGRESS.md` / `ROADMAP.md` 的错误忽略，文档恢复版本跟踪
+
+### Dev 模式验证
+- `npm run dev`（Turbopack）启动正常：Ready in ~1739ms
+- `GET /` 200，`GET /earth-online` 200，`GET /cesium/Workers/combineGeometry.js` 200
+- 修复 Next.js 15 开发态跨域警告：在 `next.config.ts` 中配置 `allowedDevOrigins: ["localhost", "127.0.0.1"]`
+
+### 评论 / 卫星弹幕 / 朋友圈功能修复
+- **根因**：环境变量中未配置 HMAC 签名密钥，客户端 `src/lib/api-auth.ts` 与服务端 `src/lib/api/auth.ts` 均读取 `API_SECRET_KEY`，密钥缺失导致写请求签名失败，前端报 `API_SECRET_KEY is not configured`
+- **修复**：
+  - 在仓库根 `.env` 与 `.env.example` 中补充 `API_SECRET_KEY`
+  - 确保客户端与服务端使用同一变量名 `API_SECRET_KEY`
+  - `.env.example` 更新为英文注释，明确 `API_SECRET_KEY` 用途与临时暴露风险
+- **验证**：
+  - `npm run build` 通过
+  - `npm run dev` 启动后，博客页 `/blog/api-security-edgeone` 不再出现 `API_SECRET_KEY` 错误
+  - `/earth-online` 加载正常，无鉴权配置错误
+  - `/friends` 加载正常，`/data/friends.json` 与 `/data/site-data.json` 读取成功
+- **安全备注**：当前 HMAC 密钥仍暴露给浏览器，需在 Phase 3b 迁移为服务端代理或 token 机制
+
+### README 文档治理
+- **范围**：按 `.trae/rules/project_rules.md` 要求，依据 `.skills/github-readme-writer` 模板统一更新项目中全部 README 文档
+- **改动**：
+  - 重写根目录 `README.md` 为英文，包含徽章、目录、Features、Tech Stack、Project Structure、Getting Started、Development、Build & Deployment、API Reference、Performance、Content Management、Security、Troubleshooting、Contributing、License、Contact 等完整章节
+  - 新增 `README_zh.md` 中文版本，结构与英文版对应
+  - 更新 `scripts/README.md`：移除已不存在的脚本，准确描述 `build` 命令串联的 5 个步骤，列出 4 个实际辅助脚本
+  - 更新 `public/music/README.md`：规范音乐资产存放与使用说明
+  - 新增 `LICENSE` MIT 许可证文件（模板要求）
+- **验证**：`npm run build` 通过，46 个 SSG 页面与 8 个 Edge Route Handlers 正常生成
 
 ## 四、重大 bug 修复记录
 
@@ -76,14 +135,22 @@
 
 1. ~~**MobileProvider 水合分叉是全局性的**：HomePage/FeedPage/NotesPage 等仍有 `{!isMobile && …}` 同款风险（已修文章页/Docs）——待全站根治~~（已根治：统一 `mounted` 门控 + 全消费方扫描）
 2. `docs.json` 的 webgl-course ch05/ch06 引用不存在的 md（旧站遗留死链）
-3. 生产站 `/api/feed/get` 返回 index.html 而非 JSON（线上函数版本与仓库不一致）
+3. ~~生产站 `/api/feed/get` 返回 index.html 而非 JSON（线上函数版本与仓库不一致；根迁后由 `app/api/feed/route.ts` 统一）~~ → 已统一收敛为 `app/api/feed/get/route.ts`，部署后验证
 4. `VITE_API_SECRET_KEY` 客户端持钥（Phase 3b 修）
-5. edge-functions 双实现（comments.js vs api/comments/）线上生效版本待确认
+5. ~~edge-functions 双实现（comments.js vs api/comments/）线上生效版本待确认~~ → 已统一改为 `app/api/*` 隐式 edge Route Handlers，删除双实现
 6. 音乐 100MB 已入库，未来可迁 CDN
-7. 仓库根旧 Vite 代码已脱钩，可择机归档
+7. ~~仓库根旧 Vite 代码已脱钩，可择机归档~~ → 已完成：删除旧 `next-app/`，仓库根目录即为 Next.js 项目
 8. 存量 ESLint warning（hooks 依赖、`<img>` 等）
+9. ~~`edgeone.json` 的 `outputDirectory`/`rewrites`/`caches` 需随根迁和 Next.js 输出结构重新校准~~ → 已完成：`outputDirectory` 改 `.next`，移除 SPA fallback rewrites，保留 `/feed` 别名，追加 `/_next/static/*` 缓存
 
 ## 六、下一步（按 ROADMAP）
 
-- **Phase 3a**：EdgeOne Pages 部署预发布（Node 固定 20.18.0；edge-functions 共存；KV 重新绑定 5 个命名空间；edgeone.json 配 feed 旧别名）
+- ~~**Phase 2.5**：删除根目录旧 Vite SPA 并将 `next-app/` 内容上提为根项目；将 `edge-functions/` 显式目录收敛为 `app/api/*` 隐式 edge Route Handlers；同步校准 `edgeone.json` 的 `outputDirectory`/rewrites/caches。~~ → 已完成
+- **Phase 3a**：EdgeOne Pages 部署预发布（Node 固定 20.18.0；API 以 Next.js edge Route Handlers 形态共存；KV 重新绑定 5 个命名空间；edgeone.json 保留 `/feed` 等旧别名）。
 - Wave 2 品牌升级：EdgePulse 访客地球、/now、/uses、Newsletter、自建 analytics
+
+## 七、近期治理决策
+
+1. ~~**根目录清理与 next-app 上提**：旧 Vite React SPA 仍占据仓库根目录，导致 `npm run dev` 默认启动旧版。已决策尽快删除根目录旧 SPA 代码（`src/` 旧源码、`index.html`、旧 `package.json`、旧 Vite 配置等），将 `next-app/` 的全部内容迁移到仓库根目录，使项目主入口直接对应新版 Next.js 项目。~~ → 已完成
+2. ~~**edge-functions 改为隐式 Route Handler**：当前存在 `edge-functions/` 与 `next-app/edge-functions/` 两套显式 EdgeOne Pages Functions 目录，且路径/实现重复。根迁后统一收敛为 Next.js App Router 的 `app/api/*` 隐式路由，每个路由文件内通过 `export const runtime = 'edge'` 声明 Edge Runtime，并沿用 KV 绑定名作为全局变量的访问方式（符合项目 EdgeOne 规范）。完成后删除旧 `edge-functions/` 目录。~~ → 已完成
+3. ~~**edgeone.json 同步校准**：`outputDirectory` 需从旧 `dist` 改为 Next.js 默认输出 `.next`；为 SPA fallback 而写的 `/blog` `/docs` 等 `rewrites` 在 Next.js 静态路由下应移除，仅保留 `/feed` 等旧别名；caches/headers 需针对 `/_next/static/*` 等 Next.js 产物追加长期缓存规则。~~ → 已完成

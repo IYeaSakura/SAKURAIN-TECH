@@ -1,0 +1,52 @@
+/**
+ * 博客展示层纯函数工具（格式化/统计）。
+ * Phase 2 起，文章数据由服务端内容管线 @/lib/content/blog 提供，
+ * 原有的客户端 fetch + 手写 frontmatter 解析已移除。
+ */
+
+export function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  
+  if (days === 0) return '今天';
+  if (days === 1) return '昨天';
+  if (days < 7) return `${days} 天前`;
+  if (days < 30) return `${Math.floor(days / 7)} 周前`;
+  if (days < 365) return `${Math.floor(days / 30)} 月前`;
+  
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+export function formatDateCard(dateString: string): string {
+  const date = new Date(dateString);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${month}/${day}`;
+}
+
+export function formatDateDetail(dateString: string): string {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}/${month}/${day}`;
+}
+
+export function getReadingTime(content: string): string {
+  const chineseCharsPerMinute = 400;
+  const chineseChars = (content.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const minutes = Math.ceil(chineseChars / chineseCharsPerMinute);
+  return `${minutes} 分钟阅读`;
+}
+
+export function getWordCount(content: string): number {
+  const chineseChars = (content.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const englishWords = (content.match(/[a-zA-Z]+/g) || []).length;
+  return chineseChars + englishWords;
+}

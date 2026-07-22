@@ -614,7 +614,7 @@ export const FlowingGradient = memo(({
         <div
           className="absolute inset-0"
           style={{
-            background: gradientString,
+            backgroundImage: gradientString,
             backgroundSize: '200% 100%',
             opacity: actualOpacity,
             filter: 'blur(60px)',
@@ -629,7 +629,7 @@ export const FlowingGradient = memo(({
       <motion.div
         className="absolute inset-0"
         style={{
-          background: gradientString,
+          backgroundImage: gradientString,
           backgroundSize: '200% 100%',
           opacity: actualOpacity,
           filter: 'blur(60px)',
@@ -755,7 +755,7 @@ export const HologramEffect = memo(({
       <div
         className="absolute inset-0 pointer-events-none z-20"
         style={{
-          background: `linear-gradient(transparent 50%, ${color}10 50%)`,
+          backgroundImage: `linear-gradient(transparent 50%, ${color}10 50%)`,
           backgroundSize: '100% 4px',
         }}
       />

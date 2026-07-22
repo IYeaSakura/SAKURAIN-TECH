@@ -9,7 +9,15 @@ export { useScrollProgress, useInView } from './useScrollProgress';
 export { useMagnetic } from './useMagnetic';
 
 // 响应式 hooks - 统一从 MobileContext 导出
-export { useIsMobile, useIsTablet, useIsDesktop, useScreenSize, useMobileContext } from '@/contexts/MobileContext';
+export {
+  useIsMobile,
+  useIsTablet,
+  useIsDesktop,
+  useScreenSize,
+  useMobileContext,
+  useMobileMounted,
+  useIsDesktopClient,
+} from '@/contexts/MobileContext';
 // Legacy alias for backwards compatibility
 export { useIsMobile as useMobile } from '@/contexts/MobileContext';
 

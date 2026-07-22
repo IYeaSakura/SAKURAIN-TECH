@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Copy,
@@ -30,7 +30,7 @@ interface ContextMenuProps {
 }
 
 export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, linkUrl, linkText }: ContextMenuProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x, y });
   const [isMounted, setIsMounted] = useState(false);
@@ -209,12 +209,12 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       if (deploymentConfig.useWindowLocation) {
         window.location.href = 'https://sakurain.net';
       } else {
-        navigate('/');
+        router.push('/');
       }
     } catch (error) {
       console.error('Failed to go home:', error);
     }
-  }, []);
+  }, [router]);
 
   const handleForceRefresh = useCallback(() => {
     try {
@@ -248,13 +248,13 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       if (deploymentConfig.useWindowLocation) {
         window.location.href = '/about';
       } else {
-        navigate('/about');
+        router.push('/about');
       }
       onClose();
     } catch (error) {
       console.error('Failed to navigate to about:', error);
     }
-  }, [onClose, navigate]);
+  }, [onClose, router]);
 
   const handleOpenLinkInNewTab = useCallback(() => {
     if (!linkUrl) return;

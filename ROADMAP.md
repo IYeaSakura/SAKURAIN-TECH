@@ -27,16 +27,18 @@
 
 ### 已知问题清单（迁移中顺手处理）
 
-- **密钥泄露**：`VITE_API_SECRET_KEY` 打进前端 bundle（`src/lib/api-auth.ts:1`）→ Phase 3b 改服务端持钥
+- **密钥泄露**：`API_SECRET_KEY` 打进前端 bundle（`src/lib/api-auth.ts:1`）→ Phase 3b 改服务端持钥
 - **硬编码域名**：`src/pages/Feed/index.tsx:1214-1344`、`src/components/effects/DanmakuSatellite.tsx:8` 硬编码 `https://sakurain.net` → 改相对路径
 - **硬编码 Cesium Ion token**：`src/components/effects/CesiumGlobe.tsx:154-155`，且 `CESIUM_BASE_URL='/'` → token 移环境变量，base URL 改 `/cesium/`
 - **防缓存 hack**：全站 fetch 带 `?v=${Date.now()}` + `cache:'no-store'`（如 `src/hooks/useConfig.ts:19`）→ 迁移后全部删除
 - **死依赖**：`recharts`、`next-themes`（src 零引用）
 - **死路由**：`src/pages/DevLog/` 存在但无 Route 指向（`main.tsx` 的 showNavPaths 里有 `/dev-log`）
-- **双实现**：`edge-functions/comments.js`（旧版 336 行）与 `edge-functions/api/comments/index.js` 并存，线上生效版本待确认
+- ~~**双实现**：`edge-functions/comments.js`（旧版 336 行）与 `edge-functions/api/comments/index.js` 并存，线上生效版本待确认~~ → 已统一改为 `app/api/*` 隐式 edge Route Handlers，删除旧显式目录
 - **手写 frontmatter 解析器**：`src/pages/Blog/utils.ts:37-75` 脆弱 → gray-matter 替代
 - **手写解析器可能掩盖脏数据**：全量 md 需 lint
 - SPA hack（`public/404.html` + `spa-redirect` + `_middleware.js`）→ Next 下整体删除
+- ~~**根目录仍被旧 Vite SPA 占据**：仓库根目录仍是旧版 React SPA，`next-app/` 需上提为项目根目录，删除旧 `src/`、`index.html`、旧 `package.json` 等~~ → 已完成：`next-app/` 内容上提为根项目，旧 Vite SPA 代码已删除
+- ~~**edge-functions 显式写法待收敛**：当前 `edge-functions/` 为 EdgeOne Pages Functions 显式目录，应改为 Next.js App Router `app/api/*` Route Handler 隐式写法（`export const runtime = 'edge'`）~~ → 已完成
 
 ### EdgeOne 平台事实（官方文档已确认）
 
@@ -68,16 +70,15 @@ next-app/
 │   ├── about|friends|friends-circle|studio|resume|earth-online|algo-viz/page.tsx
 │   ├── tools/page.tsx、tools/[toolId]/page.tsx
 │   ├── lab/                    # 炫技展厅（Wave 2+）
-│   └── api/                    # Phase 3b：danmaku/comments/feed Route Handlers（edge runtime）
+│   ├── api/                    # Phase 2.5/3b：danmaku/comments/feed Route Handlers（`runtime = 'edge'`）
 ├── content/                    # blog/posts、notes/posts、docs（从 public 迁入，Phase 2）
 ├── src/
 │   ├── lib/content/            # gray-matter 统一管线：blog.ts / notes.ts / docs.ts
 │   ├── lib/api/                # auth(HMAC)、rate-limit、kv 封装
 │   ├── components/             # 原 src/components 迁入，逐步标 'use client'
 │   ├── contexts/ hooks/        # 迁入并修 SSR guard
-│   └── config/
-├── public/                     # image、music、Assets(Cesium)、map-data
-└── edge-functions/             # API 过渡形态：原样保留（Phase 3a）
+│   └── public/                     # image、music、Assets(Cesium)、map-data
+└── edge-functions/             # 已删除：Phase 2.5 已收敛为 app/api/* 隐式 edge Route Handlers
 ```
 
 ### 内容管线选型（已定）
@@ -102,7 +103,8 @@ next-app/
 - **Phase 0 准备**：清死依赖（recharts、next-themes）；确认 comments 双实现；记录 DevLog 死路由（暂不删）
 - **Phase 1 骨架平移**：`next-app/` 路由 1:1；页面整页 'use client' 务实起步；数据仍 fetch 现有 `public/*.json`（脚本全保留）；`next/navigation` 批量替换 react-router；Cesium 静态资产 CopyPlugin 方案 + `CESIUM_BASE_URL=/cesium/`；**API 不动**（edge-functions 原样）；MobileProvider 统一 `mounted` 门控，根治 SSR/客户端首渲水合分叉
 - **Phase 2 内容内聚**：`content/` 迁移 + gray-matter 管线；blog/notes/docs 改 SSG + generateStaticParams；sitemap.ts、feed routes 上线；删 5 个生成脚本；删全站 `?v=Date.now()`
-- **Phase 3a API 共存上线**：保留 edge-functions，Next 站点先上线（吃 SSG/SEO 收益）
+- ~~**Phase 2.5 根目录治理与 API 形态收敛**：删除仓库根目录旧 Vite React SPA；将 `next-app/` 全部内容上提为项目根目录；旧 `edge-functions/` 与 `next-app/edge-functions/` 两套显式实现统一收敛为 `app/api/*` 隐式 edge Route Handlers（`export const runtime = 'edge'`，KV 绑定名仍作为全局变量使用）；同步校准 `edgeone.json`（`outputDirectory` → `.next`，移除为 SPA fallback 设置的页面 rewrites，保留 `/feed` 等旧别名，追加 `/_next/static/*` 长期缓存）~~ → 已完成
+- **Phase 3a API 共存上线**：以 Next.js edge Route Handlers 作为 API 形态，Next 站点上线（吃 SSG/SEO 收益）
 - **Phase 3b API 迁移（可选优化）**：Route Handlers + 服务端持钥修密钥泄露；前端调用点改相对路径
 - **Phase 4 SEO 收尾**：Metadata API；删 404.html/spa-redirect/_middleware.js；edgeone.json 配置旧 feed 别名；Lighthouse 对比
 
@@ -182,4 +184,6 @@ Tools/AlgoViz（搜索入口）→ Blog/Docs（权威）→ Newsletter/RSS（沉
 4. comments 双实现线上确认
 5. ~~主题/移动端 SSR 首帧闪烁（beforeInteractive 脚本时序实测）~~ → MobileProvider 已用统一 `mounted` 门控根治；主题 beforeInteractive 时序仍待实测
 6. EdgeOne 不支持 next.config redirects/rewrites（一律走 edgeone.json）
-7. 开放问题：DevLog 页补路由还是删除？Notes 详情页设计？多环境域名治理？
+7. ~~**根目录迁移风险**：next-app 上提后，所有相对路径、`next.config.ts` 的 `outputFileTracingRoot`、EdgeOne `outputDirectory`、gitignore 等需一次性校准，构建/部署链路需重新验证~~ → 已校准：`.gitignore` 增加 `.next/`，`edgeone.json` `outputDirectory` 改为 `.next` 并移除 SPA fallback rewrites，构建链路待验证
+8. ~~**edge Route Handler 适配风险**：EdgeOne Pages 对 `runtime = 'edge'` 的 Route Handler 与 KV 绑定名的全局变量注入方式需实测确认；本地 dev 依赖 `next.config.ts` rewrites 代理，根迁后逻辑不变~~ → 已实现：KV 绑定通过 `globalThis.*_KV` 访问，本地 dev 仍走 `next.config.ts` rewrites 代理
+9. 开放问题：DevLog 页补路由还是删除？Notes 详情页设计？多环境域名治理？
