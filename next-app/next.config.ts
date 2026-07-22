@@ -17,7 +17,24 @@ const nextConfig: NextConfig = {
   },
   // 预留：需要 transpile 的 ESM-only 包在此追加
   transpilePackages: [],
-  // 注意：EdgeOne 不支持 next.config 的 redirects/rewrites，一律走 edgeone.json
+  // 注意：EdgeOne 不支持 next.config 的 redirects/rewrites，一律走 edgeone.json。
+  // 因此下面的 rewrites 仅在开发态生效：把 /api/* 代理到本地函数服务
+  // （scripts/dev-api-server.mjs，模拟 EdgeOne Pages Functions），
+  // 生产构建输出不包含任何 rewrites。
+  ...(process.env.NODE_ENV === "development"
+    ? {
+        async rewrites() {
+          return [
+            {
+              source: "/api/:path*",
+              destination: `http://localhost:${
+                process.env.EDGE_API_PORT || 8788
+              }/api/:path*`,
+            },
+          ];
+        },
+      }
+    : {}),
 };
 
 export default nextConfig;

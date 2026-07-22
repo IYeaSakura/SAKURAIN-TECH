@@ -3,7 +3,8 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
+    "dev:api": "node scripts/dev-api-server.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -39,6 +40,7 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/three": "^0.185.1",
     "autoprefixer": "^10.4.21",
+    "edgeone": "^1.6.16",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.21",
     "postcss": "^8.5.6",
