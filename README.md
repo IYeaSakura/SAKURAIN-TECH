@@ -136,8 +136,6 @@ SAKURAIN-TECH/
 │   └── cesium/                       # Generated Cesium runtime assets (gitignored)
 ├── scripts/                          # Build and auxiliary scripts
 │   ├── check-friends-connectivity.js # Friend link health checker
-│   ├── generate-deployment-config.js # Deployment config generator
-│   ├── git-commits-to-notes.js       # Git-to-notes converter
 │   └── submit-sitemap.js             # Search engine sitemap submission
 ├── edgeone.json                      # EdgeOne Pages deployment config
 ├── next.config.ts                    # Next.js configuration
@@ -249,11 +247,9 @@ npm run build
 
 The build workflow runs the following steps in order. Each step must succeed before the next one starts:
 
-1. **`generate-deployment-config.js`**: Generates `src/config/deployment-config.ts` from `public/config/deployment.json`.
-2. **`git-commits-to-notes.js`**: Converts new Git commits into notes under `content/notes/posts/`.
-3. **`check-friends-connectivity.js`**: Updates the online/offline status of friend links in `public/data/friends.json`.
-4. **`next build`**: Exports 46 static pages and the RSS/Atom/JSON feed files to `dist/`.
-5. **`submit-sitemap.js`**: Submits the generated sitemap to search engines.
+1. **`check-friends-connectivity.js`**: Updates the online/offline status of friend links in `public/data/friends.json`.
+2. **`next build`**: Exports 46 static pages and the RSS/Atom/JSON feed files to `dist/`.
+3. **`submit-sitemap.js`**: Submits the generated sitemap to search engines.
 
 Because the project uses `output: "export"`, there is no SSR Node function package. EdgeOne Pages Functions in `edge-functions/` are deployed separately and are not part of the Next.js build output.
 
@@ -267,13 +263,11 @@ npm run build:fast
 
 | Stage | Description |
 |-------|-------------|
-| 1. Deployment Config | Generate `src/config/deployment-config.ts` |
-| 2. Notes Sync | Convert Git commits to notes |
-| 3. Friends Check | Check friend link connectivity |
-| 4. Compile | TypeScript compilation and bundle optimization |
-| 5. Static Generation | 46 pages exported as static HTML to `dist/` |
-| 6. Sitemap Submit | Submit sitemap to search engines |
-| 7. Trace & Optimize | Collect build traces and finalize output |
+| 1. Friends Check | Check friend link connectivity |
+| 2. Compile | TypeScript compilation and bundle optimization |
+| 3. Static Generation | 46 pages exported as static HTML to `dist/` |
+| 4. Sitemap Submit | Submit sitemap to search engines |
+| 5. Trace & Optimize | Collect build traces and finalize output |
 
 ### EdgeOne Pages Deployment
 
@@ -429,8 +423,6 @@ date: "2026-07-23 14:30"
 mood: "happy"
 ---
 ```
-
-3. Alternatively, run `node scripts/git-commits-to-notes.js` to convert recent Git commits into notes automatically.
 
 ---
 

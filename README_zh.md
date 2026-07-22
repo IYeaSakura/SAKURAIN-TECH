@@ -136,8 +136,6 @@ SAKURAIN-TECH/
 │   └── cesium/                       # 生成的 Cesium 运行时资产（gitignored）
 ├── scripts/                          # 构建与辅助脚本
 │   ├── check-friends-connectivity.js # 友链连通性检查
-│   ├── generate-deployment-config.js # 部署配置生成器
-│   ├── git-commits-to-notes.js       # Git 提交转随笔
 │   └── submit-sitemap.js             # 搜索引擎站点地图提交
 ├── edgeone.json                      # EdgeOne Pages 部署配置
 ├── next.config.ts                    # Next.js 配置
@@ -248,11 +246,9 @@ npm run build
 
 构建流程按顺序执行以下步骤，前一步成功才会继续下一步：
 
-1. **`generate-deployment-config.js`**：根据 `public/config/deployment.json` 生成 `src/config/deployment-config.ts`。
-2. **`git-commits-to-notes.js`**：将新 Git 提交转换为 `content/notes/posts/` 下的笔记。
-3. **`check-friends-connectivity.js`**：更新 `public/data/friends.json` 中友链的在线/离线状态。
-4. **`next build`**：将 46 个静态页面与 RSS/Atom/JSON 订阅源导出到 `dist/`。
-5. **`submit-sitemap.js`**：将生成的站点地图提交给搜索引擎。
+1. **`check-friends-connectivity.js`**：更新 `public/data/friends.json` 中友链的在线/离线状态。
+2. **`next build`**：将 46 个静态页面与 RSS/Atom/JSON 订阅源导出到 `dist/`。
+3. **`submit-sitemap.js`**：将生成的站点地图提交给搜索引擎。
 
 由于项目使用 `output: "export"`，不再生成 SSR Node 函数包。`edge-functions/` 中的 EdgeOne Pages Functions 单独部署，不属于 Next.js 构建产物。
 
@@ -266,13 +262,11 @@ npm run build:fast
 
 | 阶段 | 说明 |
 |------|------|
-| 1. 部署配置 | 生成 `src/config/deployment-config.ts` |
-| 2. 笔记同步 | Git 提交转笔记 |
-| 3. 友链检查 | 检查友链连通性 |
-| 4. 编译 | TypeScript 编译与打包优化 |
-| 5. 静态生成 | 46 个页面导出为静态 HTML 到 `dist/` |
-| 6. 站点地图提交 | 提交 sitemap 给搜索引擎 |
-| 7. 追踪与优化 | 收集构建追踪并 finalize 输出 |
+| 1. 友链检查 | 检查友链连通性 |
+| 2. 编译 | TypeScript 编译与打包优化 |
+| 3. 静态生成 | 46 个页面导出为静态 HTML 到 `dist/` |
+| 4. 站点地图提交 | 提交 sitemap 给搜索引擎 |
+| 5. 追踪与优化 | 收集构建追踪并 finalize 输出 |
 
 ### EdgeOne Pages 部署
 
@@ -428,8 +422,6 @@ date: "2026-07-23 14:30"
 mood: "happy"
 ---
 ```
-
-3. 或者运行 `node scripts/git-commits-to-notes.js` 自动将近期 Git 提交转换为随笔。
 
 ---
 

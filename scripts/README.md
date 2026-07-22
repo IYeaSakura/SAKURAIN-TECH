@@ -12,23 +12,15 @@ The npm build workflow is defined in `package.json` and runs the following steps
 npm run build
 ```
 
-1. `node scripts/generate-deployment-config.js`
-   - Generates `src/config/deployment-config.ts` from `public/config/deployment.json`.
-   - Must run first because the generated TypeScript file is imported by components.
-
-2. `node scripts/git-commits-to-notes.js`
-   - Converts Git commits after the latest note into Markdown files under `content/notes/posts/`.
-   - Runs before `next build` so the new notes are included in SSG.
-
-3. `node scripts/check-friends-connectivity.js`
+1. `node scripts/check-friends-connectivity.js`
    - Checks the connectivity of friend links listed in `public/data/friends.json` and updates their `status` field.
    - Runs before `next build` so the friends page reflects the latest statuses.
 
-4. `next build`
+2. `next build`
    - Runs Next.js production build with `output: "export"`, exporting 46 static pages and the RSS/Atom/JSON feed files to `dist/`.
    - Because the site is fully static, there is no SSR Node function package and no `.next/standalone` output.
 
-5. `node scripts/submit-sitemap.js`
+3. `node scripts/submit-sitemap.js`
    - Submits the generated sitemap to search engines.
    - Reads `dist/sitemap.xml` first, falling back to `.next/server/app/sitemap.xml.body` for legacy setups.
 
@@ -40,41 +32,12 @@ npm run build:fast
 
 ## Auxiliary Scripts
 
-> Note: `prune-standalone.js` was removed after the project switched to `output: "export"`. There is no longer a `.next/standalone` directory to prune.
+> Notes:
+> - `prune-standalone.js` was removed after the project switched to `output: "export"`. There is no longer a `.next/standalone` directory to prune.
+> - `git-commits-to-notes.js` was removed because it generated noise notes from every Git commit. Notes should now be created manually under `content/notes/posts/`.
+> - `generate-deployment-config.js` and `public/config/deployment.json` were removed. Deployment mode is now configured directly in `src/config/deployment-config.ts`.
 
-### 1. `generate-deployment-config.js`
-
-**Purpose**: Generate `src/config/deployment-config.ts` from `public/config/deployment.json`.
-
-**Usage**: Automatically runs during `npm run build`.
-
-**Configuration File**: `public/config/deployment.json`
-
-```json
-{
-  "mode": "edgeone"
-}
-```
-
-**Available Modes**:
-- `edgeone` / `location`: Use `window.location.href` for full-page navigation (EdgeOne Pages static export).
-- `local` / `navigate`: Use Next.js client-side navigation.
-
-**Generated Output**: `src/config/deployment-config.ts`
-
----
-
-### 2. `git-commits-to-notes.js`
-
-**Purpose**: Convert Git commits after the latest note into note Markdown files.
-
-**Usage**: Automatically runs during `npm run build`.
-
-**Output**: New files in `content/notes/posts/` named by commit timestamp (`YYYYMMDDHHMMSS.md`).
-
----
-
-### 3. `check-friends-connectivity.js`
+### 1. `check-friends-connectivity.js`
 
 **Purpose**: Check the connectivity status of friend links and update their online/offline/maintenance status.
 
@@ -86,7 +49,7 @@ npm run build:fast
 
 ---
 
-### 4. `submit-sitemap.js`
+### 2. `submit-sitemap.js`
 
 **Purpose**: Submit sitemap URLs to search engines. Currently supports Baidu; Google and Bing require manual submission.
 
@@ -114,7 +77,7 @@ The automatic build integration is defined in `package.json`:
 {
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/generate-deployment-config.js && node scripts/git-commits-to-notes.js && node scripts/check-friends-connectivity.js && next build && node scripts/submit-sitemap.js",
+    "build": "node scripts/check-friends-connectivity.js && next build && node scripts/submit-sitemap.js",
     "build:fast": "next build",
     "submit-sitemap": "node scripts/submit-sitemap.js",
     "start": "next start",
