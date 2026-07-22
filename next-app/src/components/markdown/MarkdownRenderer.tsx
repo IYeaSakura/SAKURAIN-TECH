@@ -11,16 +11,11 @@ import { extractTextFromChildren, generateHeadingId, splitContentByHeadings } fr
 import type { HeadingAnchor } from '@/components/docs/types';
 import '@/styles/code-block.css';
 
-// Wrapper for math elements to ensure horizontal scroll without affecting layout
-const MathBlock = ({ children }: { children?: any }) => {
-  return (
-    <div style={{ overflowX: 'auto', overflowY: 'hidden', margin: 0, padding: 0, border: 'none', backgroundColor: 'transparent' }}>
-      <div style={{ whiteSpace: 'nowrap' }}>
-        {children}
-      </div>
-    </div>
-  );
-};
+// 注意：不要再通过 components 映射 `math` 标签——rehype-katex 输出的 KaTeX HTML 中，
+// 视觉隐藏的 .katex-mathml 子树以原生 <math> 元素为根；用自定义组件覆盖 `math` 会
+// 破坏 MathML 命名空间上下文（导致 <mi>/<mo> 等报 "unrecognized tag"），且若该组件
+// 渲染 <div> 还会造成 <p> 内非法嵌套。display 公式的横向滚动由 code-block.css 中
+// .katex-display 的 overflow-x 规则负责。
 
 // Heading Anchor Component - rendered immediately with math support
 const HeadingAnchorElement = memo(({ heading }: { heading: HeadingAnchor }) => {
@@ -37,7 +32,6 @@ const HeadingAnchorElement = memo(({ heading }: { heading: HeadingAnchor }) => {
       rehypePlugins={[rehypeKatex]}
       components={{
         p: ({ children }: any) => <>{children}</>,  // 移除 p 标签包装
-        math: MathBlock as any,
       } as any}
     >
       {heading.text}
@@ -90,7 +84,6 @@ const contentOnlyComponents = {
         <th className="border px-4 py-3 text-left font-semibold" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>
           <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={{
             p: ({ children }: any) => <>{children}</>,
-            math: MathBlock as any,
           } as any}>
             {text}
           </ReactMarkdown>
@@ -116,7 +109,6 @@ const contentOnlyComponents = {
         <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
           <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={{
             p: ({ children }: any) => <>{children}</>,
-            math: MathBlock as any,
           } as any}>
             {text}
           </ReactMarkdown>
@@ -162,7 +154,7 @@ const ContentChunk = memo(({ content, index }: { content: string; index: number 
   return (
     <div ref={chunkRef} className="min-h-[20px]">
       {shouldRender ? (
-        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={finalContentOnlyComponentsWithMath}>{content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={finalContentOnlyComponents}>{content}</ReactMarkdown>
       ) : (
         <div className="py-4" style={{ color: 'var(--text-muted)' }}>
           <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent-primary)' }} />
@@ -208,15 +200,15 @@ const processCellChildren = (child: any): any => {
   if (Array.isArray(child)) {
     return child.flatMap((c) => {
       if (c?.type === 'br') return '\n';
-      // 保留 math 元素，不递归处理
-      if (c?.type === 'math' || c?.type?.name === 'MathBlock') return c;
+      // 保留 math 元素（KaTeX MathML 根节点），不递归处理
+      if (c?.type === 'math') return c;
       if (typeof c === 'object' && c?.props?.children) return processCellChildren(c.props.children);
       return c;
     });
   }
   if (child?.type === 'br') return '\n';
-  // 保留 math 元素
-  if (child?.type === 'math' || child?.type?.name === 'MathBlock') return child;
+  // 保留 math 元素（KaTeX MathML 根节点）
+  if (child?.type === 'math') return child;
   return child;
 };
 
@@ -255,7 +247,6 @@ const markdownComponents = {
         <th className="border px-4 py-3 text-left font-semibold" style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}>
           <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={{
             p: ({ children }: any) => <>{children}</>,
-            math: MathBlock as any,
           } as any}>
             {text}
           </ReactMarkdown>
@@ -281,7 +272,6 @@ const markdownComponents = {
         <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
           <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={{
             p: ({ children }: any) => <>{children}</>,
-            math: MathBlock as any,
           } as any}>
             {text}
           </ReactMarkdown>
@@ -318,17 +308,6 @@ const finalContentOnlyComponents = {
   pre: PreBlock
 };
 
-// Update components to include math wrapper
-const finalMarkdownComponentsWithMath = {
-  ...finalMarkdownComponents,
-  math: MathBlock
-};
-
-const finalContentOnlyComponentsWithMath = {
-  ...finalContentOnlyComponents,
-  math: MathBlock
-};
-
 // Optimized Markdown Renderer
 interface MarkdownRendererProps {
   content: string;
@@ -341,7 +320,7 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
   if (content.length < 10000 || sections.length < 5) {
     return (
       <div className="markdown-body" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>
-        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={finalMarkdownComponentsWithMath}>{content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={finalMarkdownComponents}>{content}</ReactMarkdown>
       </div>
     );
   }
