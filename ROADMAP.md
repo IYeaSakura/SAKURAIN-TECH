@@ -100,7 +100,7 @@ next-app/
 ### 迁移 Phase
 
 - **Phase 0 准备**：清死依赖（recharts、next-themes）；确认 comments 双实现；记录 DevLog 死路由（暂不删）
-- **Phase 1 骨架平移**：`next-app/` 路由 1:1；页面整页 'use client' 务实起步；数据仍 fetch 现有 `public/*.json`（脚本全保留）；`next/navigation` 批量替换 react-router；Cesium 静态资产 CopyPlugin 方案 + `CESIUM_BASE_URL=/cesium/`；**API 不动**（edge-functions 原样）
+- **Phase 1 骨架平移**：`next-app/` 路由 1:1；页面整页 'use client' 务实起步；数据仍 fetch 现有 `public/*.json`（脚本全保留）；`next/navigation` 批量替换 react-router；Cesium 静态资产 CopyPlugin 方案 + `CESIUM_BASE_URL=/cesium/`；**API 不动**（edge-functions 原样）；MobileProvider 统一 `mounted` 门控，根治 SSR/客户端首渲水合分叉
 - **Phase 2 内容内聚**：`content/` 迁移 + gray-matter 管线；blog/notes/docs 改 SSG + generateStaticParams；sitemap.ts、feed routes 上线；删 5 个生成脚本；删全站 `?v=Date.now()`
 - **Phase 3a API 共存上线**：保留 edge-functions，Next 站点先上线（吃 SSG/SEO 收益）
 - **Phase 3b API 迁移（可选优化）**：Route Handlers + 服务端持钥修密钥泄露；前端调用点改相对路径
@@ -180,6 +180,6 @@ Tools/AlgoViz（搜索入口）→ Blog/Docs（权威）→ Newsletter/RSS（沉
 2. Cesium 374MB 静态资产平移（dev 体验 / CDN 决策）
 3. Markdown 脏数据被 gray-matter 暴露（Phase 2 前全量 lint）
 4. comments 双实现线上确认
-5. 主题/移动端 SSR 首帧闪烁（beforeInteractive 脚本时序实测）
+5. ~~主题/移动端 SSR 首帧闪烁（beforeInteractive 脚本时序实测）~~ → MobileProvider 已用统一 `mounted` 门控根治；主题 beforeInteractive 时序仍待实测
 6. EdgeOne 不支持 next.config redirects/rewrites（一律走 edgeone.json）
 7. 开放问题：DevLog 页补路由还是删除？Notes 详情页设计？多环境域名治理？
