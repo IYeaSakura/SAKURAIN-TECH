@@ -27,7 +27,11 @@ npm run build
 4. `next build`
    - Runs Next.js production build, generating 46 static pages and 8 dynamic Edge Route Handlers.
 
-5. `node scripts/submit-sitemap.js`
+5. `node scripts/prune-standalone.js`
+   - Removes build-time-only packages (e.g. `typescript`, `@types`, `eslint`, `tailwindcss`) and non-runtime artifacts from `.next/standalone/node_modules`.
+   - Keeps the EdgeOne Pages deployment image small and prevents disk-space failures during packaging.
+
+6. `node scripts/submit-sitemap.js`
    - Submits the generated sitemap to search engines.
    - Runs after `next build` because it reads `.next/server/app/sitemap.xml.body`.
 
@@ -83,7 +87,17 @@ npm run build:fast
 
 ---
 
-### 4. `submit-sitemap.js`
+### 4. `prune-standalone.js`
+
+**Purpose**: Remove build-time-only packages and non-runtime artifacts from `.next/standalone/node_modules` after `next build`.
+
+**Usage**: Automatically runs during `npm run build`, between `next build` and `submit-sitemap.js`.
+
+**Why it exists**: EdgeOne Pages copies the standalone output into its SSR runtime image. Next.js file tracing may include dev-only packages (`typescript`, `@types`, `eslint`, `tailwindcss`, etc.) depending on the build environment, which can exceed the platform's disk quota. This script keeps the deployment image small without affecting runtime behavior.
+
+---
+
+### 5. `submit-sitemap.js`
 
 **Purpose**: Submit sitemap URLs to search engines. Currently supports Baidu; Google and Bing require manual submission.
 
@@ -111,7 +125,7 @@ The automatic build integration is defined in `package.json`:
 {
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/generate-deployment-config.js && node scripts/git-commits-to-notes.js && node scripts/check-friends-connectivity.js && next build && node scripts/submit-sitemap.js",
+    "build": "node scripts/generate-deployment-config.js && node scripts/git-commits-to-notes.js && node scripts/check-friends-connectivity.js && next build && node scripts/prune-standalone.js && node scripts/submit-sitemap.js",
     "build:fast": "next build",
     "submit-sitemap": "node scripts/submit-sitemap.js",
     "start": "next start",

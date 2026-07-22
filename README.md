@@ -135,6 +135,7 @@ SAKURAIN-TECH/
 │   ├── check-friends-connectivity.js # Friend link health checker
 │   ├── generate-deployment-config.js # Deployment config generator
 │   ├── git-commits-to-notes.js       # Git-to-notes converter
+│   ├── prune-standalone.js           # Strip dev-only deps from standalone output
 │   └── submit-sitemap.js             # Search engine sitemap submission
 ├── edgeone.json                      # EdgeOne Pages deployment config
 ├── next.config.ts                    # Next.js configuration
@@ -250,7 +251,8 @@ The build workflow runs the following steps in order. Each step must succeed bef
 2. **`git-commits-to-notes.js`**: Converts new Git commits into notes under `content/notes/posts/`.
 3. **`check-friends-connectivity.js`**: Updates the online/offline status of friend links in `public/data/friends.json`.
 4. **`next build`**: Produces 46 static pages and 8 dynamic Edge Route Handlers.
-5. **`submit-sitemap.js`**: Submits the generated sitemap to search engines.
+5. **`prune-standalone.js`**: Strips build-time-only packages (e.g. `typescript`, `eslint`, `tailwindcss`) from `.next/standalone/node_modules` to keep the EdgeOne Pages deployment image small.
+6. **`submit-sitemap.js`**: Submits the generated sitemap to search engines.
 
 To skip the scripts and run only `next build`:
 
@@ -268,8 +270,9 @@ npm run build:fast
 | 4. Compile | TypeScript compilation and bundle optimization |
 | 5. Static Generation | 46 pages prerendered as static HTML |
 | 6. Edge Handler Build | 8 API routes built as edge functions |
-| 7. Sitemap Submit | Submit sitemap to search engines |
-| 8. Trace & Optimize | Collect build traces and finalize output |
+| 7. Prune Standalone | Remove build-time-only deps from `.next/standalone` |
+| 8. Sitemap Submit | Submit sitemap to search engines |
+| 9. Trace & Optimize | Collect build traces and finalize output |
 
 ### EdgeOne Pages Deployment
 
