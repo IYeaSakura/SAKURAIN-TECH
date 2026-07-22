@@ -1,5 +1,6 @@
 // next.config.ts
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   // EdgeOne Pages deploys the static export directly; no SSR Node runtime is
@@ -16,6 +17,17 @@ const nextConfig: NextConfig = {
 
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion", "@react-three/drei"],
+  },
+
+  webpack: (config) => {
+    // Replace @spz-loader/core with a stub. The real package contains
+    // Emscripten output with octal escape sequences inside template strings,
+    // which breaks strict-mode bundles in the browser.
+    config.resolve.alias["@spz-loader/core"] = path.resolve(
+      process.cwd(),
+      "src/lib/stubs/spz-loader-stub.js"
+    );
+    return config;
   },
 };
 

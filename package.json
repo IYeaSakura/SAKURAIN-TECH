@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/check-friends-connectivity.js && next build && node scripts/submit-sitemap.js",
+    "build": "node scripts/copy-cesium.mjs && node scripts/sync-content-to-public.js && node scripts/check-friends-connectivity.js && next build && node scripts/submit-sitemap.js",
     "build:fast": "next build",
     "submit-sitemap": "node scripts/submit-sitemap.js",
     "start": "next start",

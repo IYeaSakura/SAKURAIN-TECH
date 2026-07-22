@@ -112,9 +112,13 @@ SAKURAIN-TECH/
 │           ├── refresh.js            # /api/feed/refresh
 │           ├── batch-get.js          # /api/feed/batch-get
 │           └── batch-refresh.js      # /api/feed/batch-refresh
-├── content/                          # 源内容（Markdown）
+├── content/                          # 所有托管内容的单一可信源
 │   ├── blog/posts/                   # 博客文章源文件
-│   └── notes/posts/                  # 随笔源文件
+│   ├── notes/posts/                  # 随笔源文件
+│   ├── docs/                         # 文档 Markdown 文件
+│   ├── data/                         # JSON 数据文件（友链、播放列表、站点数据等）
+│   ├── config/                       # 运行时配置文件
+│   └── resume/                       # 简历数据
 ├── src/                              # 应用源码
 │   ├── components/                   # React 组件
 │   ├── contexts/                     # React Context（MobileContext 等）
@@ -125,16 +129,18 @@ SAKURAIN-TECH/
 │   │   └── api-auth.ts               # 客户端 HMAC 签名
 │   └── config/                       # 自动生成的部署配置
 ├── public/                           # 静态资源
-│   ├── blog/                         # 博客公开资源与文章
-│   ├── docs/                         # 文档静态资源
+│   ├── blog/                         # 博客公开资源（文章由 content/ 生成）
+│   ├── docs/                         # 文档静态文件（由 content/ 生成）
 │   ├── image/                        # 站点图片
 │   ├── music/                        # 音频文件
 │   ├── fonts/                        # 自托管字体
 │   ├── map-data/                     # GeoJSON 地图数据
-│   ├── data/                         # JSON 数据文件
-│   ├── config/                       # 运行时配置文件
+│   ├── data/                         # JSON 数据文件（由 content/ 生成）
+│   ├── config/                       # 运行时配置文件（由 content/ 生成）
+│   ├── resume/                       # 简历数据（由 content/ 生成）
 │   └── cesium/                       # 生成的 Cesium 运行时资产（gitignored）
 ├── scripts/                          # 构建与辅助脚本
+│   ├── sync-content-to-public.js     # 将托管内容从 content/ 复制到 public/
 │   ├── check-friends-connectivity.js # 友链连通性检查
 │   └── submit-sitemap.js             # 搜索引擎站点地图提交
 ├── edgeone.json                      # EdgeOne Pages 部署配置
@@ -246,9 +252,10 @@ npm run build
 
 构建流程按顺序执行以下步骤，前一步成功才会继续下一步：
 
-1. **`check-friends-connectivity.js`**：更新 `public/data/friends.json` 中友链的在线/离线状态。
-2. **`next build`**：将 46 个静态页面与 RSS/Atom/JSON 订阅源导出到 `dist/`。
-3. **`submit-sitemap.js`**：将生成的站点地图提交给搜索引擎。
+1. **`sync-content-to-public.js`**：将托管内容（`content/data/*`、`content/docs/*`、`content/config/*`、`content/resume/*`）复制到 `public/`，供静态构建消费。
+2. **`check-friends-connectivity.js`**：更新 `public/data/friends.json` 中友链的在线/离线状态。
+3. **`next build`**：将 46 个静态页面与 RSS/Atom/JSON 订阅源导出到 `dist/`。
+4. **`submit-sitemap.js`**：将生成的站点地图提交给搜索引擎。
 
 由于项目使用 `output: "export"`，不再生成 SSR Node 函数包。`edge-functions/` 中的 EdgeOne Pages Functions 单独部署，不属于 Next.js 构建产物。
 
@@ -262,11 +269,12 @@ npm run build:fast
 
 | 阶段 | 说明 |
 |------|------|
-| 1. 友链检查 | 检查友链连通性 |
-| 2. 编译 | TypeScript 编译与打包优化 |
-| 3. 静态生成 | 46 个页面导出为静态 HTML 到 `dist/` |
-| 4. 站点地图提交 | 提交 sitemap 给搜索引擎 |
-| 5. 追踪与优化 | 收集构建追踪并 finalize 输出 |
+| 1. 内容同步 | 将 `content/` 复制到 `public/` |
+| 2. 友链检查 | 检查友链连通性 |
+| 3. 编译 | TypeScript 编译与打包优化 |
+| 4. 静态生成 | 46 个页面导出为静态 HTML 到 `dist/` |
+| 5. 站点地图提交 | 提交 sitemap 给搜索引擎 |
+| 6. 追踪与优化 | 收集构建追踪并 finalize 输出 |
 
 ### EdgeOne Pages 部署
 

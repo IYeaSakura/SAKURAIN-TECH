@@ -112,9 +112,13 @@ SAKURAIN-TECH/
 │           ├── refresh.js            # /api/feed/refresh
 │           ├── batch-get.js          # /api/feed/batch-get
 │           └── batch-refresh.js      # /api/feed/batch-refresh
-├── content/                          # Source content (markdown)
+├── content/                          # Single source of truth for all managed content
 │   ├── blog/posts/                   # Blog post source files
-│   └── notes/posts/                  # Note source files
+│   ├── notes/posts/                  # Note source files
+│   ├── docs/                         # Documentation markdown files
+│   ├── data/                         # JSON data files (friends, playlist, site-data, etc.)
+│   ├── config/                       # Runtime config files
+│   └── resume/                       # Resume data
 ├── src/                              # Application source
 │   ├── components/                   # React components
 │   ├── contexts/                     # React contexts (MobileContext, etc.)
@@ -125,16 +129,18 @@ SAKURAIN-TECH/
 │   │   └── api-auth.ts               # Client-side HMAC signer
 │   └── config/                       # Auto-generated deployment config
 ├── public/                           # Static assets
-│   ├── blog/                         # Public blog assets and posts
-│   ├── docs/                         # Static docs assets
+│   ├── blog/                         # Public blog assets (posts are generated from content/)
+│   ├── docs/                         # Static docs files (generated from content/)
 │   ├── image/                        # Site images
 │   ├── music/                        # Audio files
 │   ├── fonts/                        # Self-hosted fonts
 │   ├── map-data/                     # GeoJSON map data
-│   ├── data/                         # JSON data files
-│   ├── config/                       # Runtime config files
+│   ├── data/                         # JSON data files (generated from content/)
+│   ├── config/                       # Runtime config files (generated from content/)
+│   ├── resume/                       # Resume data (generated from content/)
 │   └── cesium/                       # Generated Cesium runtime assets (gitignored)
 ├── scripts/                          # Build and auxiliary scripts
+│   ├── sync-content-to-public.js     # Copy managed content from content/ to public/
 │   ├── check-friends-connectivity.js # Friend link health checker
 │   └── submit-sitemap.js             # Search engine sitemap submission
 ├── edgeone.json                      # EdgeOne Pages deployment config
@@ -247,9 +253,10 @@ npm run build
 
 The build workflow runs the following steps in order. Each step must succeed before the next one starts:
 
-1. **`check-friends-connectivity.js`**: Updates the online/offline status of friend links in `public/data/friends.json`.
-2. **`next build`**: Exports 46 static pages and the RSS/Atom/JSON feed files to `dist/`.
-3. **`submit-sitemap.js`**: Submits the generated sitemap to search engines.
+1. **`sync-content-to-public.js`**: Copies managed content (`content/data/*`, `content/docs/*`, `content/config/*`, `content/resume/*`) into `public/` so the static build can consume it.
+2. **`check-friends-connectivity.js`**: Updates the online/offline status of friend links in `public/data/friends.json`.
+3. **`next build`**: Exports 46 static pages and the RSS/Atom/JSON feed files to `dist/`.
+4. **`submit-sitemap.js`**: Submits the generated sitemap to search engines.
 
 Because the project uses `output: "export"`, there is no SSR Node function package. EdgeOne Pages Functions in `edge-functions/` are deployed separately and are not part of the Next.js build output.
 
@@ -263,11 +270,12 @@ npm run build:fast
 
 | Stage | Description |
 |-------|-------------|
-| 1. Friends Check | Check friend link connectivity |
-| 2. Compile | TypeScript compilation and bundle optimization |
-| 3. Static Generation | 46 pages exported as static HTML to `dist/` |
-| 4. Sitemap Submit | Submit sitemap to search engines |
-| 5. Trace & Optimize | Collect build traces and finalize output |
+| 1. Content Sync | Copy `content/` to `public/` |
+| 2. Friends Check | Check friend link connectivity |
+| 3. Compile | TypeScript compilation and bundle optimization |
+| 4. Static Generation | 46 pages exported as static HTML to `dist/` |
+| 5. Sitemap Submit | Submit sitemap to search engines |
+| 6. Trace & Optimize | Collect build traces and finalize output |
 
 ### EdgeOne Pages Deployment
 
