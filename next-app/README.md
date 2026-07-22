@@ -119,3 +119,13 @@ npm start
 ```
 
 EdgeOne Pages 部署说明见仓库根 `edgeone.json` 与 `ROADMAP.md`。
+
+### 故障排查：构建报 `Cannot find module '../chunks/ssr/[turbopack]_runtime.js'`
+
+原因：Turbopack dev 与 webpack 生产构建共用 `.next/` 缓存目录，残留的 dev 缓存污染了构建。
+
+修复：删除缓存后重建——
+
+```bash
+rm -rf .next && npm run build
+```
