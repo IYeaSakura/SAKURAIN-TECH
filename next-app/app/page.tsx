@@ -1,42 +1,16 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import HomePageLoader from "@/components/HomePageLoader";
 
-const routes = [
-  { path: "/", label: "首页" },
-  { path: "/blog", label: "博客" },
-  { path: "/notes", label: "随记" },
-  { path: "/docs", label: "文档" },
-  { path: "/friends", label: "友链" },
-  { path: "/friends-circle", label: "朋友圈" },
-  { path: "/about", label: "关于" },
-  { path: "/studio", label: "工作室" },
-  { path: "/resume", label: "简历" },
-  { path: "/earth-online", label: "Earth Online" },
-  { path: "/algo-viz", label: "算法可视化" },
-  { path: "/tools", label: "工具箱" },
-];
+/**
+ * 首页 —— Server Component 外壳。
+ * 实际内容为迁移自旧 Vite 项目 src/App.tsx 的整页客户端组件（Phase 1 务实起步）。
+ */
+export const metadata: Metadata = {
+  title: "SAKURAIN —— 有用、有料、有趣",
+  description:
+    "SAKURAIN 的个人门户：技术博客、随记、文档与开源作品。有用、有料、有趣。",
+};
 
-export default function HomePage() {
-  return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
-      <h1 className="text-4xl font-bold tracking-tight">SAKURAIN</h1>
-      <p className="mt-4 text-gray-600">
-        个人品牌站 · Next.js 15 迁移进行中。以下为规划路由占位入口：
-      </p>
-      <nav className="mt-8">
-        <ul className="grid grid-cols-2 gap-3">
-          {routes.map((r) => (
-            <li key={r.path}>
-              <Link
-                href={r.path}
-                className="block rounded-lg border border-gray-200 px-4 py-3 transition-colors hover:border-gray-400 hover:bg-gray-50"
-              >
-                <span className="font-mono text-sm text-gray-500">{r.path}</span>
-                <span className="mt-1 block font-medium">{r.label}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </main>
-  );
+export default function Page() {
+  return <HomePageLoader />;
 }
