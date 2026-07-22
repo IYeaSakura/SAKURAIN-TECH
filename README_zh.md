@@ -41,7 +41,8 @@
 
 - **Next.js 15 App Router**: 默认 Server Components，重交互部分以客户端岛屿形式存在。
 - **SSG 优先**: 构建期预渲染 46 个页面；写操作通过动态边缘 API 处理。
-- **Edge Route Handlers**: `app/api/*` 下的 API 路由通过 `export const runtime = 'edge'` 声明，并作为 EdgeOne Pages Functions 部署。
+- **EdgeOne Edge Functions**: 写操作 API（`/api/comments`、`/api/danmaku/*`、`/api/feed/*`）位于 `edge-functions/`，作为 EdgeOne Pages Functions 部署，使 Next.js 产物不含 Node.js 运行时依赖。
+- **静态导出**: `next.config.ts` 使用 `output: "export"` 与 `distDir: "dist"`；EdgeOne Pages 直接部署 `dist/` 目录，彻底规避 SSR Node 函数包体积限制。
 - **Turbopack 开发**: 按需编译，冷启动快，路由首次访问后即可即时响应。
 - **Mounted 门控模式**: 通过 `MobileContext` 与 `useMobileMounted` 统一防止水合不匹配。
 
@@ -96,19 +97,21 @@ SAKURAIN-TECH/
 │   ├── algo-viz/                     # 算法可视化页
 │   ├── about/                        # 关于页
 │   ├── studio/                       # 作品集展厅
-│   ├── resume/                       # 简历页
 │   ├── projects/                     # 项目展示页
-│   └── api/                          # Edge Route Handlers
-│       ├── comments/route.ts
+│   └── resume/                       # 简历页
+├── edge-functions/                   # EdgeOne Pages Functions（写操作 API）
+│   ├── lib/                          # 边缘函数共享逻辑（鉴权、限流、KV）
+│   └── api/                          # 函数入口
+│       ├── comments.js               # /api/comments
 │       ├── danmaku/
-│       │   ├── list/route.ts
-│       │   ├── add/route.ts
-│       │   └── delete/route.ts
+│       │   ├── list.js               # /api/danmaku/list
+│       │   ├── add.js                # /api/danmaku/add
+│       │   └── delete.js             # /api/danmaku/delete
 │       └── feed/
-│           ├── get/route.ts
-│           ├── refresh/route.ts
-│           ├── batch-get/route.ts
-│           └── batch-refresh/route.ts
+│           ├── get.js                # /api/feed/get
+│           ├── refresh.js            # /api/feed/refresh
+│           ├── batch-get.js          # /api/feed/batch-get
+│           └── batch-refresh.js      # /api/feed/batch-refresh
 ├── content/                          # 源内容（Markdown）
 │   ├── blog/posts/                   # 博客文章源文件
 │   └── notes/posts/                  # 随笔源文件
@@ -135,7 +138,6 @@ SAKURAIN-TECH/
 │   ├── check-friends-connectivity.js # 友链连通性检查
 │   ├── generate-deployment-config.js # 部署配置生成器
 │   ├── git-commits-to-notes.js       # Git 提交转随笔
-│   ├── prune-standalone.js           # 从 standalone 产物中剔除开发期依赖
 │   └── submit-sitemap.js             # 搜索引擎站点地图提交
 ├── edgeone.json                      # EdgeOne Pages 部署配置
 ├── next.config.ts                    # Next.js 配置
@@ -181,7 +183,7 @@ cp .env.example .env.local
 API_BASE_URL=
 
 # 写操作 API 的共享 HMAC-SHA256 签名密钥。
-# 客户端用其签名请求，边缘 Route Handlers 用其验签。
+# 客户端用其签名请求，EdgeOne Edge Functions 用其验签。
 # 长度至少 32 字节（64 个十六进制字符）。
 # 注意：该密钥会暴露给浏览器。Phase 3b 将改为服务端代理或 token 机制。
 API_SECRET_KEY=
@@ -225,14 +227,14 @@ Next.js 开发服务器在 `http://localhost:3000` 启动，默认启用 Turbopa
 
 > **警告**: 默认模式下的写操作会调用生产 API 并修改线上数据。
 
-如需在本地开发 API Handler，直接运行 `npm run dev` 并访问 `/api/*`，`app/api/*` 下的 Edge Route Handlers 由 Next.js 开发服务器直接提供。
+如需本地开发边缘函数，请使用 EdgeOne CLI（`edgeone dev`）或部署到预览环境。`edge-functions/` 目录不由 `next dev` 提供服务，Next.js 开发服务器只负责静态前端。
 
 ### 代码风格
 
 - 启用 TypeScript 严格模式。
 - ESLint 采用 Next.js 推荐配置。
 - 客户端 Hooks 与浏览器 API 在条件渲染中必须通过 `mounted` 门控保护。
-- Edge Route Handlers 使用 `export const runtime = 'edge'`，并通过全局变量访问 KV 命名空间。
+- EdgeOne Edge Functions 使用 Web Standard `Request`/`Response` 对象，并通过全局变量访问 KV 命名空间。
 
 ---
 
@@ -249,9 +251,10 @@ npm run build
 1. **`generate-deployment-config.js`**：根据 `public/config/deployment.json` 生成 `src/config/deployment-config.ts`。
 2. **`git-commits-to-notes.js`**：将新 Git 提交转换为 `content/notes/posts/` 下的笔记。
 3. **`check-friends-connectivity.js`**：更新 `public/data/friends.json` 中友链的在线/离线状态。
-4. **`next build`**：生成 46 个静态页面与 8 个动态 Edge Route Handlers。
-5. **`prune-standalone.js`**：从 `.next/standalone/node_modules` 中剔除 `typescript`、`eslint`、`tailwindcss` 等构建期依赖，避免 EdgeOne Pages 打包时磁盘耗尽。
-6. **`submit-sitemap.js`**：将生成的站点地图提交给搜索引擎。
+4. **`next build`**：将 46 个静态页面与 RSS/Atom/JSON 订阅源导出到 `dist/`。
+5. **`submit-sitemap.js`**：将生成的站点地图提交给搜索引擎。
+
+由于项目使用 `output: "export"`，不再生成 SSR Node 函数包。`edge-functions/` 中的 EdgeOne Pages Functions 单独部署，不属于 Next.js 构建产物。
 
 如需跳过脚本仅执行 `next build`：
 
@@ -267,18 +270,16 @@ npm run build:fast
 | 2. 笔记同步 | Git 提交转笔记 |
 | 3. 友链检查 | 检查友链连通性 |
 | 4. 编译 | TypeScript 编译与打包优化 |
-| 5. 静态生成 | 46 个页面预渲染为静态 HTML |
-| 6. Edge Handler 构建 | 8 个 API 路由构建为边缘函数 |
-| 7. 裁剪 Standalone | 从 `.next/standalone` 中移除构建期依赖 |
-| 8. 站点地图提交 | 提交 sitemap 给搜索引擎 |
-| 9. 追踪与优化 | 收集构建追踪并 finalize 输出 |
+| 5. 静态生成 | 46 个页面导出为静态 HTML 到 `dist/` |
+| 6. 站点地图提交 | 提交 sitemap 给搜索引擎 |
+| 7. 追踪与优化 | 收集构建追踪并 finalize 输出 |
 
 ### EdgeOne Pages 部署
 
 本项目部署于腾讯云 EdgeOne Pages。`edgeone.json` 关键配置：
 
 - `buildCommand`: `npm run build`
-- `outputDirectory`: `.next`
+- `outputDirectory`: `dist`
 - `nodeVersion`: `20.18.0`
 - Rewrites: 保留 `/feed`、`/feed/atom`、`/feed/json` 等旧别名
 - Caches: `/_next/static/*`、`/image/*`、`/music/*` 长期缓存；`/data/*`、`/blog/*`、`/notes/*`、订阅源短缓存

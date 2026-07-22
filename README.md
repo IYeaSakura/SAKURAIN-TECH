@@ -41,7 +41,8 @@ A personal brand portal built with Next.js 15 App Router, deployed on Tencent Cl
 
 - **Next.js 15 App Router**: Server Components by default, with client islands for heavy interactivity.
 - **SSG-First**: 46 pages prerendered at build time; dynamic edge APIs for write operations.
-- **Edge Route Handlers**: API routes under `app/api/*` marked with `export const runtime = 'edge'` and deployed as EdgeOne Pages Functions.
+- **EdgeOne Edge Functions**: Write APIs (`/api/comments`, `/api/danmaku/*`, `/api/feed/*`) live in `edge-functions/` and are deployed as EdgeOne Pages Functions, keeping the Next.js bundle free of Node.js runtime dependencies.
+- **Static Export**: `next.config.ts` uses `output: "export"` with `distDir: "dist"`; EdgeOne Pages deploys the `dist/` directory directly, eliminating the SSR Node function package entirely.
 - **Turbopack Dev**: Fast cold-start dev server with on-demand route compilation.
 - **Mounted Gate Pattern**: Unified hydration-mismatch prevention via `MobileContext` and `useMobileMounted`.
 
@@ -96,19 +97,21 @@ SAKURAIN-TECH/
 │   ├── algo-viz/                     # Algorithm visualization page
 │   ├── about/                        # About page
 │   ├── studio/                       # Portfolio studio
-│   ├── resume/                       # Resume page
 │   ├── projects/                     # Projects showcase
-│   └── api/                          # Edge Route Handlers
-│       ├── comments/route.ts
+│   └── resume/                       # Resume page
+├── edge-functions/                   # EdgeOne Pages Functions (write APIs)
+│   ├── lib/                          # Shared edge logic (auth, rate-limit, KV)
+│   └── api/                          # Function entrypoints
+│       ├── comments.js               # /api/comments
 │       ├── danmaku/
-│       │   ├── list/route.ts
-│       │   ├── add/route.ts
-│       │   └── delete/route.ts
+│       │   ├── list.js               # /api/danmaku/list
+│       │   ├── add.js                # /api/danmaku/add
+│       │   └── delete.js             # /api/danmaku/delete
 │       └── feed/
-│           ├── get/route.ts
-│           ├── refresh/route.ts
-│           ├── batch-get/route.ts
-│           └── batch-refresh/route.ts
+│           ├── get.js                # /api/feed/get
+│           ├── refresh.js            # /api/feed/refresh
+│           ├── batch-get.js          # /api/feed/batch-get
+│           └── batch-refresh.js      # /api/feed/batch-refresh
 ├── content/                          # Source content (markdown)
 │   ├── blog/posts/                   # Blog post source files
 │   └── notes/posts/                  # Note source files
@@ -135,7 +138,6 @@ SAKURAIN-TECH/
 │   ├── check-friends-connectivity.js # Friend link health checker
 │   ├── generate-deployment-config.js # Deployment config generator
 │   ├── git-commits-to-notes.js       # Git-to-notes converter
-│   ├── prune-standalone.js           # Strip dev-only deps from standalone output
 │   └── submit-sitemap.js             # Search engine sitemap submission
 ├── edgeone.json                      # EdgeOne Pages deployment config
 ├── next.config.ts                    # Next.js configuration
@@ -181,7 +183,7 @@ Create `.env.local` in the project root:
 API_BASE_URL=
 
 # Shared HMAC-SHA256 signing key for write API requests.
-# Client signs requests with this key; edge Route Handlers verify it.
+# Client signs requests with this key; EdgeOne Edge Functions verify it.
 # Must be at least 32 bytes (64 hex characters).
 # NOTE: this is exposed to the browser. Phase 3b will replace client-side
 # signing with a server-side proxy / token-based flow.
@@ -226,14 +228,14 @@ By default, `next.config.ts` rewrites `/api/:path*` to the production site (`htt
 
 > **Warning**: Write operations in default mode hit the production API and modify live data.
 
-To develop API handlers locally, run `npm run dev` and access `/api/*` directly. Edge Route Handlers under `app/api/*` are served by the Next.js dev server. Set `DEV_API_TARGET=http://localhost:8788` in `.env.local` to proxy `/api/*` to a custom local backend instead.
+To develop edge functions locally, use the EdgeOne CLI (`edgeone dev`) or deploy to a preview environment. The `edge-functions/` directory is not served by `next dev`; Next.js only handles the static frontend.
 
 ### Code Style
 
 - TypeScript strict mode is enabled.
 - ESLint uses the Next.js recommended config.
 - Client-side hooks and browser APIs must be guarded by the `mounted` gate when used in conditional rendering.
-- Edge Route Handlers use `export const runtime = 'edge'` and access KV namespaces as global variables.
+- EdgeOne Edge Functions use Web Standard `Request`/`Response` objects and access KV namespaces as global variables.
 
 ---
 
@@ -250,9 +252,10 @@ The build workflow runs the following steps in order. Each step must succeed bef
 1. **`generate-deployment-config.js`**: Generates `src/config/deployment-config.ts` from `public/config/deployment.json`.
 2. **`git-commits-to-notes.js`**: Converts new Git commits into notes under `content/notes/posts/`.
 3. **`check-friends-connectivity.js`**: Updates the online/offline status of friend links in `public/data/friends.json`.
-4. **`next build`**: Produces 46 static pages and 8 dynamic Edge Route Handlers.
-5. **`prune-standalone.js`**: Strips build-time-only packages (e.g. `typescript`, `eslint`, `tailwindcss`) from `.next/standalone/node_modules` to keep the EdgeOne Pages deployment image small.
-6. **`submit-sitemap.js`**: Submits the generated sitemap to search engines.
+4. **`next build`**: Exports 46 static pages and the RSS/Atom/JSON feed files to `dist/`.
+5. **`submit-sitemap.js`**: Submits the generated sitemap to search engines.
+
+Because the project uses `output: "export"`, there is no SSR Node function package. EdgeOne Pages Functions in `edge-functions/` are deployed separately and are not part of the Next.js build output.
 
 To skip the scripts and run only `next build`:
 
@@ -268,18 +271,16 @@ npm run build:fast
 | 2. Notes Sync | Convert Git commits to notes |
 | 3. Friends Check | Check friend link connectivity |
 | 4. Compile | TypeScript compilation and bundle optimization |
-| 5. Static Generation | 46 pages prerendered as static HTML |
-| 6. Edge Handler Build | 8 API routes built as edge functions |
-| 7. Prune Standalone | Remove build-time-only deps from `.next/standalone` |
-| 8. Sitemap Submit | Submit sitemap to search engines |
-| 9. Trace & Optimize | Collect build traces and finalize output |
+| 5. Static Generation | 46 pages exported as static HTML to `dist/` |
+| 6. Sitemap Submit | Submit sitemap to search engines |
+| 7. Trace & Optimize | Collect build traces and finalize output |
 
 ### EdgeOne Pages Deployment
 
 The project is deployed to Tencent Cloud EdgeOne Pages. Key configuration in `edgeone.json`:
 
 - `buildCommand`: `npm run build`
-- `outputDirectory`: `.next`
+- `outputDirectory`: `dist`
 - `nodeVersion`: `20.18.0`
 - Rewrites: legacy `/feed`, `/feed/atom`, `/feed/json` aliases
 - Caches: long-term caching for `/_next/static/*`, `/image/*`, `/music/*`; short TTL for `/data/*`, `/blog/*`, `/notes/*`, feeds

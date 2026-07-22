@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/generate-deployment-config.js && node scripts/git-commits-to-notes.js && node scripts/check-friends-connectivity.js && next build && node scripts/prune-standalone.js && node scripts/submit-sitemap.js",
+    "build": "node scripts/generate-deployment-config.js && node scripts/git-commits-to-notes.js && node scripts/check-friends-connectivity.js && next build && node scripts/submit-sitemap.js",
     "build:fast": "next build",
     "submit-sitemap": "node scripts/submit-sitemap.js",
     "start": "next start",
