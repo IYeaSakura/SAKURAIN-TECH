@@ -253,10 +253,11 @@ npm run build
 
 The build workflow runs the following steps in order. Each step must succeed before the next one starts:
 
-1. **`sync-content-to-public.js`**: Copies managed content (`content/data/*`, `content/docs/*`, `content/config/*`, `content/resume/*`) into `public/` so the static build can consume it.
-2. **`check-friends-connectivity.js`**: Updates the online/offline status of friend links in `public/data/friends.json`.
-3. **`next build`**: Exports 46 static pages and the RSS/Atom/JSON feed files to `dist/`.
-4. **`submit-sitemap.js`**: Submits the generated sitemap to search engines.
+1. **`copy-cesium.mjs`**: Copies Cesium runtime assets from `node_modules/cesium/Build/Cesium` to `public/cesium/`.
+2. **`sync-content-to-public.js`**: Copies managed content (`content/data/*`, `content/docs/*`, `content/config/*`, `content/resume/*`) into `public/`, and generates `public/data/docs.json` from `content/docs-index.json`.
+3. **`check-friends-connectivity.js`**: Updates the online/offline status of friend links in `public/data/friends.json`.
+4. **`next build`**: Exports 54 static pages and the RSS/Atom/JSON feed files to `dist/`.
+5. **`submit-sitemap.js`**: Submits the generated sitemap to search engines.
 
 Because the project uses `output: "export"`, there is no SSR Node function package. EdgeOne Pages Functions in `edge-functions/` are deployed separately and are not part of the Next.js build output.
 

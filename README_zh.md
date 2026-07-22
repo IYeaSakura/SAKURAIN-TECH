@@ -252,10 +252,11 @@ npm run build
 
 构建流程按顺序执行以下步骤，前一步成功才会继续下一步：
 
-1. **`sync-content-to-public.js`**：将托管内容（`content/data/*`、`content/docs/*`、`content/config/*`、`content/resume/*`）复制到 `public/`，供静态构建消费。
-2. **`check-friends-connectivity.js`**：更新 `public/data/friends.json` 中友链的在线/离线状态。
-3. **`next build`**：将 46 个静态页面与 RSS/Atom/JSON 订阅源导出到 `dist/`。
-4. **`submit-sitemap.js`**：将生成的站点地图提交给搜索引擎。
+1. **`copy-cesium.mjs`**：将 Cesium 运行时资产从 `node_modules/cesium/Build/Cesium` 复制到 `public/cesium/`。
+2. **`sync-content-to-public.js`**：将托管内容（`content/data/*`、`content/docs/*`、`content/config/*`、`content/resume/*`）复制到 `public/`，并根据 `content/docs-index.json` 生成 `public/data/docs.json`。
+3. **`check-friends-connectivity.js`**：更新 `public/data/friends.json` 中友链的在线/离线状态。
+4. **`next build`**：将 54 个静态页面与 RSS/Atom/JSON 订阅源导出到 `dist/`。
+5. **`submit-sitemap.js`**：将生成的站点地图提交给搜索引擎。
 
 由于项目使用 `output: "export"`，不再生成 SSR Node 函数包。`edge-functions/` 中的 EdgeOne Pages Functions 单独部署，不属于 Next.js 构建产物。
 
