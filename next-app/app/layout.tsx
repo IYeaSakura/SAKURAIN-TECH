@@ -3,6 +3,7 @@ import ClientEffects from "@/components/ClientEffects";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://sakurain.net"),
   title: "SAKURAIN",
   description: "SAKURAIN 个人品牌站 —— 有用、有料、有趣的技术创作者门户",
 };
