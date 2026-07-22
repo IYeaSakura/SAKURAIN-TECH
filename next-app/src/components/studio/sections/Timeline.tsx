@@ -234,13 +234,12 @@ export const Timeline = memo(function Timeline({ data }: TimelineProps) {
                       viewport={{ margin: '-50px' }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                     >
-                      <TimelineCard 
-                        event={event} 
-                        color={color} 
-                        isExpanded={isExpanded} 
+                      <TimelineCard
+                        event={event}
+                        color={color}
+                        isExpanded={isExpanded}
                         onToggle={() => handleToggle(index)}
                         align="left"
-                        isMobile
                       />
                     </motion.div>
                   </div>
@@ -266,10 +265,10 @@ export const Timeline = memo(function Timeline({ data }: TimelineProps) {
 
 // Card Component
 const TimelineCard = memo(({
-  event, color, isExpanded, onToggle, align, isMobile = false,
+  event, color, isExpanded, onToggle, align,
 }: {
   event: TimelineEvent; color: string; isExpanded: boolean; onToggle: () => void;
-  align: 'left' | 'right'; isMobile?: boolean;
+  align: 'left' | 'right';
 }) => {
   return (
     <motion.div
@@ -293,15 +292,13 @@ const TimelineCard = memo(({
         />
 
         {/* Year Badge - Desktop */}
-        {!isMobile && (
-          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full"
-            style={{ background: `${color}15`, border: `1px solid ${color}30` }}
-          >
-            <Calendar className="w-3 h-3" style={{ color }} />
-            <span className="font-primary text-xs font-bold" style={{ color }}>{event.year}</span>
-            {event.isFuture && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10">未来</span>}
-          </div>
-        )}
+        <div className="hidden md:inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full"
+          style={{ background: `${color}15`, border: `1px solid ${color}30` }}
+        >
+          <Calendar className="w-3 h-3" style={{ color }} />
+          <span className="font-primary text-xs font-bold" style={{ color }}>{event.year}</span>
+          {event.isFuture && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10">未来</span>}
+        </div>
 
         {/* Title */}
         <h3 className="font-primary text-xl font-black mb-2 text-[var(--text-primary)]">{event.title}</h3>

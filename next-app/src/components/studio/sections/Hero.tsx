@@ -8,7 +8,8 @@ import {
 import { GradientText } from '@/components/effects/TextEffects';
 
 
-import { usePrefersReducedMotion, useThrottledScroll, useIsMobile } from '@/lib/performance';
+import { usePrefersReducedMotion, useThrottledScroll } from '@/lib/performance';
+import { useIsMobile, useMobileMounted, useIsDesktopClient } from '@/hooks';
 import { usePerformance } from '@/contexts/PerformanceContext';
 
 import type { SiteData } from '@/types';
@@ -72,9 +73,12 @@ const StatCard = memo(({
   const [isHovered, setIsHovered] = useState(false);
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
+  const mounted = useMobileMounted();
   const color = 'var(--accent-primary)';
 
-  if (prefersReducedMotion || isMobile) {
+  // Keep the initial SSR/client render identical by always using the static
+  // fallback before mount; switch to the animated version only after hydration.
+  if (!mounted || prefersReducedMotion || isMobile) {
     return (
       <div
         className="relative p-5 sm:p-6 text-center overflow-hidden"
@@ -260,8 +264,9 @@ SecondaryButton.displayName = 'SecondaryButton';
 const GlowBadge = memo(({ text }: { text: string }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
+  const mounted = useMobileMounted();
 
-  if (prefersReducedMotion || isMobile) {
+  if (!mounted || prefersReducedMotion || isMobile) {
     return (
       <div className="inline-flex items-center gap-2 mb-6 sm:mb-8 relative">
         <div
@@ -339,8 +344,9 @@ GlowBadge.displayName = 'GlowBadge';
 const GlowTitle = memo(({ children }: { children: React.ReactNode }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
+  const mounted = useMobileMounted();
 
-  if (prefersReducedMotion || isMobile) {
+  if (!mounted || prefersReducedMotion || isMobile) {
     return (
       <div className="overflow-hidden mb-6 sm:mb-8">
         <h1
@@ -410,8 +416,9 @@ GlowTitle.displayName = 'GlowTitle';
 const GlowScrollIndicator = memo(({ onClick }: { onClick: () => void }) => {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
+  const mounted = useMobileMounted();
 
-  if (prefersReducedMotion || isMobile) {
+  if (!mounted || prefersReducedMotion || isMobile) {
     return (
       <div
         className="absolute bottom-8 left-1/2 -translate-x-1/2 cursor-pointer"
@@ -468,6 +475,8 @@ GlowScrollIndicator.displayName = 'GlowScrollIndicator';
 export const Hero = memo(function Hero({ data }: HeroProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isMobile = useIsMobile();
+  const mounted = useMobileMounted();
+  const isDesktopClient = useIsDesktopClient();
   const { scrollY } = useThrottledScroll(16);
   const { effectiveQuality, enableBackgroundAnimations } = usePerformance();
 
@@ -506,7 +515,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
   const primaryCta = data.cta.find(c => c.primary);
   const secondaryCta = data.cta.find(c => !c.primary);
 
-  const showAmbientGlow = !isMobile && effectiveQuality !== 'low';
+  const showAmbientGlow = mounted && !isMobile && effectiveQuality !== 'low';
   const starCount = effectiveQuality === 'low' ? 10 : effectiveQuality === 'medium' ? 15 : 20;
 
   return (
@@ -763,7 +772,7 @@ export const Hero = memo(function Hero({ data }: HeroProps) {
 
             {animationPhase >= 2 && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-2xl mx-auto xl:mx-0 relative">
-                {!isMobile && (
+                {isDesktopClient && (
                   <div
                     className="absolute inset-0 -z-10 rounded-3xl animate-pulse-slow"
                     style={{

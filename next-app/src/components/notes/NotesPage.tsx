@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Heart, MessageCircle, Smile, Meh, Frown, Calendar, BarChart3, Sparkles, Clock } from 'lucide-react';
 import { AmbientGlow, GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
-import { useMobile } from '@/hooks';
+import { useMobile, useMobileMounted } from '@/hooks';
 import { clipPathRounded } from '@/utils/styles';
 import type { Note } from '@/lib/content/notes';
 import type { SiteData } from '@/types';
@@ -29,6 +29,7 @@ interface NotesPageProps {
 
 export default function NotesPage({ notes, months }: NotesPageProps) {
   const isMobile = useMobile();
+  const mounted = useMobileMounted();
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
   const [loadedCount, setLoadedCount] = useState(NOTES_PER_LOAD);
@@ -584,7 +585,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
       {footerData && <Footer data={footerData} />}
 
       {/* 底部光剑 - 仅桌面端显示 */}
-      {!isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
+      {mounted && !isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
     </div>
   );
 }

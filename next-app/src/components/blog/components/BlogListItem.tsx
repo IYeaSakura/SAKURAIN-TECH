@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { BlogPost } from '../types';
 import { formatDateCard, getReadingTime } from '../utils';
 import { deploymentConfig } from '@/config/deployment-config';
-import { useAnimationEnabled, useMobile } from '@/hooks';
+import { useAnimationEnabled, useIsDesktopClient } from '@/hooks';
 
 interface BlogListItemProps {
   post: BlogPost;
@@ -20,7 +20,7 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useRouter().push;
   const animationEnabled = useAnimationEnabled();
-  const isMobile = useMobile();
+  const isDesktopClient = useIsDesktopClient();
 
   const handleClick = () => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -58,7 +58,7 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
       >
         <div className="relative p-5">
           {/* 左侧光效 - 仅桌面端显示 */}
-          {!isMobile && (
+          {isDesktopClient && (
             <div className="absolute top-0 left-0 w-4 h-full pointer-events-none">
               <motion.div
                 className="absolute top-0 left-0 w-[2px] h-full"
@@ -70,7 +70,7 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
           )}
 
           {/* Hover glow background - 仅桌面端显示 */}
-          {!isMobile && (
+          {isDesktopClient && (
             <motion.div
               className="absolute inset-0 pointer-events-none"
               style={{ background: 'radial-gradient(circle at 0% 50%, var(--accent-glow), transparent 60%)' }}
@@ -80,7 +80,7 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
           )}
 
           {/* Shine effect - 仅桌面端显示 */}
-          {!isMobile && (
+          {isDesktopClient && (
             <motion.div
               className="absolute inset-0 pointer-events-none"
               style={{

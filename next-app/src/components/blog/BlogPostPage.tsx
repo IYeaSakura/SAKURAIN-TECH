@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Tag, Share2, ArrowLeft, Scale } from 'lucide-react';
 import { AmbientGlow } from '@/components/effects';
-import { useTheme, useMobile } from '@/hooks';
+import { useTheme, useMobile, useMobileMounted } from '@/hooks';
 import { ImagePreviewProvider, useImagePreview } from '@/contexts/ImagePreviewContext';
 import { MarkdownRenderer } from '@/components/markdown/MarkdownRenderer';
 import { ArticleSidebar } from './components/ArticleSidebar';
@@ -33,14 +32,8 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
   const navigate = useRouter().push;
   useTheme();
   const isMobile = useMobile();
+  const mounted = useMobileMounted();
   useImagePreview();
-
-  // 水合一致性：MobileProvider 在 SSR 时固定返回 isMobile=true，
-  // 客户端首次渲染却会读到真实窗口宽度（桌面端为 false）。
-  // 所有依赖 isMobile 的条件渲染必须延迟到挂载后，
-  // 保证首次客户端渲染与 SSR 输出一致，避免 Hydration failed。
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
 
   const slug = post.slug;
 

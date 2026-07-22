@@ -20,7 +20,7 @@ import {
   Waves,
   Grid3X3,
 } from 'lucide-react';
-import { useAnimationEnabled, useConfig } from '@/hooks';
+import { useAnimationEnabled, useConfig, useIsDesktopClient } from '@/hooks';
 import { AudioVisualizer } from './AudioVisualizer';
 
 // 播放列表类型定义
@@ -54,8 +54,8 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
   const { data: playlistConfig, loading: playlistLoading } = useConfig<PlaylistConfig>('/data/playlist.json');
   const playlist = playlistConfig?.songs || [];
 
-  // 使用状态来控制是否显示，而不是直接返回 null
-  const [isVisible, setIsVisible] = useState(false);
+  // 仅桌面端显示，使用统一的 mounted 门控避免水合分叉
+  const isDesktopClient = useIsDesktopClient();
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -90,22 +90,9 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
   const currentNumber = currentPosition + 1;
   const totalSongs = playlist.length;
 
-  // 检测移动端并设置可见性
-  useEffect(() => {
-    const checkMobile = () => {
-      const isMobileDevice = window.innerWidth < 768 ||
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      setIsVisible(!isMobileDevice);
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
   // 初始化音频 - 只初始化一次
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isDesktopClient) return;
 
     const audio = new Audio();
     audio.preload = 'metadata';
@@ -169,11 +156,11 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
         preloadRef.current.src = '';
       }
     };
-  }, [isVisible]);
+  }, [isDesktopClient]);
 
   // 切换歌曲时加载音频（仅在用户交互后加载，避免音频资源缺失时全站 404 刷屏）
   useEffect(() => {
-    if (!audioRef.current || !isVisible || !hasUserInteracted) return;
+    if (!audioRef.current || !isDesktopClient || !hasUserInteracted) return;
 
     const audio = audioRef.current;
     setIsLoading(true);
@@ -204,11 +191,11 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
         });
       }
     }
-  }, [currentIndex, isVisible, hasUserInteracted, currentSong.src]);
+  }, [currentIndex, isDesktopClient, hasUserInteracted, currentSong.src]);
 
   // 处理播放/暂停
   useEffect(() => {
-    if (!audioRef.current || !isVisible) return;
+    if (!audioRef.current || !isDesktopClient) return;
 
     const audio = audioRef.current;
 
@@ -228,7 +215,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
     } else {
       audio.pause();
     }
-  }, [isPlaying, isVisible, currentSong.src]);
+  }, [isPlaying, isDesktopClient, currentSong.src]);
 
   // 音量控制
   useEffect(() => {
@@ -239,7 +226,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
 
   // Preload next song for better playback experience
   useEffect(() => {
-    if (!isVisible || !hasUserInteracted || playlist.length === 0 || shuffledOrder.length === 0) return;
+    if (!isDesktopClient || !hasUserInteracted || playlist.length === 0 || shuffledOrder.length === 0) return;
 
     const nextPosition = currentPosition + 1;
     let nextIndex: number;
@@ -264,7 +251,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
       preloadRef.current.src = nextSong.src;
       preloadRef.current.load();
     }
-  }, [currentPosition, shuffledOrder, playlist, isVisible, hasUserInteracted]);
+  }, [currentPosition, shuffledOrder, playlist, isDesktopClient, hasUserInteracted]);
 
   const handlePlayPause = useCallback(() => {
     setHasUserInteracted(true);
@@ -340,7 +327,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
   const bufferedPercent = duration ? (buffered / duration) * 100 : 0;
 
   // 移动端不渲染或播放列表未加载
-  if (!isVisible || playlistLoading || playlist.length === 0) return null;
+  if (!isDesktopClient || playlistLoading || playlist.length === 0) return null;
 
   return (
     <>

@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { AmbientGlow, LightBeam } from '@/components/effects';
-import { useMobile, useAnimationEnabled } from '@/hooks';
+import { useAnimationEnabled, useIsDesktopClient } from '@/hooks';
 
 import type { SiteData } from '@/types';
 
@@ -1212,7 +1212,7 @@ export default function FeedPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshCooldown, _setRefreshCooldown] = useState(0);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
-  const isMobile = useMobile();
+  const isDesktopClient = useIsDesktopClient();
   const animationEnabled = useAnimationEnabled();
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastRefreshTimeRef = useRef<number>(Date.now() - REFRESH_COOLDOWN_MS); // 初始设置为已过期
@@ -1705,13 +1705,13 @@ export default function FeedPage() {
   if (loading && allItems.length === 0) {
     return (
       <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-        {!isMobile && (
+        {isDesktopClient && (
           <div className="fixed inset-0 pointer-events-none">
             <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
             <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
           </div>
         )}
-        <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-32 lg:pt-36">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-32 lg:pt-36">
           <LoadingProgress loaded={loadingProgress.loaded} total={loadingProgress.total} />
         </main>
       </div>
@@ -1720,7 +1720,7 @@ export default function FeedPage() {
 
   return (
     <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      {!isMobile && (
+      {isDesktopClient && (
         <div className="fixed inset-0 pointer-events-none">
           <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
           <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
@@ -2026,7 +2026,7 @@ export default function FeedPage() {
       {footerData && <Footer data={footerData} />}
 
       {/* Light Beam */}
-      {!isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
+      {isDesktopClient && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
 
       {/* Subscribe Modal */}
       <AnimatePresence>

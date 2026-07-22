@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Grid, List, X, ChevronLeft, ChevronRight, BarChart3, BookOpen, Calendar, Tag, Sparkles } from 'lucide-react';
 import { GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
-import { useMobile, useAnimationEnabled } from '@/hooks';
+import { useMobile, useAnimationEnabled, useMobileMounted } from '@/hooks';
 import type { SiteData } from '@/types';
 
 import { BlogCard } from './components/BlogCard';
@@ -303,6 +303,7 @@ function StatCard({
 
 export default function BlogIndex({ posts, tags, description, footer }: BlogPageProps) {
   const isMobile = useMobile();
+  const mounted = useMobileMounted();
   const animationEnabled = useAnimationEnabled();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -936,7 +937,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
         {footer && <Footer data={footer} />}
 
         {/* 底部光剑 */}
-        {!isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
+        {mounted && !isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
       </div>
     </>
   );

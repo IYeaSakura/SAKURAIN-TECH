@@ -32,7 +32,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { GitHubHeatmap } from './GitHubHeatmap';
 import { Footer } from '@/components/sections/Footer';
 import { TwinklingStars, GradientText, LightBeam } from '@/components/effects';
-import { useMobile, useAnimationEnabled } from '@/hooks';
+import { useMobile, useAnimationEnabled, useMobileMounted } from '@/hooks';
 import type { SiteData } from '@/types';
 
 // 技术栈词云数据 - 随机颜色版本
@@ -430,9 +430,11 @@ function GlassCard({
 // 星光背景容器 - 移动端特效降级
 function StarryBackground() {
   const isMobile = useMobile();
+  const mounted = useMobileMounted();
 
-  // 移动端不显示复杂特效，仅保留纯色背景
-  if (isMobile) {
+  // SSR and the first client render must share the same mobile-safe branch to
+  // avoid hydration mismatches. After mount the real viewport value takes over.
+  if (!mounted || isMobile) {
     return (
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0" style={{ background: 'var(--bg-primary)' }} />
@@ -483,6 +485,7 @@ export default function AboutPage() {
   const [footerData, setFooterData] = useState<SiteData['footer'] | null>(null);
   const animationEnabled = useAnimationEnabled();
   const isMobile = useMobile();
+  const mounted = useMobileMounted();
 
   // 页面加载时滚动到顶部
   useEffect(() => {
@@ -1255,7 +1258,7 @@ export default function AboutPage() {
       {footerData && <Footer data={footerData} />}
 
       {/* 底部光剑 - 仅桌面端显示 */}
-      {!isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
+      {mounted && !isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
     </div>
   );
 }

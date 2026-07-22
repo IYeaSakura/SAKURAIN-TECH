@@ -126,7 +126,10 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('welcome');
-  const [bellPosition, setBellPosition] = useState({ x: 14, y: window.innerHeight * 0.2 + 32 });
+  const [bellPosition, setBellPosition] = useState(() => ({
+    x: 14,
+    y: typeof window !== 'undefined' ? window.innerHeight * 0.2 + 32 : 200,
+  }));
   const [markdownContent, setMarkdownContent] = useState('');
   const [isMarkdownLoading, setIsMarkdownLoading] = useState(false);
 

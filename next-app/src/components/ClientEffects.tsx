@@ -23,7 +23,7 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { Toaster } from 'sonner';
-import { MobileProvider, useIsMobile } from '@/contexts/MobileContext';
+import { MobileProvider, useIsDesktopClient } from '@/contexts/MobileContext';
 import { PerformanceProvider, usePerformance } from '@/contexts/PerformanceContext';
 import { useTheme } from '@/hooks';
 import { Navigation } from '@/components/sections/Navigation';
@@ -163,7 +163,7 @@ const SHOW_NAV_PATHS = [
 function GlobalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isHomePage = pathname === '/';
-  const isMobile = useIsMobile();
+  const isDesktopClient = useIsDesktopClient();
   const { enableMouseEffects, effectiveQuality } = usePerformance();
   const { theme, isTransitioning, toggleTheme } = useTheme();
   const { isReady, isLoading, siteData } = useInitialLoad();
@@ -192,7 +192,7 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
       <Toaster position="top-center" />
 
       {/* 全局鼠标指针效果 - 错峰加载 */}
-      {phases.phase2 && !isMobile && enableMouseEffects && (
+      {phases.phase2 && isDesktopClient && enableMouseEffects && (
         <>
           <MagneticCursor />
           <VelocityCursor />

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { BlogPost } from '../types';
 import { formatDateCard, getReadingTime } from '../utils';
 import { deploymentConfig } from '@/config/deployment-config';
-import { useAnimationEnabled, useMobile } from '@/hooks';
+import { useAnimationEnabled, useIsDesktopClient } from '@/hooks';
 
 interface BlogCardProps {
   post: BlogPost;
@@ -21,7 +21,7 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false, 
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useRouter().push;
   const animationEnabled = useAnimationEnabled();
-  const isMobile = useMobile();
+  const isDesktopClient = useIsDesktopClient();
 
   const handleClick = () => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -60,7 +60,7 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false, 
       >
         <div className="relative p-6 h-full flex flex-col">
           {/* 四角光效动画 - 仅桌面端显示 */}
-          {!isMobile && (
+          {isDesktopClient && (
             <>
               <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
                 <motion.div
@@ -130,7 +130,7 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false, 
           )}
 
           {/* Hover glow background - 仅桌面端显示 */}
-          {!isMobile && (
+          {isDesktopClient && (
             <motion.div
               className="absolute inset-0 pointer-events-none"
               style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
@@ -140,7 +140,7 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false, 
           )}
 
           {/* Scanline effect - 仅桌面端显示 */}
-          {!isMobile && (
+          {isDesktopClient && (
             <motion.div
               className="absolute inset-0 pointer-events-none"
               style={{
@@ -151,7 +151,7 @@ export const BlogCard = memo(function BlogCard({ post, index, featured = false, 
           )}
 
           {/* Shine effect - 仅桌面端显示 */}
-          {!isMobile && (
+          {isDesktopClient && (
             <motion.div
               className="absolute inset-0 pointer-events-none"
               style={{

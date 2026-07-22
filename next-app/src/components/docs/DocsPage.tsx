@@ -7,7 +7,7 @@ import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, Chevr
 import type { LucideProps } from 'lucide-react';
 import { MagneticCursor, VelocityCursor, AmbientGlow, GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
-import { useMobile, useAnimationEnabled } from '@/hooks';
+import { useAnimationEnabled, useIsDesktopClient } from '@/hooks';
 import { deploymentConfig } from '@/config/deployment-config';
 import { DocListView } from './components/DocListView';
 import { SeriesDetailView } from './components/SeriesDetailView';
@@ -49,7 +49,7 @@ export default function DocsPage({
   content = null,
 }: DocsPageProps) {
   const navigate = useRouter().push;
-  const isMobile = useMobile();
+  const isDesktopClient = useIsDesktopClient();
 
   // 由 props 派生当前选中态（服务端已校验合法性，非法路径在上层 notFound）
   const selectedCategory = useMemo<DocCategory | null>(
@@ -145,7 +145,7 @@ export default function DocsPage({
   return (
     <ImagePreviewProvider>
       {/* 鼠标效果 - 仅桌面端显示 */}
-      {!isMobile && (
+      {isDesktopClient && (
         <>
           <MagneticCursor /><VelocityCursor />
         </>
@@ -270,7 +270,7 @@ const CategoryCard = memo(({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const animationEnabled = useAnimationEnabled();
-  const isMobile = useMobile();
+  const isDesktopClient = useIsDesktopClient();
   const Icon = iconMap[category.icon] || Folder;
   const seriesCount = category.items.filter((i: DocItem) => i.type === 'series').length;
   const docCount = category.items.filter((i: DocItem) => i.type === 'doc').length;
@@ -298,7 +298,7 @@ const CategoryCard = memo(({
         }}
       >
         {/* 四角发光效果 - 仅桌面端显示 */}
-        {!isMobile && (
+        {isDesktopClient && (
           <>
             <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
               <motion.div
@@ -332,7 +332,7 @@ const CategoryCard = memo(({
         )}
 
         {/* 顶部渐变光效 - 仅桌面端显示 */}
-        {!isMobile && (
+        {isDesktopClient && (
           <motion.div
             className="absolute inset-0 pointer-events-none"
             style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
@@ -342,7 +342,7 @@ const CategoryCard = memo(({
         )}
 
         {/* 光泽扫过效果 - 仅桌面端显示 */}
-        {!isMobile && (
+        {isDesktopClient && (
           <motion.div
             className="absolute inset-0 pointer-events-none"
             style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%)' }}
@@ -404,8 +404,8 @@ const CategoryCard = memo(({
 CategoryCard.displayName = 'CategoryCard';
 
 function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeViewProps) {
-  const isMobile = useMobile();
-  
+  const isDesktopClient = useIsDesktopClient();
+
   // 计算统计数据
   const categoryCount = config.categories.length;
   const docCount = config.categories.reduce((acc: number, cat: DocCategory) => 
@@ -540,7 +540,7 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
       {siteData?.footer && <Footer data={siteData.footer} />}
 
       {/* 底部光剑 - 仅桌面端显示 */}
-      {!isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
+      {isDesktopClient && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
     </div>
   );
 }

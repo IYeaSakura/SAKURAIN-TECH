@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { AmbientGlow, LightBeam } from '@/components/effects';
-import { useMobile, useAnimationEnabled } from '@/hooks';
+import { useMobile, useAnimationEnabled, useIsDesktopClient } from '@/hooks';
 import { RouteLoader } from '@/components/RouteLoader';
 import type { SiteData } from '@/types';
 
@@ -372,6 +372,7 @@ const PixelCard = memo(function PixelCard({
   const [imageError, setImageError] = useState(false);
   const animationEnabled = useAnimationEnabled();
   const isMobile = useMobile();
+  const isDesktopClient = useIsDesktopClient();
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -439,7 +440,7 @@ const PixelCard = memo(function PixelCard({
       >
         {/* 内容容器 - 使用 padding 而不是 margin，确保边框完整显示 */}
         <div className="relative p-4 sm:p-6 h-full flex flex-col">
-        {!isMobile && (
+        {isDesktopClient && (
           <>
             <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
               <motion.div
@@ -516,7 +517,7 @@ const PixelCard = memo(function PixelCard({
           </>
         )}
 
-        {!isMobile && (
+        {isDesktopClient && (
           <>
             <motion.div
               className="absolute inset-0 pointer-events-none"
@@ -568,7 +569,7 @@ const PixelCard = memo(function PixelCard({
               <Globe className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--accent-primary)' }} />
             )}
 
-            {!isMobile && (
+            {isDesktopClient && (
               <motion.div
                 className="absolute inset-0 pointer-events-none"
                 style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
@@ -732,7 +733,7 @@ const CategorySection = memo(function CategorySection({
   onClick: (friend: Friend) => void;
 }) {
   const animationEnabled = useAnimationEnabled();
-  const isMobile = useMobile();
+  const isDesktopClient = useIsDesktopClient();
   const IconComponent = iconMap[category.icon] || Globe;
 
   return (
@@ -762,7 +763,7 @@ const CategorySection = memo(function CategorySection({
             clipPath: clipPathRounded(6),
           }}
         >
-          {!isMobile && (
+          {isDesktopClient && (
             <motion.div
               className="absolute inset-0"
               style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
@@ -833,9 +834,10 @@ const HeroSection = memo(function HeroSection({
 }) {
   const animationEnabled = useAnimationEnabled();
   const isMobile = useMobile();
+  const isDesktopClient = useIsDesktopClient();
   return (
     <section className="relative pt-20 pb-16 overflow-hidden">
-      {!isMobile && (
+      {isDesktopClient && (
         <div className="absolute inset-0 pointer-events-none">
           <div
             className="absolute top-20 right-20 w-64 h-64 opacity-20"
@@ -972,7 +974,7 @@ const HeroSection = memo(function HeroSection({
                   clipPath: clipPathRounded(6),
                 }}
               >
-                {!isMobile && (
+                {isDesktopClient && (
                   <motion.div
                     className="absolute inset-0 pointer-events-none"
                     style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
@@ -1286,6 +1288,7 @@ const ApplySection = memo(function ApplySection({
 }) {
   const animationEnabled = useAnimationEnabled();
   const isMobile = useMobile();
+  const isDesktopClient = useIsDesktopClient();
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -1301,7 +1304,7 @@ const ApplySection = memo(function ApplySection({
         clipPath: clipPathRounded(12),
       }}
     >
-      {!isMobile && (
+      {isDesktopClient && (
         <motion.div
           className="absolute inset-0 pointer-events-none"
           style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 70%)' }}
@@ -1331,7 +1334,7 @@ const ApplySection = memo(function ApplySection({
                   clipPath: clipPathRounded(4),
                 }}
               >
-                {!isMobile && (
+                {isDesktopClient && (
                   <motion.div
                     className="absolute inset-0"
                     style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
@@ -1409,7 +1412,7 @@ const ApplySection = memo(function ApplySection({
               transform: isHovered ? 'translateY(-2px)' : 'none',
             }}
           >
-            {!isMobile && (
+            {isDesktopClient && (
               <motion.div
                 className="absolute inset-0 pointer-events-none"
                 style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)' }}
@@ -1624,7 +1627,7 @@ export default function FriendsPage() {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [mailtoModalOpen, setMailtoModalOpen] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
-  const isMobile = useMobile();
+  const isDesktopClient = useIsDesktopClient();
   const animationEnabled = useAnimationEnabled();
 
   const handleFriendClick = useCallback((friend: Friend) => {
@@ -1755,7 +1758,7 @@ export default function FriendsPage() {
 
   return (
     <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      {!isMobile && (
+      {isDesktopClient && (
         <div className="fixed inset-0 pointer-events-none">
           <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
           <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
@@ -1838,7 +1841,7 @@ export default function FriendsPage() {
                     clipPath: clipPathRounded(4),
                   }}
                 >
-                  {!isMobile && (
+                  {isDesktopClient && (
                     <motion.div
                       className="absolute inset-0"
                       style={{ background: 'radial-gradient(circle at 50% 50%, var(--accent-glow), transparent 70%)' }}
@@ -1908,7 +1911,7 @@ export default function FriendsPage() {
       {footerData && <Footer data={footerData} />}
 
       {/* 底部光剑 - 仅桌面端显示 */}
-      {!isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
+      {isDesktopClient && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
 
       <RedirectModal
         isOpen={redirectModalOpen}

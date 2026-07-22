@@ -20,7 +20,7 @@ import { GlobeShowcase, DEMOS, type DemoType } from './GlobeShowcase';
 import { AmbientGlow, GradientText } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
 import { RouteLoader } from '@/components/RouteLoader';
-import { useConfig, useMobile } from '@/hooks';
+import { useConfig } from '@/hooks';
 import { clipPathRounded } from '@/utils/styles';
 import { CommentSection } from '@/components/blog/components/CommentSection';
 import type { SiteData } from '@/types';
@@ -228,8 +228,6 @@ const InfoPanel = ({
 export default function EarthOnlinePage() {
   const [selectedDemo, setSelectedDemo] = useState<DemoType>('cesium');
   const [isLoading, setIsLoading] = useState(true);
-  const _isMobile = useMobile();
-  void _isMobile; // 显式标记为已使用，避免 TypeScript 报错
   const { data: siteData } = useConfig<SiteData>('/data/site-data.json');
 
   useEffect(() => {
