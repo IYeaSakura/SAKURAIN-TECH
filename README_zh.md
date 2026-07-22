@@ -135,6 +135,7 @@ SAKURAIN-TECH/
 │   ├── check-friends-connectivity.js # 友链连通性检查
 │   ├── generate-deployment-config.js # 部署配置生成器
 │   ├── git-commits-to-notes.js       # Git 提交转随笔
+│   ├── prune-standalone.js           # 从 standalone 产物中剔除开发期依赖
 │   └── submit-sitemap.js             # 搜索引擎站点地图提交
 ├── edgeone.json                      # EdgeOne Pages 部署配置
 ├── next.config.ts                    # Next.js 配置
@@ -249,7 +250,8 @@ npm run build
 2. **`git-commits-to-notes.js`**：将新 Git 提交转换为 `content/notes/posts/` 下的笔记。
 3. **`check-friends-connectivity.js`**：更新 `public/data/friends.json` 中友链的在线/离线状态。
 4. **`next build`**：生成 46 个静态页面与 8 个动态 Edge Route Handlers。
-5. **`submit-sitemap.js`**：将生成的站点地图提交给搜索引擎。
+5. **`prune-standalone.js`**：从 `.next/standalone/node_modules` 中剔除 `typescript`、`eslint`、`tailwindcss` 等构建期依赖，避免 EdgeOne Pages 打包时磁盘耗尽。
+6. **`submit-sitemap.js`**：将生成的站点地图提交给搜索引擎。
 
 如需跳过脚本仅执行 `next build`：
 
@@ -267,8 +269,9 @@ npm run build:fast
 | 4. 编译 | TypeScript 编译与打包优化 |
 | 5. 静态生成 | 46 个页面预渲染为静态 HTML |
 | 6. Edge Handler 构建 | 8 个 API 路由构建为边缘函数 |
-| 7. 站点地图提交 | 提交 sitemap 给搜索引擎 |
-| 8. 追踪与优化 | 收集构建追踪并 finalize 输出 |
+| 7. 裁剪 Standalone | 从 `.next/standalone` 中移除构建期依赖 |
+| 8. 站点地图提交 | 提交 sitemap 给搜索引擎 |
+| 9. 追踪与优化 | 收集构建追踪并 finalize 输出 |
 
 ### EdgeOne Pages 部署
 

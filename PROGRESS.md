@@ -39,7 +39,7 @@
 | `dc0e164` | 水合错误三连修 + 音乐文件迁移 |
 | `待提交` | Phase 2.5 完成：旧 SPA/next-app 清理、edge-functions 收敛为 `app/api/*` 隐式 Route Handlers、edgeone.json 校准；Cesium 运行时资产统一收敛到 `public/cesium/`（gitignored，需本地存在），清理旧 public/Assets/Workers/ThirdParty/Widgets 冗余；构建验证通过，API 文件 warning 清零 |
 | `待提交` | README 文档治理：按 github-readme-writer 模板重写 README.md（英文）、新增 README_zh.md、更新 scripts/README.md 与 public/music/README.md、新增 LICENSE；构建验证通过 |
-| `待提交` | 构建告警清零 + EdgeOne 部署磁盘优化：重构字体 CSS 引入方式消除 `no-css-tags` 警告；校准 ESLint 规则并对齐 `_` 前缀未使用变量约定；清理剩余未使用变量与失效 `eslint-disable` 指令；显式启用 `output: "standalone"` 并通过 `outputFileTracingExcludes` 剔除构建期依赖，避免 EdgeOne 打包时 `typescript` 入包导致磁盘耗尽 |
+| `待提交` | 构建告警清零 + EdgeOne 部署磁盘优化：重构字体 CSS 引入方式消除 `no-css-tags` 警告；校准 ESLint 规则并对齐 `_` 前缀未使用变量约定；清理剩余未使用变量与失效 `eslint-disable` 指令；显式启用 `output: "standalone"` + `outputFileTracingExcludes` 并新增 `scripts/prune-standalone.js`，在 `next build` 后主动剔除 `.next/standalone/node_modules` 中的 `typescript`/`@types`/`eslint`/`tailwindcss` 等构建期依赖，避免 EdgeOne 打包时磁盘耗尽 |
 
 ## 三、关键成果
 
@@ -131,7 +131,7 @@
 | AmbientGlow 水合不匹配 | MobileProvider SSR 固定 mobile，客户端首渲分叉 | mounted 门控 + CSS 断点 |
 | MobileProvider 全局水合分叉 | 多处组件直接依赖 `isMobile`/`window` 做条件渲染，SSR 默认与客户端首渲不一致 | 统一 `mounted` 门控：`useMobileMounted`/`useIsDesktopClient`，扫描全站消费方并移除本地检测 |
 | 构建 `[turbopack]_runtime.js` 缺失 | dev/build 共用 `.next` 缓存污染 | `rm -rf .next`（已写 README） |
-| EdgeOne 部署 `ENOSPC: no space left on device` | Next.js 独立镜像默认把 `typescript`/`@types`/`eslint` 等构建期依赖追踪进 `.next/standalone/node_modules`，EdgeOne 复制该目录时撑爆磁盘 | `next.config.ts` 显式启用 `output: "standalone"` + `outputFileTracingExcludes` 排除构建期依赖；本地验证 `standalone/node_modules` 从数百 MB 降至 47 MB |
+| EdgeOne 部署 `ENOSPC: no space left on device` | EdgeOne 的 `@edgeone/opennextjs-pages` 插件在 `next build` 后继续打包 `.next/standalone/node_modules`，其中包含 `typescript`/`@types`/`eslint`/`tailwindcss` 等构建期依赖，复制到 `.edgeone/cloud-functions/ssr-node` 时撑爆磁盘 | `next.config.ts` 显式启用 `output: "standalone"` + `outputFileTracingExcludes` 排除构建期依赖；新增 `scripts/prune-standalone.js` 在 `next build` 后主动删除仍被追踪进 standalone 的开发期依赖与冗余文件；本地验证 `standalone/node_modules` 从数百 MB 降至 47 MB |
 | 构建存在大量 ESLint warning | `next/core-web-vitals` 对遗留 `<img>`、hooks 依赖、未使用变量严格检查；原项目规则未统一 `_` 前缀约定 | 迁移字体 CSS 引入消除 `no-css-tags`；ESLint 配置统一忽略 `_` 前缀占位变量；关闭项目中有意使用的 `<img>` 与 `react-hooks/exhaustive-deps` 规则；清理剩余未使用变量与失效 `eslint-disable` 指令 |
 
 ## 五、遗留问题清单
