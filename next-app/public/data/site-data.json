@@ -16,6 +16,7 @@
     "links": [
       { "label": "首页", "href": "/", "icon": "Home" },
       { "label": "博客", "href": "/blog", "icon": "BookOpen" },
+      { "label": "项目", "href": "/projects", "icon": "Briefcase" },
       { "label": "友链", "href": "/friends", "icon": "Heart" },
       { "label": "朋友圈", "href": "/friends-circle", "icon": "Rss" },
       { "label": "地球Online", "href": "/earth-online", "icon": "Globe" },

@@ -22,6 +22,7 @@ interface NavigationProps {
 const dockItems: { label: string; href: string; icon: LucideIcon; isCustom?: boolean }[] = [
   { label: '首页', href: '/', icon: Home },
   { label: '博客', href: '/blog', icon: FileText },
+  { label: '项目', href: '/projects', icon: Briefcase },
   { label: '地球Online', href: '/earth-online', icon: Gamepad2 },
   { label: '朋友圈', href: '/friends-circle', icon: Rss },
   { label: '友链', href: '/friends', icon: Heart },

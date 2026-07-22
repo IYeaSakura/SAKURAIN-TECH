@@ -140,6 +140,7 @@ const SHOW_NAV_PATHS = [
   '/earth-online',
   '/studio',
   '/algo-viz',
+  '/projects',
   '/dev-log',
   '/tools',
 ];
