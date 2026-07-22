@@ -11,6 +11,7 @@ import {
   verifyAuthHeaders,
   createAuthErrorResponse,
   addCorsHeaders,
+  SECURITY_HEADERS,
 } from './auth';
 import { checkRateLimit, createRateLimitResponse } from './rate-limit';
 
@@ -36,6 +37,7 @@ function createCorsPreflightResponse(allowedMethods: string): Response {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': allowedMethods,
       'Access-Control-Allow-Headers': 'Content-Type, X-Timestamp, X-Nonce, X-Signature',
+      ...SECURITY_HEADERS,
     },
   });
 }
@@ -67,7 +69,10 @@ async function saveDanmakus(danmakus: Danmaku[]): Promise<void> {
 function createJsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...SECURITY_HEADERS,
+    },
   });
 }
 

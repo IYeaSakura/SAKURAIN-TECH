@@ -7,6 +7,8 @@ declare global {
   var FEED_KV: KVNamespace | undefined;
 }
 
+import { SECURITY_HEADERS } from './auth';
+
 const CACHE_TTL = 24 * 60 * 60 * 1000;
 const FORCE_REFRESH_COOLDOWN = 60 * 1000;
 const FAILED_SOURCE_TTL = 7 * 24 * 60 * 60;
@@ -79,6 +81,7 @@ function createJsonResponse(body: unknown, status = 200, extraHeaders: Record<st
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
+      ...SECURITY_HEADERS,
       ...extraHeaders,
     },
   });
@@ -91,6 +94,7 @@ function createCorsPreflightResponse(allowedMethods: string): Response {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': allowedMethods,
       'Access-Control-Allow-Headers': 'Content-Type',
+      ...SECURITY_HEADERS,
     },
   });
 }
@@ -356,6 +360,7 @@ export async function handleGet(request: Request): Promise<Response> {
             headers: {
               'Content-Type': data.contentType || 'application/xml',
               'Access-Control-Allow-Origin': '*',
+              ...SECURITY_HEADERS,
               'X-Cache': 'STALE',
               'X-Feed-Timestamp': data.timestamp.toString(),
               'X-Feed-Failed': 'true',
@@ -394,6 +399,7 @@ export async function handleGet(request: Request): Promise<Response> {
             headers: {
               'Content-Type': data.contentType || 'application/xml',
               'Access-Control-Allow-Origin': '*',
+              ...SECURITY_HEADERS,
               'X-Cache': 'HIT',
               'X-Cache-Age': String(Math.floor((now - data.timestamp) / 1000)),
               'X-Cache-TTL': String(Math.floor((CACHE_TTL - (now - data.timestamp)) / 1000)),
@@ -419,6 +425,7 @@ export async function handleGet(request: Request): Promise<Response> {
         headers: {
           'Content-Type': contentType,
           'Access-Control-Allow-Origin': '*',
+          ...SECURITY_HEADERS,
           'X-Cache': 'MISS',
           'X-Feed-Timestamp': currentTimestamp.toString(),
           'X-Auto-Refresh': 'true',
@@ -435,6 +442,7 @@ export async function handleGet(request: Request): Promise<Response> {
             headers: {
               'Content-Type': data.contentType || 'application/xml',
               'Access-Control-Allow-Origin': '*',
+              ...SECURITY_HEADERS,
               'X-Cache': 'STALE',
               'X-Feed-Timestamp': data.timestamp.toString(),
               'X-Cache-Error': 'Auto refresh failed, returning stale cache',
@@ -550,6 +558,7 @@ export async function handleRefresh(request: Request): Promise<Response> {
         headers: {
           'Content-Type': contentType,
           'Access-Control-Allow-Origin': '*',
+          ...SECURITY_HEADERS,
           'X-Cache': 'MISS',
           'X-Feed-Timestamp': currentTimestamp.toString(),
           'X-Force-Refresh': 'true',
