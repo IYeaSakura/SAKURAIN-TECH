@@ -1420,8 +1420,8 @@ export default function FeedPage() {
       }
 
       const [friendsRes, siteRes] = await Promise.all([
-        fetch(`/data/friends.json?v=${Date.now()}`, { cache: 'no-store', signal }),
-        fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store', signal }),
+        fetch('/data/friends.json', { signal }),
+        fetch('/data/site-data.json', { signal }),
       ]);
 
       if (!friendsRes.ok) throw new Error('Failed to load friends data');

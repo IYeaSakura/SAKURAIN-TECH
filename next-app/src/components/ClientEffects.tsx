@@ -107,7 +107,7 @@ function useInitialLoad() {
     const loadCriticalResources = async () => {
       try {
         const [data] = await Promise.all([
-          fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' })
+          fetch('/data/site-data.json')
             .then((res) => (res.ok ? res.json() : null))
             .catch(() => null),
           document.fonts.ready,
@@ -158,7 +158,6 @@ const SHOW_NAV_PATHS = [
   '/algo-viz',
   '/projects',
   '/dev-log',
-  '/tools',
 ];
 
 function GlobalShell({ children }: { children: React.ReactNode }) {
@@ -179,10 +178,9 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
 
   const enableEffects = isReady && effectiveQuality !== 'low';
 
-  // 导航显隐：白名单 + /tools/* + /docs/*；/blog 仅列表页
+  // 导航显隐：白名单 + /docs/*；/blog 仅列表页
   const shouldShowNav =
     SHOW_NAV_PATHS.includes(pathname) ||
-    pathname.startsWith('/tools/') ||
     pathname.startsWith('/docs/');
   // 算法可视化页面导航不固定
   const isStickyNav = pathname !== '/algo-viz';

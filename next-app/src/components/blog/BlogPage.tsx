@@ -10,21 +10,19 @@ import type { SiteData } from '@/types';
 
 import { BlogCard } from './components/BlogCard';
 import { BlogListItem } from './components/BlogListItem';
-import { getBlogIndex } from './utils';
 import { BlogTagCloud } from '@/components/BlogTagCloud';
-import { useBlogArchive, useMultipleMonthArchives } from '@/hooks/useBlogArchive';
-import { RouteLoader } from '@/components/RouteLoader';
-import type { BlogIndex, BlogPost } from './types';
+import type { BlogPost } from './types';
+import type { BlogTag } from '@/lib/content/blog';
 
-interface TagData {
-  name: string;
-  count: number;
-}
-
-interface TagsResponse {
-  tags: TagData[];
-  total: number;
-  generatedAt: string;
+interface BlogPageProps {
+  /** 全部文章（服务端内容管线注入，按日期倒序，不含正文） */
+  posts: BlogPost[];
+  /** 标签统计 */
+  tags: BlogTag[];
+  /** 列表页描述文案 */
+  description: string;
+  /** 页脚数据（服务端注入） */
+  footer: SiteData['footer'] | null;
 }
 
 type ViewMode = 'grid' | 'list';
@@ -303,69 +301,19 @@ function StatCard({
   );
 }
 
-export default function BlogIndex() {
-  const [data, setData] = useState<BlogIndex | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function BlogIndex({ posts, tags, description, footer }: BlogPageProps) {
   const isMobile = useMobile();
   const animationEnabled = useAnimationEnabled();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showStats, setShowStats] = useState(false);
-  const [tagsData, setTagsData] = useState<TagsResponse | null>(null);
-  const [footerData, setFooterData] = useState<SiteData['footer'] | null>(null);
-
-  const { data: archiveData } = useBlogArchive();
-  const monthsToLoad = useMemo(() => {
-    if (!archiveData?.months.length) return [];
-    const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
-    const endIndex = startIndex + POSTS_PER_PAGE;
-    return archiveData.months.slice(startIndex, endIndex);
-  }, [archiveData, currentPage]);
-
-  const { data: regularPosts, loading: regularPostsLoading } = useMultipleMonthArchives(monthsToLoad);
-
-  useEffect(() => {
-    getBlogIndex()
-      .then((result) => {
-        setData(result);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error('Failed to load blog index:', error);
-        setLoading(false);
-      });
-  }, []);
-
-  useEffect(() => {
-    fetch(`/blog/tags.json?v=${Date.now()}`, { cache: 'no-store' })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to load tags data');
-        return res.json();
-      })
-      .then((data: TagsResponse) => {
-        setTagsData(data);
-      })
-      .catch((error) => {
-        console.error('Failed to load tags data:', error);
-      });
-  }, []);
-
-  useEffect(() => {
-    fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' })
-      .then(res => res.json())
-      .then((data: SiteData) => {
-        setFooterData(data.footer);
-      })
-      .catch(console.error);
-  }, []);
 
   const filteredRegularPosts = useMemo(() => {
-    if (!regularPosts) return [];
     const query = searchQuery.toLowerCase();
     const hasQuery = query.trim().length > 0;
 
-    return regularPosts.filter((post) => {
+    return posts.filter((post) => {
       const matchesQuery = !hasQuery ||
         post.title.toLowerCase().includes(query) ||
         post.description.toLowerCase().includes(query) ||
@@ -373,21 +321,20 @@ export default function BlogIndex() {
 
       return matchesQuery;
     });
-  }, [regularPosts, searchQuery]);
+  }, [posts, searchQuery]);
 
   const featuredPosts = useMemo(() => {
-    if (!data) return [];
-    if (!searchQuery.trim()) return data.posts.filter(post => post.featured);
+    if (!searchQuery.trim()) return posts.filter(post => post.featured);
 
     const query = searchQuery.toLowerCase();
-    return data.posts.filter(post =>
+    return posts.filter(post =>
       post.featured && (
         post.title.toLowerCase().includes(query) ||
         post.description.toLowerCase().includes(query) ||
         post.tags.some(tag => tag.toLowerCase().includes(query))
       )
     );
-  }, [data, searchQuery]);
+  }, [posts, searchQuery]);
 
   const postsByYear = useMemo(() => {
     const grouped: Record<string, typeof filteredRegularPosts> = {};
@@ -410,39 +357,55 @@ export default function BlogIndex() {
     return Object.keys(postsByYear).sort((a, b) => parseInt(b) - parseInt(a));
   }, [postsByYear]);
 
+  /** 当前页文章（按过滤结果分页） */
+  const pagedPosts = useMemo(() => {
+    const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
+    return filteredRegularPosts.slice(startIndex, startIndex + POSTS_PER_PAGE);
+  }, [filteredRegularPosts, currentPage]);
+
+  const pagedPostsByYear = useMemo(() => {
+    const grouped: Record<string, typeof pagedPosts> = {};
+
+    pagedPosts.forEach(post => {
+      const date = new Date(post.date);
+      const year = date.getFullYear();
+
+      if (!grouped[year]) {
+        grouped[year] = [];
+      }
+
+      grouped[year].push(post);
+    });
+
+    return grouped;
+  }, [pagedPosts]);
+
+  const pagedYears = useMemo(() => {
+    return Object.keys(pagedPostsByYear).sort((a, b) => parseInt(b) - parseInt(a));
+  }, [pagedPostsByYear]);
+
   const totalPages = useMemo(() => {
-    if (!archiveData?.months.length) return 1;
-    return Math.ceil(archiveData.months.length / POSTS_PER_PAGE);
-  }, [archiveData]);
+    return Math.max(1, Math.ceil(filteredRegularPosts.length / POSTS_PER_PAGE));
+  }, [filteredRegularPosts]);
+
+  /** 归档月份数（统计弹窗用） */
+  const archiveMonthCount = useMemo(() => {
+    return new Set(posts.map(post => post.date.slice(0, 7)).filter(Boolean)).size;
+  }, [posts]);
+
+  const totalTagRefs = useMemo(() => {
+    return tags.reduce((sum, tag) => sum + tag.count, 0);
+  }, [tags]);
+
+  // 搜索时回到第一页
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  if (loading) {
-    return <RouteLoader />;
-  }
-
-  if (!data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-        <div className="text-center">
-          <p style={{ color: '#ef4444' }}>加载失败</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 mt-4 text-white transition-all hover:scale-105"
-            style={{
-              background: 'var(--accent-primary)',
-              clipPath: clipPathRounded(4),
-            }}
-          >
-            重试
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -592,7 +555,7 @@ export default function BlogIndex() {
                   className="text-lg md:text-xl leading-relaxed max-w-xl"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  {data.description}
+                  {description}
                 </motion.p>
               </motion.div>
 
@@ -612,14 +575,14 @@ export default function BlogIndex() {
                 />
                 <StatCard
                   icon={Tag}
-                  value={tagsData?.tags.length || 0}
+                  value={tags.length}
                   label="标签"
                   color="var(--accent-secondary)"
                   delay={1}
                 />
                 <StatCard
                   icon={BookOpen}
-                  value={regularPosts?.length || 0}
+                  value={posts.length}
                   label="文章总数"
                   color="#22c55e"
                   delay={2}
@@ -638,7 +601,7 @@ export default function BlogIndex() {
           )}
 
           {/* 全部文章 */}
-          {sortedYears.length > 0 && (
+          {pagedYears.length > 0 && (
             <motion.section
               initial={animationEnabled ? { opacity: 0, y: 30 } : undefined}
               animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
@@ -681,22 +644,10 @@ export default function BlogIndex() {
                 </div>
               </div>
 
-              {regularPostsLoading ? (
-                <div className="flex items-center justify-center py-20">
-                  <div
-                    className="w-12 h-12 border-2 border-t-transparent animate-spin"
-                    style={{
-                      borderColor: 'var(--accent-primary)',
-                      borderTopColor: 'transparent',
-                      clipPath: clipPathRounded(6),
-                    }}
-                  />
-                </div>
-              ) : (
-                <>
+              <>
                   <div className="space-y-12">
-                    {sortedYears.map((year, yearIndex) => {
-                      const posts = postsByYear[year];
+                    {pagedYears.map((year, yearIndex) => {
+                      const yearPosts = pagedPostsByYear[year];
 
                       return (
                         <motion.div
@@ -733,13 +684,13 @@ export default function BlogIndex() {
                                 clipPath: clipPathRounded(4),
                               }}
                             >
-                              {posts.length} 篇
+                              {yearPosts.length} 篇
                             </span>
                           </div>
 
                           {/* 文章网格 */}
                           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-                            {posts.map((post, index) => (
+                            {yearPosts.map((post, index) => (
                               viewMode === 'grid' ? (
                                 <BlogCard key={post.slug} post={post} index={index} />
                               ) : (
@@ -805,12 +756,11 @@ export default function BlogIndex() {
                     </div>
                   )}
                 </>
-              )}
             </motion.section>
           )}
 
           {/* 无结果 */}
-          {filteredRegularPosts.length === 0 && !regularPostsLoading && (
+          {filteredRegularPosts.length === 0 && (
             <motion.div
               initial={animationEnabled ? { opacity: 0 } : undefined}
               animate={animationEnabled ? { opacity: 1 } : undefined}
@@ -866,10 +816,10 @@ export default function BlogIndex() {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {[
-                        { value: data?.posts.length || 0, label: '精选文章', color: 'var(--accent-primary)' },
-                        { value: regularPosts?.length || 0, label: '普通文章', color: 'var(--accent-secondary)' },
-                        { value: tagsData?.total || 0, label: '标签总数', color: '#22c55e' },
-                        { value: archiveData?.months.length || 0, label: '归档月份', color: 'var(--text-primary)' },
+                        { value: featuredPosts.length, label: '精选文章', color: 'var(--accent-primary)' },
+                        { value: posts.length - featuredPosts.length, label: '普通文章', color: 'var(--accent-secondary)' },
+                        { value: totalTagRefs, label: '标签总数', color: '#22c55e' },
+                        { value: archiveMonthCount, label: '归档月份', color: 'var(--text-primary)' },
                       ].map((stat) => (
                         <div
                           key={stat.label}
@@ -895,16 +845,7 @@ export default function BlogIndex() {
                     <h3 className="font-sans font-bold text-xl mb-4">
                       <GradientText animate={true}>标签词云</GradientText>
                     </h3>
-                    {tagsData ? (
-                      <BlogTagCloud tags={tagsData.tags} selectedTag={null} onSelectTag={() => {}} />
-                    ) : (
-                      <div className="flex items-center justify-center py-20">
-                        <div
-                          className="w-8 h-8 border-2 border-t-transparent animate-spin"
-                          style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
-                        />
-                      </div>
-                    )}
+                    <BlogTagCloud tags={tags} selectedTag={null} onSelectTag={() => {}} />
                   </div>
                 </div>
               </motion.div>
@@ -947,10 +888,10 @@ export default function BlogIndex() {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {[
-                        { value: data?.posts.length || 0, label: '精选文章', color: 'var(--accent-primary)' },
-                        { value: regularPosts?.length || 0, label: '普通文章', color: 'var(--accent-secondary)' },
-                        { value: tagsData?.total || 0, label: '标签总数', color: '#22c55e' },
-                        { value: archiveData?.months.length || 0, label: '归档月份', color: 'var(--text-primary)' },
+                        { value: featuredPosts.length, label: '精选文章', color: 'var(--accent-primary)' },
+                        { value: posts.length - featuredPosts.length, label: '普通文章', color: 'var(--accent-secondary)' },
+                        { value: totalTagRefs, label: '标签总数', color: '#22c55e' },
+                        { value: archiveMonthCount, label: '归档月份', color: 'var(--text-primary)' },
                       ].map((stat) => (
                         <div
                           key={stat.label}
@@ -983,16 +924,7 @@ export default function BlogIndex() {
                         标签词云
                       </span>
                     </h3>
-                    {tagsData ? (
-                      <BlogTagCloud tags={tagsData.tags} selectedTag={null} onSelectTag={() => {}} />
-                    ) : (
-                      <div className="flex items-center justify-center py-20">
-                        <div
-                          className="w-8 h-8 border-2 border-t-transparent animate-spin"
-                          style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
-                        />
-                      </div>
-                    )}
+                    <BlogTagCloud tags={tags} selectedTag={null} onSelectTag={() => {}} />
                   </div>
                 </div>
               </div>
@@ -1001,7 +933,7 @@ export default function BlogIndex() {
         )}
 
         {/* Footer */}
-        {footerData && <Footer data={footerData} />}
+        {footer && <Footer data={footer} />}
 
         {/* 底部光剑 */}
         {!isMobile && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}

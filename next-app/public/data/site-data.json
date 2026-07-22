@@ -20,7 +20,6 @@
       { "label": "友链", "href": "/friends", "icon": "Heart" },
       { "label": "朋友圈", "href": "/friends-circle", "icon": "Rss" },
       { "label": "地球Online", "href": "/earth-online", "icon": "Globe" },
-      { "label": "工具箱", "href": "/tools", "icon": "Wrench" },
       { "label": "关于", "href": "/about", "icon": "User" }
     ]
   },

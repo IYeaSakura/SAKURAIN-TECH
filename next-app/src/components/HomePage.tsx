@@ -373,7 +373,7 @@ const TechStackChart = () => {
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`/data/tech-evolution.json?v=${Date.now()}`, { cache: 'no-store' })
+    fetch('/data/tech-evolution.json')
       .then(res => res.json())
       .then((data: TechEvolutionData) => {
         setTechData(data);
@@ -1391,7 +1391,7 @@ const JourneySection = () => {
   const [techData, setTechData] = useState<TechEvolutionData | null>(null);
 
   useEffect(() => {
-    fetch(`/data/tech-evolution.json?v=${Date.now()}`, { cache: 'no-store' })
+    fetch('/data/tech-evolution.json')
       .then(res => res.json())
       .then((data: TechEvolutionData) => {
         setTechData(data);
@@ -1586,7 +1586,7 @@ function App() {
   useTheme();
 
   useEffect(() => {
-    fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' })
+    fetch('/data/site-data.json')
       .then(res => res.json())
       .then((data: SiteData) => {
         setSiteData(data);

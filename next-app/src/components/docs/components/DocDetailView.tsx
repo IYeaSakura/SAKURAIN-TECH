@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Folder } from 'lucide-react';
-import { useDocument } from '../hooks';
+import { useDocumentContent } from '../hooks';
 import { TocNav } from './TocNav';
 import { ThemeToggleButton } from './ThemeToggleButton';
 import type { SingleDoc, DocCategory, TocItem } from '../types';
@@ -13,6 +13,8 @@ const MarkdownRenderer = lazy(() => import('@/components/markdown/MarkdownRender
 interface DocDetailViewProps {
   doc: SingleDoc;
   category: DocCategory;
+  /** 服务端 SSG 注入的文档 markdown 正文（gray-matter 已去 frontmatter） */
+  content: string;
   onBack: () => void;
 }
 
@@ -43,8 +45,8 @@ function buildTocFromHeadings(headings: Array<{ level: number; text: string; id:
   return toc;
 }
 
-export function DocDetailView({ doc, category, onBack }: DocDetailViewProps) {
-  const { content, loading, error, toc, flatHeadings, searchContent, scrollToLine, scrollToHeadingById, lines } = useDocument(doc.path);
+export function DocDetailView({ doc, category, content, onBack }: DocDetailViewProps) {
+  const { toc, flatHeadings, searchContent, scrollToLine, scrollToHeadingById, lines } = useDocumentContent(content);
   const [showToc, setShowToc] = useState(true);
   const [activeHeading, setActiveHeading] = useState<string>('');
   const mainRef = useRef<HTMLElement>(null);
@@ -195,26 +197,16 @@ export function DocDetailView({ doc, category, onBack }: DocDetailViewProps) {
           className="flex-1 overflow-y-auto scroll-smooth"
         >
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-28 pb-12">
-            {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent-primary)' }} />
-              </div>
-            ) : error ? (
-              <div className="text-center py-20">
-                <p className="mb-4" style={{ color: '#ef4444' }}>加载失败</p>
-                <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg text-white" style={{ background: 'var(--accent-primary)' }}>重试</button>
-              </div>
-            ) : (
-              <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                {content && content.trim() ? (
-                  <Suspense fallback={<div className="p-4 text-center" style={{ color: 'var(--text-muted)' }}>加载内容...</div>}>
-                    <MarkdownRenderer content={content} />
-                  </Suspense>
-                ) : (
-                  <div className="text-center py-20" style={{ color: 'var(--text-muted)' }}>
-                    暂无内容
-                  </div>
-                )}
+            <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              {content && content.trim() ? (
+                <Suspense fallback={<div className="p-4 text-center" style={{ color: 'var(--text-muted)' }}>加载内容...</div>}>
+                  <MarkdownRenderer content={content} />
+                </Suspense>
+              ) : (
+                <div className="text-center py-20" style={{ color: 'var(--text-muted)' }}>
+                  暂无内容
+                </div>
+              )}
                 
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -272,7 +264,6 @@ export function DocDetailView({ doc, category, onBack }: DocDetailViewProps) {
                   </div>
                 </motion.div>
               </motion.article>
-            )}
           </div>
         </main>
       </div>

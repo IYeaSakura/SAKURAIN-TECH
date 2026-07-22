@@ -18,7 +18,7 @@ export function SecurityProtection({ config }: SecurityProtectionProps) {
         return config;
       }
       try {
-        const response = await fetch(`/config/security-config.json?v=${Date.now()}`, { cache: 'no-store' });
+        const response = await fetch('/config/security-config.json');
         const data = await response.json();
         const security = data.security || data.debugProtection;
         if (security) {

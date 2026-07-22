@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useEffect, useMemo, memo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useMemo, memo } from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Sparkles, Layers } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import { MagneticCursor, VelocityCursor, AmbientGlow, GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
-import { useConfig, useMobile, useAnimationEnabled } from '@/hooks';
+import { useMobile, useAnimationEnabled } from '@/hooks';
 import { deploymentConfig } from '@/config/deployment-config';
 import { DocListView } from './components/DocListView';
 import { SeriesDetailView } from './components/SeriesDetailView';
 import { clipPathRounded } from '@/utils/styles';
-import { RouteLoader } from '@/components/RouteLoader';
 import { ImagePreviewProvider } from '@/contexts/ImagePreviewContext';
 import type { DocCategory, DocItem, DocSeries, Chapter, DocsConfig } from './types';
 import type { SiteData } from '@/types';
@@ -27,66 +26,47 @@ const iconMap: Record<string, React.ComponentType<LucideProps>> = {
   Rocket, Briefcase, Code, Search, BookOpen, GraduationCap
 };
 
-export default function DocsPage() {
-  // Next optional catch-all [[...slug]] 适配层：slug 数组映射回旧版四级参数语义
-  const params = useParams();
-  const docSlug = (params?.slug as string[] | undefined) ?? [];
-  const [categoryId, itemId, chapterId] = docSlug;
+/**
+ * Phase 2：目录树与站点数据由服务端 SSG 注入；
+ * 四级参数（categoryId/itemId/chapterId）由路由适配层解析后以 props 传入；
+ * 章节 / 单文档 md 正文由服务端 gray-matter 管线读取后经 content 注入。
+ */
+interface DocsPageProps {
+  config: DocsConfig;
+  siteData: SiteData | null;
+  categoryId?: string;
+  itemId?: string;
+  chapterId?: string;
+  content?: string | null;
+}
+
+export default function DocsPage({
+  config,
+  siteData,
+  categoryId,
+  itemId,
+  chapterId,
+  content = null,
+}: DocsPageProps) {
   const navigate = useRouter().push;
   const isMobile = useMobile();
 
-  const { data: config, loading: configLoading, error: configError } = useConfig<DocsConfig>('/data/docs.json');
-  const { data: siteData } = useConfig<SiteData>('/data/site-data.json');
-
-  const [selectedCategory, setSelectedCategory] = useState<DocCategory | null>(null);
-  const [selectedItem, setSelectedItem] = useState<DocItem | null>(null);
-  const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
-
-  console.log('[DocsPage] Render - configLoading:', configLoading, 'configError:', configError, 'config:', !!config, 'categoryId:', categoryId);
-
-  useEffect(() => {
-    if (!config || !categoryId) {
-      setSelectedCategory(null);
-      setSelectedItem(null);
-      setSelectedChapter(null);
-      return;
-    }
-
-    const category = config.categories.find((c) => c.id === categoryId);
-    if (!category) {
-      navigate('/docs');
-      return;
-    }
-    setSelectedCategory(category);
-
-    if (!itemId) {
-      setSelectedItem(null);
-      setSelectedChapter(null);
-      return;
-    }
-
-    const item = category.items.find((i) => i.id === itemId);
-    if (!item) {
-      navigate('/docs');
-      return;
-    }
-    setSelectedItem(item);
-
-    if (item.type === 'series') {
-      if (chapterId) {
-        const chapter = item.chapters.find((c) => c.id === chapterId);
-        if (chapter) {
-          setSelectedChapter(chapter);
-        } else {
-          navigate(`/docs/${categoryId}/${itemId}`);
-        }
-      } else {
-        setSelectedChapter(null);
-      }
-    } else {
-      setSelectedChapter(null);
-    }
-  }, [config, categoryId, itemId, chapterId, navigate]);
+  // 由 props 派生当前选中态（服务端已校验合法性，非法路径在上层 notFound）
+  const selectedCategory = useMemo<DocCategory | null>(
+    () => (categoryId ? config.categories.find((c) => c.id === categoryId) ?? null : null),
+    [config, categoryId],
+  );
+  const selectedItem = useMemo<DocItem | null>(
+    () => (selectedCategory && itemId ? selectedCategory.items.find((i) => i.id === itemId) ?? null : null),
+    [selectedCategory, itemId],
+  );
+  const selectedChapter = useMemo<Chapter | null>(
+    () =>
+      selectedItem?.type === 'series' && chapterId
+        ? selectedItem.chapters.find((c) => c.id === chapterId) ?? null
+        : null,
+    [selectedItem, chapterId],
+  );
 
   const allChapters = useMemo(() => {
     if (!config) return [];
@@ -162,28 +142,6 @@ export default function DocsPage() {
     }
   };
 
-  if (configLoading) {
-    return <RouteLoader />;
-  }
-
-  if (configError || !config) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-      <div className="text-center">
-        <p style={{ color: '#ef4444' }}>加载失败</p>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="px-4 py-2 text-white mt-4 transition-all hover:scale-105"
-          style={{ 
-            background: 'var(--accent-primary)',
-            clipPath: clipPathRounded(4),
-          }}
-        >
-          重试
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <ImagePreviewProvider>
       {/* 鼠标效果 - 仅桌面端显示 */}
@@ -200,6 +158,7 @@ export default function DocsPage() {
               series={selectedItem}
               category={selectedCategory}
               allChapters={allChapters}
+              content={content ?? ''}
               onBack={handleBack}
               onSelectChapter={handleSelectChapter}
             />
@@ -219,6 +178,7 @@ export default function DocsPage() {
           <DocDetailView
             doc={selectedItem}
             category={selectedCategory}
+            content={content ?? ''}
             onBack={handleBack}
           />
         )

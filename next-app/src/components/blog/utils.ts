@@ -1,78 +1,8 @@
-import type { BlogPost, BlogIndex } from './types';
-
-export async function getBlogIndex(): Promise<BlogIndex> {
-  const response = await fetch(`/blog/index.json?v=${Date.now()}`, {
-    cache: 'no-store',
-  });
-  return response.json();
-}
-
-export async function getBlogPost(slug: string): Promise<BlogPost | null> {
-  try {
-    const response = await fetch(`/blog/posts/${slug}.md?v=${Date.now()}`, {
-      cache: 'no-store',
-    });
-    if (!response.ok) return null;
-    
-    const text = await response.text();
-    const { metadata, content } = parseMarkdownFrontmatter(text);
-    
-    return {
-      slug,
-      title: metadata.title || '',
-      description: metadata.description || '',
-      date: metadata.date || '',
-      author: metadata.author || '',
-      tags: metadata.tags || [],
-      cover: metadata.cover || '',
-      featured: metadata.featured || false,
-      content,
-    };
-  } catch (error) {
-    console.error(`Failed to load blog post: ${slug}`, error);
-    return null;
-  }
-}
-
-function parseMarkdownFrontmatter(text: string): { metadata: Partial<BlogPost>; content: string } {
-  const frontmatterRegex = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/;
-  const match = text.match(frontmatterRegex);
-  
-  if (!match) {
-    return { metadata: {}, content: text };
-  }
-  
-  const frontmatterText = match[1];
-  const content = match[2];
-  const metadata: Partial<BlogPost> = {};
-  
-  const lines = frontmatterText.split(/\r?\n/);
-  for (const line of lines) {
-    const colonIndex = line.indexOf(':');
-    if (colonIndex === -1) continue;
-    
-    const key = line.slice(0, colonIndex).trim();
-    const value = line.slice(colonIndex + 1).trim();
-    
-    if (key === 'tags') {
-      metadata.tags = value.split(',').map(tag => tag.trim());
-    } else if (key === 'featured') {
-      metadata.featured = value === 'true';
-    } else if (key === 'title') {
-      metadata.title = value;
-    } else if (key === 'description') {
-      metadata.description = value;
-    } else if (key === 'date') {
-      metadata.date = value;
-    } else if (key === 'author') {
-      metadata.author = value;
-    } else if (key === 'cover') {
-      metadata.cover = value;
-    }
-  }
-  
-  return { metadata, content };
-}
+/**
+ * 博客展示层纯函数工具（格式化/统计）。
+ * Phase 2 起，文章数据由服务端内容管线 @/lib/content/blog 提供，
+ * 原有的客户端 fetch + 手写 frontmatter 解析已移除。
+ */
 
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);

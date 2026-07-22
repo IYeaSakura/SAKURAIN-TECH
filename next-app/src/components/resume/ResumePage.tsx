@@ -1346,7 +1346,7 @@ export default function ResumePage() {
   const headerOpacity = useTransform(scrollYProgress, [0, 0.1], [1, 0.8]);
 
   useEffect(() => {
-    fetch(`/resume/resume-data.json?v=${Date.now()}`, { cache: 'no-store' })
+    fetch('/resume/resume-data.json')
       .then((res) => res.json())
       .then((d: ResumeData) => {
         setData(d);

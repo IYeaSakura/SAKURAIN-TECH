@@ -158,7 +158,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
   }, []);
 
   useEffect(() => {
-    fetch(`/config/welcome-modal.json?v=${Date.now()}`, { cache: 'no-store' })
+    fetch('/config/welcome-modal.json')
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -243,7 +243,7 @@ export function WelcomeModal({ forceOpen = false }: { forceOpen?: boolean }) {
   const loadMarkdown = async () => {
     setIsMarkdownLoading(true);
     try {
-      const response = await fetch(`/docs/courses/site-tech/chapter01.md?v=${Date.now()}`, { cache: 'no-store' });
+      const response = await fetch('/docs/courses/site-tech/chapter01.md');
       if (!response.ok) {
         throw new Error(`Failed to load markdown: ${response.status}`);
       }

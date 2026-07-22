@@ -7,33 +7,8 @@ import { AmbientGlow, GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
 import { useMobile } from '@/hooks';
 import { clipPathRounded } from '@/utils/styles';
-import { RouteLoader } from '@/components/RouteLoader';
+import type { Note } from '@/lib/content/notes';
 import type { SiteData } from '@/types';
-
-interface Note {
-  id: string;
-  slug: string;
-  title: string;
-  content: string;
-  date: string;
-  mood: string;
-  year: string;
-  month: string;
-  day: string;
-  hours: string;
-  minutes: string;
-  seconds: string;
-  yearMonth: string;
-  fullDate: string;
-  fullTime: string;
-  isFirstInDate?: boolean;
-}
-
-interface ArchiveData {
-  months: string[];
-  total: number;
-  generatedAt: string;
-}
 
 type Mood = 'happy' | 'neutral' | 'sad';
 
@@ -43,24 +18,26 @@ const moodConfig: Record<Mood, { icon: typeof Heart; color: string; label: strin
   sad: { icon: Frown, color: '#ef4444', label: '难过', bgColor: 'rgba(239, 68, 68, 0.15)' },
 };
 
-export default function NotesPage() {
-  const [archiveData, setArchiveData] = useState<ArchiveData | null>(null);
-  const [notes, setNotes] = useState<Note[]>([]);
+const NOTES_PER_LOAD = 10;
+
+interface NotesPageProps {
+  /** 全部随记（构建期注入，按时间倒序） */
+  notes: Note[];
+  /** 倒序月份列表（用于月份筛选） */
+  months: string[];
+}
+
+export default function NotesPage({ notes, months }: NotesPageProps) {
   const isMobile = useMobile();
-  const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
-  const [loadedMonths, setLoadedMonths] = useState<Set<string>>(new Set());
-  const [loadedCount, setLoadedCount] = useState(10);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadedCount, setLoadedCount] = useState(NOTES_PER_LOAD);
   const [footerData, setFooterData] = useState<SiteData['footer'] | null>(null);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
 
-  const NOTES_PER_LOAD = 10;
-
   // 加载 footer 数据
   useEffect(() => {
-    fetch(`/data/site-data.json?v=${Date.now()}`, { cache: 'no-store' })
+    fetch('/data/site-data.json')
       .then(res => res.json())
       .then((data: SiteData) => {
         setFooterData(data.footer);
@@ -68,70 +45,8 @@ export default function NotesPage() {
       .catch(console.error);
   }, []);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const archiveResponse = await fetch(`/notes/archive.json?v=${Date.now()}`, { cache: 'no-store' });
-        if (!archiveResponse.ok) throw new Error('Failed to load archive');
-        const archive = await archiveResponse.json();
-        setArchiveData(archive);
-
-        const allNotes: Note[] = [];
-        let monthsIndex = 0;
-        
-        // 持续加载直到达到 NOTES_PER_LOAD 条数据或没有更多月份
-        while (allNotes.length < NOTES_PER_LOAD && monthsIndex < archive.months.length) {
-          const month = archive.months[monthsIndex];
-          const monthResponse = await fetch(`/notes/archives/index-${month}.json?v=${Date.now()}`, { cache: 'no-store' });
-          if (monthResponse.ok) {
-            const monthNotes = await monthResponse.json();
-            allNotes.push(...monthNotes);
-          }
-          monthsIndex++;
-        }
-
-        setNotes(allNotes);
-        setLoadedMonths(new Set(archive.months.slice(0, monthsIndex)));
-        setLoadedCount(Math.max(NOTES_PER_LOAD, allNotes.length));
-        setLoading(false);
-      } catch (error) {
-        console.error('Failed to load notes:', error);
-        setLoading(false);
-      }
-    }
-
-    loadData();
-  }, []);
-
-  const loadMoreNotes = async () => {
-    if (!archiveData || loadingMore) return;
-
-    setLoadingMore(true);
-    try {
-      const currentTotal = notes.length;
-      const targetTotal = currentTotal + NOTES_PER_LOAD;
-      const monthsToLoad = archiveData.months.slice(
-        loadedMonths.size,
-        Math.ceil(targetTotal / 10)
-      );
-
-      const newNotes: Note[] = [];
-      for (const month of monthsToLoad) {
-        const monthResponse = await fetch(`/notes/archives/index-${month}.json?v=${Date.now()}`, { cache: 'no-store' });
-        if (monthResponse.ok) {
-          const monthNotes = await monthResponse.json();
-          newNotes.push(...monthNotes);
-        }
-      }
-
-      setLoadedMonths(prev => new Set([...prev, ...monthsToLoad]));
-      setNotes(prev => [...prev, ...newNotes]);
-      setLoadedCount(targetTotal);
-    } catch (error) {
-      console.error('Failed to load more notes:', error);
-    } finally {
-      setLoadingMore(false);
-    }
+  const loadMoreNotes = () => {
+    setLoadedCount(prev => prev + NOTES_PER_LOAD);
   };
 
   const filteredNotes = useMemo(() => {
@@ -191,7 +106,7 @@ export default function NotesPage() {
   const earliestNote = useMemo(() => {
     if (notes.length === 0) return null;
     return notes.reduce((earliest, current) => {
-      return new Date(current.date) < new Date(earliest.date) ? current : earliest;
+      return current.timestamp < earliest.timestamp ? current : earliest;
     });
   }, [notes]);
 
@@ -206,7 +121,7 @@ export default function NotesPage() {
 
   const developmentTime = useMemo(() => {
     if (!earliestNote) return null;
-    const startTime = new Date(earliestNote.date).getTime();
+    const startTime = earliestNote.timestamp;
     const endTime = currentTime;
     const diff = endTime - startTime;
 
@@ -235,10 +150,6 @@ export default function NotesPage() {
       return newSet;
     });
   };
-
-  if (loading) {
-    return <RouteLoader />;
-  }
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
@@ -375,7 +286,7 @@ export default function NotesPage() {
                   全部
                 </button>
 
-                {archiveData?.months.map(month => (
+                {months.map(month => (
                   <button
                     key={month}
                     onClick={() => setSelectedMonth(month === selectedMonth ? null : month)}
@@ -641,8 +552,8 @@ export default function NotesPage() {
                   })}
                 </div>
 
-                {/* 加载更多按钮 */}
-                {archiveData && loadedMonths.size < archiveData.months.length && (
+                {/* 加载更多按钮（客户端分页，数据已一次性注入） */}
+                {loadedCount < notes.length && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -651,8 +562,7 @@ export default function NotesPage() {
                   >
                     <button
                       onClick={loadMoreNotes}
-                      disabled={loadingMore}
-                      className="px-8 py-3 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-8 py-3 font-medium transition-all duration-200"
                       style={{
                         background: 'rgba(59, 130, 246, 0.1)',
                         border: '1px solid rgba(59, 130, 246, 0.3)',
@@ -660,7 +570,7 @@ export default function NotesPage() {
                         clipPath: clipPathRounded(6),
                       }}
                     >
-                      {loadingMore ? '加载中...' : '加载更多'}
+                      加载更多
                     </button>
                   </motion.div>
                 )}

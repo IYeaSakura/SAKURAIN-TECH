@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useTheme } from '@/hooks';
-import html2pdf from 'html2pdf.js';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -182,6 +181,9 @@ export function FloatingToolbar({ onExit, content, title, className = '' }: Floa
       await waitForImages(exportContainerRef.current);
 
       setExportProgress('正在生成PDF...');
+
+      // 动态加载：html2pdf.js 依赖浏览器环境（self/window），SSR 下直接 require 会抛错
+      const { default: html2pdf } = await import('html2pdf.js');
 
       const element = exportContainerRef.current.cloneNode(true) as HTMLElement;
       element.style.padding = '40px';

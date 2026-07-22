@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Component, Suspense, lazy, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, useRef, Component, Suspense, lazy, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -55,6 +55,8 @@ interface ChapterReaderProps {
   series: DocSeries;
   category: DocCategory;
   allChapters: Array<{ chapter: Chapter; series: DocSeries; category: DocCategory }>;
+  /** 服务端 SSG 注入的章节 markdown 正文（gray-matter 已去 frontmatter） */
+  content: string;
   onBack: () => void;
   onSelectChapter: (category: DocCategory, series: DocSeries, chapter: Chapter) => void;
 }
@@ -130,43 +132,13 @@ function parseHeadings(content: string): Array<{ level: number; text: string; id
   return headings;
 }
 
-export function ChapterReader({ chapter, series, category, onBack, onSelectChapter }: ChapterReaderProps) {
+export function ChapterReader({ chapter, series, category, content, onBack, onSelectChapter }: ChapterReaderProps) {
   const [showToc, setShowToc] = useState(true);
   const [activeHeading, setActiveHeading] = useState<string>(chapter.id);
   const mainRef = useRef<HTMLElement>(null);
-  
-  // 直接使用 fetch 加载内容，类似博客
-  const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [flatHeadings, setFlatHeadings] = useState<Array<{ level: number; text: string; id: string }>>([]);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    
-    fetch(`${chapter.path}?v=${Date.now()}`, { cache: 'no-store' })
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.text();
-      })
-      .then(text => {
-        if (!cancelled) {
-          setContent(text);
-          setFlatHeadings(parseHeadings(text));
-          setLoading(false);
-        }
-      })
-      .catch(err => {
-        if (!cancelled) {
-          setError(err.message);
-          setLoading(false);
-        }
-      });
-    
-    return () => { cancelled = true; };
-  }, [chapter.path]);
+  // Phase 2：正文由服务端注入，标题目录从正文派生（跳过代码块逻辑沿用简易解析）
+  const flatHeadings = useMemo(() => parseHeadings(content), [content]);
   
   // 简单的搜索功能
   const searchContent = (query: string) => {
@@ -375,22 +347,11 @@ export function ChapterReader({ chapter, series, category, onBack, onSelectChapt
           className="flex-1 overflow-y-auto scroll-smooth"
         >
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-28 pb-12">
-            {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent-primary)' }} />
-              </div>
-            ) : error ? (
-              <div className="text-center py-20">
-                <p className="mb-4" style={{ color: '#ef4444' }}>加载失败</p>
-                <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg text-white" style={{ background: 'var(--accent-primary)' }}>重试</button>
-              </div>
-            ) : (
-              <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                  {content}
-                </ReactMarkdown>
-              </motion.article>
-            )}
+            <motion.article initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                {content}
+              </ReactMarkdown>
+            </motion.article>
 
             {/* Chapter Navigation */}
             <div className="mt-16 pt-8 border-t flex items-center justify-between" style={{ borderColor: 'var(--border-color)' }}>

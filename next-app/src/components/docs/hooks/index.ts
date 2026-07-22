@@ -9,49 +9,15 @@ export interface SearchResult {
   preview?: string;
 }
 
-export function useDocument(path: string) {
-  const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [toc, setToc] = useState<TocItem[]>([]);
-  const [flatHeadings, setFlatHeadings] = useState<HeadingItem[]>([]);
-  const [lines, setLines] = useState<string[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const response = await fetch(`${path}?v=${Date.now()}`, {
-          cache: 'no-store',
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const text = await response.text();
-        
-        if (!cancelled) {
-          setContent(text);
-          setLines(text.split('\n'));
-          const { toc: parsedToc, headings } = parseToc(text);
-          setToc(parsedToc);
-          setFlatHeadings(headings);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : '加载失败');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    load();
-    return () => { cancelled = true; };
-  }, [path]);
+/**
+ * Phase 2：md 正文由服务端 SSG 注入，本 hook 只做解析 / 搜索 / 滚动定位，
+ * 不再客户端 fetch（顺带移除 ?v= 缓存穿透 hack）。
+ */
+export function useDocumentContent(content: string) {
+  const { toc, flatHeadings, lines } = useMemo(() => {
+    const { toc: parsedToc, headings } = parseToc(content);
+    return { toc: parsedToc, flatHeadings: headings, lines: content.split('\n') };
+  }, [content]);
 
   // 预构建标题行号映射（用于快速查找）
   const headingLineMap = useMemo(() => {
@@ -280,7 +246,7 @@ export function useDocument(path: string) {
     scrollLoop();
   }, [scrollToElement]);
 
-  return { content, loading, error, toc, flatHeadings, searchContent, scrollToLine, scrollToHeadingById, lines };
+  return { content, toc, flatHeadings, searchContent, scrollToLine, scrollToHeadingById, lines };
 }
 
 export function useReadingProgress(chapterId: string) {

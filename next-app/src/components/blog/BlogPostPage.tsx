@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Tag, Share2, ArrowLeft, Scale } from 'lucide-react';
 import { AmbientGlow } from '@/components/effects';
@@ -11,63 +10,31 @@ import { MarkdownRenderer } from '@/components/markdown/MarkdownRenderer';
 import { ArticleSidebar } from './components/ArticleSidebar';
 import { FloatingToolbar } from './components/FloatingToolbar';
 import { CommentSection } from './components/CommentSection';
-import { getBlogPost, formatDateDetail, getReadingTime, getWordCount } from './utils';
-import { RouteLoader } from '@/components/RouteLoader';
+import { formatDateDetail, getReadingTime, getWordCount } from './utils';
 import type { BlogPost } from './types';
 
-export default function BlogPost() {
+interface BlogPostPageProps {
+  /** 当前文章（含正文，服务端内容管线注入） */
+  post: BlogPost;
+  /** 全部文章元信息（上一篇/下一篇、相关文章用，不含正文） */
+  allPosts: BlogPost[];
+}
+
+export default function BlogPostPage({ post, allPosts }: BlogPostPageProps) {
   return (
     <ImagePreviewProvider>
-      <BlogPostContent />
+      <BlogPostContent post={post} allPosts={allPosts} />
     </ImagePreviewProvider>
   );
 }
 
-function BlogPostContent() {
-  const { slug } = useParams<{ slug: string }>();
+function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
   const navigate = useRouter().push;
   useTheme();
-  const [post, setPost] = useState<BlogPost | null>(null);
-  const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const isMobile = useMobile();
   useImagePreview();
 
-  useEffect(() => {
-    if (!slug) {
-      navigate('/blog');
-      return;
-    }
-
-    getBlogPost(slug)
-      .then((result) => {
-        if (result) {
-          setPost(result);
-          setLoading(false);
-        } else {
-          setError('文章不存在');
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load blog post:', err);
-        setError('加载失败');
-        setLoading(false);
-      });
-  }, [slug, navigate]);
-
-  useEffect(() => {
-    fetch(`/blog/index.json?v=${Date.now()}`, { cache: 'no-store' })
-      .then(res => res.json())
-      .then((data) => {
-        const posts = data.posts || [];
-        setAllPosts(posts);
-      })
-      .catch(err => {
-        console.error('Failed to load blog index:', err);
-      });
-  }, []);
+  const slug = post.slug;
 
   const handleBack = () => {
     navigate('/blog');
@@ -100,34 +67,13 @@ function BlogPostContent() {
   const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
 
   const relatedPosts = allPosts
-    .filter(p => p.slug !== slug && p.tags.some(tag => post?.tags.includes(tag)))
+    .filter(p => p.slug !== slug && p.tags.some(tag => post.tags.includes(tag)))
     .slice(0, 3)
     .map(p => ({
       title: p.title,
       slug: p.slug,
       description: p.description,
     }));
-
-  if (loading) {
-    return <RouteLoader />;
-  }
-
-  if (error || !post) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-        <div className="text-center">
-          <p style={{ color: '#ef4444' }} className="mb-4">{error || '文章不存在'}</p>
-          <button 
-            onClick={() => navigate('/blog')} 
-            className="px-4 py-2 rounded-lg text-white"
-            style={{ background: 'var(--accent-primary)' }}
-          >
-            返回博客列表
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -340,7 +286,7 @@ function BlogPostContent() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.45 }}
             >
-              <CommentSection postId={slug || ''} />
+              <CommentSection postId={slug} />
             </motion.div>
           </motion.article>
         </main>

@@ -4,12 +4,6 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { securityConfig } from '@/config/security-config';
 
-// Check if current page should allow copy shortcut
-function shouldAllowCopyShortcut(): boolean {
-  const path = window.location.pathname;
-  return path.startsWith('/tools');
-}
-
 export function DebugProtection() {
   const config = securityConfig.debugProtection;
   const pathname = usePathname();
@@ -31,14 +25,12 @@ export function DebugProtection() {
       }
 
       if (config.disableDevToolsShortcuts) {
-        // Allow Ctrl+Shift+C in toolbox pages for copy functionality
         const isCopyShortcut = ctrl && shift && key === 'c';
-        const isToolboxPage = shouldAllowCopyShortcut();
-        
+
         if (
           (ctrl && shift && key === 'i') ||
           (ctrl && shift && key === 'j') ||
-          (isCopyShortcut && !isToolboxPage) ||
+          isCopyShortcut ||
           (meta && alt && key === 'i') ||
           (meta && alt && key === 'j') ||
           (meta && alt && key === 'c')
