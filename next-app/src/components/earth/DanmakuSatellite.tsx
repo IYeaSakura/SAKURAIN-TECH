@@ -9,8 +9,9 @@ import { generateAuthHeaders } from '@/lib/api-auth';
 // API 基础路径（同源相对路径；如需跨域部署，配置 NEXT_PUBLIC_API_BASE_URL）
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL || ''}/api/danmaku`;
 
-// 调试日志
+// 调试日志（仅开发环境输出，避免生产环境刷屏）
 const debugLog = (...args: unknown[]) => {
+  if (process.env.NODE_ENV !== 'development') return;
   console.log('[Danmaku]', ...args);
 };
 
@@ -227,7 +228,9 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
         debugLog('Loaded Beidou satellites:', satellites.length);
       }
     } catch (err) {
-      console.error('Failed to load Beidou satellites:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[Danmaku] Failed to load Beidou satellites:', err);
+      }
     }
   }, [beidouSatellites.length]);
 
@@ -278,7 +281,10 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
         hasLoadedDanmakusRef.current = true; // 标记已加载
       }
     } catch (error) {
-      console.error('Failed to fetch danmakus:', error);
+      // 弹幕接口未部署/网络异常时静默保持空态，仅开发态告警
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[Danmaku] Failed to fetch danmakus:', error);
+      }
     } finally {
       isFetchingRef.current = false;
     }
@@ -362,7 +368,9 @@ export function DanmakuSatellite({ viewer, setIsRotationPaused }: DanmakuSatelli
         setDanmakus(prev => prev.filter(d => d.id !== id));
       }
     } catch (error) {
-      console.error('Failed to delete danmaku:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[Danmaku] Failed to delete danmaku:', error);
+      }
     }
   }, []);
 

@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
       exclude: ["error", "warn"],
     },
   },
+  experimental: {
+    // 按需重写具名导入为深路径导入，避免 barrel 全量打包；
+    // 注意：cesium 不能加入（依赖侧效导入，会被破坏）
+    optimizePackageImports: ["lucide-react", "framer-motion", "@react-three/drei"],
+  },
   // 预留：需要 transpile 的 ESM-only 包在此追加
   transpilePackages: [],
   // 注意：EdgeOne 不支持 next.config 的 redirects/rewrites，一律走 edgeone.json

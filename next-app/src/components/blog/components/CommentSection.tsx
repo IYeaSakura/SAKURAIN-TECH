@@ -99,8 +99,13 @@ export function CommentSection({ postId }: CommentSectionProps) {
         setTotalComments(data.total || 0);
       }
     } catch (err) {
-      console.error('Failed to fetch comments:', err);
-      setError('加载评论失败');
+      // 评论接口未部署/网络异常时静默降级：展示已有的空态与错误提示，仅开发态告警一行
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[Comments] 评论加载失败（接口可能未部署），已进入降级态:', err);
+      }
+      setComments([]);
+      setTotalComments(0);
+      setError('评论服务暂不可用');
     } finally {
       setLoading(false);
     }
@@ -236,10 +241,10 @@ export function CommentSection({ postId }: CommentSectionProps) {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.error || '提交失败');
+        throw new Error(data?.error || '评论服务暂不可用，请稍后重试');
       }
 
       setSuccess('评论提交成功！');

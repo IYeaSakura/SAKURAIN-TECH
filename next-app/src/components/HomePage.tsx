@@ -38,7 +38,6 @@ import {
 import { GradientText } from '@/components/effects/TextEffects';
 
 import { Footer } from '@/components/sections/Footer';
-import { PerformanceProvider } from '@/contexts/PerformanceContext';
 import { useTheme, useNavigation } from '@/hooks';
 import { usePrefersReducedMotion } from '@/lib/performance';
 import type { SiteData } from '@/types';
@@ -1629,11 +1628,9 @@ function App() {
   );
 }
 
-// Phase 1 务实起步：整页 'use client'，在此统一挂载所需的 Context Provider
+// Phase 1 务实起步：整页 'use client'。
+// 性能优化：移除页面内嵌套的 PerformanceProvider —— layout 级 ClientEffects
+// 已提供全局实例，这里直接消费，避免双实例导致重复能力检测与状态分裂。
 export default function HomePage() {
-  return (
-    <PerformanceProvider>
-      <App />
-    </PerformanceProvider>
-  );
+  return <App />;
 }

@@ -30,18 +30,34 @@ import { Navigation } from '@/components/sections/Navigation';
 import { GlobalContextMenu } from '@/components/CustomContextMenu';
 import { DebugProtection } from '@/components/DebugProtection';
 import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
+// 轻量光标特效全站保留；直接从具体模块导入，
+// 避免经 barrel（@/components/effects）把全部特效打入共享 chunk
 import {
   MagneticCursor,
   VelocityCursor,
-  TwinklingStars,
-  FlowingGradient,
-  LightBeam,
-} from '@/components/effects';
+} from '@/components/effects/MouseEffects';
 import type { SiteData } from '@/types';
 
 // 音乐播放器体积大且纯客户端，ssr:false 动态加载
 const MusicPlayer = dynamic(
   () => import('@/components/MusicPlayer').then((m) => m.MusicPlayer),
+  { ssr: false }
+);
+
+// 重型背景特效仅首页渲染（见下方 isHomePage 门控），dynamic 拆包后：
+// 非首页导航不下载/不执行这些 chunk；首页仍按 phase3~5 错峰挂载
+const TwinklingStars = dynamic(
+  () =>
+    import('@/components/effects/LightEffects').then((m) => m.TwinklingStars),
+  { ssr: false }
+);
+const FlowingGradient = dynamic(
+  () =>
+    import('@/components/effects/LightEffects').then((m) => m.FlowingGradient),
+  { ssr: false }
+);
+const LightBeam = dynamic(
+  () => import('@/components/effects/LightEffects').then((m) => m.LightBeam),
   { ssr: false }
 );
 

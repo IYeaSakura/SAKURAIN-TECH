@@ -5,11 +5,16 @@
    ============================================ */
 
 /* 字体引入 - 必须置顶（迁移自旧 styles/globals.css 头部） */
-@import url('https://unpkg.com/@chinese-fonts/zpix/dist/舟方日央型秀-A/result.css');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+/*
+ * 字体策略（报错清扫调整）：
+ * - JetBrains Mono / VT323 / Press Start 2P：已本地化到 /fonts/google/（含 font-display: swap），
+ *   避免 fonts.googleapis.com 在中国网络下阻塞首屏渲染；
+ * - Noto Sans SC：移除 @import（全量本地化需 700+ 个子集文件，体积不可接受），
+ *   回退到 PingFang SC / Microsoft YaHei 等系统中文字体（见 --font-primary）；
+ * - Zpix（舟方日央型秀-A）：npm 包 @chinese-fonts/zpix 已下架，原 unpkg 地址 404，故移除，
+ *   像素字体回退到 VT323 / Press Start 2P（见 --font-pixel）。
+ */
+@import url('/fonts/google/fonts.css');
 
 @tailwind base;
 @tailwind components;

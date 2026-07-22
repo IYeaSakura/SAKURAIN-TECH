@@ -1338,10 +1338,12 @@ export default function FeedPage() {
       const isTimeout = errorMsg.includes('Timeout');
       const isAbort = (err as Error).name === 'AbortError';
 
-      if (isAbort) {
-        console.warn(`[Feed] Fetch aborted for ${friend.name} (${feedUrl})`);
-      } else {
-        console.warn(`[Feed] Failed to fetch feed for ${friend.name} (${feedUrl}):`, err);
+      if (process.env.NODE_ENV === 'development') {
+        if (isAbort) {
+          console.warn(`[Feed] Fetch aborted for ${friend.name} (${feedUrl})`);
+        } else {
+          console.warn(`[Feed] Failed to fetch feed for ${friend.name} (${feedUrl}):`, err);
+        }
       }
 
       return {
@@ -1380,7 +1382,9 @@ export default function FeedPage() {
       if ((err as Error).name === 'AbortError') {
         throw err;
       }
-      console.error('[Feed] Batch fetch error:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[Feed] Batch fetch error (已回退到逐个获取):', err);
+      }
       // 如果批量获取失败，返回空结果让所有feed都走单独获取
       return { cached: [], missing: feeds, expired: [], failed: [] };
     }
@@ -1482,7 +1486,9 @@ export default function FeedPage() {
                 latestTimestamp = batchItem.timestamp;
               }
             } catch (parseErr) {
-              console.error(`[Feed] Failed to parse cached feed for ${friend.name}:`, parseErr);
+              if (process.env.NODE_ENV === 'development') {
+                console.warn(`[Feed] Failed to parse cached feed for ${friend.name}:`, parseErr);
+              }
               // 解析失败，加入单独获取列表
               feedsToFetchIndividually.push(friend);
             }
@@ -1519,7 +1525,10 @@ export default function FeedPage() {
           }))]);
 
         } catch (batchErr) {
-          console.error('[Feed] Batch fetch failed, falling back to individual fetch:', batchErr);
+          // 批量接口不可用时静默回退到逐个获取，仅开发态告警
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('[Feed] Batch fetch failed, falling back to individual fetch:', batchErr);
+          }
           feedsToFetchIndividually = eligibleFriends;
         }
       } else {
@@ -1590,7 +1599,10 @@ export default function FeedPage() {
       }
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
-        console.error('Failed to load feed data:', err);
+        // 数据加载失败：组件已有空态/错误态 UI，仅开发态告警一行
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[Feed] Failed to load feed data:', err);
+        }
       }
     } finally {
       if (!isBackgroundRefresh) {

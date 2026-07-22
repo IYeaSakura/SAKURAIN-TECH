@@ -68,11 +68,15 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
   const [shuffledOrder, setShuffledOrder] = useState<number[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [visualizerMode, setVisualizerMode] = useState<'bars' | 'wave' | 'heatmap'>('bars');
+  // 用户首次交互前不加载音频，避免音频资源缺失时每打开一个页面都自动发起 404 请求
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const handleNextRef = useRef<() => void>(() => {});
   const preloadRef = useRef<HTMLAudioElement | null>(null);
+  // 记录加载失败的音频地址：失败后静默降级，不重复重试、不刷错误日志
+  const failedSrcsRef = useRef<Set<string>>(new Set());
 
   // Initialize shuffled order when playlist is loaded
   useEffect(() => {
@@ -114,9 +118,16 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
       setIsLoading(false);
     };
     const handleEnded = () => handleNextRef.current();
-    const handleError = (e: Event) => {
-      console.error('Audio error:', e);
-      setError('音频加载失败');
+    const handleError = () => {
+      // 静默降级：音频文件缺失/加载失败时进入占位态，同一地址只告警一次且不再自动重试
+      const failedSrc = audio.currentSrc || audio.src;
+      if (failedSrc && !failedSrcsRef.current.has(failedSrc)) {
+        failedSrcsRef.current.add(failedSrc);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`[MusicPlayer] 音频加载失败，已静默降级: ${failedSrc}`);
+        }
+      }
+      setError('音频资源暂不可用');
       setIsLoading(false);
       setIsPlaying(false);
     };
@@ -160,15 +171,23 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
     };
   }, [isVisible]);
 
-  // 切换歌曲时加载音频
+  // 切换歌曲时加载音频（仅在用户交互后加载，避免音频资源缺失时全站 404 刷屏）
   useEffect(() => {
-    if (!audioRef.current || !isVisible) return;
+    if (!audioRef.current || !isVisible || !hasUserInteracted) return;
 
     const audio = audioRef.current;
     setIsLoading(true);
     setError(null);
     setCurrentTime(0);
     setBuffered(0);
+
+    // 已知加载失败的地址直接进入降级态，不重复发起请求
+    if (currentSong.src && failedSrcsRef.current.has(currentSong.src)) {
+      setError('音频资源暂不可用');
+      setIsLoading(false);
+      setIsPlaying(false);
+      return;
+    }
 
     // 直接设置 src，让浏览器处理加载
     audio.src = currentSong.src;
@@ -178,14 +197,14 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
     if (isPlaying) {
       const playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.error('Play error:', err);
+        playPromise.catch(() => {
+          // 播放被拦截或资源缺失：静默回到暂停态（资源类失败由 error 事件统一处理）
           setIsPlaying(false);
           setIsLoading(false);
         });
       }
     }
-  }, [currentIndex, isVisible]);
+  }, [currentIndex, isVisible, hasUserInteracted, currentSong.src]);
 
   // 处理播放/暂停
   useEffect(() => {
@@ -194,17 +213,22 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
     const audio = audioRef.current;
 
     if (isPlaying) {
+      // 已知失败的资源不再尝试播放
+      if (currentSong.src && failedSrcsRef.current.has(currentSong.src)) {
+        setIsPlaying(false);
+        return;
+      }
       const playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          console.error('Play error:', err);
+        playPromise.catch(() => {
+          // 播放被拦截或资源缺失：静默回到暂停态
           setIsPlaying(false);
         });
       }
     } else {
       audio.pause();
     }
-  }, [isPlaying, isVisible]);
+  }, [isPlaying, isVisible, currentSong.src]);
 
   // 音量控制
   useEffect(() => {
@@ -215,7 +239,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
 
   // Preload next song for better playback experience
   useEffect(() => {
-    if (!isVisible || playlist.length === 0 || shuffledOrder.length === 0) return;
+    if (!isVisible || !hasUserInteracted || playlist.length === 0 || shuffledOrder.length === 0) return;
 
     const nextPosition = currentPosition + 1;
     let nextIndex: number;
@@ -227,7 +251,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
     }
 
     const nextSong = playlist[nextIndex];
-    if (!nextSong?.src) return;
+    if (!nextSong?.src || failedSrcsRef.current.has(nextSong.src)) return;
 
     // Create preload audio element
     if (!preloadRef.current) {
@@ -240,12 +264,14 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
       preloadRef.current.src = nextSong.src;
       preloadRef.current.load();
     }
-  }, [currentPosition, shuffledOrder, playlist, isVisible]);
+  }, [currentPosition, shuffledOrder, playlist, isVisible, hasUserInteracted]);
 
   const handlePlayPause = useCallback(() => {
+    setHasUserInteracted(true);
     if (error) {
       setError(null);
-      // 重新加载当前歌曲
+      // 手动重试：清除失败标记后重新加载当前歌曲
+      failedSrcsRef.current.delete(currentSong.src);
       if (audioRef.current) {
         audioRef.current.src = currentSong.src;
         audioRef.current.load();
@@ -429,7 +455,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
                 }}
                 transition={{ duration: 0.3 }}
               >
-                {isLoading ? '加载中...' : isPlaying ? '播放中' : `${currentNumber}/${totalSongs}`}
+                {isLoading ? '加载中...' : error ? '暂不可用' : isPlaying ? '播放中' : `${currentNumber}/${totalSongs}`}
               </motion.span>
             </div>
 
