@@ -25,7 +25,7 @@ export const PlantUML = ({ code }: { code: string }) => {
         await new Promise<void>((resolve, reject) => { img.onload = () => resolve(); img.onerror = () => reject(); img.src = url; });
         renderedRef.current = code;
         setImageUrl(url);
-      } catch (err) { setError('渲染失败'); }
+      } catch (_err) { setError('渲染失败'); }
       finally { setLoading(false); }
     };
     render();
