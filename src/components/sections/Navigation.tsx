@@ -1,10 +1,11 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User, Rss, Globe, Briefcase, Wrench, Gamepad2 } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router';
+import { BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User, Rss, Globe, Briefcase, Gamepad2 } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { SiteData } from '@/types';
-import { preloadDocs, preloadFriends, preloadBlog, preloadEarthOnline } from '@/main';
 import { deploymentConfig } from '@/config/deployment-config';
 import type { LucideIcon } from 'lucide-react';
 
@@ -18,9 +19,10 @@ interface NavigationProps {
   sticky?: boolean;
 }
 
-const dockItems = [
+const dockItems: { label: string; href: string; icon: LucideIcon; isCustom?: boolean }[] = [
   { label: '首页', href: '/', icon: Home },
   { label: '博客', href: '/blog', icon: FileText },
+  { label: '项目', href: '/projects', icon: Briefcase },
   { label: '地球Online', href: '/earth-online', icon: Gamepad2 },
   { label: '朋友圈', href: '/friends-circle', icon: Rss },
   { label: '友链', href: '/friends', icon: Heart },
@@ -29,8 +31,8 @@ const dockItems = [
 
 export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, sticky = true }: NavigationProps) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -44,53 +46,11 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
     if (deploymentConfig.useWindowLocation) {
       window.location.href = href;
     } else {
-      navigate(href);
+      router.push(href);
     }
   };
 
-  const handleDocsClick = () => {
-    preloadDocs();
-    if (deploymentConfig.useWindowLocation) {
-      window.location.href = '/docs';
-    } else {
-      navigate('/docs');
-    }
-  };
-
-  const handleFriendsClick = () => {
-    preloadFriends();
-    if (deploymentConfig.useWindowLocation) {
-      window.location.href = '/friends';
-    } else {
-      navigate('/friends');
-    }
-  };
-
-  const handleBlogClick = () => {
-    preloadBlog();
-    if (deploymentConfig.useWindowLocation) {
-      window.location.href = '/blog';
-    } else {
-      navigate('/blog');
-    }
-  };
-
-  const handleNotesClick = () => {
-    if (deploymentConfig.useWindowLocation) {
-      window.location.href = '/notes';
-    } else {
-      navigate('/notes');
-    }
-  };
-
-  const handleEarthOnlineClick = () => {
-    preloadEarthOnline();
-    if (deploymentConfig.useWindowLocation) {
-      window.location.href = '/earth-online';
-    } else {
-      navigate('/earth-online');
-    }
-  };
+  // Next.js 下页面自带代码分割与预取，旧版 react-lazy 的 preload* 预加载逻辑已移除
 
   const getIcon = (iconName?: string): LucideIcon | null => {
     switch (iconName) {
@@ -103,7 +63,6 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
       case 'Rss': return Rss;
       case 'Globe': return Globe;
       case 'Briefcase': return Briefcase;
-      case 'Wrench': return Wrench;
       default: return null;
     }
   };
@@ -111,26 +70,14 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
   // 判断是否为当前激活路径
   const isActive = (href: string) => {
     if (href === '/') {
-      return location.pathname === '/';
+      return pathname === '/';
     }
-    return location.pathname.startsWith(href);
+    return pathname.startsWith(href);
   };
 
   // 处理 Dock 导航点击
   const handleDockClick = (href: string) => {
-    if (href === '/docs') {
-      handleDocsClick();
-    } else if (href === '/blog') {
-      handleBlogClick();
-    } else if (href === '/notes') {
-      handleNotesClick();
-    } else if (href === '/friends') {
-      handleFriendsClick();
-    } else if (href === '/earth-online') {
-      handleEarthOnlineClick();
-    } else {
-      handleNavClick(href);
-    }
+    handleNavClick(href);
   };
 
   return (
@@ -181,11 +128,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
               {data?.links?.map((link) => {
                 const Icon = getIcon(link.icon);
                 const handleClick = () => {
-                  if (link.href === '/docs') handleDocsClick();
-                  else if (link.href === '/blog') handleBlogClick();
-                  else if (link.href === '/notes') handleNotesClick();
-                  else if (link.href === '/friends') handleFriendsClick();
-                  else handleNavClick(link.href);
+                  handleNavClick(link.href);
                 };
                 return (
                   <button
@@ -295,7 +238,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
           {dockItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
-            const isCustomIcon = (item as any).isCustom;
+            const isCustomIcon = item.isCustom;
 
             return (
               <button

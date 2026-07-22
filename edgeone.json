@@ -1,6 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "outputDirectory": ".next",
   "nodeVersion": "20.18.0",
   "rewrites": [
     {
@@ -22,75 +22,15 @@
     {
       "source": "/feed",
       "destination": "/feed.xml"
-    },
-    {
-      "source": "/docs",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/docs/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/friends",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/friends/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/blog",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/blog/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/friends-circle",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/notes",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/notes/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/about",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/earth-online",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/studio",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/algo-viz",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/resume",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/tools",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/tools/:path*",
-      "destination": "/index.html"
     }
   ],
   "caches": [
     {
       "source": "/assets/*",
+      "cacheTtl": 2592000
+    },
+    {
+      "source": "/_next/static/*",
       "cacheTtl": 2592000
     },
     {
@@ -132,19 +72,20 @@
     {
       "source": "/feed.json",
       "cacheTtl": 300
-    },
-    {
-      "source": "/404.html",
-      "cacheTtl": 0
-    },
-    {
-      "source": "/index.html",
-      "cacheTtl": 0
     }
   ],
   "headers": [
     {
       "source": "/assets/*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/_next/static/*",
       "headers": [
         {
           "key": "Cache-Control",
@@ -263,24 +204,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=300, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/404.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/index.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
         }
       ]
     }

@@ -95,14 +95,6 @@ const COLOR_POOL = [
 export const BlogTagCloud = memo(function BlogTagCloud({ tags, selectedTag, onSelectTag }: BlogTagCloudProps) {
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
 
-  if (tags.length === 0) {
-    return (
-      <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>
-        暂无标签
-      </div>
-    );
-  }
-
   // 打乱标签顺序
   const shuffledTags = useMemo(() => {
     const array = [...tags];
@@ -170,6 +162,14 @@ export const BlogTagCloud = memo(function BlogTagCloud({ tags, selectedTag, onSe
     });
     return Array.from(categories);
   }, [tags]);
+
+  if (tags.length === 0) {
+    return (
+      <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>
+        暂无标签
+      </div>
+    );
+  }
 
   return (
     <div className="relative">

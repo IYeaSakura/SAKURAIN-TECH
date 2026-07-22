@@ -1,4 +1,4 @@
-const API_SECRET_KEY = import.meta.env.VITE_API_SECRET_KEY || '';
+const API_SECRET_KEY = process.env.API_SECRET_KEY || '';
 
 const TIMESTAMP_TOLERANCE = 5 * 60 * 1000;
 

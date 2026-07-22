@@ -1,112 +1,49 @@
-# SAKURAIN TEAM
+# SAKURAIN-TECH
 
 <div align="center">
 
-[![Website](https://img.shields.io/badge/Website-sakurain.net-blue)](https://sakurain.net)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5-000000?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite)](https://vitejs.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.18-339933?logo=node.js)](https://nodejs.org/)
+[![EdgeOne](https://img.shields.io/badge/EdgeOne%20Pages-Deploy-0052D9?logo=tencent-qq)](https://pages.edgeone.ai/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 </div>
 
-A modern personal portfolio and blog featuring interactive 3D visualizations, algorithm animations, developer tools, and a complete content management system — built with React 19, TypeScript, and Vite.
+A personal brand portal built with Next.js 15 App Router, deployed on Tencent Cloud EdgeOne Pages. The site combines a technical blog, documentation courses, interactive algorithm visualizations, a 3D Earth live feed, friend links, and a portfolio studio into a single SSG-first application with edge-computed interactive APIs.
 
-[Features](#features) | [Tech Stack](#tech-stack) | [Project Structure](#project-structure) | [Getting Started](#getting-started) | [Development](#development) | [Build & Deployment](#build--deployment) | [Performance](#performance) | [Security](#security) | [API Reference](#api-reference) | [Content Management](#content-management) | [Browser Compatibility](#browser-compatibility) | [Troubleshooting](#troubleshooting) | [Changelog](#changelog)  | [Contributing](#contributing) | [License](#license)
+[Features](#features) | [Tech Stack](#tech-stack) | [Project Structure](#project-structure) | [Getting Started](#getting-started) | [Development](#development) | [Build & Deployment](#build--deployment) | [API Reference](#api-reference) | [Security](#security) | [Troubleshooting](#troubleshooting) | [Contributing](#contributing) | [License](#license) | [Contact](#contact)
 
 **Live Site**: [https://sakurain.net](https://sakurain.net)
 
 ---
 
-## Acknowledgments
-
-Special thanks to my supporters:
-
-- **@ge~** — My best buddy during my undergraduate years, who has always accompanied me in various competitions.
-- **@FuFu今天也要憨 / @小樱雨 / @秋绘家的豌豆** — My younger sister, whose constant support and encouragement have been the driving force behind the continuous iteration of this project.
-
----
-
 ## Features
 
-### Homepage
-- ASCII art logo animation with typewriter effect
-- Tech stack evolution timeline with interactive charts
-- Service showcase section with hover effects
-- Staggered loading animations with performance optimization
-- Background particle effects with GPU acceleration
+### Content & Publishing
 
-### Blog System
-- Markdown-based content with frontmatter support
-- GitHub Flavored Markdown (GFM) and math expression support
-- Tags and archive organization with filtering
-- RSS/Atom/JSON feed generation and auto-submission
-- Comment system with moderation and spam protection
-- Featured post highlighting and related posts recommendation
-- Full-text search capability with instant results
-- Reading time estimation and word count
+- **Blog**: Markdown-driven posts with frontmatter, KaTeX math, syntax highlighting, GFMs, and OG images.
+- **Notes**: Short-form timestamped notes with mood tags and automatic archive indexes.
+- **Docs**: Multi-level documentation courses and rules served through a catch-all SSG route.
+- **Feeds**: Built-in RSS 2.0, Atom, and JSON Feed routes at `/feed.xml`, `/atom.xml`, and `/feed.json`.
+- **Sitemap & Robots**: Auto-generated `sitemap.xml` and `robots.txt` via Next.js Metadata Route API.
 
-### Documentation
-- Course materials and tutorials (React TSX, WebGL, Site Tech)
-- Technical articles and coding guidelines
-- Organized by category (courses, rules, services)
-- Interactive code examples with syntax highlighting
-- Table of contents generation for long articles
+### Interactive Experiences
 
-### Algorithm Visualizer
-- Interactive sorting algorithm animations (Bubble, Quick, Merge, Heap, etc.)
-- Graph algorithm visualizations (BFS, DFS, Dijkstra, A*, etc.)
-- Dynamic programming demonstrations
-- Step-by-step execution control with play/pause
-- Speed adjustment and customization options
-- Pseudocode display synchronized with animation
-- Data size and array type customization
+- **EarthOnline**: A Cesium-powered 3D globe with live satellite orbits and an interactive danmaku layer.
+- **AlgoViz**: Browser-based algorithm visualizations including graph traversal, sorting, and grid pathfinding.
+- **Friends Circle**: A social feed aggregator with batch refresh and cached card rendering.
+- **Music Player**: Persistent ambient music player with playlist management and playback state.
 
-### Developer Tools
-- JSON formatter and validator with tree view
-- Base64 encoder/decoder for text and files
-- Color converter (HEX, RGB, HSL, CMYK) with picker
-- Regular expression tester with match highlighting
-- Hash generator (MD5, SHA-1, SHA-256, SHA-512)
-- QR code generator with customization options
-- Timestamp converter and date formatter
-- URL encoder/decoder and parser
-- HTML entity encoder/decoder
-- UUID generator and validator
-- Number base converter (Binary, Octal, Decimal, Hex)
-- Text diff and comparison tool
-- Markdown preview and editor
+### Architecture & DX
 
-### 3D Earth Visualization
-- Cesium-based interactive globe with high-resolution imagery
-- Satellite orbit visualization with TLE data support
-- Real-time satellite position tracking and prediction
-- Danmaku (bullet comments) overlay system
-- China map data visualization with regional boundaries
-- Camera controls and animation paths
-- Day/night cycle visualization
-- Starfield background and atmospheric effects
-
-### Notes System
-- Micro-blogging/note-taking with markdown support
-- Mood tracking (happy, neutral, sad) with visual indicators
-- Timeline view with infinite scroll
-- Quick publishing workflow via API
-- Auto-generated archive pages
-
-### Friends Links
-- Friends link aggregation with avatar and description
-- RSS feed aggregation with auto-refresh
-- Connectivity status checking with health indicators
-- Link exchange management and categorization
-
-### Music Player
-- Global floating music player with playlist support
-- Visual audio spectrum analyzer
-- Playback controls and progress tracking
-- Volume control and mute toggle
-- Playlist management and shuffle/repeat modes
+- **Next.js 15 App Router**: Server Components by default, with client islands for heavy interactivity.
+- **SSG-First**: 46 pages prerendered at build time; dynamic edge APIs for write operations.
+- **Edge Route Handlers**: API routes under `app/api/*` marked with `export const runtime = 'edge'` and deployed as EdgeOne Pages Functions.
+- **Turbopack Dev**: Fast cold-start dev server with on-demand route compilation.
+- **Mounted Gate Pattern**: Unified hydration-mismatch prevention via `MobileContext` and `useMobileMounted`.
 
 ---
 
@@ -116,31 +53,20 @@ Special thanks to my supporters:
 
 | Category | Technology | Version |
 |----------|------------|---------|
-| Framework | React | 19.x |
-| Language | TypeScript | 5.9.x |
-| Build Tool | Vite | 7.x |
-| Styling | Tailwind CSS | 3.4.x |
-| UI Components | shadcn/ui | Latest |
-| Animation | Framer Motion | 12.x |
-| Animation | GSAP | 3.x |
-| 3D Graphics | Three.js | Latest |
-| 3D React | React Three Fiber | 9.x |
-| 3D Globe | CesiumJS | 1.x |
-| Icons | Lucide React | Latest |
-| Routing | React Router | 7.x |
+| Framework | Next.js | 15.5.21 |
+| UI Library | React | 19.2.0 |
+| Language | TypeScript | 5.9.3 |
+| Styling | Tailwind CSS | 3.4.17 |
+| Runtime | Node.js | 20.18.0 |
+| Deployment | Tencent Cloud EdgeOne Pages | - |
 
 ### Additional Libraries
 
-- **Markdown Rendering**: `react-markdown` with `remark-gfm`, `remark-math`, `rehype-katex`
-- **Charts**: Recharts, custom SVG charts
-- **Carousel**: Embla Carousel
-- **Smooth Scroll**: Lenis
-- **PDF Generation**: html2pdf.js
-- **Syntax Highlighting**: react-syntax-highlighter
-- **UI State**: next-themes, vaul
-- **Notifications**: sonner
-- **Form Validation**: zod
-- **Date Handling**: date-fns
+- **Content Pipeline**: gray-matter, react-markdown, remark-gfm, remark-math, rehype-katex
+- **3D & Graphics**: Cesium, Three.js, @react-three/fiber, @react-three/drei
+- **Animation**: framer-motion, gsap
+- **UI Utilities**: lucide-react, clsx, tailwind-merge, sonner
+- **Edge Runtime**: crypto Web API, KVNamespace via global bindings
 
 ---
 
@@ -148,56 +74,75 @@ Special thanks to my supporters:
 
 ```
 SAKURAIN-TECH/
-├── src/                         # Main source code
-│   ├── components/              # React components
-│   │   ├── atoms/               # Atomic components (Button, Card, Badge, GlowBadge)
-│   │   ├── ui/                  # shadcn/ui components (Button, Dialog, Dropdown, etc.)
-│   │   ├── effects/             # Visual effects (particles, glow, mouse effects, 3D globe)
-│   │   ├── sections/            # Page sections (Hero, Footer, Navigation, etc.)
-│   │   └── MusicPlayer/         # Global music player with controls and playlist
-│   ├── pages/                   # Page components (lazy-loaded for performance)
-│   │   ├── Blog/                # Blog system (list, post, tags, archives)
-│   │   ├── Docs/                # Documentation system with categories
-│   │   ├── AlgoViz/             # Algorithm visualizer with multiple algorithms
-│   │   ├── Tools/               # Developer tools registry and individual tools
-│   │   ├── Friends/             # Friends links and RSS aggregation
-│   │   ├── Notes/               # Micro-blog system with mood tracking
-│   │   ├── EarthOnline/         # Cesium 3D globe and satellite tracking
-│   │   └── ...                  # Other pages (About, Timeline, etc.)
-│   ├── hooks/                   # Custom React hooks (useTheme, useMobile, usePerformance)
-│   ├── contexts/                # React contexts (Theme, Performance, Mobile)
-│   ├── lib/                     # Utility functions (utils, animations, api-auth)
-│   ├── types/                   # TypeScript type definitions
-│   └── styles/                  # Global CSS styles and animations
-├── public/                      # Static assets (served directly)
-│   ├── blog/                    # Blog posts, generated archives and tags
-│   ├── notes/                   # Notes posts and generated archives
-│   ├── docs/                    # Documentation markdown files
-│   ├── data/                    # JSON data files (site-data, friends, docs index)
-│   ├── config/                  # Runtime configuration files
-│   ├── map-data/                # China map GeoJSON data
-│   ├── Assets/                  # Cesium assets and textures
-│   └── image/                   # Website images and icons
-├── edge-functions/              # Edge Function APIs (EdgeOne/Cloudflare)
-│   ├── api/                     # API endpoints (danmaku, comments, feeds)
-│   └── _utils/                  # Shared utilities for edge functions
-├── scripts/                     # Build automation scripts
-│   ├── generate-deployment-config.js
-│   ├── generate-security-config.js
-│   ├── check-friends-connectivity.js
-│   ├── generate-blog-tags.js
-│   ├── generate-blog-archive.js
-│   ├── generate-notes-archive.js
-│   ├── generate-feeds.js
-│   ├── generate-sitemap.js
-│   └── submit-sitemap.js
-├── dist/                        # Build output (generated by Vite)
-├── index.html                   # HTML entry point
-├── vite.config.ts               # Vite configuration with manual chunks
-├── tailwind.config.js           # Tailwind CSS configuration
-├── tsconfig.json                # TypeScript base configuration
-├── tsconfig.app.json            # TypeScript app configuration
-└── tsconfig.node.json           # TypeScript node configuration
+├── app/                              # Next.js App Router
+│   ├── layout.tsx                    # Root layout, metadata, fonts, providers
+│   ├── page.tsx                      # Home page
+│   ├── not-found.tsx                 # 404 page
+│   ├── globals.css                   # Global styles
+│   ├── robots.ts                     # robots.txt route
+│   ├── sitemap.ts                    # sitemap.xml route
+│   ├── feed.xml/route.ts             # RSS feed route
+│   ├── atom.xml/route.ts             # Atom feed route
+│   ├── feed.json/route.ts            # JSON feed route
+│   ├── blog/                         # Blog listing and post pages
+│   │   ├── page.tsx
+│   │   └── [slug]/page.tsx
+│   ├── notes/                        # Notes listing page
+│   ├── docs/                         # Documentation catch-all
+│   │   └── [[...slug]]/page.tsx
+│   ├── friends/                      # Friend links page
+│   ├── friends-circle/               # Social feed page
+│   ├── earth-online/                 # 3D globe page
+│   ├── algo-viz/                     # Algorithm visualization page
+│   ├── about/                        # About page
+│   ├── studio/                       # Portfolio studio
+│   ├── resume/                       # Resume page
+│   ├── projects/                     # Projects showcase
+│   └── api/                          # Edge Route Handlers
+│       ├── comments/route.ts
+│       ├── danmaku/
+│       │   ├── list/route.ts
+│       │   ├── add/route.ts
+│       │   └── delete/route.ts
+│       └── feed/
+│           ├── get/route.ts
+│           ├── refresh/route.ts
+│           ├── batch-get/route.ts
+│           └── batch-refresh/route.ts
+├── content/                          # Source content (markdown)
+│   ├── blog/posts/                   # Blog post source files
+│   └── notes/posts/                  # Note source files
+├── src/                              # Application source
+│   ├── components/                   # React components
+│   ├── contexts/                     # React contexts (MobileContext, etc.)
+│   ├── hooks/                        # Custom React hooks
+│   ├── lib/                          # Utility libraries
+│   │   ├── content/                  # gray-matter content pipeline
+│   │   ├── api/                      # Edge API shared logic (auth, rate-limit, KV)
+│   │   └── api-auth.ts               # Client-side HMAC signer
+│   └── config/                       # Auto-generated deployment config
+├── public/                           # Static assets
+│   ├── blog/                         # Public blog assets and posts
+│   ├── docs/                         # Static docs assets
+│   ├── image/                        # Site images
+│   ├── music/                        # Audio files
+│   ├── fonts/                        # Self-hosted fonts
+│   ├── map-data/                     # GeoJSON map data
+│   ├── data/                         # JSON data files
+│   ├── config/                       # Runtime config files
+│   └── cesium/                       # Generated Cesium runtime assets (gitignored)
+├── scripts/                          # Build and auxiliary scripts
+│   ├── check-friends-connectivity.js # Friend link health checker
+│   ├── generate-deployment-config.js # Deployment config generator
+│   ├── git-commits-to-notes.js       # Git-to-notes converter
+│   └── submit-sitemap.js             # Search engine sitemap submission
+├── edgeone.json                      # EdgeOne Pages deployment config
+├── next.config.ts                    # Next.js configuration
+├── postcss.config.mjs                # PostCSS configuration
+├── eslint.config.mjs                 # ESLint configuration
+├── package.json                      # npm scripts and dependencies
+├── .env.example                      # Environment variable template
+└── README.md                         # This file
 ```
 
 ---
@@ -206,9 +151,9 @@ SAKURAIN-TECH/
 
 ### Prerequisites
 
-- **Node.js**: 20.18.0 or higher (recommended: 22.x LTS)
-- **npm**: 10.x or higher (or pnpm 9.x)
-- **Git**: For version control
+- **Node.js**: 20.18.0 (managed by EdgeOne Pages build environment)
+- **npm**: 10.x or higher
+- **Git**: any recent version
 
 ### Installation
 
@@ -220,31 +165,36 @@ cd SAKURAIN-TECH
 # Install dependencies
 npm install
 
-# Copy environment variables template
-cp .env.example .env
+# Copy environment template
+cp .env.example .env.local
 
-# Edit .env with your configuration
-# See Environment Variables section below
+# Edit .env.local with your configuration
 ```
 
 ### Environment Variables
 
-Create a `.env` file in the project root with the following variables:
+Create `.env.local` in the project root:
 
 ```env
-# ============================================
-# Required for API write operations
-# ============================================
-VITE_API_SECRET_KEY=your-32-byte-secret-key-here
+# Base URL for backend APIs (leave empty for same-origin relative paths)
+API_BASE_URL=
 
-# ============================================
-# Optional: Search Engine Submission
-# ============================================
-BAIDU_PUSH_TOKEN=your-baidu-token
-BING_API_KEY=your-bing-api-key
+# Shared HMAC-SHA256 signing key for write API requests.
+# Client signs requests with this key; edge Route Handlers verify it.
+# Must be at least 32 bytes (64 hex characters).
+# NOTE: this is exposed to the browser. Phase 3b will replace client-side
+# signing with a server-side proxy / token-based flow.
+API_SECRET_KEY=
+
+# Cesium Ion access token (optional fallback for Ion assets)
+NEXT_PUBLIC_CESIUM_ION_TOKEN=
+
+# Dev API proxy target (default: https://sakurain.net)
+# Set to http://localhost:8788 to use the local mock server.
+DEV_API_TARGET=
 ```
 
-**Security Note**: Never commit the `.env` file to version control. The `.env` file is already listed in `.gitignore`.
+**Security Note**: Never commit `.env` or `.env.local`. Both are listed in `.gitignore`.
 
 ---
 
@@ -256,73 +206,33 @@ BING_API_KEY=your-bing-api-key
 npm run dev
 ```
 
-The development server will start at `http://localhost:5173` (or another available port) with hot module replacement (HMR) enabled.
+The Next.js dev server starts at `http://localhost:3000` with Turbopack enabled. The first visit to an uncompiled route incurs a short compilation delay; subsequent visits are instant.
 
 ### Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start development server with HMR |
-| `npm run build` | Full production build with all optimizations |
-| `npm run build:fast` | Fast build without pre-build scripts |
-| `npm run preview` | Preview production build locally |
-| `npm run lint` | Run ESLint for code quality |
-| `npx tsc --noEmit` | Type check without emitting files |
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Next.js dev server with Turbopack |
+| `npm run build` | Run all build scripts, then `next build` |
+| `npm run build:fast` | Run `next build` only, skipping all build scripts |
+| `npm run submit-sitemap` | Submit the generated sitemap to search engines |
+| `npm run start` | Start production preview server |
+| `npm run lint` | Run ESLint |
+
+### Local API Development
+
+By default, `next.config.ts` rewrites `/api/:path*` to the production site (`https://sakurain.net`) during development. This lets you read real comments, danmaku, and friend data without running a local backend.
+
+> **Warning**: Write operations in default mode hit the production API and modify live data.
+
+To develop API handlers locally, run `npm run dev` and access `/api/*` directly. Edge Route Handlers under `app/api/*` are served by the Next.js dev server. Set `DEV_API_TARGET=http://localhost:8788` in `.env.local` to proxy `/api/*` to a custom local backend instead.
 
 ### Code Style
 
-The project uses strict TypeScript configuration with the following conventions:
-
-#### Import Patterns
-
-```typescript
-// Use @/ alias for src/ imports
-import { Button } from '@/components/ui/button';
-import { useTheme } from '@/hooks';
-import { formatDate } from '@/lib/utils';
-
-// Use type keyword for type-only imports
-import type { SiteData, Post } from '@/types';
-import type { ReactNode } from 'react';
-```
-
-#### Naming Conventions
-
-| Item | Convention | Example |
-|------|------------|---------|
-| Components | PascalCase | `BlogCard.tsx`, `UserProfile.tsx` |
-| Hooks | camelCase with `use` prefix | `useTheme.ts`, `useMobile.ts` |
-| Utilities | camelCase | `utils.ts`, `formatDate.ts` |
-| Constants | SCREAMING_SNAKE_CASE | `API_BASE_URL`, `DEFAULT_TIMEOUT` |
-| CSS Classes | Tailwind utilities; custom in kebab-case | `btn-primary`, `card-hover` |
-
-#### Component Structure
-
-```typescript
-// Props interface
-interface MyComponentProps {
-  title: string;
-  children?: React.ReactNode;
-}
-
-// Functional component with explicit return type
-export function MyComponent({ title, children }: MyComponentProps): JSX.Element {
-  return (
-    <div className="p-4">
-      <h1>{title}</h1>
-      {children}
-    </div>
-  );
-}
-```
-
-### Performance Guidelines
-
-- Use `React.lazy()` for route-based code splitting
-- Use `useMemo` and `useCallback` for expensive computations
-- Respect `prefers-reduced-motion` for accessibility
-- Use `will-change` sparingly and only on animated elements
-- Prefer `transform` and `opacity` for animations (GPU accelerated)
+- TypeScript strict mode is enabled.
+- ESLint uses the Next.js recommended config.
+- Client-side hooks and browser APIs must be guarded by the `mounted` gate when used in conditional rendering.
+- Edge Route Handlers use `export const runtime = 'edge'` and access KV namespaces as global variables.
 
 ---
 
@@ -331,523 +241,299 @@ export function MyComponent({ title, children }: MyComponentProps): JSX.Element 
 ### Production Build
 
 ```bash
-# Full production build (recommended)
 npm run build
 ```
 
-The build process runs multiple stages in sequence:
+The build workflow runs the following steps in order. Each step must succeed before the next one starts:
 
-| Stage | Script | Description |
-|-------|--------|-------------|
-| 1 | `generate-deployment-config.js` | Generate deployment mode configuration |
-| 2 | `generate-security-config.js` | Generate security feature toggles |
-| 3 | `check-friends-connectivity.js` | Check friends link connectivity status |
-| 4 | `generate-blog-tags.js` | Extract and generate blog tags |
-| 5 | `generate-blog-archive.js` | Generate blog archive pages |
-| 6 | `generate-notes-archive.js` | Generate notes archive pages |
-| 7 | `generate-feeds.js` | Generate RSS/Atom/JSON feeds |
-| 8 | `generate-sitemap.js` | Generate sitemap.xml |
-| 9 | `submit-sitemap.js` | Submit sitemap to search engines |
-| 10 | `tsc -b` | TypeScript compilation |
-| 11 | `vite build` | Vite production build |
+1. **`generate-deployment-config.js`**: Generates `src/config/deployment-config.ts` from `public/config/deployment.json`.
+2. **`git-commits-to-notes.js`**: Converts new Git commits into notes under `content/notes/posts/`.
+3. **`check-friends-connectivity.js`**: Updates the online/offline status of friend links in `public/data/friends.json`.
+4. **`next build`**: Produces 46 static pages and 8 dynamic Edge Route Handlers.
+5. **`submit-sitemap.js`**: Submits the generated sitemap to search engines.
 
-### Build Output
-
-The build output is located in `dist/` with the following structure:
-
-```
-dist/
-├── index.html              # Entry HTML file
-├── assets/                 # Static assets
-│   ├── index-*.js         # Main JS bundle
-│   ├── react-vendor-*.js  # React vendor chunk
-│   ├── framer-motion-*.js # Framer Motion chunk
-│   └── ...                # Other chunks
-├── blog/                  # Blog static files
-├── notes/                 # Notes static files
-└── ...                    # Other public assets
-```
-
-### Deployment Platforms
-
-#### EdgeOne (Primary)
-
-The project is primarily deployed on Tencent Cloud EdgeOne. Configuration is in `edgeone.json`.
-
-#### Vercel
-
-Alternative deployment on Vercel is supported via `vercel.json`.
+To skip the scripts and run only `next build`:
 
 ```bash
-# Deploy to Vercel
-vercel --prod
+npm run build:fast
 ```
 
-### Cache Configuration
+### Build Stages
 
-| Resource Type | Cache Duration |
-|---------------|----------------|
-| JS/CSS Assets | 30 days |
-| Images/Music | 30 days |
-| Data/Content | 60 seconds |
-| RSS Feeds | 5 minutes |
-| HTML | No cache |
+| Stage | Description |
+|-------|-------------|
+| 1. Deployment Config | Generate `src/config/deployment-config.ts` |
+| 2. Notes Sync | Convert Git commits to notes |
+| 3. Friends Check | Check friend link connectivity |
+| 4. Compile | TypeScript compilation and bundle optimization |
+| 5. Static Generation | 46 pages prerendered as static HTML |
+| 6. Edge Handler Build | 8 API routes built as edge functions |
+| 7. Sitemap Submit | Submit sitemap to search engines |
+| 8. Trace & Optimize | Collect build traces and finalize output |
 
----
+### EdgeOne Pages Deployment
 
-## Performance
+The project is deployed to Tencent Cloud EdgeOne Pages. Key configuration in `edgeone.json`:
 
-### Build Optimizations
+- `buildCommand`: `npm run build`
+- `outputDirectory`: `.next`
+- `nodeVersion`: `20.18.0`
+- Rewrites: legacy `/feed`, `/feed/atom`, `/feed/json` aliases
+- Caches: long-term caching for `/_next/static/*`, `/image/*`, `/music/*`; short TTL for `/data/*`, `/blog/*`, `/notes/*`, feeds
+- Headers: security and content-type headers for static assets and feeds
 
-The project implements several build-time optimizations:
+**KV Namespaces**: Bind the following namespaces in the EdgeOne console:
 
-#### Code Splitting
+- `KV_SECRET` - nonce replay protection
+- `RATE_LIMIT_KV` - rate limiting
+- `DANMAKU_KV` - satellite danmaku storage
+- `COMMENTS_KV` - blog comments storage
+- `FEED_KV` - friends-circle feed cache
 
-Manual chunks are configured in `vite.config.ts`:
-
-| Chunk | Contents |
-|-------|----------|
-| `react-vendor` | React, React DOM, React Router |
-| `framer-motion` | Framer Motion |
-| `gsap` | GSAP + @gsap/react |
-| `lucide` | Lucide React icons |
-| `utils` | clsx, tailwind-merge, class-variance-authority |
-| `charts` | Recharts |
-| `three-core` | Three.js |
-| `react-three` | React Three Fiber, Drei |
-
-#### Other Build Optimizations
-
-- CSS code splitting enabled
-- esbuild minification with console/debugger removal in production
-- Source maps disabled in production
-- Tree shaking for dead code elimination
-
-### Runtime Optimizations
-
-- **Route-based lazy loading**: Pages loaded on demand
-- **Staggered effect loading**: Animations start at different times to reduce initial load
-- **Performance context**: Detects device capability and adjusts quality
-- **Reduced motion support**: Respects `prefers-reduced-motion` user preference
-- **GPU acceleration**: Uses `transform` and `will-change` appropriately
-- **Image optimization**: WebP format preferred for images
-
-### Performance Metrics
-
-The project targets the following performance metrics:
-
-| Metric | Target |
-|--------|--------|
-| First Contentful Paint (FCP) | < 1.8s |
-| Largest Contentful Paint (LCP) | < 2.5s |
-| Time to Interactive (TTI) | < 3.8s |
-| Cumulative Layout Shift (CLS) | < 0.1 |
-
----
-
-## Security
-
-### Client-side Protection
-
-The project includes optional client-side security features (configurable via build scripts):
-
-- Debug detection and protection
-- F12/developer tools blocking (optional, configurable)
-- Source code obfuscation via build process
-- Console output removal in production
-
-### API Security
-
-All write operations to Edge Functions require:
-
-- **HMAC-SHA256** signature authentication
-- **Timestamp validation** (5-minute tolerance window)
-- **Nonce validation** to prevent replay attacks
-- **Rate limiting** (60 requests/minute per IP address)
-
-### API Authentication Example
-
-```typescript
-import { generateApiSignature } from '@/lib/api-auth';
-
-const payload = {
-  content: 'Comment content',
-  postId: 'post-slug',
-  timestamp: Date.now(),
-  nonce: crypto.randomUUID()
-};
-
-const signature = generateApiSignature(payload, API_SECRET_KEY);
-
-await fetch('/api/comments', {
-  method: 'POST',
-  headers: {
-    'X-Signature': signature,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify(payload)
-});
-```
-
-### Environment Variables Security
-
-Sensitive variables that should never be committed:
-
-| Variable | Purpose |
-|----------|---------|
-| `VITE_API_SECRET_KEY` | API signing key |
-| `BAIDU_PUSH_TOKEN` | Baidu search submission |
-| `BING_API_KEY` | Bing webmaster API |
+In edge functions, these bindings are accessed directly as global variables, for example `await COMMENTS_KV.get(key)`.
 
 ---
 
 ## API Reference
 
-### Edge Functions
+All API endpoints are implemented as Next.js Edge Route Handlers under `app/api/*`. They share HMAC authentication via `X-Timestamp`, `X-Nonce`, and `X-Signature` headers.
 
-Located in `edge-functions/api/`, deployed to EdgeOne/Cloudflare.
+### Authentication
 
-#### Danmaku API
+Write endpoints require HMAC-SHA256 signatures:
 
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/api/danmaku/list` | GET | No | Get satellite danmaku list |
-| `/api/danmaku/add` | POST | Yes | Add new danmaku |
-| `/api/danmaku/delete` | POST | Yes | Delete danmaku (admin only) |
+```
+X-Timestamp: <milliseconds since epoch>
+X-Nonce: <UUID>
+X-Signature: <hex(HMAC-SHA256("<timestamp>:<nonce>", API_SECRET_KEY))>
+```
 
-#### Comments API
-
-| Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
-| `/api/comments` | GET | No | Get comments for a post |
-| `/api/comments` | POST | Yes | Post a new comment |
-
-#### Feed API
+### Comments
 
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
-| `/api/feed/get` | GET | No | Get RSS feed data |
-| `/api/feed/refresh` | POST | Yes | Refresh RSS feed cache |
-| `/api/feed/batch-get` | GET | No | Batch get multiple feeds |
-| `/api/feed/batch-refresh` | POST | Yes | Batch refresh feeds |
+| `/api/comments` | GET | No | List comments for a post (`?postId=<slug>`) |
+| `/api/comments` | POST | Yes | Add a comment to a post |
 
-### Request/Response Format
+### Danmaku
 
-All APIs use JSON format. Successful responses:
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/danmaku/list` | GET | No | List all satellite danmaku |
+| `/api/danmaku/add` | POST | Yes | Add a new danmaku message |
+| `/api/danmaku/delete` | POST | Yes | Delete a danmaku message by ID |
+
+### Friends Circle Feed
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/feed/get` | GET | No | Get cached feed entries |
+| `/api/feed/batch-get` | GET | No | Batch get feeds for multiple sources |
+| `/api/feed/refresh` | POST | Yes | Refresh a single feed source |
+| `/api/feed/batch-refresh` | POST | Yes | Refresh all feed sources |
+
+### Response Format
+
+Success:
 
 ```json
 {
   "success": true,
-  "data": { ... }
+  "data": {}
 }
 ```
 
-Error responses:
+Error:
 
 ```json
 {
   "success": false,
-  "error": "Error message",
-  "code": 400
+  "error": "Invalid signature"
 }
 ```
+
+---
+
+## Performance
+
+### Optimization Strategies
+
+- **SSG-First Rendering**: 46 pages are prerendered at build time, eliminating runtime server load for content pages.
+- **Turbopack Development**: Fast cold-start and on-demand compilation during development.
+- **Optimize Package Imports**: `next.config.ts` configures `optimizePackageImports` for `lucide-react`, `framer-motion`, and `@react-three/drei` to reduce bundle size.
+- **Self-Hosted Fonts**: JetBrains Mono, VT323, and Press Start 2P fonts are self-hosted to eliminate external network blocking.
+- **Image Optimization**: Next.js Image component is used where possible; large audio files are served as static assets.
+- **Mounted Gate Pattern**: Heavy client-side effects are deferred until after hydration to prevent layout shift and hydration mismatch.
+
+### Performance Metrics
+
+| Metric | Target |
+|--------|--------|
+| First Contentful Paint (FCP) | < 1.5s |
+| Largest Contentful Paint (LCP) | < 2.5s |
+| Time to Interactive (TTI) | < 3.5s |
+| Build Time | < 90s |
+| Static Pages | 46 |
+| Edge Route Handlers | 8 |
+
+### Bundle Considerations
+
+- Cesium runtime assets live under `public/cesium/` and are served as static files, not bundled into JavaScript. The directory is gitignored; if it is missing, copy it from `node_modules/cesium/Build/Cesium` before building.
+- Three.js and Cesium are loaded only on pages that need them via dynamic imports with `ssr: false`.
+- Heavy interactive pages such as `/earth-online` and `/algo-viz` are marked dynamic to avoid blocking static generation.
 
 ---
 
 ## Content Management
 
-### Blog Posts
+### Content Pipeline
 
-Blog posts are stored as Markdown files in `public/blog/posts/`.
+The project uses a custom content pipeline built on `gray-matter` and `react-markdown`:
 
-#### Frontmatter Format
+- **Source Files**: Blog and notes markdown files live under `content/blog/posts/` and `content/notes/posts/`.
+- **Frontmatter**: Each file includes title, date, description, tags, and optional featured flag.
+- **Rendering**: `react-markdown` with `remark-gfm`, `remark-math`, and `rehype-katex` handles GitHub-flavored markdown and KaTeX math.
+- **Static Generation**: `generateStaticParams` in `app/blog/[slug]/page.tsx` and `app/docs/[[...slug]]/page.tsx` prerenders all content paths.
+
+### Adding a Blog Post
+
+1. Create a new markdown file under `content/blog/posts/`.
+2. Add frontmatter at the top:
 
 ```markdown
 ---
 title: "Post Title"
-description: "Brief description of the post"
-date: "2026-02-08"
-author: "SAKURAIN"
-tags: ["React", "TypeScript", "Web Development"]
-cover: "/image/logo.webp"
+date: "2026-07-23"
+description: "Short description"
+tags: ["Next.js", "EdgeOne"]
 featured: true
 ---
-
-# Content starts here
-
-Write your post content in Markdown...
 ```
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `title` | Yes | Post title |
-| `description` | Yes | Brief description for SEO and previews |
-| `date` | Yes | Publication date (YYYY-MM-DD) |
-| `author` | No | Author name (defaults to "SAKURAIN") |
-| `tags` | No | Array of tag strings |
-| `cover` | No | Cover image path |
-| `featured` | No | Whether to feature on homepage |
+3. Write content in Markdown.
+4. Run `npm run build` to include the new post in SSG and feeds.
 
-#### Workflow
+### Adding a Note
 
-1. Create markdown file in `public/blog/posts/`
-2. Add proper frontmatter
-3. Run `npm run build` to regenerate indices and feeds
-4. Images should be placed in `public/blog/assets/`
-
-### Notes (Micro-blog)
-
-Notes are stored in `public/notes/posts/` with timestamp-based filenames.
-
-#### Frontmatter Format
+1. Create a new markdown file under `content/notes/posts/` using the timestamp filename format `YYYYMMDDHHMMSS.md`.
+2. Add frontmatter:
 
 ```markdown
 ---
 title: "Note Title"
-date: "2026-02-08 14:30"
-mood: "happy"  # Options: happy, neutral, sad
+date: "2026-07-23 14:30"
+mood: "happy"
 ---
-
-Note content here...
 ```
 
-#### Workflow
-
-1. Create markdown file with timestamp filename (e.g., `20260302001351.md`)
-2. Add frontmatter with title, date, and mood
-3. Run `npm run build` to regenerate archives
-
-### Documentation
-
-Documentation is stored in `public/docs/` organized by category:
-
-```
-public/docs/
-├── courses/          # Tutorial series
-│   ├── react-tsx/   # React TypeScript course
-│   ├── webgl/       # WebGL tutorials
-│   └── site-tech/   # Website technology guides
-├── rules/           # Coding standards and guidelines
-└── services/        # Service documentation
-```
-
-### Adding a Developer Tool
-
-1. Create tool component in `src/pages/Tools/tools/my-tool.tsx`:
-
-```typescript
-export function MyTool() {
-  return (
-    <div>
-      <h1>My Tool</h1>
-      {/* Tool UI */}
-    </div>
-  );
-}
-```
-
-2. Register in `src/pages/Tools/registry.ts`:
-
-```typescript
-import { MyTool } from './tools/my-tool';
-
-registerTool({
-  id: 'my-tool',
-  name: 'My Tool',
-  description: 'Description of what the tool does',
-  component: MyTool,
-  icon: WrenchIcon,
-  category: 'Converter'  // or 'Generator', 'Formatter', 'Utility'
-});
-```
+3. Alternatively, run `node scripts/git-commits-to-notes.js` to convert recent Git commits into notes automatically.
 
 ---
 
-## Browser Compatibility
+## Security
 
-### Supported Browsers
+### Authentication
 
-| Browser | Minimum Version | Notes |
-|---------|-----------------|-------|
-| Chrome | 90+ | Full support |
-| Firefox | 88+ | Full support |
-| Safari | 14+ | Full support |
-| Edge | 90+ | Full support |
-| Opera | 76+ | Full support |
+- HMAC-SHA256 signed requests with timestamp and nonce.
+- Nonce replay protection via `KV_SECRET` with 5-minute TTL.
+- Timestamp tolerance of 5 minutes to prevent replay attacks.
 
-### Mobile Support
+### API Security
 
-| Platform | Support Level |
-|----------|--------------|
-| iOS Safari | Full support (iOS 14+) |
-| Android Chrome | Full support (Android 10+) |
-| Android Firefox | Full support |
+- Rate limiting per IP via `RATE_LIMIT_KV`.
+- Input validation and length limits on all write endpoints.
+- CORS headers configured for cross-origin access.
+- Error responses return generic messages; stack traces and sensitive config are never exposed.
 
-### Features with Limited Support
+### Headers
 
-| Feature | Fallback |
-|---------|----------|
-| WebGL 3D Globe | Static image fallback |
-| CSS Grid/Flexbox | Standard layout |
-| CSS Variables | Inline styles fallback |
-| Intersection Observer | Scroll event fallback |
+Edge Route Handlers include security headers in responses:
+
+- `X-Frame-Options: DENY`
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Content-Security-Policy` directives appropriate for the route
+
+### Known Limitations
+
+- `API_SECRET_KEY` is currently exposed to the browser because the client signs requests directly. Phase 3b will migrate to a server-side proxy or token-based flow to eliminate client-side key exposure.
 
 ---
 
 ## Troubleshooting
 
-### Build Failures
+### Build Failure: `Cannot find module '../chunks/ssr/[turbopack]_runtime.js'`
 
-**Problem**: `npm run build` fails with TypeScript errors
-
-**Solution**:
-
-```bash
-# Check TypeScript errors
-npx tsc --noEmit
-
-# Ensure Node.js version is 20.18.0+
-node --version
-
-# Delete node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
-**Problem**: Build fails during script execution
+**Cause**: Turbopack dev cache and webpack production build share `.next/`, causing cache pollution.
 
 **Solution**:
 
 ```bash
-# Run individual scripts to identify the issue
-node scripts/generate-blog-tags.js
-node scripts/generate-feeds.js
-
-# Check that all required directories exist
-ls -la public/blog/posts/
-ls -la public/notes/posts/
+rm -rf .next
+npm run build
 ```
 
-### Development Issues
+### Dev Server Cross-Origin Warning
 
-**Problem**: Hot reload not working
+**Cause**: Next.js 15 warns when accessing `localhost` via `127.0.0.1`.
 
-**Solution**:
+**Solution**: Already configured in `next.config.ts`:
 
-- Check that `vite.config.ts` HMR is enabled
-- Ensure no syntax errors in the file being edited
-- Try refreshing the browser manually
+```ts
+allowedDevOrigins: ["localhost", "127.0.0.1"]
+```
 
-**Problem**: Environment variables not loading
+### `npm run build` Hangs on Friend Link Checks
 
-**Solution**:
+**Cause**: `check-friends-connectivity.js` makes outbound HTTPS requests to every friend link.
 
-- Ensure `.env` file exists in project root
-- Variable names must start with `VITE_` to be exposed to client
-- Restart the dev server after changing `.env`
+**Solution**: On slow networks, increase timeouts or use `npm run build:fast` for local iteration. For CI/CD, ensure outbound HTTPS is allowed.
 
-### Edge Function Issues
+### Write API Returns `Invalid signature`
 
-**Problem**: API returns 401 Unauthorized
+**Cause**: `API_SECRET_KEY` mismatch between client and edge handler, or clock skew.
 
 **Solution**:
 
-- Check that `VITE_API_SECRET_KEY` is set correctly
-- Verify timestamp is within 5-minute window
-- Ensure nonce is unique and not reused
+- Ensure `.env.local` and EdgeOne environment both define the same `API_SECRET_KEY`.
+- Verify system clock is accurate.
+- Check that `X-Timestamp`, `X-Nonce`, and `X-Signature` headers are present.
 
-**Problem**: KV storage errors
 
-**Solution**:
 
-- Verify KV namespace bindings are configured
-- Check that KV namespaces exist in EdgeOne/Cloudflare dashboard
+## Contributing
+
+Contributions are welcome. Please follow this workflow:
+
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/your-feature`.
+3. Make changes following the code style guidelines.
+4. Run the build: `npm run build`.
+5. Commit: `git commit -m 'feat: add new feature'`.
+6. Push: `git push origin feature/your-feature`.
+7. Open a Pull Request.
+
+### Code Quality Requirements
+
+Before submitting a PR:
+
+- [ ] `npm run build` passes without errors.
+- [ ] `npm run lint` passes or only introduces acceptable warnings.
+- [ ] New environment variables are documented in `.env.example` and README.
+- [ ] Edge Route Handlers include input validation and try-catch around KV operations.
+- [ ] No secrets or `.env` files are committed.
 
 ---
 
 ## Changelog
 
-### [1.0.0] - 2026-03-25
-
-- Initial release
-- Homepage with animated UI and 3D globe
-- Blog system with Markdown support
-- Documentation system
-- Algorithm visualizer
-- Developer tools collection
-- Notes system with mood tracking
-- Friends links with RSS aggregation
-- Music player with visualizer
-
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
-
----
-
-## Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-### Getting Started
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes
-4. Run tests and ensure build passes: `npm run build`
-5. Commit your changes: `git commit -m 'Add amazing feature'`
-6. Push to the branch: `git push origin feature/amazing-feature`
-7. Open a Pull Request
-
-### Code Quality Requirements
-
-Before submitting a PR, ensure:
-
-- [ ] `npm run lint` passes without errors
-- [ ] `npx tsc --noEmit` has no TypeScript errors
-- [ ] `npm run build` completes successfully
-- [ ] All new code follows the project's style conventions
-- [ ] Components respect `usePrefersReducedMotion()` for accessibility
-- [ ] No `console.log` statements in production code
-
-### Reporting Issues
-
-When reporting bugs, please include:
-
-- Browser and version
-- Operating system
-- Steps to reproduce
-- Expected vs actual behavior
-- Screenshots if applicable
-- Console error messages
+See [PROGRESS.md](PROGRESS.md) for the detailed migration timeline and key decisions.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-```
-MIT License
-
-Copyright (c) 2026 SAKURAIN
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
@@ -855,27 +541,24 @@ SOFTWARE.
 
 This project is built with the help of many open-source projects:
 
-- [Vite](https://vitejs.dev/) - Next Generation Frontend Tooling
-- [React](https://react.dev/) - The library for web and native user interfaces
+- [Next.js](https://nextjs.org/) - React framework
+- [React](https://react.dev/) - UI library
 - [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [shadcn/ui](https://ui.shadcn.com/) - Beautifully designed components
-- [Framer Motion](https://www.framer.com/motion/) - Production-ready motion library
-- [GSAP](https://greensock.com/gsap/) - Professional-grade JavaScript animation
-- [Cesium](https://cesium.com/) - Open-source platform for 3D geospatial data
-- [Three.js](https://threejs.org/) - JavaScript 3D library
-- [React Three Fiber](https://docs.pmnd.rs/react-three-fiber) - React renderer for Three.js
-- [Lucide](https://lucide.dev/) - Beautiful & consistent icon toolkit
+- [Cesium](https://cesium.com/) - 3D globe and mapping
+- [Three.js](https://threejs.org/) - 3D graphics library
+- [EdgeOne Pages](https://pages.edgeone.ai/) - Edge deployment platform
 
 ---
 
 ## Contact
 
+- **Author**: Yuyang.Wang
 - **Website**: [https://sakurain.net](https://sakurain.net)
-- **Email**: [contact@sakurain.net](mailto:contact@sakurain.net)
-- **GitHub**: [https://github.com/yourusername](https://github.com/yourusername)
+- **Email**: [Yae_SakuRain@outlook.com](mailto:Yae_SakuRain@outlook.com)
+- **GitHub**: [https://github.com/IYeaSakura](https://github.com/IYeaSakura)
 
 ---
 
 <p align="center">
-  Made by SAKURAIN
+  Made by Yuyang.Wang
 </p>

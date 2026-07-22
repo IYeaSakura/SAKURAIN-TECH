@@ -1,4 +1,3 @@
 {
-  "mode": "navigate",
-  "description": "Deployment mode configuration: 'navigate' for SPA navigation with React Router, 'location' for full page reload with window.location.href"
+  "mode": "edgeone"
 }

@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useRef, useCallback } from 'react';
 
 interface AudioVisualizerProps {
@@ -16,6 +18,7 @@ const globalAudioMap = new WeakMap<HTMLAudioElement, {
 export function AudioVisualizer({ audioRef, isPlaying, mode = 'bars' }: AudioVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
+  const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const isInitializedRef = useRef(false);
   const isActiveRef = useRef(false);
@@ -216,7 +219,11 @@ export function AudioVisualizer({ audioRef, isPlaying, mode = 'bars' }: AudioVis
     if (!ctx) return;
 
     const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
+    // 复用频谱缓冲，避免每帧分配 Uint8Array（60fps 下造成 GC 压力与掉帧）
+    if (!dataArrayRef.current || dataArrayRef.current.length !== bufferLength) {
+      dataArrayRef.current = new Uint8Array(bufferLength);
+    }
+    const dataArray = dataArrayRef.current;
     analyser.getByteFrequencyData(dataArray);
 
     // 清空画布
@@ -269,7 +276,10 @@ export function AudioVisualizer({ audioRef, isPlaying, mode = 'bars' }: AudioVis
           source,
         });
       } catch (err) {
-        console.error('Audio context init failed:', err);
+        // 音频上下文初始化失败（如资源缺失）时静默降级，仅开发态告警
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[MusicPlayer] Audio context init failed:', err);
+        }
       }
     }
 
@@ -320,7 +330,10 @@ export function AudioVisualizer({ audioRef, isPlaying, mode = 'bars' }: AudioVis
       isActiveRef.current = true;
       draw();
     } else {
+      // 暂停时标记非活跃并停止动画循环，防止残留 rAF 帧继续递归空转
+      isActiveRef.current = false;
       cancelAnimationFrame(animationRef.current);
+      animationRef.current = 0;
       // 清空画布
       const canvas = canvasRef.current;
       const ctx = canvas?.getContext('2d');

@@ -29,6 +29,22 @@ let cachedCapability: DeviceCapability | null = null;
 export function detectDeviceCapability(): DeviceCapability {
   if (cachedCapability) return cachedCapability;
 
+  // SSR 兜底：服务端无 window/navigator，返回保守默认值。
+  // 全局布局层（ClientEffects）会在服务端渲染 PerformanceProvider，
+  // 特效与导航均在客户端 effect 阶段才挂载，默认值不影响最终呈现。
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return {
+      isLowPower: false,
+      isMobile: false,
+      supportsWebGL: false,
+      hardwareConcurrency: 4,
+      deviceMemory: 4,
+      devicePixelRatio: 1,
+      isBatterySaving: false,
+      recommendedQuality: 'medium',
+    };
+  }
+
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
     navigator.userAgent
   ) || window.innerWidth < 1024;

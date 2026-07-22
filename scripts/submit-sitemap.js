@@ -2,7 +2,7 @@
 /**
  * Submit sitemap URLs to search engines
  * Supports: Baidu, Google (planned), Bing (planned)
- * 
+ *
  * Environment variables:
  * - BAIDU_PUSH_TOKEN: Baidu push token (required for Baidu)
  * - SEARCH_ENGINE_SUBMIT: Comma-separated list of engines to submit (default: baidu)
@@ -17,15 +17,35 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const SITE_URL = 'https://sakurain.net';
-const SITEMAP_PATH = path.join(__dirname, '../public/sitemap.xml');
 const BATCH_SIZE = 2000;
+
+/**
+ * Locate the generated sitemap.xml.
+ * Next.js metadata routes emit the rendered body to .next/server/app/<route>.body.
+ * Fallback to public/sitemap.xml for legacy/manual setups.
+ */
+function resolveSitemapPath() {
+  const candidates = [
+    path.join(__dirname, '../.next/server/app/sitemap.xml.body'),
+    path.join(__dirname, '../public/sitemap.xml'),
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  return candidates[0];
+}
 
 const BAIDU_API = 'data.zz.baidu.com';
 const BAIDU_PATH = '/urls';
 
 function parseSitemap(sitemapPath) {
   if (!fs.existsSync(sitemapPath)) {
-    console.error('Sitemap not found:', sitemapPath);
+    console.error('✘ Sitemap not found:', sitemapPath);
+    console.error('   Run "npm run build" first to generate sitemap.xml.');
     return [];
   }
 
@@ -184,15 +204,18 @@ async function submitToSearchEngines() {
     return;
   }
 
+  const sitemapPath = resolveSitemapPath();
+
   console.log('Submitting sitemap to search engines...');
   console.log(`  Site: ${SITE_URL}`);
   console.log(`  Engines: ${enabledEngines.join(', ')}`);
+  console.log(`  Sitemap: ${sitemapPath}`);
   console.log('');
 
-  const urls = parseSitemap(SITEMAP_PATH);
+  const urls = parseSitemap(sitemapPath);
 
   if (urls.length === 0) {
-    console.error('No URLs found in sitemap');
+    console.error('✘ No URLs found in sitemap');
     process.exit(1);
   }
 
@@ -227,4 +250,7 @@ async function submitToSearchEngines() {
   }
 }
 
-submitToSearchEngines();
+submitToSearchEngines().catch((error) => {
+  console.error('✘ Unexpected error during sitemap submission:', error.message);
+  process.exit(1);
+});

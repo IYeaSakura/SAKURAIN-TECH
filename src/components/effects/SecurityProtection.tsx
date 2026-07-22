@@ -18,7 +18,7 @@ export function SecurityProtection({ config }: SecurityProtectionProps) {
         return config;
       }
       try {
-        const response = await fetch(`/config/security-config.json?v=${Date.now()}`, { cache: 'no-store' });
+        const response = await fetch('/config/security-config.json');
         const data = await response.json();
         const security = data.security || data.debugProtection;
         if (security) {
@@ -350,7 +350,7 @@ function disableDebug() {
   disableInspectElement();
 
   const disableBeforeUnload = (e: BeforeUnloadEvent) => {
-    if (performance.now() - (window as any).lastPageLoad < 1000) {
+    if (performance.now() - ((window as unknown as { lastPageLoad?: number }).lastPageLoad ?? 0) < 1000) {
       e.preventDefault();
       e.returnValue = '';
     }
@@ -358,7 +358,7 @@ function disableDebug() {
 
   window.addEventListener('beforeunload', disableBeforeUnload);
 
-  (window as any).lastPageLoad = performance.now();
+  (window as unknown as { lastPageLoad: number }).lastPageLoad = performance.now();
 
   const disableWindowOpen = () => {
     window.open = function() {
@@ -370,7 +370,7 @@ function disableDebug() {
   disableWindowOpen();
 
   const disableEval = () => {
-    (window as any).eval = function() {
+    (window as unknown as { eval: () => undefined }).eval = function() {
       showBlockedMessage('eval is disabled');
       return undefined;
     };

@@ -1,25 +1,31 @@
+'use client';
+
 import { useCallback } from 'react';
-import { useNavigate } from 'react-router';
+import { useRouter } from 'next/navigation';
 import { deploymentConfig } from '@/config/deployment-config';
 
+/**
+ * Phase 1：react-router 的 useNavigate 已替换为 next/navigation 的 useRouter。
+ * navigate(path) → router.push(path)；navigate(-1) → router.back()。
+ */
 export function useNavigation() {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const navigateTo = useCallback((path: string) => {
     if (deploymentConfig.useWindowLocation) {
       window.location.href = path;
     } else {
-      navigate(path);
+      router.push(path);
     }
-  }, [navigate]);
+  }, [router]);
 
   const goBack = useCallback(() => {
     if (deploymentConfig.useWindowLocation) {
       window.history.back();
     } else {
-      navigate(-1);
+      router.back();
     }
-  }, [navigate]);
+  }, [router]);
 
   return {
     navigateTo,

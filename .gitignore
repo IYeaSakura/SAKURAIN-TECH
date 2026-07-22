@@ -1,10 +1,24 @@
-node_modules
-dist
-.next
-.VSCodeCounter
-.vscode
+# Next.js build output
+.next/
+out/
+
+# Cesium 运行时资产（从 node_modules/cesium/Build/Cesium 复制，勿提交）
+public/cesium/
+
+# 本地环境变量（含 API 密钥，勿提交）
 .env
-public/blog/posts/origin
-prompt.md
-.trae
-AGENTS.md
+.env.local
+.env*.local
+
+# 本地 EdgeOne / KV 模拟持久化数据（勿提交）
+.edgeone-local/
+
+# EdgeOne CLI 本地状态
+.edgeone/
+node_modules
+
+# 其他
+.DS_Store
+.skills/
+.trae/
+.vscode/

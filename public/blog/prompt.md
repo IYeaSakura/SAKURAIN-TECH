@@ -1,0 +1,1 @@
+public\blog\posts\origin中是未按格式规范处理的原始文档，请按照public\blog\posts\下的文件命名和文章前frontmatter信息格式，仅编写文章头部frontmatter信息，其中tags优先从public/blog/tags.json中获取，没有合适的则自行编撰，不要修改tags.json文件，文件生成在public\blog\posts\下，正文由我手动粘贴。

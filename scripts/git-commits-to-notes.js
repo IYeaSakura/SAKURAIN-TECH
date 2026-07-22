@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const NOTES_DIR = path.join(__dirname, '..', 'public', 'notes', 'posts');
+const NOTES_DIR = path.join(__dirname, '..', 'content', 'notes', 'posts');
 
 function getGitCommits() {
   try {
@@ -129,57 +129,62 @@ function ensureDirectoryExists(dir) {
 }
 
 function main() {
-  ensureDirectoryExists(NOTES_DIR);
+  try {
+    ensureDirectoryExists(NOTES_DIR);
 
-  const commits = getGitCommits();
-  console.log(`Found ${commits.length} commits`);
+    const commits = getGitCommits();
+    console.log(`Found ${commits.length} commits`);
 
-  const latestDate = getLatestNoteDate();
-  if (latestDate) {
-    console.log(`Processing commits after: ${latestDate.toISOString()}`);
-  } else {
-    console.log('No existing notes found, processing all commits.');
+    const latestDate = getLatestNoteDate();
+    if (latestDate) {
+      console.log(`Processing commits after: ${latestDate.toISOString()}`);
+    } else {
+      console.log('No existing notes found, processing all commits.');
+    }
+
+    let created = 0;
+    let skipped = 0;
+    let invalid = 0;
+
+    commits.forEach((commit) => {
+      if (commit.subject === 'NULL') {
+        skipped++;
+        return;
+      }
+
+      const filename = formatDateToFilename(commit.date);
+
+      if (!filename) {
+        console.log(`Skipping invalid date: ${commit.date} - ${commit.subject}`);
+        invalid++;
+        return;
+      }
+
+      const commitDate = new Date(commit.date);
+
+      if (latestDate && commitDate <= latestDate) {
+        skipped++;
+        return;
+      }
+
+      const filepath = path.join(NOTES_DIR, filename);
+
+      if (fs.existsSync(filepath)) {
+        skipped++;
+        return;
+      }
+
+      const markdown = generateMarkdown(commit);
+      fs.writeFileSync(filepath, markdown, 'utf-8');
+      console.log(`Created: ${filename} - ${commit.subject}`);
+      created++;
+    });
+
+    console.log(`\nDone! Created ${created} files, skipped ${skipped} files, ${invalid} invalid commits.`);
+  } catch (error) {
+    console.error('✘ Failed to convert git commits to notes:', error.message);
+    process.exit(1);
   }
-
-  let created = 0;
-  let skipped = 0;
-  let invalid = 0;
-
-  commits.forEach((commit, index) => {
-    if (commit.subject === 'NULL') {
-      skipped++;
-      return;
-    }
-
-    const filename = formatDateToFilename(commit.date);
-
-    if (!filename) {
-      console.log(`Skipping invalid date: ${commit.date} - ${commit.subject}`);
-      invalid++;
-      return;
-    }
-
-    const commitDate = new Date(commit.date);
-
-    if (latestDate && commitDate <= latestDate) {
-      skipped++;
-      return;
-    }
-
-    const filepath = path.join(NOTES_DIR, filename);
-
-    if (fs.existsSync(filepath)) {
-      skipped++;
-      return;
-    }
-
-    const markdown = generateMarkdown(commit);
-    fs.writeFileSync(filepath, markdown, 'utf-8');
-    console.log(`Created: ${filename} - ${commit.subject}`);
-    created++;
-  });
-
-  console.log(`\nDone! Created ${created} files, skipped ${skipped} files, ${invalid} invalid commits.`);
 }
 
 main();
