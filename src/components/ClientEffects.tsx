@@ -32,6 +32,7 @@ import { TerminalLayout } from '@/components/themes/TerminalLayout';
 import { GlobalContextMenu } from '@/components/CustomContextMenu';
 import { DebugProtection } from '@/components/DebugProtection';
 import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
+import { DynamicIsland } from '@/components/apple/DynamicIsland';
 // 轻量光标特效全站保留；直接从具体模块导入，
 // 避免经 barrel（@/components/effects）把全部特效打入共享 chunk
 import {
@@ -251,6 +252,9 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
           sticky={isStickyNav}
         />
       )}
+
+      {/* Apple Dynamic Island —— 全局灵动岛，可形变为音乐控制台与命令面板 */}
+      {!isTerminal && shouldShowNav && <DynamicIsland />}
 
       {isTerminal ? (
         <TerminalLayout

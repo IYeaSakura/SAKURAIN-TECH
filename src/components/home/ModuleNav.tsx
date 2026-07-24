@@ -1,8 +1,10 @@
 'use client';
 
 /**
- * Numbered module navigation inspired by refact.cc.
- * Each module shows an index, label, title and short description.
+ * ModuleNav —— Apple 风格模块导航（Bento 网格）。
+ *
+ * 将终端风格的编号、状态标签融入圆角卡片网格，
+ * 每个卡片都是一个可点击的功能入口。
  */
 
 import { motion } from 'framer-motion';
@@ -26,6 +28,7 @@ interface Module {
   href: string;
   icon: LucideIcon;
   status?: string;
+  gradient: string;
 }
 
 const modules: Module[] = [
@@ -33,55 +36,61 @@ const modules: Module[] = [
     index: '01',
     label: 'BLOG',
     title: '博客',
-    desc: '技术文章、教程与深度思考',
+    desc: '技术文章与深度思考',
     href: '/blog',
     icon: BookOpen,
     status: 'Active',
+    gradient: 'from-blue-500/20 to-cyan-500/20',
   },
   {
     index: '02',
     label: 'PROJECTS',
     title: '项目',
-    desc: '开源作品与实验性 Demo',
+    desc: '开源作品与 Demo',
     href: '/projects',
     icon: Briefcase,
     status: 'Stable',
+    gradient: 'from-purple-500/20 to-pink-500/20',
   },
   {
     index: '03',
     label: 'EARTH',
     title: '地球Online',
-    desc: '弹幕卫星与互动留言',
+    desc: '弹幕卫星与互动',
     href: '/earth-online',
     icon: Globe,
     status: 'Online',
+    gradient: 'from-green-500/20 to-emerald-500/20',
   },
   {
     index: '04',
     label: 'SHUOSHUO',
     title: '说说',
-    desc: '日常灵感、心情与碎碎念',
+    desc: '日常灵感与随记',
     href: '/shuoshuo',
     icon: FileText,
     status: 'Recent',
+    gradient: 'from-orange-500/20 to-yellow-500/20',
   },
   {
     index: '05',
     label: 'FRIENDS',
     title: '友链',
-    desc: '朋友们的网站与连接',
+    desc: '朋友们的网站',
     href: '/friends',
     icon: Heart,
     status: 'Connected',
+    gradient: 'from-red-500/20 to-rose-500/20',
   },
   {
     index: '06',
     label: 'CIRCLE',
     title: '朋友圈',
-    desc: '动态与社交信息流',
+    desc: '动态与信息流',
     href: '/friends-circle',
     icon: Rss,
     status: 'Live',
+    gradient: 'from-indigo-500/20 to-violet-500/20',
   },
   {
     index: '07',
@@ -91,6 +100,7 @@ const modules: Module[] = [
     href: '/about',
     icon: User,
     status: 'Verified',
+    gradient: 'from-teal-500/20 to-cyan-500/20',
   },
 ];
 
@@ -99,7 +109,7 @@ export function ModuleNav() {
   const { navigateTo } = useNavigation();
 
   return (
-    <div className="grid gap-px border border-border/40 bg-border/40 rounded-lg overflow-hidden">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
       {modules.map((module, index) => {
         const Icon = module.icon;
         return (
@@ -109,48 +119,40 @@ export function ModuleNav() {
             initial={animationEnabled ? { opacity: 0, y: 12 } : undefined}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: index * 0.05 }}
-            className="group flex items-center gap-4 p-4 sm:p-5 bg-background/50 hover:bg-muted/10 transition-colors text-left w-full"
+            className="group relative apple-bento p-4 text-left flex flex-col gap-3 overflow-hidden"
           >
-            {/* Index badge */}
-            <div className="hidden sm:flex flex-col items-center justify-center w-10 h-10 border border-primary/20 bg-primary/5 text-primary font-mono text-xs font-bold">
-              {module.index}
-            </div>
-
-            {/* Icon */}
+            {/* 渐变背景 */}
             <div
-              className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0"
-              style={{
-                background: 'var(--bg-secondary)',
-                color: 'var(--accent-primary)',
-              }}
-            >
-              <Icon className="w-5 h-5" />
+              className={`absolute inset-0 bg-gradient-to-br ${module.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+            />
+
+            <div className="relative z-10 flex items-start justify-between">
+              <div
+                className="flex items-center justify-center w-10 h-10 rounded-xl transition-transform group-hover:scale-110"
+                style={{
+                  background: 'var(--bg-tertiary)',
+                  color: 'var(--accent-primary)',
+                }}
+              >
+                <Icon className="w-5 h-5" />
+              </div>
+              <span className="font-mono text-[10px] text-muted-foreground">{module.index}</span>
             </div>
 
-            {/* Text */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="mono-label text-[10px]">{module.label}</span>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {module.title}
+                </span>
                 {module.status && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full border border-accent-primary/30 text-accent-primary bg-accent-primary/5">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full border border-accent-primary/30 text-accent-primary bg-accent-primary/5">
                     {module.status}
                   </span>
                 )}
               </div>
-              <h3
-                className="text-base sm:text-lg font-semibold group-hover:text-accent-primary transition-colors"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                {module.title}
-              </h3>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="text-[11px] text-muted-foreground line-clamp-1">
                 {module.desc}
               </p>
-            </div>
-
-            {/* Arrow */}
-            <div className="text-muted-foreground group-hover:text-accent-primary transition-colors">
-              <span className="font-mono text-xs hidden sm:inline">→</span>
             </div>
           </motion.button>
         );
