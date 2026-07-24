@@ -1,20 +1,23 @@
 'use client';
 
 /**
- * Photo log page —— a chronological gallery of moments worth capturing.
+ * Photo log page —— WeChat Moments-style gallery timeline.
  *
- * Rendered with the site-wide brutalist design: sharp corners, thick borders,
- * pixel offset shadows and monospace metadata labels.
+ * Photos are grouped into a single-column feed where each entry has an avatar,
+ * nickname, caption, image grid, location and tags. Tapping any image opens
+ * the lightbox viewer.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Camera, MapPin, Calendar, Tag, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Camera, MapPin, Calendar, Tag, X, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { useAnimationEnabled, useNavigation } from '@/hooks';
 import type { PhotoLogData, PhotoLogPhoto } from '@/types';
 
 const PIXEL_BORDER = '2px solid var(--border-subtle)';
 const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
+const AVATAR_SRC = '/image/about/head.jpg';
+const NICKNAME = 'Yuyang';
 
 export function PhotoLogPage() {
   const animationEnabled = useAnimationEnabled();
@@ -55,6 +58,18 @@ export function PhotoLogPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxIndex, photos.length]);
 
+  const entries = useMemo(() => {
+    const grouped: Record<string, PhotoLogPhoto[]> = {};
+    for (const photo of photos) {
+      const day = photo.date;
+      if (!grouped[day]) grouped[day] = [];
+      grouped[day].push(photo);
+    }
+    return Object.entries(grouped)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([date, items]) => ({ date, items }));
+  }, [photos]);
+
   if (!data) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
@@ -71,7 +86,7 @@ export function PhotoLogPage() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-24 lg:py-28">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-24 lg:py-28">
         {/* Header */}
         <motion.header
           initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
@@ -101,8 +116,8 @@ export function PhotoLogPage() {
           </p>
         </motion.header>
 
-        {/* Photo grid */}
-        {photos.length === 0 ? (
+        {/* Moments feed */}
+        {entries.length === 0 ? (
           <div
             className="p-8 text-center text-sm rounded-sm"
             style={{
@@ -116,14 +131,15 @@ export function PhotoLogPage() {
             暂无照片
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {photos.map((photo, index) => (
-              <PhotoCard
-                key={photo.id}
-                photo={photo}
-                index={index}
+          <div className="space-y-8">
+            {entries.map((entry, entryIndex) => (
+              <MomentEntry
+                key={entry.date}
+                entry={entry}
+                entryIndex={entryIndex}
                 animationEnabled={animationEnabled}
-                onOpen={() => openLightbox(index)}
+                photos={photos}
+                onOpen={openLightbox}
               />
             ))}
           </div>
@@ -223,77 +239,178 @@ export function PhotoLogPage() {
   );
 }
 
-function PhotoCard({
-  photo,
-  index,
+function MomentEntry({
+  entry,
+  entryIndex,
   animationEnabled,
+  photos,
   onOpen,
 }: {
-  photo: PhotoLogPhoto;
-  index: number;
+  entry: { date: string; items: PhotoLogPhoto[] };
+  entryIndex: number;
   animationEnabled: boolean;
-  onOpen: () => void;
+  photos: PhotoLogPhoto[];
+  onOpen: (globalIndex: number) => void;
 }) {
+  const caption = entry.items[0]?.caption || '';
+  const location = entry.items[0]?.location || '';
+  const tags = entry.items[0]?.tags ?? [];
+
   return (
     <motion.article
       initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.4, delay: (index % 6) * 0.05 }}
-      className="group cursor-pointer"
-      onClick={onOpen}
+      transition={{ duration: 0.4, delay: entryIndex * 0.05 }}
+      className="flex gap-4 pb-8 border-b-2"
+      style={{ borderColor: 'var(--border-subtle)' }}
     >
+      {/* Avatar */}
       <div
-        className="overflow-hidden rounded-sm transition-transform duration-200 group-hover:-translate-x-0.5 group-hover:-translate-y-0.5"
-        style={{
-          background: 'var(--bg-secondary)',
-          border: PIXEL_BORDER,
-          boxShadow: PIXEL_SHADOW,
-        }}
+        className="shrink-0 w-12 h-12 overflow-hidden rounded-sm"
+        style={{ border: PIXEL_BORDER }}
       >
-        <div className="aspect-[4/3] overflow-hidden border-b-2" style={{ borderColor: 'var(--border-subtle)' }}>
-          <img
-            src={photo.src}
-            alt={photo.caption}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
-        <div className="p-4">
-          <p className="text-sm mb-3" style={{ color: 'var(--text-primary)' }}>
-            {photo.caption}
+        <img src={AVATAR_SRC} alt={NICKNAME} className="w-full h-full object-cover" />
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <h2
+          className="text-sm font-bold mb-1"
+          style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
+        >
+          {NICKNAME}
+        </h2>
+        <p className="text-xs mb-3" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+          {entry.date}
+        </p>
+
+        {caption && (
+          <p className="text-sm mb-3 leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+            {caption}
           </p>
-          <div className="flex flex-wrap items-center gap-3 text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              {photo.date}
-            </span>
+        )}
+
+        <PhotoGrid photos={entry.items} allPhotos={photos} onOpen={onOpen} />
+
+        <div className="flex flex-wrap items-center gap-3 mt-3 text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+          {location && (
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3 h-3" />
-              {photo.location}
+              {location}
             </span>
-          </div>
-          {photo.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {photo.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] uppercase border"
-                  style={{
-                    borderColor: 'var(--border-subtle)',
-                    color: 'var(--text-muted)',
-                    fontFamily: 'var(--font-mono)',
-                  }}
-                >
-                  <Tag className="w-3 h-3" />
-                  {tag}
-                </span>
-              ))}
-            </div>
           )}
+          {tags.length > 0 && (
+            <span className="inline-flex items-center gap-1">
+              <Tag className="w-3 h-3" />
+              {tags.join(', ')}
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-4 mt-3">
+          <button
+            className="inline-flex items-center gap-1 text-xs transition-opacity hover:opacity-70"
+            style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
+            aria-label="喜欢"
+          >
+            <Heart className="w-3.5 h-3.5" />
+            赞
+          </button>
         </div>
       </div>
     </motion.article>
+  );
+}
+
+function PhotoGrid({
+  photos,
+  allPhotos,
+  onOpen,
+}: {
+  photos: PhotoLogPhoto[];
+  allPhotos: PhotoLogPhoto[];
+  onOpen: (globalIndex: number) => void;
+}) {
+  const count = photos.length;
+
+  const getGlobalIndex = (photo: PhotoLogPhoto) => allPhotos.findIndex((p) => p.id === photo.id);
+
+  if (count === 1) {
+    return (
+      <div
+        className="cursor-pointer overflow-hidden rounded-sm max-w-[70%]"
+        style={{ border: PIXEL_BORDER }}
+        onClick={() => onOpen(getGlobalIndex(photos[0]))}
+      >
+        <img
+          src={photos[0].src}
+          alt={photos[0].caption}
+          className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
+        />
+      </div>
+    );
+  }
+
+  if (count === 2) {
+    return (
+      <div className="grid grid-cols-2 gap-1 max-w-[80%]">
+        {photos.map((photo) => (
+          <div
+            key={photo.id}
+            className="cursor-pointer overflow-hidden rounded-sm aspect-square"
+            style={{ border: PIXEL_BORDER }}
+            onClick={() => onOpen(getGlobalIndex(photo))}
+          >
+            <img
+              src={photo.src}
+              alt={photo.caption}
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (count === 4) {
+    return (
+      <div className="grid grid-cols-2 gap-1 max-w-[70%]">
+        {photos.map((photo) => (
+          <div
+            key={photo.id}
+            className="cursor-pointer overflow-hidden rounded-sm aspect-square"
+            style={{ border: PIXEL_BORDER }}
+            onClick={() => onOpen(getGlobalIndex(photo))}
+          >
+            <img
+              src={photo.src}
+              alt={photo.caption}
+              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // 3, 5-9 use a 3-column grid similar to WeChat Moments.
+  return (
+    <div className="grid grid-cols-3 gap-1 max-w-[70%]">
+      {photos.map((photo) => (
+        <div
+          key={photo.id}
+          className="cursor-pointer overflow-hidden rounded-sm aspect-square"
+          style={{ border: PIXEL_BORDER }}
+          onClick={() => onOpen(getGlobalIndex(photo))}
+        >
+          <img
+            src={photo.src}
+            alt={photo.caption}
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          />
+        </div>
+      ))}
+    </div>
   );
 }
