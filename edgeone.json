@@ -58,7 +58,7 @@
       "cacheTtl": 60
     },
     {
-      "source": "/notes/*",
+      "source": "/shuoshuo/*",
       "cacheTtl": 60
     },
     {
@@ -156,7 +156,7 @@
       ]
     },
     {
-      "source": "/notes/*",
+      "source": "/shuoshuo/*",
       "headers": [
         {
           "key": "Cache-Control",

@@ -30,6 +30,9 @@ export { useTheme } from './useTheme';
 // 风格预设 hooks
 export { useStylePreset } from '@/contexts/StylePresetContext';
 
+// 全局音乐播放器 hook
+export { useMusicPlayer } from '@/contexts/MusicPlayerContext';
+
 // 性能相关 hooks - 优先从 lib/performance 导出
 export {
   // 基础性能 hooks

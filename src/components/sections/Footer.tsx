@@ -89,12 +89,12 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
               <span>技术文档</span>
             </button>
             <button
-              onClick={() => navigateTo('/notes')}
+              onClick={() => navigateTo('/shuoshuo')}
               className="flex items-center gap-2 text-sm transition-colors hover:text-[var(--accent-primary)] cursor-pointer"
               style={{ color: 'var(--text-muted)' }}
             >
               <MessageCircle className="w-4 h-4" />
-              <span>开发日志</span>
+              <span>说说</span>
             </button>
             <button
               onClick={() => {

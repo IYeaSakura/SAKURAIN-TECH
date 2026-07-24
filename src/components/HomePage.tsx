@@ -11,7 +11,7 @@
  *
  * @author SAKURAIN
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
@@ -19,10 +19,8 @@ import {
   ArrowDown,
   BookOpen,
   Heart,
-  Rss,
   Globe,
   User,
-  Code2,
   Terminal,
   Cpu,
   Sparkles,
@@ -33,7 +31,6 @@ import {
   ScrollProgress,
   SecurityProtection,
   TwinklingStars,
-  AmbientGlow,
 } from '@/components/effects';
 import { GradientText } from '@/components/effects/TextEffects';
 
@@ -41,6 +38,12 @@ import { Footer } from '@/components/sections/Footer';
 import { useTheme, useNavigation } from '@/hooks';
 import { usePrefersReducedMotion } from '@/lib/performance';
 import type { SiteData, TechEvolutionData } from '@/types';
+import type { Note } from '@/lib/content/notes';
+
+import { SystemHeader } from '@/components/home/SystemHeader';
+import { MusicWidget } from '@/components/home/MusicWidget';
+import { RecentShuoshuo } from '@/components/home/RecentShuoshuo';
+import { ModuleNav } from '@/components/home/ModuleNav';
 
 // 像素风格 clip-path 辅助函数
 const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
@@ -284,28 +287,6 @@ const AsciiDecoration = ({ className = '' }: { className?: string }) => (
     {'<>'}{'_'.repeat(20)}{'<>'}
   </div>
 );
-
-// 视差容器组件
-const ParallaxContainer = ({ children, speed = 0.5 }: { children: React.ReactNode; speed?: number }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"]
-  });
-
-  const y = useTransform(scrollYProgress, [0, 1], [0, -100 * speed]);
-  const prefersReducedMotion = usePrefersReducedMotion();
-
-  if (prefersReducedMotion) {
-    return <div ref={ref}>{children}</div>;
-  }
-
-  return (
-    <motion.div ref={ref} style={{ y }}>
-      {children}
-    </motion.div>
-  );
-};
 
 // 生成平滑贝塞尔曲线路径
 const smoothPath = (points: { x: number; y: number }[]) => {
@@ -1425,124 +1406,71 @@ const JourneySection = ({ techEvolution }: JourneySectionProps) => {
   );
 };
 
-// 快速链接区域 - 简化为补充导航
-const QuickLinksSection = () => {
-  const { navigateTo } = useNavigation();
-  const links = [
-    {
-      title: '朋友圈',
-      desc: '日常与灵感',
-      icon: Rss,
-      href: '/friends-circle',
-      color: '#10b981',
-    },
-    {
-      title: '友链',
-      desc: '朋友们的网站',
-      icon: Heart,
-      href: '/friends',
-      color: '#f59e0b',
-    },
-    {
-      title: '算法可视化',
-      desc: '探索算法的动态之美',
-      icon: GitGraph,
-      href: '/algo-viz',
-      color: '#ec4899',
-    },
-    {
-      title: '文档',
-      desc: '技术文档',
-      icon: Code2,
-      href: '/docs',
-      color: '#06b6d4',
-    },
-  ];
+interface DashboardSectionProps {
+  /** 近期说说数据（由服务端组件注入） */
+  notes: Note[];
+}
 
+/**
+ * 主页功能聚合仪表盘（refact.cc 风格）。
+ * 将模块导航、音乐播放器、近期说说聚合在一个不对称网格中，
+ * 保持全局音乐播放器状态同步。
+ */
+const DashboardSection = ({ notes }: DashboardSectionProps) => {
   return (
-    <section className="relative py-20 overflow-hidden">
-      {/* 背景装饰 */}
-      <div className="absolute inset-0 pointer-events-none">
-        <AmbientGlow color="var(--accent-secondary)" opacity={0.08} position="bottom-left" size={500} />
-      </div>
-
-      <div className="max-w-6xl mx-auto px-6 lg:px-12">
-        <ParallaxContainer speed={0.3}>
-          <div className="text-center mb-12">
-            <AsciiDecoration className="mb-4 mx-auto" />
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              <GradientText animate={true}>更多探索</GradientText>
-            </h2>
-            <p className="text-lg font-mono" style={{ color: 'var(--text-muted)' }}>
-              {'>'} ls ./other
-            </p>
+    <section className="relative py-16 sm:py-20 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* 区域标题 */}
+        <motion.div
+          className="mb-8 sm:mb-10"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{ background: 'var(--accent-primary)' }}
+            />
+            <span className="mono-label">DASHBOARD / MODULES</span>
           </div>
-        </ParallaxContainer>
+          <h2
+            className="text-2xl sm:text-3xl font-bold"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            功能聚合
+          </h2>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            快速导航、音乐控制与近期动态的统一入口
+          </p>
+        </motion.div>
 
-        {/* 网格 */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {links.map((card, index) => (
-            <motion.div
-              key={card.title}
-              onClick={() => navigateTo(card.href)}
-              className="group block cursor-pointer"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <div
-                className="relative p-5 rounded-xl overflow-hidden transition-all duration-300 h-full"
-                style={{
-                  background: 'var(--bg-card)',
-                  border: `2px solid var(--border-subtle)`,
-                }}
-              >
-                {/* 背景渐变 */}
-                <div
-                  className="absolute inset-0 transition-opacity duration-500"
-                  style={{
-                    background: `linear-gradient(135deg, ${card.color} 0%, transparent 100%)`,
-                    opacity: 0.05,
-                  }}
-                />
+        {/* 不对称网格：左侧模块导航，右侧音乐 + 说说 */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+          {/* 模块导航：占 7/12 */}
+          <div className="lg:col-span-7">
+            <ModuleNav />
+          </div>
 
-                {/* 内容 */}
-                <div className="relative z-10">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition-transform group-hover:scale-110"
-                    style={{ background: `${card.color}15` }}
-                  >
-                    <card.icon className="w-5 h-5" style={{ color: card.color }} />
-                  </div>
-
-                  <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-                    {card.title}
-                  </h3>
-
-                  <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
-                    {card.desc}
-                  </p>
-                </div>
-
-                {/* 悬停边框 */}
-                <div
-                  className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-                  style={{
-                    border: `2px solid ${card.color}`,
-                  }}
-                />
-              </div>
-            </motion.div>
-          ))}
+          {/* 右侧小部件：占 5/12 */}
+          <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 sm:gap-6">
+            <MusicWidget />
+            <RecentShuoshuo notes={notes} maxItems={5} />
+          </div>
         </div>
       </div>
     </section>
   );
 };
 
+interface HomePageProps {
+  /** 近期说说数据（由服务端组件在构建期注入） */
+  notes: Note[];
+}
+
 // 主应用组件
-function App() {
+function App({ notes }: HomePageProps) {
   const [siteData, setSiteData] = useState<SiteData | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
   useTheme();
@@ -1578,10 +1506,12 @@ function App() {
       <SecurityProtection />
       <ScrollProgress />
 
+      <SystemHeader />
+
       <main>
         <HeroSection />
+        <DashboardSection notes={notes} />
         <JourneySection techEvolution={siteData?.home?.techEvolution} />
-        <QuickLinksSection />
       </main>
 
       {/* 使用子页相同的Footer */}
@@ -1593,6 +1523,6 @@ function App() {
 // Phase 1 务实起步：整页 'use client'。
 // 性能优化：移除页面内嵌套的 PerformanceProvider —— layout 级 ClientEffects
 // 已提供全局实例，这里直接消费，避免双实例导致重复能力检测与状态分裂。
-export default function HomePage() {
-  return <App />;
+export default function HomePage({ notes }: HomePageProps) {
+  return <App notes={notes} />;
 }

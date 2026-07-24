@@ -76,16 +76,17 @@ function routeToFileName(pathname: string): string {
     '/earth-online': 'earth-online.tsx',
     '/about': 'about.md',
     '/docs': 'docs/README.md',
-    '/notes': 'notes.md',
+    '/shuoshuo': 'shuoshuo.md',
+    '/notes': 'shuoshuo.md',
     '/studio': 'studio.tsx',
     '/algo-viz': 'algo-viz.tsx',
-    '/dev-log': 'dev-log.md',
   };
 
   if (map[pathname]) return map[pathname];
   if (pathname.startsWith('/blog/')) return `blog/${pathname.slice(6)}.md`;
   if (pathname.startsWith('/docs/')) return `docs/${pathname.slice(6)}.md`;
-  if (pathname.startsWith('/notes/')) return `notes/${pathname.slice(7)}.md`;
+  if (pathname.startsWith('/shuoshuo/')) return `shuoshuo/${pathname.slice(10)}.md`;
+  if (pathname.startsWith('/notes/')) return `shuoshuo/${pathname.slice(7)}.md`;
   return `${pathname.replace(/^\//, '') || 'unknown'}.md`;
 }
 
@@ -99,10 +100,10 @@ function routeToLabel(pathname: string): string {
     '/earth-online': '地球Online',
     '/about': '关于',
     '/docs': '技术文档',
-    '/notes': '开发日志',
+    '/shuoshuo': '说说',
+    '/notes': '说说',
     '/studio': '工作室',
     '/algo-viz': '算法可视化',
-    '/dev-log': '开发日志',
   };
   return map[pathname] || pathname;
 }
@@ -141,7 +142,7 @@ function TerminalSidebar({
   const allItems = useMemo<NavItem[]>(() => {
     const extras: NavItem[] = [
       { label: '技术文档', href: '/docs', icon: 'FileText' },
-      { label: '开发日志', href: '/notes', icon: 'MessageCircle' },
+      { label: '说说', href: '/shuoshuo', icon: 'MessageCircle' },
       { label: '算法可视化', href: '/algo-viz', icon: 'Zap' },
     ];
     const base = items.length ? items : [];

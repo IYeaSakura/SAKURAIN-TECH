@@ -15,7 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/`, lastModified: today, changeFrequency: "weekly", priority: 1.0 },
     { url: `${SITE_URL}/blog`, lastModified: today, changeFrequency: "daily", priority: 0.9 },
     { url: `${SITE_URL}/docs`, lastModified: today, changeFrequency: "weekly", priority: 0.8 },
-    { url: `${SITE_URL}/notes`, lastModified: today, changeFrequency: "daily", priority: 0.6 },
+    { url: `${SITE_URL}/shuoshuo`, lastModified: today, changeFrequency: "daily", priority: 0.6 },
     { url: `${SITE_URL}/friends`, lastModified: today, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/friends-circle`, lastModified: today, changeFrequency: "daily", priority: 0.6 },
     { url: `${SITE_URL}/about`, lastModified: today, changeFrequency: "monthly", priority: 0.7 },

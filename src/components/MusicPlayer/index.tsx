@@ -2,9 +2,11 @@
 
 /**
  * 全站音乐播放器 - 随机播放模式
- * 固定在页面右下角，切换页面不会中断播放
+ * 固定在页面右下角，切换页面不会中断播放。
+ * 播放逻辑已迁移到 MusicPlayerContext；本组件仅负责渲染与交互。
  */
-import { useState, useRef, useEffect, useCallback } from 'react';
+
+import { useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Play,
@@ -20,301 +22,54 @@ import {
   Waves,
   Grid3X3,
 } from 'lucide-react';
-import { useAnimationEnabled, useConfig, useIsDesktopClient } from '@/hooks';
+import { useAnimationEnabled, useMusicPlayer } from '@/hooks';
 import { AudioVisualizer } from './AudioVisualizer';
 
-// 播放列表类型定义
-interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  src: string;
-}
-
-interface PlaylistConfig {
-  songs: Song[];
-}
-
-// Fisher-Yates 洗牌算法
-const shuffleArray = (length: number): number[] => {
-  const array = Array.from({ length }, (_, i) => i);
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
-};
-
-interface MusicPlayerProps {
-  defaultOpen?: boolean;
-}
-
-export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
+export function MusicPlayer() {
   const animationEnabled = useAnimationEnabled();
-  const { data: playlistConfig, loading: playlistLoading } = useConfig<PlaylistConfig>('/data/playlist.json');
-  const playlist = playlistConfig?.songs || [];
-
-  // 仅桌面端显示，使用统一的 mounted 门控避免水合分叉
-  const isDesktopClient = useIsDesktopClient();
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0.5);
-  const [isMuted, setIsMuted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [buffered, setBuffered] = useState(0);
-  const [shuffledOrder, setShuffledOrder] = useState<number[]>([]);
-  const [currentPosition, setCurrentPosition] = useState(0);
-  const [visualizerMode, setVisualizerMode] = useState<'bars' | 'wave' | 'heatmap'>('bars');
-  // 用户首次交互前不加载音频，避免音频资源缺失时每打开一个页面都自动发起 404 请求
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
-
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const player = useMusicPlayer();
   const progressRef = useRef<HTMLDivElement>(null);
-  const handleNextRef = useRef<() => void>(() => {});
-  const preloadRef = useRef<HTMLAudioElement | null>(null);
-  // 记录加载失败的音频地址：失败后静默降级，不重复重试、不刷错误日志
-  const failedSrcsRef = useRef<Set<string>>(new Set());
 
-  // Initialize shuffled order when playlist is loaded
-  useEffect(() => {
-    if (playlist.length > 0 && shuffledOrder.length === 0) {
-      setShuffledOrder(shuffleArray(playlist.length));
-    }
-  }, [playlist.length, shuffledOrder.length]);
+  const {
+    isOpen,
+    isPlaying,
+    currentTime,
+    duration,
+    volume,
+    isMuted,
+    error,
+    isLoading,
+    buffered,
+    currentNumber,
+    totalSongs,
+    currentSong,
+    visualizerMode,
+    playlistLoading,
+    togglePlay,
+    next,
+    prev,
+    open,
+    close,
+    setVolume,
+    toggleMuted,
+    changeVisualizer,
+  } = player;
 
-  const currentIndex = shuffledOrder[currentPosition] ?? 0;
-  const currentSong = playlist[currentIndex] || { title: '', artist: '', src: '' };
-  const currentNumber = currentPosition + 1;
-  const totalSongs = playlist.length;
+  const handleSeek = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!progressRef.current || !duration) return;
+      const rect = progressRef.current.getBoundingClientRect();
+      const percent = Math.max(
+        0,
+        Math.min(1, (e.clientX - rect.left) / rect.width)
+      );
+      player.seek(percent * duration);
+    },
+    [duration, player]
+  );
 
-  // 初始化音频 - 只初始化一次
-  useEffect(() => {
-    if (!isDesktopClient) return;
-
-    const audio = new Audio();
-    audio.preload = 'metadata';
-    audio.volume = volume;
-    audioRef.current = audio;
-
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-      setIsLoading(false);
-    };
-    const handleEnded = () => handleNextRef.current();
-    const handleError = () => {
-      // 静默降级：音频文件缺失/加载失败时进入占位态，同一地址只告警一次且不再自动重试
-      const failedSrc = audio.currentSrc || audio.src;
-      if (failedSrc && !failedSrcsRef.current.has(failedSrc)) {
-        failedSrcsRef.current.add(failedSrc);
-        if (process.env.NODE_ENV === 'development') {
-          console.warn(`[MusicPlayer] 音频加载失败，已静默降级: ${failedSrc}`);
-        }
-      }
-      setError('音频资源暂不可用');
-      setIsLoading(false);
-      setIsPlaying(false);
-    };
-    const handleCanPlay = () => {
-      setIsLoading(false);
-    };
-    const handleWaiting = () => setIsLoading(true);
-    const handlePlaying = () => setIsLoading(false);
-    const handleProgress = () => {
-      if (audio.buffered.length > 0) {
-        const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
-        setBuffered(bufferedEnd);
-      }
-    };
-
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('error', handleError);
-    audio.addEventListener('canplay', handleCanPlay);
-    audio.addEventListener('waiting', handleWaiting);
-    audio.addEventListener('playing', handlePlaying);
-    audio.addEventListener('progress', handleProgress);
-
-    return () => {
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
-      audio.removeEventListener('canplay', handleCanPlay);
-      audio.removeEventListener('waiting', handleWaiting);
-      audio.removeEventListener('playing', handlePlaying);
-      audio.removeEventListener('progress', handleProgress);
-      audio.pause();
-      audio.src = '';
-      // Cleanup preload audio
-      if (preloadRef.current) {
-        preloadRef.current.pause();
-        preloadRef.current.src = '';
-      }
-    };
-  }, [isDesktopClient]);
-
-  // 切换歌曲时加载音频（仅在用户交互后加载，避免音频资源缺失时全站 404 刷屏）
-  useEffect(() => {
-    if (!audioRef.current || !isDesktopClient || !hasUserInteracted) return;
-
-    const audio = audioRef.current;
-    setIsLoading(true);
-    setError(null);
-    setCurrentTime(0);
-    setBuffered(0);
-
-    // 已知加载失败的地址直接进入降级态，不重复发起请求
-    if (currentSong.src && failedSrcsRef.current.has(currentSong.src)) {
-      setError('音频资源暂不可用');
-      setIsLoading(false);
-      setIsPlaying(false);
-      return;
-    }
-
-    // 直接设置 src，让浏览器处理加载
-    audio.src = currentSong.src;
-    audio.load();
-
-    // 如果正在播放状态，尝试播放
-    if (isPlaying) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // 播放被拦截或资源缺失：静默回到暂停态（资源类失败由 error 事件统一处理）
-          setIsPlaying(false);
-          setIsLoading(false);
-        });
-      }
-    }
-  }, [currentIndex, isDesktopClient, hasUserInteracted, currentSong.src]);
-
-  // 处理播放/暂停
-  useEffect(() => {
-    if (!audioRef.current || !isDesktopClient) return;
-
-    const audio = audioRef.current;
-
-    if (isPlaying) {
-      // 已知失败的资源不再尝试播放
-      if (currentSong.src && failedSrcsRef.current.has(currentSong.src)) {
-        setIsPlaying(false);
-        return;
-      }
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // 播放被拦截或资源缺失：静默回到暂停态
-          setIsPlaying(false);
-        });
-      }
-    } else {
-      audio.pause();
-    }
-  }, [isPlaying, isDesktopClient, currentSong.src]);
-
-  // 音量控制
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume;
-    }
-  }, [volume, isMuted]);
-
-  // Preload next song for better playback experience
-  useEffect(() => {
-    if (!isDesktopClient || !hasUserInteracted || playlist.length === 0 || shuffledOrder.length === 0) return;
-
-    const nextPosition = currentPosition + 1;
-    let nextIndex: number;
-
-    if (nextPosition >= shuffledOrder.length) {
-      nextIndex = shuffledOrder[0];
-    } else {
-      nextIndex = shuffledOrder[nextPosition];
-    }
-
-    const nextSong = playlist[nextIndex];
-    if (!nextSong?.src || failedSrcsRef.current.has(nextSong.src)) return;
-
-    // Create preload audio element
-    if (!preloadRef.current) {
-      preloadRef.current = new Audio();
-      preloadRef.current.preload = 'auto';
-    }
-
-    // Set the next song source for preloading
-    if (preloadRef.current.src !== nextSong.src) {
-      preloadRef.current.src = nextSong.src;
-      preloadRef.current.load();
-    }
-  }, [currentPosition, shuffledOrder, playlist, isDesktopClient, hasUserInteracted]);
-
-  const handlePlayPause = useCallback(() => {
-    setHasUserInteracted(true);
-    if (error) {
-      setError(null);
-      // 手动重试：清除失败标记后重新加载当前歌曲
-      failedSrcsRef.current.delete(currentSong.src);
-      if (audioRef.current) {
-        audioRef.current.src = currentSong.src;
-        audioRef.current.load();
-      }
-      setIsPlaying(true);
-    } else {
-      setIsPlaying(prev => !prev);
-    }
-  }, [error, currentSong.src]);
-
-  // 下一首
-  const handleNext = useCallback(() => {
-    if (playlist.length === 0) return;
-    setCurrentPosition(prev => {
-      const nextPosition = prev + 1;
-      if (nextPosition >= shuffledOrder.length) {
-        const newOrder = shuffleArray(playlist.length);
-        setShuffledOrder(newOrder);
-        return 0;
-      }
-      return nextPosition;
-    });
-  }, [shuffledOrder.length, playlist.length]);
-
-  // 更新 ref 以确保事件处理器总是使用最新版本
-  useEffect(() => {
-    handleNextRef.current = handleNext;
-  }, [handleNext]);
-
-  // 上一首
-  const handlePrev = useCallback(() => {
-    setCurrentPosition(prev => {
-      if (prev <= 0) {
-        return shuffledOrder.length - 1;
-      }
-      return prev - 1;
-    });
-  }, [shuffledOrder.length]);
-
-  // 切换频谱效果
-  const handleChangeVisualizer = useCallback(() => {
-    setVisualizerMode(prev => {
-      if (prev === 'bars') return 'wave';
-      if (prev === 'wave') return 'heatmap';
-      return 'bars';
-    });
-  }, []);
-
-  const handleSeek = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressRef.current || !audioRef.current || !duration) return;
-    const rect = progressRef.current.getBoundingClientRect();
-    const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    const newTime = percent * duration;
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
-  }, [duration]);
+  // Skip rendering on mobile, while loading playlist, or when playlist is empty
+  if (playlistLoading || totalSongs === 0) return null;
 
   const formatTime = (time: number) => {
     if (!time || isNaN(time)) return '0:00';
@@ -326,9 +81,6 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
   const progressPercent = duration ? (currentTime / duration) * 100 : 0;
   const bufferedPercent = duration ? (buffered / duration) * 100 : 0;
 
-  // 移动端不渲染或播放列表未加载
-  if (!isDesktopClient || playlistLoading || playlist.length === 0) return null;
-
   return (
     <>
       {!isOpen ? (
@@ -338,15 +90,15 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
           transition={{ duration: 0.3 }}
           className="fixed bottom-6 right-6 z-[100]"
         >
-          {/* 迷你播放器 */}
+          {/* Mini player */}
           <motion.button
-            onClick={() => setIsOpen(true)}
+            onClick={open}
             whileHover={animationEnabled ? { scale: 1.05 } : undefined}
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 px-3 py-2 rounded-full shadow-lg backdrop-blur-md relative overflow-hidden transition-all duration-500"
             style={{
               background: 'var(--bg-card)',
-              borderColor: isPlaying ? 'var(--accent-primary)' : 'var(--border-subtle)',
+              border: `1px solid ${isPlaying ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
               boxShadow: isPlaying
                 ? '0 4px 20px var(--accent-glow), 0 0 30px var(--accent-glow)'
                 : '0 4px 20px rgba(0, 0, 0, 0.3)',
@@ -356,18 +108,18 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
             }}
             transition={{ duration: 0.5, ease: 'easeInOut' }}
           >
-            {/* 播放时的背景光效 - 柔和呼吸光晕 */}
+            {/* Breathing glow during playback */}
             <motion.div
               className="absolute inset-0 pointer-events-none overflow-hidden rounded-full"
               initial={{ opacity: 0 }}
               animate={{ opacity: isPlaying ? 1 : 0 }}
               transition={{ duration: 0.6, ease: 'easeInOut' }}
             >
-              {/* 柔和流动光带 - 低透明度 */}
               <motion.div
                 className="absolute inset-0"
                 style={{
-                  background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-primary))',
+                  background:
+                    'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-primary))',
                   backgroundSize: '200% 100%',
                   opacity: 0.15,
                 }}
@@ -380,18 +132,18 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
                   ease: 'easeInOut',
                 }}
               />
-              {/* 遮罩成圆形光晕效果 - 更柔和 */}
               <div
                 className="absolute inset-0"
                 style={{
-                  background: 'radial-gradient(circle at 50% 50%, transparent 30%, var(--bg-card) 80%)',
+                  background:
+                    'radial-gradient(circle at 50% 50%, transparent 30%, var(--bg-card) 80%)',
                 }}
               />
-              {/* 中心微弱呼吸光 */}
               <motion.div
                 className="absolute inset-0"
                 style={{
-                  background: 'radial-gradient(circle at 50% 50%, var(--accent-glow) 0%, transparent 40%)',
+                  background:
+                    'radial-gradient(circle at 50% 50%, var(--accent-glow) 0%, transparent 40%)',
                 }}
                 animate={{
                   opacity: [0.1, 0.25, 0.1],
@@ -405,34 +157,40 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
               />
             </motion.div>
 
-            {/* 音乐图标 - 播放时有柔和呼吸 */}
+            {/* Music icon */}
             <motion.div
-              animate={isPlaying ? {
-                scale: [1, 1.05, 1],
-              } : {}}
+              animate={isPlaying ? { scale: [1, 1.05, 1] } : {}}
               transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 relative z-10"
               style={{
-                background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                background:
+                  'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
               }}
             >
-              {/* 柔和外发光 */}
               <motion.div
                 className="absolute -inset-0.5 rounded-full -z-10"
                 style={{
-                  background: 'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)',
+                  background:
+                    'radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)',
                 }}
-                animate={isPlaying ? {
-                  opacity: [0.3, 0.5, 0.3],
-                  scale: [1, 1.2, 1],
-                } : { opacity: 0 }}
+                animate={
+                  isPlaying
+                    ? {
+                        opacity: [0.3, 0.5, 0.3],
+                        scale: [1, 1.2, 1],
+                      }
+                    : { opacity: 0 }
+                }
                 transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               />
               <Music className="w-4 h-4 text-white" />
             </motion.div>
 
             <div className="flex flex-col items-start relative z-10">
-              <span className="text-xs font-medium max-w-[80px] truncate" style={{ color: 'var(--text-primary)' }}>
+              <span
+                className="text-xs font-medium max-w-[80px] truncate"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 {currentSong.title}
               </span>
               <motion.span
@@ -442,11 +200,17 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
                 }}
                 transition={{ duration: 0.3 }}
               >
-                {isLoading ? '加载中...' : error ? '暂不可用' : isPlaying ? '播放中' : `${currentNumber}/${totalSongs}`}
+                {isLoading
+                  ? 'Loading...'
+                  : error
+                    ? 'Unavailable'
+                    : isPlaying
+                      ? 'Playing'
+                      : `${currentNumber}/${totalSongs}`}
               </motion.span>
             </div>
 
-            {/* 迷你频谱指示器 - 带发光效果 */}
+            {/* Mini spectrum */}
             <motion.div
               className="flex items-end gap-[3px] h-4 relative z-10"
               initial={{ opacity: 0, scale: 0.8 }}
@@ -462,11 +226,16 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
                   className="w-1 rounded-full"
                   style={{
                     background: 'var(--accent-primary)',
-                    boxShadow: '0 0 6px var(--accent-primary), 0 0 12px var(--accent-secondary)',
+                    boxShadow:
+                      '0 0 6px var(--accent-primary), 0 0 12px var(--accent-secondary)',
                   }}
-                  animate={isPlaying && !isLoading ? {
-                    height: [4, 14, 6, 12, 4],
-                  } : { height: 4 }}
+                  animate={
+                    isPlaying && !isLoading
+                      ? {
+                          height: [4, 14, 6, 12, 4],
+                        }
+                      : { height: 4 }
+                  }
                   transition={{
                     height: {
                       duration: 0.8,
@@ -479,7 +248,7 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
               ))}
             </motion.div>
 
-            {/* 加载状态 - 带淡入淡出 */}
+            {/* Loading spinner */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{
@@ -490,11 +259,14 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
               className="relative z-10"
             >
               {isLoading && (
-                <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--accent-primary)' }} />
+                <Loader2
+                  className="w-4 h-4 animate-spin"
+                  style={{ color: 'var(--accent-primary)' }}
+                />
               )}
             </motion.div>
 
-            {/* 暂停状态图标 - 带淡入淡出 */}
+            {/* Paused icon */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{
@@ -525,49 +297,63 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
             }}
           >
-            {/* 头部 */}
-            <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border-subtle)' }}>
+            {/* Header */}
+            <div
+              className="flex items-center justify-between px-4 py-3 border-b"
+              style={{ borderColor: 'var(--border-subtle)' }}
+            >
               <div className="flex items-center gap-2">
-                <Shuffle className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                  随机播放
+                <Shuffle
+                  className="w-4 h-4"
+                  style={{ color: 'var(--accent-primary)' }}
+                />
+                <span
+                  className="text-sm font-medium"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  Shuffle
                 </span>
               </div>
               <div className="flex items-center gap-1">
                 <motion.button
-                  onClick={handleChangeVisualizer}
+                  onClick={changeVisualizer}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   className="p-1.5 rounded-lg transition-colors hover:bg-accent-primary/10"
                   style={{ color: 'var(--text-muted)' }}
-                  title={`切换效果: ${visualizerMode === 'bars' ? '柱状图' : visualizerMode === 'wave' ? '波形图' : '热力图'}`}
+                  title={`Visualizer: ${visualizerMode}`}
                 >
                   {visualizerMode === 'bars' && <BarChart3 className="w-4 h-4" />}
                   {visualizerMode === 'wave' && <Waves className="w-4 h-4" />}
                   {visualizerMode === 'heatmap' && <Grid3X3 className="w-4 h-4" />}
                 </motion.button>
                 <motion.button
-                  onClick={() => setIsOpen(false)}
+                  onClick={close}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   className="p-1.5 rounded-lg transition-colors hover:bg-red-500/10"
                   style={{ color: 'var(--text-muted)' }}
-                  title="收起播放器"
+                  title="Collapse player"
                 >
                   <span className="text-xs">✕</span>
                 </motion.button>
               </div>
             </div>
 
-            {/* 歌曲信息 */}
+            {/* Track info */}
             <div className="px-4 py-4">
               <div className="flex items-center gap-3">
                 <motion.div
                   animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
-                  transition={isPlaying ? { duration: 8, repeat: Infinity, ease: 'linear' } : {}}
+                  transition={
+                    isPlaying
+                      ? { duration: 8, repeat: Infinity, ease: 'linear' }
+                      : {}
+                  }
                   className="w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{
-                    background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                    background:
+                      'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
                     boxShadow: '0 4px 15px var(--accent-glow)',
                   }}
                 >
@@ -597,19 +383,26 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
                 </div>
               </div>
 
-              {/* 音频可视化频谱 */}
+              {/* Visualizer */}
               <div className="mt-3">
-                <AudioVisualizer audioRef={audioRef} isPlaying={isPlaying} mode={visualizerMode} />
+                <AudioVisualizer
+                  audioRef={player.audioRef}
+                  isPlaying={isPlaying}
+                  mode={visualizerMode}
+                />
               </div>
 
-              {/* 错误提示 */}
+              {/* Error message */}
               {error && (
-                <div className="mt-2 text-xs text-red-400 text-center cursor-pointer" onClick={handlePlayPause}>
+                <div
+                  className="mt-2 text-xs text-red-400 text-center cursor-pointer"
+                  onClick={togglePlay}
+                >
                   {error}
                 </div>
               )}
 
-              {/* 进度条 */}
+              {/* Progress */}
               <div className="mt-4">
                 <div
                   ref={progressRef}
@@ -627,39 +420,47 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
                   <motion.div
                     className="h-full rounded-full relative z-10"
                     style={{
-                      background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))',
+                      background:
+                        'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))',
                       width: `${progressPercent}%`,
                     }}
                   />
                 </div>
-                <div className="flex justify-between mt-1 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                <div
+                  className="flex justify-between mt-1 text-[10px]"
+                  style={{ color: 'var(--text-muted)' }}
+                >
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
                 </div>
               </div>
 
-              {/* 控制按钮 */}
+              {/* Controls */}
               <div className="flex items-center justify-center gap-4 mt-3">
                 <motion.button
-                  onClick={handlePrev}
+                  onClick={prev}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   disabled={isLoading}
                   className="p-2 rounded-full transition-colors disabled:opacity-50"
-                  style={{ color: 'var(--text-muted)', background: 'var(--bg-secondary)' }}
-                  title="上一首"
+                  style={{
+                    color: 'var(--text-muted)',
+                    background: 'var(--bg-secondary)',
+                  }}
+                  title="Previous"
                 >
                   <SkipBack className="w-5 h-5" />
                 </motion.button>
 
                 <motion.button
-                  onClick={handlePlayPause}
+                  onClick={togglePlay}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   disabled={isLoading && !error}
                   className="p-3 rounded-full disabled:opacity-50"
                   style={{
-                    background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                    background:
+                      'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
                     boxShadow: '0 4px 15px var(--accent-glow)',
                   }}
                 >
@@ -673,27 +474,34 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
                 </motion.button>
 
                 <motion.button
-                  onClick={handleNext}
+                  onClick={next}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   disabled={isLoading}
                   className="p-2 rounded-full transition-colors disabled:opacity-50"
-                  style={{ color: 'var(--text-muted)', background: 'var(--bg-secondary)' }}
-                  title="下一首"
+                  style={{
+                    color: 'var(--text-muted)',
+                    background: 'var(--bg-secondary)',
+                  }}
+                  title="Next"
                 >
                   <SkipForward className="w-5 h-5" />
                 </motion.button>
               </div>
 
-              {/* 音量控制 */}
+              {/* Volume */}
               <div className="flex items-center gap-2 mt-3">
                 <motion.button
-                  onClick={() => setIsMuted(!isMuted)}
+                  onClick={toggleMuted}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  {isMuted || volume === 0 ? (
+                    <VolumeX className="w-4 h-4" />
+                  ) : (
+                    <Volume2 className="w-4 h-4" />
+                  )}
                 </motion.button>
                 <input
                   type="range"
@@ -703,7 +511,6 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
                   value={isMuted ? 0 : volume}
                   onChange={(e) => {
                     setVolume(parseFloat(e.target.value));
-                    setIsMuted(false);
                   }}
                   className="flex-1 h-1 rounded-full appearance-none cursor-pointer"
                   style={{
@@ -712,11 +519,17 @@ export function MusicPlayer({ defaultOpen = false }: MusicPlayerProps) {
                 />
               </div>
 
-              {/* 播放信息 */}
-              <div className="flex items-center justify-center gap-1 mt-3 pt-2 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
-                <Shuffle className="w-3 h-3" style={{ color: 'var(--accent-primary)' }} />
+              {/* Track info footer */}
+              <div
+                className="flex items-center justify-center gap-1 mt-3 pt-2 border-t"
+                style={{ borderColor: 'var(--border-subtle)' }}
+              >
+                <Shuffle
+                  className="w-3 h-3"
+                  style={{ color: 'var(--accent-primary)' }}
+                />
                 <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                  第 {currentNumber} 首 / 共 {totalSongs} 首 · {visualizerMode === 'bars' ? '柱状图' : visualizerMode === 'wave' ? '波形图' : '热力图'}
+                  Track {currentNumber} / {totalSongs} · {visualizerMode}
                 </span>
               </div>
             </div>

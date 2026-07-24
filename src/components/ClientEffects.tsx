@@ -25,6 +25,7 @@ import { usePathname } from 'next/navigation';
 import { Toaster } from 'sonner';
 import { MobileProvider, useIsDesktopClient } from '@/contexts/MobileContext';
 import { PerformanceProvider, usePerformance } from '@/contexts/PerformanceContext';
+import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
 import { useTheme, useStylePreset } from '@/hooks';
 import { Navigation } from '@/components/sections/Navigation';
 import { TerminalLayout } from '@/components/themes/TerminalLayout';
@@ -153,12 +154,11 @@ const SHOW_NAV_PATHS = [
   '/friends',
   '/friends-circle',
   '/about',
-  '/notes',
+  '/shuoshuo',
   '/earth-online',
   '/studio',
   '/algo-viz',
   '/projects',
-  '/dev-log',
 ];
 
 function GlobalShell({ children }: { children: React.ReactNode }) {
@@ -287,7 +287,9 @@ export default function ClientEffects({
   return (
     <MobileProvider>
       <PerformanceProvider>
-        <GlobalShell>{children}</GlobalShell>
+        <MusicPlayerProvider>
+          <GlobalShell>{children}</GlobalShell>
+        </MusicPlayerProvider>
       </PerformanceProvider>
     </MobileProvider>
   );
