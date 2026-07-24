@@ -31,6 +31,7 @@ const DEFAULT_BARS = Array.from({ length: 16 }, () => 0);
 export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: AudioMetricsProps) {
   const animationRef = useRef<number>(0);
   const isInitializedRef = useRef(false);
+  const lastFrameRef = useRef(0);
   const [metrics, setMetrics] = useState<Metrics>({
     bars: DEFAULT_BARS,
     peakDb: -96,
@@ -118,7 +119,11 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
       if (connection?.context.state === 'suspended') {
         connection.context.resume().catch(() => {});
       }
-      readMetrics();
+      const now = performance.now();
+      if (now - lastFrameRef.current >= 80) {
+        lastFrameRef.current = now;
+        readMetrics();
+      }
       animationRef.current = requestAnimationFrame(tick);
     };
 
