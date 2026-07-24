@@ -56,12 +56,12 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
             />
             <div className="flex flex-col">
               <span
-                className="font-pixel"
+                className="font-semibold"
                 style={{
                   fontSize: 'var(--text-xl)',
                   color: 'var(--text-primary)',
-                  textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
-                  letterSpacing: '0.05em',
+                  letterSpacing: '-0.02em',
+                  fontFamily: 'var(--apple-font-stack)',
                 }}
               >
                 SAKURAIN

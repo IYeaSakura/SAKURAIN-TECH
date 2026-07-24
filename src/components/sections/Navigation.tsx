@@ -90,9 +90,9 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
         className={cn(
-          sticky ? 'fixed top-0 left-0 right-0 z-50' : 'relative',
+          sticky ? 'fixed top-0 left-0 right-0 z-50 pt-12' : 'relative',
           'transition-all duration-300 overflow-hidden',
-          isScrolled ? 'mc-navbar' : 'bg-transparent'
+          isScrolled ? 'apple-glass border-b-0' : 'bg-transparent'
         )}
         style={{ pointerEvents: 'auto' }}
       >
@@ -113,12 +113,12 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
                 fetchPriority="high"
               />
               <span
-                className="font-pixel text-lg sm:text-2xl lg:text-3xl truncate max-w-[120px] sm:max-w-none"
+                className="text-lg sm:text-2xl lg:text-2xl font-semibold truncate max-w-[120px] sm:max-w-none"
                 style={{
                   color: 'var(--text-primary)',
-                  textShadow: '2px 2px 0 color-mix(in srgb, var(--bg-secondary) 50%, black)',
-                  letterSpacing: '0.05em',
+                  letterSpacing: '-0.02em',
                   whiteSpace: 'nowrap',
+                  fontFamily: 'var(--apple-font-stack)',
                 }}
               >
                 {data.logo}
@@ -136,16 +136,24 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
                   <button
                     key={link.href}
                     onClick={handleClick}
-                    className="mc-nav-link flex items-center gap-1"
+                    className="group relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
                     style={{
-                      fontFamily: 'var(--font-primary)',
-                      fontSize: 'var(--text-base)',
-                      fontWeight: 600,
-                      letterSpacing: '0.05em',
+                      fontFamily: 'var(--apple-font-stack)',
+                      color: isActive(link.href) ? 'var(--text-primary)' : 'var(--text-secondary)',
                     }}
                   >
-                    {Icon && <Icon className="w-4 h-4" />}
-                    {link.label}
+                    {isActive(link.href) && (
+                      <motion.div
+                        layoutId="nav-pill"
+                        className="absolute inset-0 rounded-full"
+                        style={{ background: 'var(--bg-secondary)' }}
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-1.5">
+                      {Icon && <Icon className="w-3.5 h-3.5" />}
+                      {link.label}
+                    </span>
                   </button>
                 );
               })}
@@ -156,24 +164,16 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
               <button
                 onClick={cyclePreset}
                 title="Switch style preset"
-                className="relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)',
-                  color: 'var(--text-secondary)'
-                }}
+                className="relative p-2.5 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 apple-glass"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 {preset.id === 'default' ? <Terminal className="w-5 h-5" /> : <Layout className="w-5 h-5" />}
               </button>
               <button
                 onClick={onThemeToggle}
                 disabled={isThemeTransitioning}
-                className="relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)',
-                  color: 'var(--text-secondary)'
-                }}
+                className="relative p-2.5 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 apple-glass"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
@@ -201,24 +201,16 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
               <button
                 onClick={cyclePreset}
                 title="Switch style preset"
-                className="relative p-2 rounded-lg sm:p-2.5 sm:rounded-xl transition-all duration-300 hover:scale-110 active:scale-95"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)',
-                  color: 'var(--text-secondary)'
-                }}
+                className="relative p-2 rounded-full sm:p-2.5 transition-all duration-300 hover:scale-110 active:scale-95 apple-glass"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 {preset.id === 'default' ? <Terminal className="w-4 h-4 sm:w-5 sm:h-5" /> : <Layout className="w-4 h-4 sm:w-5 sm:h-5" />}
               </button>
               <button
                 onClick={onThemeToggle}
                 disabled={isThemeTransitioning}
-                className="relative p-2 rounded-lg sm:p-2.5 sm:rounded-xl transition-all duration-300 hover:scale-110 active:scale-95"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)',
-                  color: 'var(--text-secondary)'
-                }}
+                className="relative p-2 rounded-full sm:p-2.5 transition-all duration-300 hover:scale-110 active:scale-95 apple-glass"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
@@ -246,20 +238,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
       >
         {/* Dock 容器 - iOS 风格 */}
         <div
-          className="flex items-center justify-center gap-1 px-2 py-1.5 pb-[env(safe-area-inset-bottom,8px)]"
-          style={{
-            background: theme === 'dark'
-              ? 'rgba(30, 30, 30, 0.9)'
-              : 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderTop: theme === 'dark'
-              ? '1px solid rgba(255, 255, 255, 0.1)'
-              : '1px solid rgba(0, 0, 0, 0.1)',
-            boxShadow: theme === 'dark'
-              ? '0 -4px 20px rgba(0, 0, 0, 0.4)'
-              : '0 -4px 20px rgba(0, 0, 0, 0.15)',
-          }}
+          className="flex items-center justify-center gap-1 px-3 py-2 pb-[env(safe-area-inset-bottom,8px)] apple-glass border-t-0 rounded-t-3xl mx-2"
         >
           {dockItems.map((item) => {
             const Icon = item.icon;
@@ -296,9 +275,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
                         d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
                         strokeWidth="2"
                         style={{
-                          stroke: active
-                            ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C')
-                            : 'var(--text-secondary)',
+                          stroke: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
                         }}
                       />
                       <circle
@@ -307,9 +284,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
                         r="4"
                         strokeWidth="2"
                         style={{
-                          stroke: active
-                            ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C')
-                            : 'var(--text-secondary)',
+                          stroke: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
                         }}
                       />
                     </svg>
@@ -317,12 +292,8 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
                     <Icon
                       className="w-5 h-5 transition-all duration-150"
                       style={{
-                        color: active
-                          ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C')
-                          : 'var(--text-secondary)',
-                        stroke: active
-                          ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C')
-                          : 'var(--text-secondary)',
+                        color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                        stroke: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
                       }}
                       strokeWidth={2}
                       fill="none"
@@ -335,10 +306,8 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
                 <span
                   className="text-[10px] font-medium mt-1 transition-colors duration-150"
                   style={{
-                    color: active
-                      ? (theme === 'dark' ? 'var(--accent-primary)' : '#0E639C')
-                      : 'var(--text-muted)',
-                    fontFamily: 'var(--font-primary)',
+                    color: active ? 'var(--accent-primary)' : 'var(--text-muted)',
+                    fontFamily: 'var(--apple-font-stack)',
                   }}
                 >
                   {item.label}
