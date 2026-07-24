@@ -25,8 +25,9 @@ import { usePathname } from 'next/navigation';
 import { Toaster } from 'sonner';
 import { MobileProvider, useIsDesktopClient } from '@/contexts/MobileContext';
 import { PerformanceProvider, usePerformance } from '@/contexts/PerformanceContext';
-import { useTheme } from '@/hooks';
+import { useTheme, useStylePreset } from '@/hooks';
 import { Navigation } from '@/components/sections/Navigation';
+import { TerminalLayout } from '@/components/themes/TerminalLayout';
 import { GlobalContextMenu } from '@/components/CustomContextMenu';
 import { DebugProtection } from '@/components/DebugProtection';
 import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
@@ -166,6 +167,7 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
   const isDesktopClient = useIsDesktopClient();
   const { enableMouseEffects, effectiveQuality } = usePerformance();
   const { theme, isTransitioning, toggleTheme } = useTheme();
+  const { preset, setPreset } = useStylePreset();
   const { isReady, isLoading, siteData } = useInitialLoad();
   const phases = useStaggeredLoad(isReady);
 
@@ -177,11 +179,13 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
   const beamIntensity = effectiveQuality === 'low' ? 0.15 : 0.25;
 
   const enableEffects = isReady && effectiveQuality !== 'low';
+  const isTerminal = preset.id === 'terminal';
 
   // 导航显隐：白名单 + /docs/*；/blog 仅列表页
   const shouldShowNav =
-    SHOW_NAV_PATHS.includes(pathname) ||
-    pathname.startsWith('/docs/');
+    !isTerminal &&
+    (SHOW_NAV_PATHS.includes(pathname) ||
+      pathname.startsWith('/docs/'));
   // 算法可视化页面导航不固定
   const isStickyNav = pathname !== '/algo-viz';
 
@@ -199,8 +203,8 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
         </>
       )}
 
-      {/* 首页专属背景特效 - 错峰加载 */}
-      {enableEffects && isHomePage && (
+      {/* 首页专属背景特效 - 错峰加载（默认风格下展示） */}
+      {!isTerminal && enableEffects && isHomePage && (
         <>
           {phases.phase3 && (
             <div className="fixed inset-0 pointer-events-none z-0">
@@ -237,7 +241,7 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
         </>
       )}
 
-      {/* 顶部导航（按路径白名单显隐） */}
+      {/* 顶部导航（按路径白名单显隐；终端风格使用自带侧边栏） */}
       {shouldShowNav && siteData?.navigation && (
         <Navigation
           data={siteData.navigation}
@@ -248,7 +252,19 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      {children}
+      {isTerminal ? (
+        <TerminalLayout
+          siteData={siteData}
+          theme={theme}
+          onThemeToggle={toggleTheme}
+          preset={preset.id}
+          onPresetChange={setPreset}
+        >
+          {children}
+        </TerminalLayout>
+      ) : (
+        children
+      )}
 
       {/* 全局音乐播放器 - 挂在 layout 内，切换页面不会中断 */}
       <MusicPlayer />

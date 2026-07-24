@@ -113,7 +113,7 @@ SAKURAIN-TECH/
 │           ├── batch-get.js          # /api/feed/batch-get
 │           └── batch-refresh.js      # /api/feed/batch-refresh
 ├── content/                          # Single source of truth for all managed content
-│   ├── blog/posts/                   # Blog post source files
+│   ├── blog/                         # Blog post source files
 │   ├── notes/posts/                  # Note source files
 │   ├── docs/                         # Documentation markdown files
 │   ├── data/                         # JSON data files (friends, playlist, site-data, etc.)
@@ -397,14 +397,14 @@ Error:
 
 The project uses a custom content pipeline built on `gray-matter` and `react-markdown`:
 
-- **Source Files**: Blog and notes markdown files live under `content/blog/posts/` and `content/notes/posts/`.
+- **Source Files**: Blog and notes markdown files live under `content/blog/` and `content/notes/posts/`.
 - **Frontmatter**: Each file includes title, date, description, tags, and optional featured flag.
 - **Rendering**: `react-markdown` with `remark-gfm`, `remark-math`, and `rehype-katex` handles GitHub-flavored markdown and KaTeX math.
 - **Static Generation**: `generateStaticParams` in `app/blog/[slug]/page.tsx` and `app/docs/[[...slug]]/page.tsx` prerenders all content paths.
 
 ### Adding a Blog Post
 
-1. Create a new markdown file under `content/blog/posts/`.
+1. Create a new markdown file under `content/blog/`.
 2. Add frontmatter at the top:
 
 ```markdown

@@ -113,7 +113,7 @@ SAKURAIN-TECH/
 │           ├── batch-get.js          # /api/feed/batch-get
 │           └── batch-refresh.js      # /api/feed/batch-refresh
 ├── content/                          # 所有托管内容的单一可信源
-│   ├── blog/posts/                   # 博客文章源文件
+│   ├── blog/                         # 博客文章源文件
 │   ├── notes/posts/                  # 随笔源文件
 │   ├── docs/                         # 文档 Markdown 文件
 │   ├── data/                         # JSON 数据文件（友链、播放列表、站点数据等）
@@ -396,14 +396,14 @@ X-Signature: <hex(HMAC-SHA256("<timestamp>:<nonce>", API_SECRET_KEY))>
 
 项目使用基于 `gray-matter` 与 `react-markdown` 的自定义内容管线：
 
-- **源文件**: 博客与随笔 Markdown 分别位于 `content/blog/posts/` 与 `content/notes/posts/`。
+- **源文件**: 博客与随笔 Markdown 分别位于 `content/blog/` 与 `content/notes/posts/`。
 - **Frontmatter**: 每篇文章包含标题、日期、描述、标签与可选的 featured 标记。
 - **渲染**: `react-markdown` 配合 `remark-gfm`、`remark-math`、`rehype-katex` 处理 GitHub 风格 Markdown 与 KaTeX 数学公式。
 - **静态生成**: `app/blog/[slug]/page.tsx` 与 `app/docs/[[...slug]]/page.tsx` 通过 `generateStaticParams` 预渲染所有内容路径。
 
 ### 添加博客文章
 
-1. 在 `content/blog/posts/` 下新建 Markdown 文件。
+1. 在 `content/blog/` 下新建 Markdown 文件。
 2. 顶部添加 frontmatter：
 
 ```markdown

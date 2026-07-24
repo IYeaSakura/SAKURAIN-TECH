@@ -1,7 +1,7 @@
 /**
  * 服务端内容读取 + Feed/Sitemap 生成辅助（Phase 2 内建化）
  *
- * 自包含实现：直接用 fs + gray-matter 读取 next-app/content/blog/posts/*.md，
+ * 自包含实现：直接用 fs + gray-matter 读取 content/blog/*.md，
  * 不依赖 src/lib/content/（由其他任务并行建设中）。
  * 输出格式对齐旧版 scripts/generate-feeds.js / generate-sitemap.js，保持 URL 兼容。
  *
@@ -36,7 +36,7 @@ export const FEED_CONFIG = {
 /** Feed 收录的最新文章数 */
 export const FEED_POST_LIMIT = 20;
 
-const BLOG_POSTS_DIR = path.join(process.cwd(), "content", "blog", "posts");
+const BLOG_POSTS_DIR = path.join(process.cwd(), "content", "blog");
 const SITE_DATA_PATH = path.join(process.cwd(), "public", "data", "site-data.json");
 const DOCS_JSON_PATH = path.join(process.cwd(), "public", "data", "docs.json");
 
@@ -126,7 +126,7 @@ export function getSiteInfo(): SiteInfo {
 }
 
 /**
- * 读取全部博客文章（content/blog/posts/*.md），按日期降序。
+ * 读取全部博客文章（content/blog/*.md），按日期降序。
  * 目录不存在（内容迁移进行中）时返回空数组，保证构建不中断。
  */
 export function getBlogPosts(limit?: number): FeedPost[] {
