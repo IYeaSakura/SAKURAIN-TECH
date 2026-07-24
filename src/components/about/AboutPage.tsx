@@ -1,12 +1,10 @@
 'use client';
 
 /**
- * AboutPage — a bold, externally-facing personal profile in neo-brutalist pixel style.
+ * AboutPage — a concise, externally-facing personal profile in neo-brutalist pixel style.
  *
- * Combines hero introduction, bento highlights, stats, tech stack, honors carousel,
- * gear/blueprint sections, GitHub contributions, contact CTA and footer into a
- * single cohesive page. Uses the site-wide pixel language: sharp corners, thick
- * 2px borders and 4px offset shadows.
+ * The page leads with identity, impact numbers and core strengths, then shows the
+ * tech stack, honors and contact channels. Everything is kept short and scannable.
  */
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
@@ -20,22 +18,17 @@ import {
   ChevronLeft,
   ChevronRight,
   Trophy,
-  Briefcase,
-  Star,
   Calendar,
   Layers,
   Globe,
-  Sparkles,
   Zap,
   Rocket,
   Terminal,
+  Star,
 } from 'lucide-react';
 import { useAnimationEnabled, useNavigation } from '@/hooks';
 import { Footer } from '@/components/sections/Footer';
-import { GitHubHeatmap } from './GitHubHeatmap';
 import { GithubIcon as Github } from './GithubIcon';
-import { UsesSection } from './UsesSection';
-import { ColophonSection } from './ColophonSection';
 import type { SiteData } from '@/types';
 
 interface TechItem {
@@ -76,7 +69,7 @@ const achievementSlides = [
     id: 1,
     title: '2024年中国大学生计算机博弈大赛',
     subtitle: '全国冠军',
-    description: '在全国计算机博弈大赛中斩获冠军，展现了优秀的算法设计与工程实现能力。',
+    description: '算法设计与高性能对局引擎实现获得国家级冠军。',
     color: '#fbbf24',
     year: '2024',
     image: '/image/about/by2024.webp',
@@ -86,7 +79,7 @@ const achievementSlides = [
     id: 2,
     title: '2025年计算机博弈大赛',
     subtitle: '全国亚军',
-    description: '连续两年在国家级赛事中取得优异成绩，持续保持技术竞争力。',
+    description: '连续两年在国家级博弈赛事中保持顶尖竞争力。',
     color: '#c0c0c0',
     year: '2025',
     image: '/image/about/by2025.webp',
@@ -96,7 +89,7 @@ const achievementSlides = [
     id: 3,
     title: '2024年挑战杯大赛',
     subtitle: '辽宁省铜奖',
-    description: '在创新创业大赛中展现出色的项目实践能力与团队协作精神。',
+    description: '创新创业项目中展现工程落地与团队协作能力。',
     color: '#cd7f32',
     year: '2024',
     image: '/image/about/tzb.webp',
@@ -191,12 +184,12 @@ export default function AboutPage() {
           </button>
         </motion.div>
 
-        {/* Hero section: pixel name, status badge, avatar and compact metadata badges. */}
+        {/* Hero: pixel name, role and compact metadata. */}
         <motion.section
           initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-20"
+          className="mb-16"
         >
           <div className="flex flex-col lg:flex-row items-start gap-8 lg:gap-12">
             <div
@@ -211,30 +204,17 @@ export default function AboutPage() {
             </div>
 
             <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-3 mb-5">
-                <div
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider border"
-                  style={{
-                    borderColor: 'var(--accent-primary)',
-                    color: 'var(--accent-primary)',
-                    fontFamily: 'var(--font-mono)',
-                    background: 'var(--bg-secondary)',
-                  }}
-                >
-                  <Sparkles className="w-3 h-3" />
-                  OPEN TO WORK
-                </div>
-                <div
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider border"
-                  style={{
-                    borderColor: 'var(--border-subtle)',
-                    color: 'var(--text-muted)',
-                    fontFamily: 'var(--font-mono)',
-                  }}
-                >
-                  <Globe className="w-3 h-3" />
-                  全栈开发 · 博弈算法 · AI 研究
-                </div>
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1.5 mb-5 text-[10px] font-bold uppercase tracking-wider border"
+                style={{
+                  borderColor: 'var(--accent-primary)',
+                  color: 'var(--accent-primary)',
+                  fontFamily: 'var(--font-mono)',
+                  background: 'var(--bg-secondary)',
+                }}
+              >
+                <Globe className="w-3 h-3" />
+                全栈开发 · 博弈算法 · AI 研究
               </div>
 
               <h1
@@ -247,15 +227,15 @@ export default function AboutPage() {
                 className="text-base sm:text-lg font-bold uppercase tracking-wide mb-6"
                 style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}
               >
-                Yuyang / 软件工程 / 26届本科
+                软件工程 · 26届本科 · 中共党员
               </p>
 
               <div className="flex flex-wrap gap-2">
                 {[
-                  { icon: Star, text: '中共党员' },
+                  { icon: Trophy, text: '博弈算法冠军' },
+                  { icon: Rocket, text: '全栈工程师' },
+                  { icon: Terminal, text: 'AI 工程化' },
                   { icon: GraduationCap, text: '26届本科' },
-                  { icon: Trophy, text: '博弈算法专长' },
-                  { icon: Briefcase, text: '软件工程师' },
                 ].map((item, index) => (
                   <span
                     key={index}
@@ -277,50 +257,14 @@ export default function AboutPage() {
           </div>
         </motion.section>
 
-        {/* Bento highlight cards summarizing the three core identities. */}
+        {/* Stats strip: impact numbers first. */}
         <motion.section
           initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
-          className="mb-20"
+          className="mb-16"
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <HighlightCard
-              icon={Zap}
-              title="Algorithm & Game Theory"
-              description="国家级博弈赛事冠军，擅长搜索剪枝、强化学习与高性能对局引擎。"
-              index={0}
-            />
-            <HighlightCard
-              icon={Rocket}
-              title="Full-Stack Engineering"
-              description="从 React / Next.js 到 FastAPI / Go，构建完整、可落地的工程系统。"
-              index={1}
-            />
-            <HighlightCard
-              icon={Terminal}
-              title="Research & Open Source"
-              description="关注 AI 工程化与科研实践，积极参与开源社区与前沿技术探索。"
-              index={2}
-            />
-          </div>
-        </motion.section>
-
-        {/* Stats strip rendered as four bold pixel cards. */}
-        <motion.section
-          initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
-          className="mb-20"
-        >
-          <h2
-            className="text-sm font-bold uppercase tracking-wider mb-4"
-            style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
-          >
-            项目数据
-          </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {projectStats.map((stat, index) => {
               const Icon = stat.icon;
@@ -354,13 +298,43 @@ export default function AboutPage() {
           </div>
         </motion.section>
 
-        {/* Tech stack grouped by category inside a bento grid. */}
+        {/* Three core strengths in a bento row. */}
         <motion.section
           initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
-          className="mb-20"
+          className="mb-16"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <HighlightCard
+              icon={Zap}
+              title="Algorithm & Game Theory"
+              description="国家级博弈赛事冠军，擅长搜索剪枝与高性能对局引擎。"
+              index={0}
+            />
+            <HighlightCard
+              icon={Rocket}
+              title="Full-Stack Engineering"
+              description="React / Next.js 到 FastAPI / Go，构建可落地的工程系统。"
+              index={1}
+            />
+            <HighlightCard
+              icon={Terminal}
+              title="AI & Research"
+              description="关注 AI 工程化与科研实践，持续探索前沿技术。"
+              index={2}
+            />
+          </div>
+        </motion.section>
+
+        {/* Tech stack grouped by category. */}
+        <motion.section
+          initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4 }}
+          className="mb-16"
         >
           <h2
             className="text-sm font-bold uppercase tracking-wider mb-4"
@@ -395,13 +369,13 @@ export default function AboutPage() {
           </div>
         </motion.section>
 
-        {/* Honors carousel with image on one side and medal/year/content on the other. */}
+        {/* Honors carousel. */}
         <motion.section
           initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
-          className="mb-20"
+          className="mb-16"
           onMouseEnter={() => setIsAutoPlaying(false)}
           onMouseLeave={() => setIsAutoPlaying(true)}
         >
@@ -511,30 +485,7 @@ export default function AboutPage() {
           </div>
         </motion.section>
 
-        {/* Gear & Blueprint sections rendered back-to-back as unified page content. */}
-        <section className="mb-20">
-          <UsesSection />
-          <ColophonSection />
-        </section>
-
-        {/* GitHub contribution heatmap. */}
-        <motion.section
-          initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4 }}
-          className="mb-20"
-        >
-          <h2
-            className="text-sm font-bold uppercase tracking-wider mb-4"
-            style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
-          >
-            GitHub 贡献
-          </h2>
-          <GitHubHeatmap username="IYeaSakura" />
-        </motion.section>
-
-        {/* Bold contact CTA with GitHub, Email and QQ action buttons. */}
+        {/* Contact CTA. */}
         <motion.section
           initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
           whileInView={{ opacity: 1, y: 0 }}

@@ -25,7 +25,6 @@ import {
   Shuffle,
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
-import { AmbientGlow, LightBeam } from '@/components/effects';
 import { useAnimationEnabled, useIsDesktopClient } from '@/hooks';
 
 import type { SiteData } from '@/types';
@@ -85,13 +84,18 @@ interface FeedSourceStatus {
   error?: string;
 }
 
-// CSS clip-path helpers
-const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
+// Neo-brutalist design tokens shared across the feed page
+const BRUTALIST_BORDER = '2px solid var(--border-subtle)';
+const BRUTALIST_ACCENT_BORDER = '2px solid var(--accent-primary)';
+const BRUTALIST_SHADOW = '4px 4px 0 var(--border-subtle)';
+const BRUTALIST_ACCENT_SHADOW = '4px 4px 0 var(--accent-primary)';
 
 const POSTS_PER_PAGE = 9;
-const FETCH_TIMEOUT = 15000; // 增加到15秒，给新建站点更多时间
+// Increase timeout to 15s so newly added sites have more time to respond
+const FETCH_TIMEOUT = 15000;
 const FEED_CACHE_KEY = 'sakurain_feed_cache';
-const FEED_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+// Feed cache TTL: 30 minutes
+const FEED_CACHE_TTL = 30 * 60 * 1000;
 
 interface FeedCache {
   items: FeedItem[];
@@ -135,7 +139,7 @@ const clearFeedCache = (): void => {
   }
 };
 
-// Format date helper
+// Format a date string to Chinese locale
 const formatDate = (dateStr: string): string => {
   try {
     const date = new Date(dateStr);
@@ -151,7 +155,7 @@ const formatDate = (dateStr: string): string => {
   }
 };
 
-// Get relative time (e.g., 5 minutes ago, 2 hours ago, 1 day ago)
+// Return a relative time string (e.g. 5 minutes ago, 2 hours ago)
 const getRelativeTime = (dateStr: string): string => {
   try {
     const now = new Date();
@@ -189,7 +193,7 @@ const getRelativeTime = (dateStr: string): string => {
   }
 };
 
-// 统计卡片组件
+// Stat card with a sharp border, offset shadow and mono label
 function StatCard({
   icon: Icon,
   value,
@@ -207,7 +211,6 @@ function StatCard({
   onClick?: () => void;
   active?: boolean;
 }) {
-  const [isHovered, setIsHovered] = useState(false);
   const animationEnabled = useAnimationEnabled();
 
   return (
@@ -215,36 +218,33 @@ function StatCard({
       initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
       animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
       transition={animationEnabled ? { delay: 0.4 + delay * 0.1, duration: 0.5 } : undefined}
-      whileHover={animationEnabled ? { scale: 1.05, y: -4 } : undefined}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
-      className={`relative p-6 text-center cursor-default group ${onClick ? 'cursor-pointer' : ''}`}
+      className={[
+        'relative p-6 text-center transition-all duration-200',
+        onClick ? 'cursor-pointer' : 'cursor-default',
+        'border-2',
+        'shadow-[4px_4px_0_var(--border-subtle)]',
+        'hover:translate-x-[-2px] hover:translate-y-[-2px]',
+        ...(active ? [] : ['hover:shadow-[4px_4px_0_var(--accent-primary)]']),
+      ].join(' ')}
       style={{
-        background: active ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-card)',
-        border: `2px solid ${active ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
-        clipPath: clipPathRounded(6),
+        background: active ? 'var(--bg-secondary)' : 'var(--bg-card)',
+        borderColor: active ? 'var(--accent-primary)' : 'var(--border-subtle)',
+        boxShadow: active ? BRUTALIST_ACCENT_SHADOW : undefined,
       }}
     >
-      {animationEnabled && (
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isHovered ? 0.5 : 0 }}
-          transition={{ duration: 0.3 }}
-        />
-      )}
       <Icon className="w-6 h-6 mx-auto mb-3" style={{ color }} />
       <div className="font-sans font-bold text-3xl mb-1 break-all px-1" style={{ color: 'var(--text-primary)' }}>
         {value}
       </div>
-      <div className="text-sm" style={{ color: 'var(--text-muted)' }}>{label}</div>
+      <div className="font-mono uppercase tracking-wider text-[10px]" style={{ color: 'var(--text-muted)' }}>
+        {label}
+      </div>
     </motion.div>
   );
 }
 
-// 统计面板组件
+// Stats panel showing source distribution and last 7 days activity
 function StatsPanel({
   items,
   onClose
@@ -253,13 +253,13 @@ function StatsPanel({
   onClose: () => void;
 }) {
   const stats = useMemo(() => {
-    // 按来源统计
+    // Count articles per source
     const sourceStats: Record<string, number> = {};
     items.forEach(item => {
       sourceStats[item.source] = (sourceStats[item.source] || 0) + 1;
     });
 
-    // 按日期统计（最近7天）
+    // Count articles per day for the last 7 days
     const dateStats: Record<string, number> = {};
     const now = new Date();
     for (let i = 6; i >= 0; i--) {
@@ -277,7 +277,7 @@ function StatsPanel({
       }
     });
 
-    // 排序来源
+    // Sort sources by article count
     const sortedSources = Object.entries(sourceStats)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10);
@@ -296,8 +296,8 @@ function StatsPanel({
         className="p-6"
         style={{
           background: 'var(--bg-card)',
-          border: '2px solid var(--border-subtle)',
-          clipPath: clipPathRounded(12),
+          border: BRUTALIST_BORDER,
+          boxShadow: BRUTALIST_SHADOW,
         }}
       >
         <div className="flex items-center justify-between mb-6">
@@ -306,38 +306,35 @@ function StatsPanel({
           </h3>
           <button
             onClick={onClose}
-            className="p-2 transition-colors hover:bg-white/5"
-            style={{ clipPath: clipPathRounded(4) }}
+            className="p-2 border-2 border-transparent transition-all hover:border-[var(--accent-primary)]"
+            style={{ color: 'var(--text-muted)' }}
           >
-            <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          {/* 来源统计 */}
+          {/* Source distribution */}
           <div>
-            <h4 className="text-sm font-medium mb-4" style={{ color: 'var(--text-muted)' }}>
+            <h4 className="font-mono uppercase tracking-wider text-[10px] mb-4" style={{ color: 'var(--text-muted)' }}>
               文章来源分布
             </h4>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {stats.sourceStats.map(([source, count], index) => (
                 <div
                   key={source}
-                  className="flex items-center justify-between p-3"
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    clipPath: clipPathRounded(4),
-                  }}
+                  className="flex items-center justify-between p-3 border-2 bg-[var(--bg-secondary)]"
+                  style={{ borderColor: 'var(--border-subtle)' }}
                 >
                   <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
                     {index + 1}. {source}
                   </span>
                   <span
-                    className="px-2 py-1 text-xs font-medium"
+                    className="px-2 py-0.5 border-2 font-mono uppercase tracking-wider text-[10px]"
                     style={{
-                      background: 'var(--accent-primary)20',
+                      background: 'var(--bg-tertiary)',
+                      borderColor: 'var(--accent-primary)',
                       color: 'var(--accent-primary)',
-                      clipPath: clipPathRounded(2),
                     }}
                   >
                     {count} 篇
@@ -347,9 +344,9 @@ function StatsPanel({
             </div>
           </div>
 
-          {/* 日期统计 */}
+          {/* Daily activity */}
           <div>
-            <h4 className="text-sm font-medium mb-4" style={{ color: 'var(--text-muted)' }}>
+            <h4 className="font-mono uppercase tracking-wider text-[10px] mb-4" style={{ color: 'var(--text-muted)' }}>
               最近7天更新
             </h4>
             <div className="space-y-2">
@@ -358,7 +355,10 @@ function StatsPanel({
                   <span className="text-sm w-24" style={{ color: 'var(--text-muted)' }}>
                     {date.slice(5)}
                   </span>
-                  <div className="flex-1 h-6 overflow-hidden" style={{ background: 'var(--bg-secondary)', clipPath: clipPathRounded(2) }}>
+                  <div
+                    className="flex-1 h-6 border-2 overflow-hidden"
+                    style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}
+                  >
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: count > 0 ? `${Math.max((count / Math.max(...Object.values(stats.dateStats))) * 100, 1)}%` : '0%' }}
@@ -380,7 +380,7 @@ function StatsPanel({
   );
 }
 
-// 订阅弹窗组件
+// Subscribe modal with sharp borders and mono labels
 function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const animationEnabled = useAnimationEnabled();
   const [copied, setCopied] = useState<string | null>(null);
@@ -435,9 +435,8 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         className="relative w-full max-w-lg p-6"
         style={{
           background: 'var(--bg-secondary)',
-          border: '2px solid var(--border-color)',
-          clipPath: clipPathRounded(12),
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          border: BRUTALIST_BORDER,
+          boxShadow: BRUTALIST_SHADOW,
         }}
       >
         {/* Header */}
@@ -447,8 +446,8 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
               className="flex items-center justify-center w-12 h-12"
               style={{
                 background: 'var(--bg-secondary)',
-                border: '2px solid var(--border-subtle)',
-                clipPath: clipPathRounded(4),
+                border: BRUTALIST_BORDER,
+                boxShadow: BRUTALIST_SHADOW,
               }}
             >
               <Rss className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
@@ -464,33 +463,29 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           </div>
           <button
             onClick={onClose}
-            className="p-2 transition-colors hover:bg-white/5"
-            style={{ clipPath: clipPathRounded(4) }}
+            className="p-2 border-2 border-transparent transition-all hover:border-[var(--accent-primary)]"
+            style={{ color: 'var(--text-muted)' }}
           >
-            <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Feed Options */}
+        {/* Feed options */}
         <div className="space-y-3 mb-6">
           {feedOptions.map((option) => (
             <div
               key={option.name}
-              className="p-4 transition-colors hover:bg-white/5"
-              style={{
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-subtle)',
-                clipPath: clipPathRounded(6),
-              }}
-    >
+              className="p-4 border-2 bg-[var(--bg-secondary)] transition-all duration-200 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_var(--accent-primary)] hover:border-[var(--accent-primary)]"
+              style={{ borderColor: 'var(--border-subtle)' }}
+            >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span
-                    className="px-2 py-0.5 text-xs font-medium"
+                    className="px-2 py-0.5 border-2 font-mono uppercase tracking-wider text-[10px]"
                     style={{
-                      background: `${option.color}20`,
+                      background: 'var(--bg-tertiary)',
+                      borderColor: option.color,
                       color: option.color,
-                      clipPath: clipPathRounded(2),
                     }}
                   >
                     {option.name}
@@ -502,24 +497,23 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
               </div>
               <div className="flex items-center gap-2">
                 <code
-                  className="flex-1 px-3 py-2 text-sm font-mono truncate"
+                  className="flex-1 px-3 py-2 text-sm font-mono truncate border-2"
                   style={{
-                    background: 'rgba(0, 0, 0, 0.3)',
+                    background: 'var(--bg-tertiary)',
                     color: 'var(--accent-primary)',
-                    clipPath: clipPathRounded(3),
+                    borderColor: 'var(--border-subtle)',
                   }}
                 >
                   {option.url}
                 </code>
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleCopy(option.url, option.name)}
-                  className="px-3 py-2 text-sm font-medium transition-all whitespace-nowrap"
+                  className="px-3 py-2 text-sm font-medium whitespace-nowrap border-2 transition-all duration-200 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_var(--border-subtle)]"
                   style={{
-                    background: copied === option.name ? 'rgba(34, 197, 94, 0.2)' : 'var(--accent-primary)',
+                    background: copied === option.name ? 'var(--bg-tertiary)' : 'var(--accent-primary)',
+                    borderColor: copied === option.name ? '#22c55e' : 'var(--accent-primary)',
                     color: copied === option.name ? '#22c55e' : 'white',
-                    clipPath: clipPathRounded(3),
                   }}
                 >
                   {copied === option.name ? (
@@ -541,11 +535,10 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
 
         {/* Info */}
         <div
-          className="p-4 text-sm"
+          className="p-4 text-sm border-2"
           style={{
-            background: 'rgba(59, 130, 246, 0.05)',
-            border: '1px solid rgba(59, 130, 246, 0.2)',
-            clipPath: clipPathRounded(6),
+            background: 'var(--bg-tertiary)',
+            borderColor: 'var(--accent-primary)',
             color: 'var(--text-muted)',
           }}
         >
@@ -562,7 +555,7 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   );
 }
 
-// 调试面板组件
+// Debug panel showing source fetch status with sharp bordered badges
 function DebugPanel({
   sources,
   onClose
@@ -601,6 +594,19 @@ function DebugPanel({
     }
   };
 
+  const getStatusColors = (status: FeedSourceStatus['status']) => {
+    switch (status) {
+      case 'success':
+        return { borderColor: '#22c55e', color: '#22c55e' };
+      case 'error':
+        return { borderColor: '#ef4444', color: '#ef4444' };
+      case 'timeout':
+        return { borderColor: '#eab308', color: '#eab308' };
+      case 'pending':
+        return { borderColor: '#3b82f6', color: '#3b82f6' };
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, height: 0 }}
@@ -612,8 +618,8 @@ function DebugPanel({
         className="p-6"
         style={{
           background: 'var(--bg-card)',
-          border: '2px solid var(--border-subtle)',
-          clipPath: clipPathRounded(12),
+          border: BRUTALIST_BORDER,
+          boxShadow: BRUTALIST_SHADOW,
         }}
       >
         <div className="flex items-center justify-between mb-6">
@@ -625,88 +631,80 @@ function DebugPanel({
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-sm">
-              <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 text-green-500" /> {successCount}</span>
-              {errorCount > 0 && <span className="flex items-center gap-1"><AlertCircle className="w-4 h-4 text-red-500" /> {errorCount}</span>}
-              {timeoutCount > 0 && <span className="flex items-center gap-1"><Clock className="w-4 h-4 text-yellow-500" /> {timeoutCount}</span>}
-              {pendingCount > 0 && <span className="flex items-center gap-1"><Loader2 className="w-4 h-4 text-blue-500 animate-spin" /> {pendingCount}</span>}
+              <span className="flex items-center gap-1 px-2 py-0.5 border-2" style={{ borderColor: '#22c55e', color: '#22c55e' }}><CheckCircle2 className="w-4 h-4" /> {successCount}</span>
+              {errorCount > 0 && <span className="flex items-center gap-1 px-2 py-0.5 border-2" style={{ borderColor: '#ef4444', color: '#ef4444' }}><AlertCircle className="w-4 h-4" /> {errorCount}</span>}
+              {timeoutCount > 0 && <span className="flex items-center gap-1 px-2 py-0.5 border-2" style={{ borderColor: '#eab308', color: '#eab308' }}><Clock className="w-4 h-4" /> {timeoutCount}</span>}
+              {pendingCount > 0 && <span className="flex items-center gap-1 px-2 py-0.5 border-2" style={{ borderColor: '#3b82f6', color: '#3b82f6' }}><Loader2 className="w-4 h-4 animate-spin" /> {pendingCount}</span>}
             </div>
             <button
               onClick={onClose}
-              className="p-2 transition-colors hover:bg-white/5"
-              style={{ clipPath: clipPathRounded(4) }}
+              className="p-2 border-2 border-transparent transition-all hover:border-[var(--accent-primary)]"
+              style={{ color: 'var(--text-muted)' }}
             >
-              <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         <div className="space-y-2 max-h-80 overflow-y-auto">
-          {sources.map((source) => (
-            <div
-              key={source.name}
-              className="flex items-center gap-3 p-3"
-              style={{
-                background: 'var(--bg-secondary)',
-                clipPath: clipPathRounded(4),
-              }}
-            >
-              <div className="flex-shrink-0">
-                {getStatusIcon(source.status)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
-                    {source.name}
-                  </span>
-                  <span
-                    className="text-xs px-2 py-0.5"
-                    style={{
-                      background: source.status === 'success' ? 'rgba(34, 197, 94, 0.2)' :
-                                  source.status === 'error' ? 'rgba(239, 68, 68, 0.2)' :
-                                  source.status === 'timeout' ? 'rgba(234, 179, 8, 0.2)' :
-                                  'rgba(59, 130, 246, 0.2)',
-                      color: source.status === 'success' ? '#22c55e' :
-                             source.status === 'error' ? '#ef4444' :
-                             source.status === 'timeout' ? '#eab308' :
-                             '#3b82f6',
-                      clipPath: clipPathRounded(2),
-                    }}
-                  >
-                    {getStatusText(source.status)}
-                  </span>
-                  {source.itemCount > 0 && (
-                    <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {source.itemCount} 篇文章
+          {sources.map((source) => {
+            const statusColors = getStatusColors(source.status);
+            return (
+              <div
+                key={source.name}
+                className="flex items-center gap-3 p-3 border-2 bg-[var(--bg-secondary)]"
+                style={{ borderColor: 'var(--border-subtle)' }}
+              >
+                <div className="flex-shrink-0">
+                  {getStatusIcon(source.status)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
+                      {source.name}
                     </span>
+                    <span
+                      className="text-[10px] px-2 py-0.5 border-2 font-mono uppercase tracking-wider"
+                      style={{
+                        background: 'var(--bg-tertiary)',
+                        borderColor: statusColors.borderColor,
+                        color: statusColors.color,
+                      }}
+                    >
+                      {getStatusText(source.status)}
+                    </span>
+                    {source.itemCount > 0 && (
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        {source.itemCount} 篇文章
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs mt-1 truncate" style={{ color: 'var(--text-muted)' }}>
+                    {source.url}
+                  </div>
+                  {source.error && (
+                    <div
+                      className="text-xs mt-2 p-2 break-all border-l-4 bg-[var(--bg-tertiary)]"
+                      style={{
+                        color: '#f87171',
+                        borderColor: '#ef4444',
+                      }}
+                    >
+                      <span className="font-medium">失败原因: </span>
+                      {source.error}
+                    </div>
                   )}
                 </div>
-                <div className="text-xs mt-1 truncate" style={{ color: 'var(--text-muted)' }}>
-                  {source.url}
-                </div>
-                {source.error && (
-                  <div
-                    className="text-xs mt-2 p-2 break-all"
-                    style={{
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      color: '#f87171',
-                      borderLeft: '2px solid #ef4444',
-                      clipPath: clipPathRounded(2),
-                    }}
-                  >
-                    <span className="font-medium">失败原因: </span>
-                    {source.error}
-                  </div>
-                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </motion.div>
   );
 }
 
-// JSON Feed / 类 JSON Feed 条目的宽松类型（字段来自多种订阅格式，保持可选）
+// Loose type for entries coming from RSS/Atom/JSON feeds
 interface RawJsonFeedItem {
   title?: string;
   url?: string;
@@ -724,7 +722,7 @@ interface RawJsonFeedItem {
   author?: string | { name?: string };
 }
 
-// Parse feed content - auto-detect format
+// Parse feed content and auto-detect the format
 const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> => {
   const items: FeedItem[] = [];
 
@@ -824,7 +822,7 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
   return items;
 };
 
-// Feed Card Component - 使用博客卡片相同的像素风格
+// Brutalist feed card with a clean border, offset shadow and hover nudge
 const FeedCard = memo(function FeedCard({
   item,
   index,
@@ -833,7 +831,6 @@ const FeedCard = memo(function FeedCard({
   index: number;
 }) {
   const [imageError, setImageError] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <motion.div
@@ -845,10 +842,7 @@ const FeedCard = memo(function FeedCard({
         type: 'spring',
         stiffness: 100,
       }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
       className="group relative block cursor-pointer h-full"
-      style={{ perspective: '1000px' }}
     >
       <a
         href={item.link}
@@ -856,220 +850,83 @@ const FeedCard = memo(function FeedCard({
         rel="noopener noreferrer"
         className="block h-full"
       >
-        {/* 像素风格外框 */}
         <div
-          className="relative h-full transition-all duration-300"
+          className="relative h-full p-6 flex flex-col border-2 shadow-[4px_4px_0_var(--border-subtle)] transition-all duration-200 group-hover:translate-x-[-2px] group-hover:translate-y-[-2px] group-hover:shadow-[4px_4px_0_var(--accent-primary)] group-hover:border-[var(--accent-primary)]"
           style={{
-            background: isHovered ? 'var(--bg-secondary)' : 'var(--bg-card)',
-            border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
-            clipPath: clipPathRounded(8),
-            transform: isHovered ? 'translateY(-4px)' : 'none',
+            background: 'var(--bg-card)',
+            borderColor: 'var(--border-subtle)',
           }}
         >
-          <div className="relative p-6 h-full flex flex-col">
-            {/* 四角光效动画 */}
-            <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
-              <motion.div
-                className="absolute top-0 left-0 w-full h-[2px]"
-                style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
-                animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-              />
-              {isHovered && (
-                <motion.div
-                  className="absolute top-0 left-0 w-[2px] h-full"
-                  style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </div>
-            <div className="absolute top-0 right-0 w-4 h-4 pointer-events-none">
-              <motion.div
-                className="absolute top-0 right-0 w-full h-[2px]"
-                style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
-                animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-              />
-              {isHovered && (
-                <motion.div
-                  className="absolute top-0 right-0 w-[2px] h-full"
-                  style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </div>
-            <div className="absolute bottom-0 left-0 w-4 h-4 pointer-events-none">
-              <motion.div
-                className="absolute bottom-0 left-0 w-full h-[2px]"
-                style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
-                animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-              />
-              {isHovered && (
-                <motion.div
-                  className="absolute bottom-0 left-0 w-[2px] h-full"
-                  style={{ background: 'linear-gradient(to top, var(--accent-secondary), transparent)' }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </div>
-            <div className="absolute bottom-0 right-0 w-4 h-4 pointer-events-none">
-              <motion.div
-                className="absolute bottom-0 right-0 w-full h-[2px]"
-                style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
-                animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-              />
-              {isHovered && (
-                <motion.div
-                  className="absolute bottom-0 right-0 w-[2px] h-full"
-                  style={{ background: 'linear-gradient(to top, var(--accent-primary), transparent)' }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </div>
-
-            {/* Hover glow background */}
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
-              style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
-              animate={{ opacity: isHovered ? 1 : 0 }}
-              transition={{ duration: 0.3 }}
-            />
-
-            {/* Scanline effect */}
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
+          {/* Source header with icon */}
+          <div
+            className="flex items-center gap-3 mb-4 pb-4 border-b-2"
+            style={{ borderColor: 'var(--border-subtle)' }}
+          >
+            <div
+              className="w-10 h-10 flex-shrink-0 flex items-center justify-center overflow-hidden border-2"
               style={{
-                background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px)',
-                opacity: isHovered ? 0.5 : 0,
+                background: 'var(--bg-secondary)',
+                borderColor: 'var(--border-subtle)',
               }}
+            >
+              {!imageError ? (
+                <img
+                  src={item.sourceIcon}
+                  alt={item.source}
+                  className="w-6 h-6 object-contain"
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <Globe className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+              )}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <span className="text-sm font-medium truncate block" style={{ color: 'var(--text-primary)' }}>
+                {item.source}
+              </span>
+            </div>
+
+            <ExternalLink
+              className="w-5 h-5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ color: 'var(--accent-primary)' }}
             />
+          </div>
 
-            {/* Shine effect */}
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 45%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 55%, transparent 60%)',
-              }}
-              animate={isHovered ? { x: '200%' } : { x: '-100%' }}
-              transition={{ duration: 0.8 }}
-            />
+          {/* Title */}
+          <h3
+            className="font-bold text-lg line-clamp-2 mb-3"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            {item.title}
+          </h3>
 
-            {/* Content */}
-            <div className="flex flex-col flex-1 relative z-10">
-              {/* Source Header with Icon */}
-              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/5">
-                <motion.div
-                  animate={{
-                    scale: isHovered ? 1.1 : 1,
-                    rotate: isHovered ? 5 : 0,
-                  }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                  className="w-10 h-10 flex-shrink-0 flex items-center justify-center overflow-hidden"
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
-                    clipPath: clipPathRounded(4),
-                  }}
-                >
-                  {!imageError ? (
-                    <img
-                      src={item.sourceIcon}
-                      alt={item.source}
-                      className="w-6 h-6 object-contain"
-                      onError={() => setImageError(true)}
-                    />
-                  ) : (
-                    <Globe className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-                  )}
-                  {/* Icon glow */}
-                  <motion.div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
-                    animate={{ opacity: isHovered ? 0.5 : 0 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </motion.div>
+          {/* Description */}
+          <p
+            className="text-sm line-clamp-3 mb-4 flex-1"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            {item.description || '暂无摘要'}
+          </p>
 
-                <div className="flex-1 min-w-0">
-                  <span className="text-sm font-medium truncate block" style={{ color: 'var(--text-primary)' }}>
-                    {item.source}
-                  </span>
-                </div>
-
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : -10 }}
-                  transition={{ duration: 0.3 }}
-                  className="flex-shrink-0"
-                >
-                  <ExternalLink className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-                </motion.div>
-              </div>
-
-              {/* Title */}
-              <div className="flex items-start gap-2 mb-3">
-                <div className="relative group/title flex-1 min-w-0">
-                  <motion.h3
-                    animate={{ scale: isHovered ? 1.02 : 1 }}
-                    transition={{ duration: 0.2 }}
-                    className="font-bold text-lg line-clamp-2"
-                    style={{
-                      color: 'var(--text-primary)',
-                      textShadow: isHovered ? '0 0 10px var(--accent-glow)' : 'none',
-                    }}
-                  >
-                    {item.title}
-                  </motion.h3>
-
-                  {/* 悬浮提示 */}
-                  <div
-                    className="absolute left-0 -top-1 -translate-y-full opacity-0 group-hover/title:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap"
-                    style={{
-                      background: 'var(--bg-secondary)',
-                      border: '1px solid var(--border-color)',
-                      padding: '4px 12px',
-                      clipPath: clipPathRounded(4),
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                    }}
-                  >
-                    <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      {item.title}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description */}
-              <p
-                className="text-sm line-clamp-3 mb-4 flex-1"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                {item.description || '暂无摘要'}
-              </p>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
-                  {item.pubDate && (
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {formatDate(item.pubDate).split(' ')[0]}
-                    </span>
-                  )}
-                  {item.author && (
-                    <span className="flex items-center gap-1">
-                      <User className="w-3 h-3" />
-                      {item.author}
-                    </span>
-                  )}
-                </div>
-              </div>
+          {/* Footer */}
+          <div
+            className="flex items-center justify-between pt-4 border-t-2"
+            style={{ borderColor: 'var(--border-subtle)' }}
+          >
+            <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
+              {item.pubDate && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  {formatDate(item.pubDate).split(' ')[0]}
+                </span>
+              )}
+              {item.author && (
+                <span className="flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  {item.author}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -1078,7 +935,7 @@ const FeedCard = memo(function FeedCard({
   );
 });
 
-// Pagination Component
+// Sharp pagination controls with offset shadows
 const Pagination = memo(function Pagination({
   currentPage,
   totalPages,
@@ -1088,8 +945,6 @@ const Pagination = memo(function Pagination({
   totalPages: number;
   onPageChange: (page: number) => void;
 }) {
-  const animationEnabled = useAnimationEnabled();
-
   if (totalPages <= 1) return null;
 
   const getPageNumbers = () => {
@@ -1113,55 +968,62 @@ const Pagination = memo(function Pagination({
     return pages;
   };
 
+  const baseButtonClasses = [
+    'border-2 shadow-[4px_4px_0_var(--border-subtle)]',
+    'transition-all duration-200',
+    'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_var(--accent-primary)] hover:border-[var(--accent-primary)]',
+    'disabled:opacity-30 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_var(--border-subtle)] disabled:hover:border-[var(--border-subtle)]',
+  ].join(' ');
+
   return (
     <div className="flex items-center justify-center gap-2 mt-12">
       <motion.button
-        whileHover={animationEnabled ? { scale: 1.05 } : undefined}
         whileTap={{ scale: 0.95 }}
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="p-2 transition-all disabled:opacity-30"
+        className={`p-2 ${baseButtonClasses}`}
         style={{
           background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-subtle)',
-          clipPath: clipPathRounded(4),
+          borderColor: 'var(--border-subtle)',
           color: 'var(--text-primary)',
         }}
       >
         <ChevronLeft className="w-5 h-5" />
       </motion.button>
 
-      {getPageNumbers().map((page, index) => (
-        <motion.button
-          key={index}
-          whileHover={animationEnabled ? { scale: 1.05 } : undefined}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => typeof page === 'number' && onPageChange(page)}
-          disabled={page === '...'}
-          className="min-w-[40px] h-[40px] px-3 transition-all disabled:cursor-default"
-          style={{
-            background: page === currentPage
-              ? 'var(--accent-primary)'
-              : 'var(--bg-secondary)',
-            border: '1px solid var(--border-subtle)',
-            clipPath: clipPathRounded(4),
-            color: page === currentPage ? 'white' : 'var(--text-primary)',
-          }}
-        >
-          {page}
-        </motion.button>
-      ))}
+      {getPageNumbers().map((page, index) => {
+        const isActive = page === currentPage;
+        return (
+          <motion.button
+            key={index}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => typeof page === 'number' && onPageChange(page)}
+            disabled={page === '...'}
+            className={[
+              'min-w-[40px] h-[40px] px-3 border-2 transition-all duration-200 disabled:cursor-default',
+              isActive
+                ? 'shadow-[4px_4px_0_var(--accent-primary)]'
+                : 'shadow-[4px_4px_0_var(--border-subtle)] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_var(--accent-primary)] hover:border-[var(--accent-primary)]',
+            ].join(' ')}
+            style={{
+              background: isActive ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+              borderColor: isActive ? 'var(--accent-primary)' : 'var(--border-subtle)',
+              color: isActive ? 'white' : 'var(--text-primary)',
+            }}
+          >
+            {page}
+          </motion.button>
+        );
+      })}
 
       <motion.button
-        whileHover={animationEnabled ? { scale: 1.05 } : undefined}
         whileTap={{ scale: 0.95 }}
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="p-2 transition-all disabled:opacity-30"
+        className={`p-2 ${baseButtonClasses}`}
         style={{
           background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-subtle)',
-          clipPath: clipPathRounded(4),
+          borderColor: 'var(--border-subtle)',
           color: 'var(--text-primary)',
         }}
       >
@@ -1171,16 +1033,19 @@ const Pagination = memo(function Pagination({
   );
 });
 
-// 加载进度组件
+// Loading progress with a sharp bordered bar
 function LoadingProgress({ loaded, total }: { loaded: number; total: number }) {
   const progress = total > 0 ? Math.round((loaded / total) * 100) : 0;
 
   return (
     <div className="flex flex-col items-center justify-center py-20">
-      <div className="w-64 h-2 mb-4 overflow-hidden" style={{ clipPath: clipPathRounded(2) }}>
+      <div
+        className="w-64 h-4 mb-4 overflow-hidden"
+        style={{ border: BRUTALIST_BORDER }}
+      >
         <motion.div
           className="h-full"
-          style={{ background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))' }}
+          style={{ background: 'var(--accent-primary)' }}
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.3 }}
@@ -1193,10 +1058,10 @@ function LoadingProgress({ loaded, total }: { loaded: number; total: number }) {
   );
 }
 
-// 刷新冷却时间（毫秒）
-const REFRESH_COOLDOWN_MS = 90 * 1000; // 90秒
+// Refresh cooldown in milliseconds
+const REFRESH_COOLDOWN_MS = 90 * 1000; // 90 seconds
 
-// Main Feed Page Component
+// Main feed page component
 export default function FeedPage() {
   const [, setFriends] = useState<Friend[]>([]);
   const [allItems, setAllItems] = useState<FeedItem[]>([]);
@@ -1215,7 +1080,8 @@ export default function FeedPage() {
   const isDesktopClient = useIsDesktopClient();
   const animationEnabled = useAnimationEnabled();
   const abortControllerRef = useRef<AbortController | null>(null);
-  const lastRefreshTimeRef = useRef<number>(Date.now() - REFRESH_COOLDOWN_MS); // 初始设置为已过期
+  // Initialize as already expired so the first refresh is allowed immediately
+  const lastRefreshTimeRef = useRef<number>(Date.now() - REFRESH_COOLDOWN_MS);
   const cooldownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const getFeedUrl = useCallback((friend: Friend): string => {
@@ -1231,7 +1097,7 @@ export default function FeedPage() {
   ): Promise<{ items: FeedItem[], timestamp: number, status: FeedSourceStatus }> => {
     const feedUrl = getFeedUrl(friend);
     try {
-      // 根据forceRefresh参数选择不同的接口
+      // Choose the endpoint based on the forceRefresh flag
       const apiUrl = forceRefresh
         ? `/api/feed/refresh?url=${encodeURIComponent(feedUrl)}`
         : `/api/feed/get?url=${encodeURIComponent(feedUrl)}`;
@@ -1385,7 +1251,7 @@ export default function FeedPage() {
       if (process.env.NODE_ENV === 'development') {
         console.warn('[Feed] Batch fetch error (已回退到逐个获取):', err);
       }
-      // 如果批量获取失败，返回空结果让所有feed都走单独获取
+      // If batch fetch fails, return empty result so every feed falls back to individual fetch
       return { cached: [], missing: feeds, expired: [], failed: [] };
     }
   }, []);
@@ -1433,7 +1299,7 @@ export default function FeedPage() {
         (f: Friend) => f.feed && f.feed.trim() !== ''
       ) || [];
 
-      // 初始化状态
+      // Initialize source status
       if (!isBackgroundRefresh) {
         setSourceStatus(eligibleFriends.map((f: Friend) => ({
           name: f.name,
@@ -1450,7 +1316,7 @@ export default function FeedPage() {
       const statusList: FeedSourceStatus[] = [];
       let latestTimestamp = 0;
 
-      // 如果不是强制刷新，先尝试批量获取
+      // Try batch fetch first unless this is a forced or background refresh
       let feedsToFetchIndividually: Friend[] = [];
 
       if (!forceRefresh && !isBackgroundRefresh) {
@@ -1462,7 +1328,7 @@ export default function FeedPage() {
 
           const batchResult = await fetchBatchFeeds(feedRequests, signal);
 
-          // 处理已缓存的内容（包括过期缓存，isExpired=true的已经在cached中）
+          // Process cached content (expired entries are also returned in cached)
           for (const batchItem of batchResult.cached) {
             if (signal.aborted) break;
 
@@ -1489,12 +1355,12 @@ export default function FeedPage() {
               if (process.env.NODE_ENV === 'development') {
                 console.warn(`[Feed] Failed to parse cached feed for ${friend.name}:`, parseErr);
               }
-              // 解析失败，加入单独获取列表
+              // Parsing failed, fall back to individual fetch
               feedsToFetchIndividually.push(friend);
             }
           }
 
-          // 处理失败的feed
+          // Process failed feeds
           for (const failed of batchResult.failed || []) {
             const friend = eligibleFriends.find((f: Friend) => f.name === failed.name);
             if (!friend) continue;
@@ -1508,7 +1374,7 @@ export default function FeedPage() {
             });
           }
 
-          // 收集需要单独获取的feed
+          // Collect feeds that need individual fetching
           const missingNames = new Set(batchResult.missing.map(m => m.name));
           const expiredNames = new Set((batchResult.expired || []).map(e => e.name));
 
@@ -1516,7 +1382,7 @@ export default function FeedPage() {
             missingNames.has(f.name) || expiredNames.has(f.name)
           );
 
-          // 更新已缓存feed的状态
+          // Update status for cached feeds
           setSourceStatus([...statusList, ...feedsToFetchIndividually.map((f: Friend) => ({
             name: f.name,
             url: f.feed || '',
@@ -1525,23 +1391,23 @@ export default function FeedPage() {
           }))]);
 
         } catch (batchErr) {
-          // 批量接口不可用时静默回退到逐个获取，仅开发态告警
+          // Silently fall back to individual fetch when the batch endpoint is unavailable
           if (process.env.NODE_ENV === 'development') {
             console.warn('[Feed] Batch fetch failed, falling back to individual fetch:', batchErr);
           }
           feedsToFetchIndividually = eligibleFriends;
         }
       } else {
-        // 强制刷新或后台刷新，全部单独获取
+        // Force refresh or background refresh: fetch every feed individually
         feedsToFetchIndividually = eligibleFriends;
       }
 
-      // 设置进度总数量
+      // Set total progress count
       const totalFeedsToFetch = feedsToFetchIndividually.length;
       let fetchedCount = 0;
       setLoadingProgress({ loaded: fetchedCount, total: totalFeedsToFetch });
 
-      // 单独获取剩余的feed
+      // Fetch remaining feeds one by one
       for (let i = 0; i < feedsToFetchIndividually.length; i++) {
         if (signal.aborted) break;
 
@@ -1550,7 +1416,7 @@ export default function FeedPage() {
         allFeeds.push(...items);
         statusList.push(status);
 
-        // 实时更新状态
+        // Update status in real time
         setSourceStatus([...statusList, ...feedsToFetchIndividually.slice(i + 1).map((f: Friend) => ({
           name: f.name,
           url: f.feed || '',
@@ -1558,7 +1424,7 @@ export default function FeedPage() {
           itemCount: 0,
         }))]);
 
-        // 更新最新时间戳
+        // Update latest timestamp
         if (timestamp > latestTimestamp) {
           latestTimestamp = timestamp;
         }
@@ -1590,7 +1456,7 @@ export default function FeedPage() {
         // Save to cache
         setFeedCache(sorted, statusList);
 
-        // 使用KV存储中的最新时间戳更新lastRefreshTime
+        // Update last refresh time using the latest KV timestamp
         if (latestTimestamp > 0) {
           setLastRefreshTime(new Date(latestTimestamp));
         } else {
@@ -1599,7 +1465,7 @@ export default function FeedPage() {
       }
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
-        // 数据加载失败：组件已有空态/错误态 UI，仅开发态告警一行
+        // Data loading failed: the empty/error UI handles the user facing state
         if (process.env.NODE_ENV === 'development') {
           console.warn('[Feed] Failed to load feed data:', err);
         }
@@ -1645,7 +1511,7 @@ export default function FeedPage() {
     // Clear cache before force refresh
     clearFeedCache();
 
-    // 启动冷却倒计时
+    // Start cooldown countdown
     if (cooldownTimerRef.current) {
       clearInterval(cooldownTimerRef.current);
     }
@@ -1681,7 +1547,7 @@ export default function FeedPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [allItems, updateDisplayItems]);
 
-  // 随机阅读功能
+  // Open a random article in a new tab
   const handleRandomRead = useCallback(() => {
     if (allItems.length === 0) return;
     const randomItem = allItems[Math.floor(Math.random() * allItems.length)];
@@ -1706,12 +1572,16 @@ export default function FeedPage() {
     return (
       <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
         {isDesktopClient && (
-          <div className="fixed inset-0 pointer-events-none">
-            <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
-            <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
-          </div>
+          <div
+            className="fixed inset-0 pointer-events-none opacity-[0.04]"
+            style={{
+              backgroundImage: `linear-gradient(var(--border-subtle) 1px, transparent 1px),
+                               linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)`,
+              backgroundSize: '80px 80px'
+            }}
+          />
         )}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-32 lg:pt-36">
+        <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-32 lg:pt-36">
           <LoadingProgress loaded={loadingProgress.loaded} total={loadingProgress.total} />
         </main>
       </div>
@@ -1721,140 +1591,143 @@ export default function FeedPage() {
   return (
     <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       {isDesktopClient && (
-        <div className="fixed inset-0 pointer-events-none">
-          <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
-          <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
-          <AmbientGlow color="var(--accent-primary)" opacity={0.08} position="center" size={600} />
-
-          {/* Grid Background */}
-          <div
-            className="absolute inset-0 opacity-[0.02]"
-            style={{
-              backgroundImage: `linear-gradient(rgba(255,255,255, 0.1) 1px, transparent 1px),
-                               linear-gradient(90deg, rgba(255,255,255, 0.1) 1px, transparent 1px)`,
-              backgroundSize: '80px 80px'
-            }}
-          />
-        </div>
+        <div
+          className="fixed inset-0 pointer-events-none opacity-[0.04]"
+          style={{
+            backgroundImage: `linear-gradient(var(--border-subtle) 1px, transparent 1px),
+                             linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)`,
+            backgroundSize: '80px 80px'
+          }}
+        />
       )}
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-32 lg:pt-36 pb-12">
-        {/* 顶部工具栏 */}
+        {/* Top toolbar */}
         <motion.div
           initial={animationEnabled ? { opacity: 0, y: -20 } : undefined}
           animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
           transition={animationEnabled ? { duration: 0.5 } : undefined}
-          className="fixed top-16 lg:top-20 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8 py-3"
+          className="fixed top-16 lg:top-20 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8 py-3 border-b-2"
           style={{
-            background: 'linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-primary) 80%, transparent 100%)'
+            background: 'var(--bg-primary)',
+            borderColor: 'var(--border-subtle)',
           }}
         >
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
             <div className="flex-1" />
 
             <div className="flex items-center gap-2">
-              {/* 调试按钮 */}
+              {/* Debug button */}
               <button
                 onClick={() => setShowDebug(!showDebug)}
-                className="flex items-center gap-2 px-3 py-2 transition-all duration-200"
+                className={[
+                  'flex items-center gap-2 px-3 py-2 border-2 font-mono uppercase tracking-wider text-[10px] transition-all duration-200',
+                  'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_var(--accent-primary)]',
+                  showDebug
+                    ? 'shadow-[4px_4px_0_var(--accent-primary)]'
+                    : 'shadow-[4px_4px_0_var(--border-subtle)]',
+                ].join(' ')}
                 style={{
                   background: showDebug ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
+                  borderColor: showDebug ? 'var(--accent-primary)' : 'var(--border-subtle)',
                   color: showDebug ? 'white' : 'var(--text-primary)',
-                  clipPath: clipPathRounded(4),
                 }}
                 title="调试面板"
               >
                 <Bug className="w-4 h-4" />
-                <span className="text-sm font-medium hidden sm:block">调试</span>
+                <span className="hidden sm:block">调试</span>
               </button>
 
-              {/* 统计按钮 */}
+              {/* Stats button */}
               <button
                 onClick={() => setShowStats(!showStats)}
-                className="flex items-center gap-2 px-3 py-2 transition-all duration-200"
+                className={[
+                  'flex items-center gap-2 px-3 py-2 border-2 font-mono uppercase tracking-wider text-[10px] transition-all duration-200',
+                  'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_var(--accent-primary)]',
+                  showStats
+                    ? 'shadow-[4px_4px_0_var(--accent-primary)]'
+                    : 'shadow-[4px_4px_0_var(--border-subtle)]',
+                ].join(' ')}
                 style={{
                   background: showStats ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
+                  borderColor: showStats ? 'var(--accent-primary)' : 'var(--border-subtle)',
                   color: showStats ? 'white' : 'var(--text-primary)',
-                  clipPath: clipPathRounded(4),
                 }}
               >
                 <BarChart3 className="w-4 h-4" />
-                <span className="text-sm font-medium hidden sm:block">统计</span>
+                <span className="hidden sm:block">统计</span>
               </button>
 
-              {/* 刷新按钮 */}
+              {/* Refresh button */}
               <motion.button
-                whileHover={animationEnabled && refreshCooldown === 0 ? { scale: 1.05 } : undefined}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleRefresh}
                 disabled={refreshing || refreshCooldown > 0}
-                className="flex items-center gap-2 px-3 py-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed relative"
+                className={[
+                  'flex items-center gap-2 px-3 py-2 border-2 font-mono uppercase tracking-wider text-[10px] transition-all duration-200',
+                  'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_var(--accent-primary)]',
+                  'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_var(--border-subtle)]',
+                  refreshCooldown > 0 ? 'shadow-[4px_4px_0_var(--border-subtle)]' : 'shadow-[4px_4px_0_var(--border-subtle)]',
+                ].join(' ')}
                 style={{
                   background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                  clipPath: clipPathRounded(4),
+                  borderColor: 'var(--border-subtle)',
                   color: refreshCooldown > 0 ? 'var(--text-muted)' : 'var(--text-primary)',
                 }}
                 title={refreshCooldown > 0 ? `${refreshCooldown}秒后可刷新` : '强制刷新（60秒冷却）'}
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                <span className="text-sm font-medium hidden sm:block">
+                <span className="hidden sm:block">
                   {refreshCooldown > 0 ? `${refreshCooldown}s` : '刷新'}
                 </span>
               </motion.button>
 
-              {/* 随机阅读按钮 */}
+              {/* Random read button */}
               <motion.button
-                whileHover={animationEnabled ? { scale: 1.05 } : undefined}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleRandomRead}
                 disabled={allItems.length === 0}
-                className="flex items-center gap-2 px-3 py-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className={[
+                  'flex items-center gap-2 px-3 py-2 border-2 font-mono uppercase tracking-wider text-[10px] transition-all duration-200',
+                  'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_var(--border-subtle)]',
+                  'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0_var(--border-subtle)]',
+                ].join(' ')}
                 style={{
                   background: 'var(--accent-secondary)',
-                  border: '1px solid var(--accent-secondary)',
-                  clipPath: clipPathRounded(4),
+                  borderColor: 'var(--accent-secondary)',
                   color: 'white',
                 }}
                 title="随机阅读一篇文章"
               >
                 <Shuffle className="w-4 h-4" />
-                <span className="text-sm font-medium hidden sm:block">随机阅读</span>
+                <span className="hidden sm:block">随机阅读</span>
               </motion.button>
 
-              {/* 订阅按钮 */}
+              {/* Subscribe button */}
               <motion.button
-                whileHover={animationEnabled ? { scale: 1.05 } : undefined}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowSubscribe(true)}
-                className="flex items-center gap-2 px-3 py-2 transition-all"
+                className={[
+                  'flex items-center gap-2 px-3 py-2 border-2 font-mono uppercase tracking-wider text-[10px] transition-all duration-200',
+                  'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_var(--border-subtle)]',
+                ].join(' ')}
                 style={{
                   background: 'var(--accent-primary)',
-                  border: '1px solid var(--accent-primary)',
-                  clipPath: clipPathRounded(4),
+                  borderColor: 'var(--accent-primary)',
                   color: 'white',
                 }}
               >
                 <Rss className="w-4 h-4" />
-                <span className="text-sm font-medium hidden sm:block">订阅</span>
+                <span className="hidden sm:block">订阅</span>
               </motion.button>
             </div>
           </div>
         </motion.div>
 
-        {/* Hero Section */}
+        {/* Hero section */}
         <section className="relative pt-8 pb-12 overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none">
-            <div
-              className="absolute top-20 right-20 w-64 h-64 opacity-20"
-              style={{ background: 'radial-gradient(circle, var(--accent-glow), transparent 70%)' }}
-            />
-          </div>
-
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* 左侧：标题和描述 */}
+            {/* Left: title and description */}
             <motion.div
               initial={animationEnabled ? { opacity: 0, x: -50 } : undefined}
               animate={animationEnabled ? { opacity: 1, x: 0 } : undefined}
@@ -1864,24 +1737,20 @@ export default function FeedPage() {
                 initial={animationEnabled ? { opacity: 0, scale: 0.9 } : undefined}
                 animate={animationEnabled ? { opacity: 1, scale: 1 } : undefined}
                 transition={animationEnabled ? { delay: 0.2, duration: 0.5 } : undefined}
-                className="inline-flex items-center gap-2 px-4 py-2 mb-6"
+                className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 font-mono uppercase tracking-wider text-[10px]"
                 style={{
-                  background: 'rgba(59, 130, 246, 0.1)',
-                  border: '1px solid rgba(59, 130, 246, 0.3)',
-                  clipPath: clipPathRounded(4),
+                  background: 'var(--bg-secondary)',
+                  border: BRUTALIST_ACCENT_BORDER,
+                  color: 'var(--accent-primary)',
                 }}
               >
-                <Rss className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>朋友圈</span>
+                <Rss className="w-4 h-4" />
+                <span>朋友圈</span>
               </motion.div>
 
               <h1
-                className="font-sans font-bold text-4xl md:text-5xl lg:text-6xl mb-6"
-                style={{
-                  background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
+                className="font-mono font-bold text-4xl md:text-5xl lg:text-6xl mb-6 uppercase tracking-tight"
+                style={{ color: 'var(--text-primary)' }}
               >
                 朋友圈
               </h1>
@@ -1897,7 +1766,7 @@ export default function FeedPage() {
               </motion.p>
             </motion.div>
 
-            {/* 右侧：统计卡片 */}
+            {/* Right: stat cards */}
             <motion.div
               initial={animationEnabled ? { opacity: 0, x: 50 } : undefined}
               animate={animationEnabled ? { opacity: 1, x: 0 } : undefined}
@@ -1929,21 +1798,21 @@ export default function FeedPage() {
           </div>
         </section>
 
-        {/* 统计面板 */}
+        {/* Stats panel */}
         <AnimatePresence>
           {showStats && (
             <StatsPanel items={allItems} onClose={() => setShowStats(false)} />
           )}
         </AnimatePresence>
 
-        {/* 调试面板 */}
+        {/* Debug panel */}
         <AnimatePresence>
           {showDebug && (
             <DebugPanel sources={sourceStatus} onClose={() => setShowDebug(false)} />
           )}
         </AnimatePresence>
 
-        {/* 加载进度条（刷新时显示） */}
+        {/* Loading bar shown during refresh */}
         {loading && allItems.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -1955,7 +1824,10 @@ export default function FeedPage() {
               <span>正在刷新...</span>
               <span>{loadingProgress.loaded}/{loadingProgress.total}</span>
             </div>
-            <div className="w-full h-1 overflow-hidden" style={{ clipPath: clipPathRounded(1) }}>
+            <div
+              className="w-full h-2 overflow-hidden border-2"
+              style={{ borderColor: 'var(--border-subtle)' }}
+            >
               <motion.div
                 className="h-full"
                 style={{ background: 'var(--accent-primary)' }}
@@ -1966,7 +1838,7 @@ export default function FeedPage() {
           </motion.div>
         )}
 
-        {/* 内容区域 */}
+        {/* Content area */}
         {allItems.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1977,8 +1849,8 @@ export default function FeedPage() {
               className="inline-flex items-center justify-center w-20 h-20 mb-6"
               style={{
                 background: 'var(--bg-secondary)',
-                border: '2px solid var(--border-subtle)',
-                clipPath: clipPathRounded(8),
+                border: BRUTALIST_BORDER,
+                boxShadow: BRUTALIST_SHADOW,
               }}
             >
               <Rss className="w-10 h-10" style={{ color: 'var(--text-muted)' }} />
@@ -1991,11 +1863,11 @@ export default function FeedPage() {
             </p>
             <button
               onClick={() => setShowSubscribe(true)}
-              className="px-4 py-2 text-sm transition-all"
+              className="px-4 py-2 text-sm font-mono uppercase tracking-wider border-2 transition-all duration-200 hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[4px_4px_0_var(--border-subtle)]"
               style={{
                 background: 'var(--accent-primary)',
+                borderColor: 'var(--accent-primary)',
                 color: 'white',
-                clipPath: clipPathRounded(4),
               }}
             >
               订阅本站
@@ -2003,7 +1875,7 @@ export default function FeedPage() {
           </motion.div>
         ) : (
           <>
-            {/* Feed Grid */}
+            {/* Feed grid */}
             <section className="mb-12">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {displayItems.map((item, index) => (
@@ -2025,10 +1897,7 @@ export default function FeedPage() {
       {/* Footer */}
       {footerData && <Footer data={footerData} />}
 
-      {/* Light Beam */}
-      {isDesktopClient && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
-
-      {/* Subscribe Modal */}
+      {/* Subscribe modal */}
       <AnimatePresence>
         {showSubscribe && (
           <SubscribeModal isOpen={showSubscribe} onClose={() => setShowSubscribe(false)} />
