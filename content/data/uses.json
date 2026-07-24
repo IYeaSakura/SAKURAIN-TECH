@@ -1,0 +1,35 @@
+{
+  "updatedAt": "2026-07-24",
+  "hardware": [
+    { "name": "MacBook Pro 14\"", "desc": "M3 Pro，主力开发与写作机器", "icon": "Laptop" },
+    { "name": "Keychron Q1 Pro", "desc": "Alice 配列，自定义轴体", "icon": "Keyboard" },
+    { "name": "Dell U2723QX", "desc": "4K 显示器，代码与设计的窗口", "icon": "Monitor" },
+    { "name": "Sony WH-1000XM5", "desc": "降噪耳机，专注模式必备", "icon": "Headphones" },
+    { "name": "Logitech MX Master 3S", "desc": "多设备切换，手势操作", "icon": "Mouse" }
+  ],
+  "software": [
+    { "name": "TRAE / VS Code", "desc": "AI 辅助编程与日常开发", "icon": "Code2" },
+    { "name": "Cursor", "desc": "复杂重构与探索性编程", "icon": "Sparkles" },
+    { "name": "Warp", "desc": "Rust 终端，团队命令片段", "icon": "Terminal" },
+    { "name": "Notion", "desc": "笔记、项目与知识库", "icon": "FileText" },
+    { "name": "Obsidian", "desc": "本地 Markdown 双向链接", "icon": "BookOpen" },
+    { "name": "Figma", "desc": "界面设计与原型", "icon": "Palette" },
+    { "name": "Arc", "desc": "主力浏览器，空间与工作区", "icon": "Globe" }
+  ],
+  "development": [
+    { "name": "Next.js 15", "desc": "React 全栈与静态生成", "icon": "Layers" },
+    { "name": "TypeScript", "desc": "类型安全与工程化", "icon": "FileCode" },
+    { "name": "Tailwind CSS", "desc": "原子化样式快速迭代", "icon": "Paintbrush" },
+    { "name": "Python / FastAPI", "desc": "后端、数据与算法脚本", "icon": "Server" },
+    { "name": "C++", "desc": "博弈算法与高性能计算", "icon": "Cpu" },
+    { "name": "PyTorch", "desc": "深度学习实验与落地", "icon": "BrainCircuit" },
+    { "name": "Docker", "desc": "环境一致与部署", "icon": "Container" },
+    { "name": "Git / GitHub", "desc": "版本控制与开源协作", "icon": "GitBranch" }
+  ],
+  "services": [
+    { "name": "EdgeOne", "desc": "边缘函数、CDN 与静态托管", "icon": "Cloud" },
+    { "name": "Cloudflare", "desc": "DNS、Workers 与 R2", "icon": "Shield" },
+    { "name": "Vercel", "desc": "预览部署与 CI", "icon": "Triangle" },
+    { "name": "GitHub Actions", "desc": "自动化构建与发布", "icon": "Workflow" }
+  ]
+}

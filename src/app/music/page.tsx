@@ -36,7 +36,7 @@ import {
   AlignLeft,
 } from 'lucide-react';
 import { useMusicPlayer, useAnimationEnabled, useNavigation } from '@/hooks';
-import { AudioVisualizer } from '@/components/MusicPlayer/AudioVisualizer';
+import { AudioMetrics } from '@/components/MusicPlayer/AudioMetrics';
 import type { Song, LyricLine } from '@/contexts/MusicPlayerContext';
 
 const PIXEL_BORDER = '2px solid var(--border-subtle)';
@@ -368,6 +368,7 @@ export default function MusicPage() {
     playlist,
     playMode,
     showPlaylist,
+    systemPaused,
     togglePlay,
     next,
     prev,
@@ -525,15 +526,29 @@ export default function MusicPage() {
           </span>
         </div>
 
+        {/* System pause notice */}
+        {systemPaused && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center justify-center gap-2 py-1 text-[10px] font-bold uppercase tracking-wider border-b-2"
+            style={{ borderColor: 'var(--border-subtle)', color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
+          >
+            <span className="w-1.5 h-1.5 bg-[var(--accent-primary)] animate-pulse" />
+            系统已暂停播放，点击播放按钮恢复
+          </motion.div>
+        )}
+
         {/* Controls row */}
-        <div className="flex items-center justify-between gap-2">
-          {/* Audio visualizer */}
-          <div className="hidden sm:flex items-center flex-1 max-w-[16rem] lg:max-w-[20rem] h-10">
-            <AudioVisualizer audioRef={audioRef} isPlaying={isPlaying} />
+        <div className="relative flex items-center justify-between gap-2 min-h-[2.5rem]">
+          {/* Audio metrics */}
+          <div className="hidden sm:flex items-center flex-1 min-w-0">
+            <AudioMetrics audioRef={audioRef} isPlaying={isPlaying} isLoading={isLoading} systemPaused={systemPaused} />
           </div>
 
-          {/* Playback controls */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          {/* Playback controls — absolute center */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2">
             <button
               onClick={prev}
               className="p-1.5 sm:p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"

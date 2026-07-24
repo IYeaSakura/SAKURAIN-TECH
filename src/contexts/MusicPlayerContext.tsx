@@ -74,6 +74,7 @@ interface MusicPlayerState {
   playMode: PlayMode;
   showLyrics: boolean;
   showPlaylist: boolean;
+  systemPaused: boolean;
 }
 
 interface MusicPlayerActions {
@@ -129,11 +130,14 @@ export function MusicPlayerProvider({
   const [showPlaylist, setShowPlaylist] = useState(false);
   // Defer audio loading until first user interaction to avoid 404 storms
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  const [systemPaused, setSystemPaused] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const preloadRef = useRef<HTMLAudioElement | null>(null);
   const failedSrcsRef = useRef<Set<string>>(new Set());
   const prevPlayModeRef = useRef<PlayMode>('shuffle');
+  // Distinguish user-initiated pause from system-initiated pause.
+  const userPausedRef = useRef(false);
 
   // Build shuffle order once the playlist is known
   useEffect(() => {
@@ -197,13 +201,31 @@ export function MusicPlayerProvider({
     };
     const handleCanPlay = () => setIsLoading(false);
     const handleWaiting = () => setIsLoading(true);
-    const handlePlaying = () => setIsLoading(false);
+    const handlePlaying = () => {
+      setIsLoading(false);
+      setSystemPaused(false);
+    };
     const handleProgress = () => {
       if (audio.buffered.length > 0) {
         const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
         setBuffered(bufferedEnd);
       }
     };
+    const handlePause = () => {
+      // If the pause was not triggered by the user, treat it as a system pause.
+      if (!userPausedRef.current && isPlaying) {
+        setSystemPaused(true);
+      }
+      setIsPlaying(false);
+      userPausedRef.current = false;
+    };
+    const handleSuspend = () => {
+      if (isPlaying) {
+        setSystemPaused(true);
+        setIsPlaying(false);
+      }
+    };
+    const handleStalled = () => setIsLoading(true);
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -213,6 +235,9 @@ export function MusicPlayerProvider({
     audio.addEventListener('waiting', handleWaiting);
     audio.addEventListener('playing', handlePlaying);
     audio.addEventListener('progress', handleProgress);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('suspend', handleSuspend);
+    audio.addEventListener('stalled', handleStalled);
 
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
@@ -223,6 +248,9 @@ export function MusicPlayerProvider({
       audio.removeEventListener('waiting', handleWaiting);
       audio.removeEventListener('playing', handlePlaying);
       audio.removeEventListener('progress', handleProgress);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('suspend', handleSuspend);
+      audio.removeEventListener('stalled', handleStalled);
       audio.pause();
       audio.src = '';
       if (preloadRef.current) {
@@ -318,6 +346,7 @@ export function MusicPlayerProvider({
   const togglePlay = useCallback(() => {
     setHasUserInteracted(true);
     setIsOpen(true);
+    setSystemPaused(false);
     setIsPlaying((prev) => {
       if (error) {
         setError(null);
@@ -327,6 +356,10 @@ export function MusicPlayerProvider({
           audioRef.current.load();
         }
         return true;
+      }
+      // Mark the next pause as user-initiated when switching to paused state.
+      if (prev) {
+        userPausedRef.current = true;
       }
       return !prev;
     });
@@ -443,6 +476,7 @@ export function MusicPlayerProvider({
       playMode,
       showLyrics,
       showPlaylist,
+      systemPaused,
       togglePlay,
       next,
       prev,
@@ -478,6 +512,7 @@ export function MusicPlayerProvider({
       playMode,
       showLyrics,
       showPlaylist,
+      systemPaused,
       togglePlay,
       next,
       prev,

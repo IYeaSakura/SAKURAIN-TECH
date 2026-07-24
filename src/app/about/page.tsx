@@ -8,7 +8,7 @@ import AboutPageLoader from '@/components/about/AboutPageLoader';
 export const metadata: Metadata = {
   title: '关于 | SAKURAIN',
   description:
-    '关于 Yuyang：全栈开发、博弈算法与 AI 研究，技术栈词云、项目介绍与荣誉成就。',
+    '关于 Yuyang：全栈开发、博弈算法与 AI 研究，技术栈、项目数据与荣誉成就。',
 };
 
 export default function Page() {

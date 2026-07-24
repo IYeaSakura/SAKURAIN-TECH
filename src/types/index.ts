@@ -450,3 +450,34 @@ export interface SiteData {
     links: NavLink[];
   };
 }
+
+// Uses page data (content/data/uses.json)
+export interface UsesItem {
+  name: string;
+  desc: string;
+  icon: string;
+}
+
+export interface UsesData {
+  updatedAt: string;
+  hardware: UsesItem[];
+  software: UsesItem[];
+  development: UsesItem[];
+  services: UsesItem[];
+}
+
+// Photo log data (content/data/photolog.json)
+export interface PhotoLogPhoto {
+  id: string;
+  src: string;
+  caption: string;
+  date: string;
+  location: string;
+  tags: string[];
+}
+
+export interface PhotoLogData {
+  title: string;
+  description: string;
+  photos: PhotoLogPhoto[];
+}
