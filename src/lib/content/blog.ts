@@ -1,7 +1,7 @@
 /**
  * 博客内容管线（Phase 2：内容层内聚）
  *
- * 服务端专用：通过 Node fs + gray-matter 直接解析 content/blog/posts/*.md，
+ * 服务端专用：通过 Node fs + gray-matter 直接解析 content/blog/*.md，
  * 取代旧版 public/blog/*.json 索引与客户端 fetch。
  *
  * 仅在 Server Component / generateStaticParams / generateMetadata /
@@ -17,7 +17,7 @@ import type { BlogPost } from "@/components/blog/types";
 /* 常量                                                                */
 /* ------------------------------------------------------------------ */
 
-const BLOG_POSTS_DIR = path.join(process.cwd(), "content", "blog", "posts");
+const BLOG_POSTS_DIR = path.join(process.cwd(), "content", "blog");
 
 /** 中文阅读速度（字/分钟），与 src/components/blog/utils.ts 保持一致 */
 const CHINESE_CHARS_PER_MINUTE = 400;

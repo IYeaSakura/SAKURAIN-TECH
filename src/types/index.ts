@@ -266,6 +266,62 @@ export interface NavigationConfig {
   social: SocialLink[];
 }
 
+// Data types inlined into site-data.json
+export interface TechEvolutionData {
+  title: string;
+  subtitle: string;
+  description: string;
+  periods: string[];
+  categories: {
+    key: string;
+    label: string;
+    color: string;
+    description?: string;
+  }[];
+  data: Record<string, number | string>[];
+  milestones: {
+    period: string;
+    label: string;
+    color: string;
+  }[];
+  tooltips: Record<string, Record<string, {
+    main: string[];
+    learning: string[];
+  }>>;
+}
+
+export interface TimelineData {
+  title: string;
+  subtitle: string;
+  events: {
+    year: string;
+    title: string;
+    description: string;
+    icon: string;
+    color: string;
+    achievements?: string[];
+    isFuture?: boolean;
+  }[];
+}
+
+export interface StatsChartsData {
+  title: string;
+  subtitle: string;
+  stats: {
+    title: string;
+    value: number;
+    unit: string;
+    color: string;
+    description: string;
+    trend: string;
+  }[];
+  charts: {
+    title: string;
+    type: 'pie' | 'bar' | 'radar' | 'heatmap';
+    data: { label: string; value: number; color?: string }[];
+  }[];
+}
+
 // Unified Site Data Types (from site-data.json)
 export interface SiteData {
   meta: {
@@ -280,6 +336,9 @@ export interface SiteData {
       label: string;
       href: string;
     };
+  };
+  home?: {
+    techEvolution: TechEvolutionData;
   };
   hero: {
     badge: string;
@@ -380,6 +439,10 @@ export interface SiteData {
     responseTime: string;
     social: SocialLink[];
     note: string;
+  };
+  studio?: {
+    timeline: TimelineData;
+    statsCharts: StatsChartsData;
   };
   footer: {
     copyright: string;

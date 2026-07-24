@@ -40,7 +40,7 @@ import { GradientText } from '@/components/effects/TextEffects';
 import { Footer } from '@/components/sections/Footer';
 import { useTheme, useNavigation } from '@/hooks';
 import { usePrefersReducedMotion } from '@/lib/performance';
-import type { SiteData } from '@/types';
+import type { SiteData, TechEvolutionData } from '@/types';
 
 // 像素风格 clip-path 辅助函数
 const clipPathRounded = (r: number) => `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;
@@ -307,30 +307,6 @@ const ParallaxContainer = ({ children, speed = 0.5 }: { children: React.ReactNod
   );
 };
 
-// 技术演进数据类型
-interface TechEvolutionData {
-  title: string;
-  subtitle: string;
-  description: string;
-  periods: string[];
-  categories: {
-    key: string;
-    label: string;
-    color: string;
-    description?: string;
-  }[];
-  data: Record<string, number | string>[];
-  milestones: {
-    period: string;
-    label: string;
-    color: string;
-  }[];
-  tooltips: Record<string, Record<string, {
-    main: string[];
-    learning: string[];
-  }>>;
-}
-
 // 生成平滑贝塞尔曲线路径
 const smoothPath = (points: { x: number; y: number }[]) => {
   if (points.length < 2) return '';
@@ -353,10 +329,12 @@ const smoothPath = (points: { x: number; y: number }[]) => {
 // 图表类型
 type ChartType = 'area' | 'line' | 'bar';
 
-// 技术爱好堆叠面积图 - 从JSON配置加载
-const TechStackChart = () => {
-  const [techData, setTechData] = useState<TechEvolutionData | null>(null);
-  const [loading, setLoading] = useState(true);
+interface TechStackChartProps {
+  data: TechEvolutionData;
+}
+
+// 技术爱好堆叠面积图 - 从 site-data.json 读取
+const TechStackChart = ({ data: techData }: TechStackChartProps) => {
   const [chartType, setChartType] = useState<ChartType>('area');
   const [hoveredData, setHoveredData] = useState<{
     period: string;
@@ -372,18 +350,7 @@ const TechStackChart = () => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch('/data/tech-evolution.json')
-      .then(res => res.json())
-      .then((data: TechEvolutionData) => {
-        setTechData(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load tech evolution data:', err);
-        setLoading(false);
-      });
-  }, []);
+  const loading = !techData;
 
   const chartHeight = 340;
   const chartWidth = 800;
@@ -1386,18 +1353,13 @@ const HeroSection = () => {
   );
 };
 
-// 技术演进面积图区域
-const JourneySection = () => {
-  const [techData, setTechData] = useState<TechEvolutionData | null>(null);
+interface JourneySectionProps {
+  techEvolution?: TechEvolutionData;
+}
 
-  useEffect(() => {
-    fetch('/data/tech-evolution.json')
-      .then(res => res.json())
-      .then((data: TechEvolutionData) => {
-        setTechData(data);
-      })
-      .catch(console.error);
-  }, []);
+// 技术演进面积图区域
+const JourneySection = ({ techEvolution }: JourneySectionProps) => {
+  const techData = techEvolution;
 
   return (
     <section id="journey" className="relative py-32 overflow-hidden">
@@ -1455,7 +1417,7 @@ const JourneySection = () => {
               border: '2px solid var(--border-subtle)',
             }}
           >
-            <TechStackChart />
+            {techData && <TechStackChart data={techData} />}
           </div>
         </motion.div>
       </div>
@@ -1618,7 +1580,7 @@ function App() {
 
       <main>
         <HeroSection />
-        <JourneySection />
+        <JourneySection techEvolution={siteData?.home?.techEvolution} />
         <QuickLinksSection />
       </main>
 

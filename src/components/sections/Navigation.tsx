@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User, Rss, Globe, Briefcase, Gamepad2 } from 'lucide-react';
+import { BookOpen, Heart, MessageCircle, Sun, Moon, Home, FileText, User, Rss, Globe, Briefcase, Gamepad2, Terminal, Layout } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useStylePreset } from '@/hooks';
 import type { SiteData } from '@/types';
 import { deploymentConfig } from '@/config/deployment-config';
 import type { LucideIcon } from 'lucide-react';
@@ -33,6 +34,7 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
   const [isScrolled, setIsScrolled] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { preset, cyclePreset } = useStylePreset();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -152,6 +154,18 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
             {/* 桌面端主题切换按钮 */}
             <div className="hidden md:flex items-center gap-4 flex-shrink-0">
               <button
+                onClick={cyclePreset}
+                title="Switch style preset"
+                className="relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-secondary)'
+                }}
+              >
+                {preset.id === 'default' ? <Terminal className="w-5 h-5" /> : <Layout className="w-5 h-5" />}
+              </button>
+              <button
                 onClick={onThemeToggle}
                 disabled={isThemeTransitioning}
                 className="relative p-2.5 rounded-xl transition-all duration-300 hover:scale-110 active:scale-95"
@@ -182,8 +196,20 @@ export function Navigation({ data, theme, onThemeToggle, isThemeTransitioning, s
               </button>
             </div>
 
-            {/* 移动端顶部按钮（仅主题切换，移除菜单按钮） */}
+            {/* 移动端顶部按钮 */}
             <div className="flex items-center gap-1 sm:gap-2 md:hidden flex-shrink-0">
+              <button
+                onClick={cyclePreset}
+                title="Switch style preset"
+                className="relative p-2 rounded-lg sm:p-2.5 sm:rounded-xl transition-all duration-300 hover:scale-110 active:scale-95"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--border-color)',
+                  color: 'var(--text-secondary)'
+                }}
+              >
+                {preset.id === 'default' ? <Terminal className="w-4 h-4 sm:w-5 sm:h-5" /> : <Layout className="w-4 h-4 sm:w-5 sm:h-5" />}
+              </button>
               <button
                 onClick={onThemeToggle}
                 disabled={isThemeTransitioning}

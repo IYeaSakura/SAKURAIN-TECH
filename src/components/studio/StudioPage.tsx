@@ -33,38 +33,6 @@ const Comparison = lazy(() => import('./sections/Comparison').then(m => ({ defau
 const Contact = lazy(() => import('./sections/Contact').then(m => ({ default: m.Contact })));
 const Footer = lazy(() => import('@/components/sections/Footer').then(m => ({ default: m.Footer })));
 
-interface TimelineData {
-  title: string;
-  subtitle: string;
-  events: {
-    year: string;
-    title: string;
-    description: string;
-    icon: string;
-    color: string;
-    achievements?: string[];
-    isFuture?: boolean;
-  }[];
-}
-
-interface StatsChartsData {
-  title: string;
-  subtitle: string;
-  stats: {
-    title: string;
-    value: number;
-    unit: string;
-    color: string;
-    description: string;
-    trend: string;
-  }[];
-  charts: {
-    title: string;
-    type: 'pie' | 'bar' | 'radar' | 'heatmap';
-    data: { label: string; value: number; color?: string }[];
-  }[];
-}
-
 /**
  * 错峰加载的底部光剑 - 延迟显示避免首屏动画冲突
  */
@@ -143,21 +111,14 @@ function StaggeredFloatingButton() {
 
 export default function StudioPage() {
   const [siteData, setSiteData] = useState<SiteData | null>(null);
-  const [timelineData, setTimelineData] = useState<TimelineData | null>(null);
-  const [statsChartsData, setStatsChartsData] = useState<StatsChartsData | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
   useTheme();
 
   useEffect(() => {
-    Promise.all([
-      fetch('/data/site-data.json').then((res) => res.json()),
-      fetch('/data/timeline.json').then((res) => res.json()),
-      fetch('/data/stats-charts.json').then((res) => res.json()),
-    ])
-      .then(([site, timeline, stats]: [SiteData, TimelineData, StatsChartsData]) => {
+    fetch('/data/site-data.json')
+      .then((res) => res.json())
+      .then((site: SiteData) => {
         setSiteData(site);
-        setTimelineData(timeline);
-        setStatsChartsData(stats);
         setDataLoaded(true);
       })
       .catch((error) => {
@@ -199,18 +160,18 @@ export default function StudioPage() {
         </Suspense>
 
         {/* 统计数据 */}
-        {statsChartsData && (
-          <Suspense fallback={<SectionLoadingPlaceholder />}>
-            <StatsCharts data={statsChartsData} />
-          </Suspense>
-        )}
+      {siteData.studio?.statsCharts && (
+        <Suspense fallback={<SectionLoadingPlaceholder />}>
+          <StatsCharts data={siteData.studio.statsCharts} />
+        </Suspense>
+      )}
 
-        {/* 时间线 */}
-        {timelineData && (
-          <Suspense fallback={<SectionLoadingPlaceholder />}>
-            <Timeline data={timelineData} />
-          </Suspense>
-        )}
+      {/* 时间线 */}
+      {siteData.studio?.timeline && (
+        <Suspense fallback={<SectionLoadingPlaceholder />}>
+          <Timeline data={siteData.studio.timeline} />
+        </Suspense>
+      )}
 
         {/* 定价 */}
         <Suspense fallback={<SectionLoadingPlaceholder />}>

@@ -2,12 +2,8 @@
 .next/
 out/
 
-# Cesium 运行时资产（从 node_modules/cesium/Build/Cesium 复制，勿提交）
-public/cesium/
-
-# 博客 Markdown 源文件统一由 content/blog/posts 管理，构建期注入页面
-# public/blog/posts 为旧版冗余目录，不再提交
-public/blog/posts/
+# 博客 Markdown 源文件统一由 content/blog/ 管理，构建期注入页面
+public/blog/
 
 # 以下内容统一由 content/ 目录管理，构建期通过 scripts/sync-content-to-public.js 同步到 public/
 # content/ 只保留便于手动编辑的源文件；public/ 下的对应文件为生成产物，请勿直接编辑，也不提交
@@ -16,10 +12,6 @@ public/data/playlist.json
 public/data/site-data.json
 public/data/docs.json
 public/data/beidou-satellites.json
-public/data/china-population-2024.json
-public/data/stats-charts.json
-public/data/tech-evolution.json
-public/data/timeline.json
 public/config/security-config.json
 public/config/welcome-modal.json
 public/docs/

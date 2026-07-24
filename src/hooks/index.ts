@@ -27,6 +27,9 @@ export { useAnimationEnabled } from './useAnimationEnabled';
 // 主题相关 hooks
 export { useTheme } from './useTheme';
 
+// 风格预设 hooks
+export { useStylePreset } from '@/contexts/StylePresetContext';
+
 // 性能相关 hooks - 优先从 lib/performance 导出
 export {
   // 基础性能 hooks
