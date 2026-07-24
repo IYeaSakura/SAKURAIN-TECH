@@ -38,12 +38,7 @@ import {
   ChevronUp,
   Copy,
   Check,
-  Dices,
-  History,
-  Rss,
   Camera,
-  Wrench,
-  Ruler,
 } from 'lucide-react';
 import {
   useMusicPlayer,
@@ -68,9 +63,7 @@ const NAV_LINKS: NavItem[] = [
   { label: '朋友圈', href: '/friends-circle', icon: Heart },
   { label: '地球', href: '/earth-online', icon: Globe },
   { label: '关于', href: '/about', icon: User },
-  { label: '照片', href: '/photolog', icon: Camera },
-  { label: 'Uses', href: '/uses', icon: Wrench },
-  { label: 'Colophon', href: '/colophon', icon: Ruler },
+  { label: '照片', href: '/photos', icon: Camera },
   { label: '音乐', href: '/music', icon: Music },
   { label: '设置', href: '/settings', icon: Settings },
 ];
@@ -165,55 +158,6 @@ export function DynamicIsland() {
     },
     [toggleTheme]
   );
-
-  const handleRandomPost = useCallback(async () => {
-    try {
-      const res = await fetch('/data/blog.json');
-      const data = (await res.json()) as { posts?: { slug: string }[] };
-      const posts = data.posts || [];
-      if (posts.length === 0) return;
-      const random = posts[Math.floor(Math.random() * posts.length)];
-      setExpanded(false);
-      navigateTo(`/blog/${random.slug}`);
-    } catch {
-      // Fall back to blog list if data is unavailable.
-      setExpanded(false);
-      navigateTo('/blog');
-    }
-  }, [navigateTo]);
-
-  const handleRandomNote = useCallback(async () => {
-    try {
-      const res = await fetch('/data/notes.json');
-      const data = (await res.json()) as { notes?: { id: string }[] };
-      const notes = data.notes || [];
-      if (notes.length === 0) return;
-      setExpanded(false);
-      navigateTo('/shuoshuo');
-    } catch {
-      setExpanded(false);
-      navigateTo('/shuoshuo');
-    }
-  }, [navigateTo]);
-
-  const handleRandomFriend = useCallback(async () => {
-    try {
-      const res = await fetch('/data/friends.json');
-      const data = (await res.json()) as { friends?: { url: string; status?: string; featured?: boolean }[] };
-      const friends = (data.friends || []).filter((f) => f.featured && f.status === 'online');
-      if (friends.length === 0) {
-        setExpanded(false);
-        navigateTo('/friends');
-        return;
-      }
-      const random = friends[Math.floor(Math.random() * friends.length)];
-      window.open(random.url, '_blank', 'noopener,noreferrer');
-      setExpanded(false);
-    } catch {
-      setExpanded(false);
-      navigateTo('/friends');
-    }
-  }, [navigateTo]);
 
   const filteredNav = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -353,6 +297,17 @@ export function DynamicIsland() {
                     <ChevronUp className="w-4 h-4" />
                   </button>
                   <button
+                    onClick={() => handleNav('/settings')}
+                    className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
+                    style={{
+                      borderColor: 'var(--border-subtle)',
+                      color: 'var(--text-secondary)',
+                    }}
+                    title="Settings"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </button>
+                  <button
                     onClick={() => setExpanded(false)}
                     className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
                     style={{
@@ -412,51 +367,6 @@ export function DynamicIsland() {
                     </span>
                   </button>
                 ))}
-              </div>
-
-              {/* Quick tools */}
-              <div
-                className="border-2 p-3 mb-4"
-                style={{ borderColor: 'var(--border-subtle)' }}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <Dices className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
-                  <span
-                    className="text-[10px] font-bold uppercase tracking-wider"
-                    style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
-                  >
-                    随机探索
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={handleRandomPost}
-                    className="flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase border-2 transition-all hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)] hover:border-[var(--accent-primary)]"
-                    style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
-                    title="随机文章"
-                  >
-                    <Rss className="w-3.5 h-3.5" />
-                    文章
-                  </button>
-                  <button
-                    onClick={handleRandomNote}
-                    className="flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase border-2 transition-all hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)] hover:border-[var(--accent-primary)]"
-                    style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
-                    title="随机说说"
-                  >
-                    <History className="w-3.5 h-3.5" />
-                    说说
-                  </button>
-                  <button
-                    onClick={handleRandomFriend}
-                    className="flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase border-2 transition-all hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)] hover:border-[var(--accent-primary)]"
-                    style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
-                    title="随机友链"
-                  >
-                    <Globe className="w-3.5 h-3.5" />
-                    友链
-                  </button>
-                </div>
               </div>
 
               {/* Music section */}

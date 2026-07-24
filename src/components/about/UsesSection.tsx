@@ -3,8 +3,7 @@
 /**
  * UsesSection — tools, hardware and services used every day.
  *
- * Embedded into the About page so the standalone /uses page and the about
- * page share the same data source.
+ * Embedded into the About page; the standalone /uses route has been removed.
  */
 
 import { useEffect, useState } from 'react';

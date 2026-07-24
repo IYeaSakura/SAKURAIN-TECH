@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Photo log page —— WeChat Moments-style gallery timeline.
+ * Photos page —— WeChat Moments-style gallery timeline.
  *
  * Photos are grouped into a single-column feed where each entry has an avatar,
  * nickname, caption, image grid, location and tags. Tapping any image opens
@@ -19,14 +19,14 @@ const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
 const AVATAR_SRC = '/image/about/head.jpg';
 const NICKNAME = 'Yuyang';
 
-export function PhotoLogPage() {
+export function PhotosPage() {
   const animationEnabled = useAnimationEnabled();
   const { navigateTo } = useNavigation();
   const [data, setData] = useState<PhotoLogData | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch('/data/photolog.json')
+    fetch('/data/photos.json')
       .then((res) => res.json())
       .then(setData)
       .catch(console.error);

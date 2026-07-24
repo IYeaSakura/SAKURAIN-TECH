@@ -451,7 +451,7 @@ export interface SiteData {
   };
 }
 
-// Uses page data (content/data/uses.json)
+// Uses data (content/data/uses.json), rendered inside the About page.
 export interface UsesItem {
   name: string;
   desc: string;
@@ -466,7 +466,7 @@ export interface UsesData {
   services: UsesItem[];
 }
 
-// Photo log data (content/data/photolog.json)
+// Photos gallery data (content/data/photos.json)
 export interface PhotoLogPhoto {
   id: string;
   src: string;

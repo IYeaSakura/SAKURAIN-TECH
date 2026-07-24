@@ -24,9 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/projects`, lastModified: today, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/earth-online`, lastModified: today, changeFrequency: "weekly", priority: 0.5 },
     { url: `${SITE_URL}/algo-viz`, lastModified: today, changeFrequency: "weekly", priority: 0.5 },
-    { url: `${SITE_URL}/photolog`, lastModified: today, changeFrequency: "weekly", priority: 0.6 },
-    { url: `${SITE_URL}/uses`, lastModified: today, changeFrequency: "monthly", priority: 0.5 },
-    { url: `${SITE_URL}/colophon`, lastModified: today, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${SITE_URL}/photos`, lastModified: today, changeFrequency: "weekly", priority: 0.6 },
   ];
 
   // 博客文章：lastmod 取 frontmatter date

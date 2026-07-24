@@ -62,15 +62,7 @@
       "cacheTtl": 60
     },
     {
-      "source": "/photolog",
-      "cacheTtl": 60
-    },
-    {
-      "source": "/uses",
-      "cacheTtl": 60
-    },
-    {
-      "source": "/colophon",
+      "source": "/photos",
       "cacheTtl": 60
     },
     {
@@ -181,33 +173,7 @@
       ]
     },
     {
-      "source": "/photolog",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=60, must-revalidate"
-        },
-        {
-          "key": "Vary",
-          "value": "Accept-Encoding"
-        }
-      ]
-    },
-    {
-      "source": "/uses",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=60, must-revalidate"
-        },
-        {
-          "key": "Vary",
-          "value": "Accept-Encoding"
-        }
-      ]
-    },
-    {
-      "source": "/colophon",
+      "source": "/photos",
       "headers": [
         {
           "key": "Cache-Control",
