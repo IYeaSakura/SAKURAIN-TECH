@@ -30,6 +30,11 @@
         "icon": "Briefcase"
       },
       {
+        "label": "说说",
+        "href": "/shuoshuo",
+        "icon": "MessageCircle"
+      },
+      {
         "label": "友链",
         "href": "/friends",
         "icon": "Heart"

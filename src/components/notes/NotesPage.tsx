@@ -135,8 +135,8 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
   }, [earliestNote, currentTime]);
 
   const stats = useMemo(() => [
-    { label: '开发时长', value: developmentTime ? `${developmentTime.days}天${developmentTime.hours}时${developmentTime.minutes}分${developmentTime.seconds}秒` : '-', icon: MessageCircle, color: 'var(--accent-primary)' },
-    { label: '版本迭代', value: notes.length.toString(), icon: Calendar, color: 'var(--accent-secondary)' },
+    { label: '记录时长', value: developmentTime ? `${developmentTime.days}天${developmentTime.hours}时${developmentTime.minutes}分${developmentTime.seconds}秒` : '-', icon: MessageCircle, color: 'var(--accent-primary)' },
+    { label: '随记数量', value: notes.length.toString(), icon: Calendar, color: 'var(--accent-secondary)' },
     { label: '心情分布', value: `${moodCounts.happy}/${moodCounts.neutral}/${moodCounts.sad}`, icon: BarChart3, color: '#22c55e' },
   ], [developmentTime, notes.length, moodCounts]);
 
@@ -190,7 +190,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                   }}
                 >
                   <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                  <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>开发记录 · 心情分享</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>随记 · 心情分享</span>
                 </motion.div>
 
                 <motion.h1
@@ -199,7 +199,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                   transition={{ duration: 0.6, delay: 0.1 }}
                   className="font-sans font-bold text-5xl lg:text-6xl mb-6"
                 >
-                  <GradientText animate={true}>日志</GradientText>
+                  <GradientText animate={true}>说说</GradientText>
                 </motion.h1>
 
                 <motion.p
@@ -209,7 +209,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                   className="text-xl mb-8 max-w-xl"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  通过Git commit记录自动生成的开发日志，本站的开发历程。
+                  记录日常灵感、心情与碎碎念，本站的生活与技术随笔。
                 </motion.p>
               </div>
 
@@ -350,7 +350,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                 className="text-center py-20"
                 style={{ color: 'var(--text-muted)' }}
               >
-                没有找到匹配的说说
+                还没有说说，去写一条吧 ~
               </motion.div>
             ) : (
               <div className="relative">
