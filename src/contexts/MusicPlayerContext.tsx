@@ -381,19 +381,27 @@ export function MusicPlayerProvider({
       return;
     }
 
+    let shouldPlay = false;
     setCurrentPosition((prev) => {
       const nextPosition = prev + 1;
       if (nextPosition >= shuffledOrder.length) {
         if (playMode === 'sequential') {
           // Stop at the end of the playlist
+          setIsPlaying(false);
           return prev;
         }
         const newOrder = shuffleArray(playlist.length);
         setShuffledOrder(newOrder);
+        shouldPlay = true;
         return 0;
       }
+      shouldPlay = true;
       return nextPosition;
     });
+
+    if (shouldPlay) {
+      setIsPlaying(true);
+    }
   }, [shuffledOrder.length, playlist.length, playMode]);
 
   const prev = useCallback(() => {

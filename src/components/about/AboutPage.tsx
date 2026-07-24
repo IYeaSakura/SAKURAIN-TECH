@@ -29,6 +29,8 @@ import { useAnimationEnabled, useNavigation } from '@/hooks';
 import { Footer } from '@/components/sections/Footer';
 import { GitHubHeatmap } from './GitHubHeatmap';
 import { GithubIcon as Github } from './GithubIcon';
+import { UsesSection } from './UsesSection';
+import { ColophonSection } from './ColophonSection';
 import type { SiteData } from '@/types';
 
 interface TechItem {
@@ -101,7 +103,7 @@ const projectStats = [
   { label: '项目模块', value: '120+', icon: Layers },
   { label: '代码行数', value: '70K+', icon: Code2 },
   { label: '技术栈', value: '15+', icon: Cpu },
-  { name: '开源依赖', value: '90+', icon: Github },
+  { label: '开源依赖', value: '90+', icon: Github },
 ];
 
 const contactLinks = [
@@ -288,6 +290,9 @@ export default function AboutPage() {
             ))}
           </div>
         </motion.section>
+
+        <UsesSection />
+        <ColophonSection />
 
         <motion.section
           initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}

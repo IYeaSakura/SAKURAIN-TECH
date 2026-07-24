@@ -3,7 +3,7 @@
 /**
  * AudioMetrics — real-time audio statistics for the music page.
  *
- * Reads frequency data from the shared Web Audio analyser and renders a
+ * Connects to the shared HTMLAudioElement via Web Audio API and renders a
  * compact spectrum bar graph together with numeric read-outs for sample rate,
  * bitrate and playback state.
  */
@@ -30,6 +30,7 @@ const DEFAULT_BARS = Array.from({ length: 16 }, () => 0);
 
 export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: AudioMetricsProps) {
   const animationRef = useRef<number>(0);
+  const isInitializedRef = useRef(false);
   const [metrics, setMetrics] = useState<Metrics>({
     bars: DEFAULT_BARS,
     peakDb: -96,
@@ -37,6 +38,41 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
     channels: 2,
     bitrate: 320,
   });
+
+  // Ensure a Web Audio analyser is attached to the shared audio element.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || isInitializedRef.current) return;
+
+    const existing = globalAudioMap.get(audio);
+    if (existing) {
+      isInitializedRef.current = true;
+      return;
+    }
+
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    try {
+      const audioContext = new AudioContextClass();
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 128;
+      analyser.smoothingTimeConstant = 0.82;
+
+      const source = audioContext.createMediaElementSource(audio);
+      source.connect(analyser);
+      analyser.connect(audioContext.destination);
+
+      globalAudioMap.set(audio, { context: audioContext, analyser, source });
+      isInitializedRef.current = true;
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[AudioMetrics] Audio context init failed:', err);
+      }
+    }
+  }, [audioRef]);
 
   const readMetrics = useCallback(() => {
     const audio = audioRef.current;
@@ -75,7 +111,13 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
   }, [audioRef]);
 
   useEffect(() => {
+    const audio = audioRef.current;
+    const connection = audio ? globalAudioMap.get(audio) : undefined;
+
     const tick = () => {
+      if (connection?.context.state === 'suspended') {
+        connection.context.resume().catch(() => {});
+      }
       readMetrics();
       animationRef.current = requestAnimationFrame(tick);
     };
@@ -87,7 +129,7 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
     }
 
     return () => cancelAnimationFrame(animationRef.current);
-  }, [isPlaying, readMetrics]);
+  }, [isPlaying, readMetrics, audioRef]);
 
   const stateLabel = systemPaused
     ? 'SYSTEM PAUSED'
