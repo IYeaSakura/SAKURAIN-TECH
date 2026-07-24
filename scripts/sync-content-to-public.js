@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import matter from 'gray-matter';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,6 +11,10 @@ const CONTENT_DIR = path.join(PROJECT_ROOT, 'content');
 const PUBLIC_DIR = path.join(PROJECT_ROOT, 'public');
 const DOCS_INDEX_PATH = path.join(CONTENT_DIR, 'docs-index.json');
 const DOCS_JSON_TARGET = path.join(PUBLIC_DIR, 'data', 'docs.json');
+const BLOG_JSON_TARGET = path.join(PUBLIC_DIR, 'data', 'blog.json');
+const NOTES_JSON_TARGET = path.join(PUBLIC_DIR, 'data', 'notes.json');
+const BLOG_POSTS_DIR = path.join(CONTENT_DIR, 'blog');
+const NOTES_POSTS_DIR = path.join(CONTENT_DIR, 'notes', 'posts');
 
 /**
  * Managed content mappings from content/ to public/.
@@ -31,6 +36,8 @@ const SYNCED_PUBLIC_PATHS = [
   'data/playlist.json',
   'data/site-data.json',
   'data/docs.json',
+  'data/blog.json',
+  'data/notes.json',
   'data/beidou-satellites.json',
   'config/security-config.json',
   'config/welcome-modal.json',
@@ -200,6 +207,186 @@ function validateDocsIndex() {
   }
 }
 
+/**
+ * Normalize a frontmatter date value to YYYY-MM-DD.
+ */
+function normalizeDate(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+  if (typeof value === 'string') return value.trim();
+  return '';
+}
+
+/**
+ * Parse a blog markdown file and return a normalized post object.
+ */
+function parseBlogFile(file) {
+  try {
+    const raw = fs.readFileSync(path.join(BLOG_POSTS_DIR, file), 'utf-8');
+    const { data, content } = matter(raw);
+    const slug = file.replace(/\.mdx?$/, '');
+    const chineseChars = (content.match(/[一-龥]/g) || []).length;
+    const englishWords = (content.match(/[a-zA-Z]+/g) || []).length;
+    const wordCount = chineseChars + englishWords;
+    const readingMinutes = Math.max(1, Math.ceil(chineseChars / 400));
+
+    return {
+      slug,
+      title: typeof data.title === 'string' && data.title ? data.title : slug,
+      description:
+        typeof data.description === 'string'
+          ? data.description
+          : typeof data.excerpt === 'string'
+            ? data.excerpt
+            : '',
+      date: normalizeDate(data.date),
+      author: typeof data.author === 'string' && data.author ? data.author : 'SAKURAIN',
+      tags: Array.isArray(data.tags)
+        ? data.tags.map(String).map((t) => t.trim()).filter(Boolean)
+        : typeof data.tags === 'string'
+          ? data.tags.split(',').map((t) => t.trim()).filter(Boolean)
+          : [],
+      cover: typeof data.cover === 'string' ? data.cover : '',
+      featured: data.featured === true || data.featured === 'true',
+      content,
+      wordCount,
+      readingTime: `${readingMinutes} 分钟阅读`,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build public/data/blog.json from content/blog/*.md.
+ * Includes full markdown content so the terminal mode can read posts via `cat`.
+ */
+function generateBlogJson() {
+  if (!fs.existsSync(BLOG_POSTS_DIR)) {
+    console.log('  ⚠ blog directory not found, skipping blog.json generation');
+    return;
+  }
+
+  const files = fs
+    .readdirSync(BLOG_POSTS_DIR)
+    .filter((file) => file.endsWith('.md') || file.endsWith('.mdx'));
+
+  const posts = files
+    .map(parseBlogFile)
+    .filter((p) => p !== null)
+    .sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+
+  const index = {
+    title: 'SAKURAIN 博客',
+    description: '博弈算法、量化系统、数据分析与 Web 工程',
+    posts,
+  };
+
+  ensureDir(path.dirname(BLOG_JSON_TARGET));
+  fs.writeFileSync(BLOG_JSON_TARGET, JSON.stringify(index, null, 2), 'utf-8');
+  console.log(`  ✓ Generated public/data/blog.json with ${posts.length} posts`);
+}
+
+/**
+ * Parse a note markdown file and return a normalized note object.
+ */
+function parseNoteFile(fileName) {
+  try {
+    const slug = fileName.replace(/\.md$/, '');
+    const fullPath = path.join(NOTES_POSTS_DIR, fileName);
+    const raw = fs.readFileSync(fullPath, 'utf8');
+    const { data, content } = matter(raw);
+
+    const title = typeof data.title === 'string' ? data.title : slug;
+    const dateStr = data.date instanceof Date && !Number.isNaN(data.date.getTime())
+      ? data.date.toISOString().replace('T', ' ').slice(0, 19) + ' +0000'
+      : typeof data.date === 'string'
+        ? data.date.trim()
+        : '';
+    const mood = typeof data.mood === 'string' ? data.mood : 'neutral';
+    const body = content.trim();
+    const wordCount = body.replace(/\s/g, '').length;
+
+    const match = dateStr.match(
+      /^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})(?:\s*([+-])(\d{2})(\d{2}))?/
+    );
+    const parsed = match
+      ? (() => {
+          const [, y, mo, d, h, mi, s, sign, tzH, tzM] = match;
+          const tz = sign ? `${sign}${tzH}:${tzM}` : '+08:00';
+          return {
+            year: Number(y),
+            month: mo,
+            day: d,
+            hours: h,
+            minutes: mi,
+            seconds: s,
+            timestamp: new Date(`${y}-${mo}-${d}T${h}:${mi}:${s}${tz}`).getTime(),
+          };
+        })()
+      : {
+          year: 1970,
+          month: '01',
+          day: '01',
+          hours: '00',
+          minutes: '00',
+          seconds: '00',
+          timestamp: Number.isNaN(new Date(dateStr).getTime()) ? 0 : new Date(dateStr).getTime(),
+        };
+
+    return {
+      id: slug,
+      slug,
+      title,
+      content: body,
+      date: dateStr,
+      mood,
+      wordCount,
+      readingTime: `${Math.max(1, Math.ceil(wordCount / 200))} 分钟阅读`,
+      year: parsed.year,
+      month: parsed.month,
+      day: parsed.day,
+      hours: parsed.hours,
+      minutes: parsed.minutes,
+      seconds: parsed.seconds,
+      yearMonth: `${parsed.year}-${parsed.month}`,
+      fullDate: `${parsed.year}-${parsed.month}-${parsed.day}`,
+      fullTime: `${parsed.hours}:${parsed.minutes}:${parsed.seconds}`,
+      timestamp: parsed.timestamp,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Build public/data/notes.json from content/notes/posts/*.md.
+ * Provides note metadata and content for the terminal mode.
+ */
+function generateNotesJson() {
+  if (!fs.existsSync(NOTES_POSTS_DIR)) {
+    console.log('  ⚠ notes directory not found, skipping notes.json generation');
+    return;
+  }
+
+  const files = fs.readdirSync(NOTES_POSTS_DIR).filter((f) => f.endsWith('.md'));
+  const notes = files
+    .map(parseNoteFile)
+    .filter((n) => n !== null)
+    .sort((a, b) => b.timestamp - a.timestamp);
+
+  const index = {
+    title: 'SAKURAIN 说说',
+    description: '随笔、想法与生活片段',
+    notes,
+  };
+
+  ensureDir(path.dirname(NOTES_JSON_TARGET));
+  fs.writeFileSync(NOTES_JSON_TARGET, JSON.stringify(index, null, 2), 'utf-8');
+  console.log(`  ✓ Generated public/data/notes.json with ${notes.length} notes`);
+}
+
 function syncContent() {
   if (!fs.existsSync(CONTENT_DIR)) {
     console.error('✘ Content directory not found:', CONTENT_DIR);
@@ -242,6 +429,10 @@ function syncContent() {
 
   // Generate the docs catalog from the trimmed index.
   generateDocsJson();
+
+  // Generate terminal-readable JSON indexes for blog and notes.
+  generateBlogJson();
+  generateNotesJson();
 
   // Validate that the trimmed index does not reference missing markdown files.
   validateDocsIndex();
