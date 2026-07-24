@@ -222,6 +222,26 @@ body {
   display: none;
 }
 
+/* 细窄滚动条：用于歌词、播放列表等小组件，避免使用全局 8px 默认滚动条 */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+  border-radius: 0;
+}
+
 /* 11. 禁用文本选择 - 用于动画元素 */
 .no-select {
   -webkit-user-select: none;
@@ -2069,6 +2089,10 @@ html.theme-transitioning {
   --apple-radius-xl: 0px;
   --apple-radius-full: 0px;
 
+  /* User-adjustable intensity defaults */
+  --border-weight: 1;
+  --shadow-weight: 1;
+
   /* Typography: monospace-first with Chinese fallbacks */
   --font-primary: 'JetBrains Mono', 'Fira Code', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', monospace;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', monospace;
@@ -2119,12 +2143,12 @@ html.theme-transitioning {
   /* Solid brutalist card: no blur, hard border */
   .apple-glass {
     background: var(--bg-card);
-    border: 2px solid var(--border-subtle);
-    box-shadow: 4px 4px 0 var(--border-subtle);
+    border: calc(2px * var(--border-weight)) solid var(--border-subtle);
+    box-shadow: calc(4px * var(--shadow-weight)) calc(4px * var(--shadow-weight)) 0 var(--border-subtle);
   }
 
   [data-theme="dark"] .apple-glass {
-    box-shadow: 4px 4px 0 rgba(255, 255, 255, 0.15);
+    box-shadow: calc(4px * var(--shadow-weight)) calc(4px * var(--shadow-weight)) 0 rgba(255, 255, 255, 0.15);
   }
 
   /* Brutalist button */
@@ -2132,18 +2156,18 @@ html.theme-transitioning {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold uppercase tracking-wider transition-all;
     background: var(--accent-primary);
     color: var(--bg-primary);
-    border: 2px solid var(--border-subtle);
-    box-shadow: 4px 4px 0 var(--border-subtle);
+    border: calc(2px * var(--border-weight)) solid var(--border-subtle);
+    box-shadow: calc(4px * var(--shadow-weight)) calc(4px * var(--shadow-weight)) 0 var(--border-subtle);
     font-family: var(--font-mono);
   }
 
   .apple-button:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 var(--border-subtle);
+    transform: translate(calc(-2px * var(--shadow-weight)), calc(-2px * var(--shadow-weight)));
+    box-shadow: calc(6px * var(--shadow-weight)) calc(6px * var(--shadow-weight)) 0 var(--border-subtle);
   }
 
   .apple-button:active {
-    transform: translate(2px, 2px);
+    transform: translate(calc(2px * var(--shadow-weight)), calc(2px * var(--shadow-weight)));
     box-shadow: 0 0 0 var(--border-subtle);
   }
 
@@ -2151,28 +2175,28 @@ html.theme-transitioning {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold uppercase tracking-wider transition-all;
     background: var(--bg-secondary);
     color: var(--text-primary);
-    border: 2px solid var(--border-subtle);
-    box-shadow: 4px 4px 0 var(--border-subtle);
+    border: calc(2px * var(--border-weight)) solid var(--border-subtle);
+    box-shadow: calc(4px * var(--shadow-weight)) calc(4px * var(--shadow-weight)) 0 var(--border-subtle);
     font-family: var(--font-mono);
   }
 
   .apple-button-secondary:hover {
     background: var(--bg-tertiary);
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 var(--border-subtle);
+    transform: translate(calc(-2px * var(--shadow-weight)), calc(-2px * var(--shadow-weight)));
+    box-shadow: calc(6px * var(--shadow-weight)) calc(6px * var(--shadow-weight)) 0 var(--border-subtle);
   }
 
   /* Unified control island shell */
   .island-shell {
     background: var(--bg-card);
-    border: 2px solid var(--border-subtle);
-    box-shadow: 6px 6px 0 var(--border-subtle);
+    border: calc(2px * var(--border-weight)) solid var(--border-subtle);
+    box-shadow: calc(6px * var(--shadow-weight)) calc(6px * var(--shadow-weight)) 0 var(--border-subtle);
     color: var(--text-primary);
     font-family: var(--font-mono);
   }
 
   [data-theme="dark"] .island-shell {
-    box-shadow: 6px 6px 0 rgba(255, 255, 255, 0.12);
+    box-shadow: calc(6px * var(--shadow-weight)) calc(6px * var(--shadow-weight)) 0 rgba(255, 255, 255, 0.12);
   }
 
   /* Section spacing */
@@ -2206,21 +2230,21 @@ html.theme-transitioning {
   .apple-bento {
     @apply relative overflow-hidden p-6 sm:p-8 transition-all;
     background: var(--bg-secondary);
-    border: 2px solid var(--border-subtle);
-    box-shadow: 4px 4px 0 var(--border-subtle);
+    border: calc(2px * var(--border-weight)) solid var(--border-subtle);
+    box-shadow: calc(4px * var(--shadow-weight)) calc(4px * var(--shadow-weight)) 0 var(--border-subtle);
   }
 
   .apple-bento:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 var(--border-subtle);
+    transform: translate(calc(-2px * var(--shadow-weight)), calc(-2px * var(--shadow-weight)));
+    box-shadow: calc(6px * var(--shadow-weight)) calc(6px * var(--shadow-weight)) 0 var(--border-subtle);
   }
 
   [data-theme="dark"] .apple-bento {
-    box-shadow: 4px 4px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: calc(4px * var(--shadow-weight)) calc(4px * var(--shadow-weight)) 0 rgba(255, 255, 255, 0.1);
   }
 
   [data-theme="dark"] .apple-bento:hover {
-    box-shadow: 6px 6px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: calc(6px * var(--shadow-weight)) calc(6px * var(--shadow-weight)) 0 rgba(255, 255, 255, 0.1);
   }
 
   /* Mono terminal label */

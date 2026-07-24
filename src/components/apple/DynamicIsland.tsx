@@ -1,17 +1,17 @@
 'use client';
 
 /**
- * Dynamic Island —— unified navigation, music and system control center.
+ * Dynamic Island — unified navigation, music and system control center.
  *
  * The island absorbs the old top Navigation so the UI has a single control
  * surface. It keeps a compact capsule when idle and expands into a modular
- * panel with nav links, music controls and system toggles.
+ * panel with nav links, music controls, system toggles and quick tools.
  *
  * Visual language is a brutalism / pixel / early-web fusion: sharp corners,
  * thick borders, monospace/pixel fonts and high-contrast accent blocks.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play,
@@ -31,16 +31,42 @@ import {
   Users,
   User,
   Menu,
+  Globe,
+  Heart,
+  Settings,
+  Search,
+  ChevronUp,
+  Copy,
+  Check,
+  Dices,
+  History,
+  Rss,
 } from 'lucide-react';
-import { useMusicPlayer, useAnimationEnabled, useStylePreset, useTheme, useNavigation } from '@/hooks';
+import {
+  useMusicPlayer,
+  useAnimationEnabled,
+  useStylePreset,
+  useTheme,
+  useNavigation,
+} from '@/hooks';
 
-const NAV_LINKS = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+}
+
+const NAV_LINKS: NavItem[] = [
   { label: '首页', href: '/', icon: Home },
   { label: '博客', href: '/blog', icon: BookOpen },
   { label: '项目', href: '/projects', icon: FolderKanban },
   { label: '说说', href: '/shuoshuo', icon: MessageSquare },
   { label: '友链', href: '/friends', icon: Users },
+  { label: '朋友圈', href: '/friends-circle', icon: Heart },
+  { label: '地球', href: '/earth-online', icon: Globe },
   { label: '关于', href: '/about', icon: User },
+  { label: '音乐', href: '/music', icon: Music },
+  { label: '设置', href: '/settings', icon: Settings },
 ];
 
 function formatTime(time: number) {
@@ -54,11 +80,14 @@ export function DynamicIsland() {
   const [expanded, setExpanded] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const animationEnabled = useAnimationEnabled();
   const player = useMusicPlayer();
   const { preset, cyclePreset } = useStylePreset();
   const { theme, toggleTheme } = useTheme();
   const { navigateTo } = useNavigation();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -66,6 +95,18 @@ export function DynamicIsland() {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Close the island when clicking outside.
+  useEffect(() => {
+    if (!expanded) return;
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setExpanded(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [expanded]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -99,10 +140,89 @@ export function DynamicIsland() {
     cyclePreset();
   }, [cyclePreset]);
 
+  const handleCopyUrl = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }, []);
+
+  const handleScrollTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setExpanded(false);
+  }, []);
+
+  const handleThemeToggle = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      toggleTheme(e);
+    },
+    [toggleTheme]
+  );
+
+  const handleRandomPost = useCallback(async () => {
+    try {
+      const res = await fetch('/data/blog.json');
+      const data = (await res.json()) as { posts?: { slug: string }[] };
+      const posts = data.posts || [];
+      if (posts.length === 0) return;
+      const random = posts[Math.floor(Math.random() * posts.length)];
+      setExpanded(false);
+      navigateTo(`/blog/${random.slug}`);
+    } catch {
+      // Fall back to blog list if data is unavailable.
+      setExpanded(false);
+      navigateTo('/blog');
+    }
+  }, [navigateTo]);
+
+  const handleRandomNote = useCallback(async () => {
+    try {
+      const res = await fetch('/data/notes.json');
+      const data = (await res.json()) as { notes?: { id: string }[] };
+      const notes = data.notes || [];
+      if (notes.length === 0) return;
+      setExpanded(false);
+      navigateTo('/shuoshuo');
+    } catch {
+      setExpanded(false);
+      navigateTo('/shuoshuo');
+    }
+  }, [navigateTo]);
+
+  const handleRandomFriend = useCallback(async () => {
+    try {
+      const res = await fetch('/data/friends.json');
+      const data = (await res.json()) as { friends?: { url: string; status?: string; featured?: boolean }[] };
+      const friends = (data.friends || []).filter((f) => f.featured && f.status === 'online');
+      if (friends.length === 0) {
+        setExpanded(false);
+        navigateTo('/friends');
+        return;
+      }
+      const random = friends[Math.floor(Math.random() * friends.length)];
+      window.open(random.url, '_blank', 'noopener,noreferrer');
+      setExpanded(false);
+    } catch {
+      setExpanded(false);
+      navigateTo('/friends');
+    }
+  }, [navigateTo]);
+
+  const filteredNav = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return NAV_LINKS;
+    return NAV_LINKS.filter(
+      (link) =>
+        link.label.toLowerCase().includes(q) ||
+        link.href.toLowerCase().includes(q)
+    );
+  }, [searchQuery]);
+
   if (!mounted) return null;
 
   return (
-    <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100]">
+    <div ref={containerRef} className="fixed top-3 left-1/2 -translate-x-1/2 z-[100]">
       <motion.div
         layout
         initial={animationEnabled ? { opacity: 0, y: -20 } : undefined}
@@ -114,8 +234,8 @@ export function DynamicIsland() {
         }}
         className="island-shell relative overflow-hidden cursor-pointer select-none"
         style={{
-          width: expanded ? 360 : 'auto',
-          minWidth: expanded ? 320 : 160,
+          width: expanded ? 380 : 'auto',
+          minWidth: expanded ? 340 : 160,
           height: expanded ? 'auto' : 44,
         }}
       >
@@ -199,21 +319,74 @@ export function DynamicIsland() {
                     Control
                   </span>
                 </div>
-                <button
-                  onClick={() => setExpanded(false)}
-                  className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
-                  style={{
-                    borderColor: 'var(--border-subtle)',
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={handleCopyUrl}
+                    className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
+                    style={{
+                      borderColor: 'var(--border-subtle)',
+                      color: 'var(--text-secondary)',
+                    }}
+                    title="Copy current URL"
+                  >
+                    {copied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </button>
+                  <button
+                    onClick={handleScrollTop}
+                    className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
+                    style={{
+                      borderColor: 'var(--border-subtle)',
+                      color: 'var(--text-secondary)',
+                    }}
+                    title="Scroll to top"
+                  >
+                    <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setExpanded(false)}
+                    className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
+                    style={{
+                      borderColor: 'var(--border-subtle)',
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Search */}
+              <div
+                className="flex items-center gap-2 px-2 py-1.5 border-2 mb-4"
+                style={{ borderColor: 'var(--border-subtle)' }}
+              >
+                <Search className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="搜索导航..."
+                  className="flex-1 bg-transparent outline-none text-xs min-w-0"
+                  style={{ color: 'var(--text-primary)', caretColor: 'var(--accent-primary)' }}
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="text-[10px] font-bold uppercase"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    清除
+                  </button>
+                )}
               </div>
 
               {/* Navigation grid */}
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                {NAV_LINKS.map((link) => (
+              <div className="grid grid-cols-5 gap-2 mb-4">
+                {filteredNav.map((link) => (
                   <button
                     key={link.href}
                     onClick={() => handleNav(link.href)}
@@ -222,13 +395,62 @@ export function DynamicIsland() {
                       borderColor: 'var(--border-subtle)',
                       color: 'var(--text-secondary)',
                     }}
+                    title={link.label}
                   >
                     <link.icon className="w-4 h-4" />
-                    <span className="text-[10px] font-bold uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
+                    <span
+                      className="text-[9px] font-bold uppercase truncate w-full text-center"
+                      style={{ fontFamily: 'var(--font-mono)' }}
+                    >
                       {link.label}
                     </span>
                   </button>
                 ))}
+              </div>
+
+              {/* Quick tools */}
+              <div
+                className="border-2 p-3 mb-4"
+                style={{ borderColor: 'var(--border-subtle)' }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <Dices className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
+                  <span
+                    className="text-[10px] font-bold uppercase tracking-wider"
+                    style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
+                  >
+                    随机探索
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={handleRandomPost}
+                    className="flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase border-2 transition-all hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)] hover:border-[var(--accent-primary)]"
+                    style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
+                    title="随机文章"
+                  >
+                    <Rss className="w-3.5 h-3.5" />
+                    文章
+                  </button>
+                  <button
+                    onClick={handleRandomNote}
+                    className="flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase border-2 transition-all hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)] hover:border-[var(--accent-primary)]"
+                    style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
+                    title="随机说说"
+                  >
+                    <History className="w-3.5 h-3.5" />
+                    说说
+                  </button>
+                  <button
+                    onClick={handleRandomFriend}
+                    className="flex items-center justify-center gap-1.5 py-2 text-[10px] font-bold uppercase border-2 transition-all hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)] hover:border-[var(--accent-primary)]"
+                    style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
+                    title="随机友链"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    友链
+                  </button>
+                </div>
               </div>
 
               {/* Music section */}
@@ -254,14 +476,30 @@ export function DynamicIsland() {
                       {player.currentSong?.artist || 'Unknown Artist'}
                     </p>
                   </div>
+                  <button
+                    onClick={() => handleNav('/music')}
+                    className="px-2 py-1 text-[10px] font-bold uppercase border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
+                    style={{
+                      borderColor: 'var(--border-subtle)',
+                      color: 'var(--text-secondary)',
+                    }}
+                  >
+                    打开
+                  </button>
                 </div>
-                <div className="h-2 border-2 mb-1 overflow-hidden" style={{ borderColor: 'var(--border-subtle)' }}>
+                <div
+                  className="h-2 border-2 mb-1 overflow-hidden"
+                  style={{ borderColor: 'var(--border-subtle)' }}
+                >
                   <motion.div
                     className="h-full"
                     style={{ background: 'var(--accent-primary)', width: `${progressPercent}%` }}
                   />
                 </div>
-                <div className="flex justify-between text-[10px] font-mono mb-2" style={{ color: 'var(--text-muted)' }}>
+                <div
+                  className="flex justify-between text-[10px] font-mono mb-2"
+                  style={{ color: 'var(--text-muted)' }}
+                >
                   <span>{formatTime(player.currentTime)}</span>
                   <span>{formatTime(player.duration)}</span>
                 </div>
@@ -297,7 +535,7 @@ export function DynamicIsland() {
               {/* System toggles */}
               <div className="grid grid-cols-2 gap-2">
                 <button
-                  onClick={toggleTheme}
+                  onClick={handleThemeToggle}
                   className="flex items-center justify-center gap-2 p-2 border-2 transition-all hover:bg-[var(--accent-secondary)] hover:text-[var(--bg-primary)] hover:border-[var(--accent-secondary)]"
                   style={{
                     borderColor: 'var(--border-subtle)',

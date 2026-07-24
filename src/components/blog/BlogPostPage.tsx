@@ -1,10 +1,17 @@
 'use client';
 
+/**
+ * BlogPostPage —— brutalist article reader.
+ *
+ * A clean, content-first layout with thick borders, pixel shadows and
+ * monospace accents. Keeps the reading experience focused while maintaining
+ * the site-wide visual language.
+ */
+
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Tag, Share2, ArrowLeft, Scale } from 'lucide-react';
-import { AmbientGlow } from '@/components/effects';
-import { useTheme, useMobile, useMobileMounted } from '@/hooks';
+import { useTheme } from '@/hooks';
 import { ImagePreviewProvider, useImagePreview } from '@/contexts/ImagePreviewContext';
 import { MarkdownRenderer } from '@/components/markdown/MarkdownRenderer';
 import { ArticleSidebar } from './components/ArticleSidebar';
@@ -31,8 +38,6 @@ export default function BlogPostPage({ post, allPosts }: BlogPostPageProps) {
 function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
   const navigate = useRouter().push;
   useTheme();
-  const isMobile = useMobile();
-  const mounted = useMobileMounted();
   useImagePreview();
 
   const slug = post.slug;
@@ -58,240 +63,205 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
     }
   };
 
-  const handleNavigate = (slug: string) => {
-    navigate(`/blog/${slug}`);
+  const handleNavigate = (targetSlug: string) => {
+    navigate(`/blog/${targetSlug}`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const currentIndex = allPosts.findIndex(p => p.slug === slug);
+  const currentIndex = allPosts.findIndex((p) => p.slug === slug);
   const previousPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
   const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
 
   const relatedPosts = allPosts
-    .filter(p => p.slug !== slug && p.tags.some(tag => post.tags.includes(tag)))
+    .filter((p) => p.slug !== slug && p.tags.some((tag) => post.tags.includes(tag)))
     .slice(0, 3)
-    .map(p => ({
+    .map((p) => ({
       title: p.title,
       slug: p.slug,
       description: p.description,
     }));
 
   return (
-    <>
-      <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
-        <div className="absolute inset-0 pointer-events-none">
-          <div
-            className="absolute inset-0 opacity-5"
-            style={{
-              backgroundImage: `
-                linear-gradient(var(--accent-primary) 1px, transparent 1px),
-                linear-gradient(90deg, var(--accent-primary) 1px, transparent 1px)
-              `,
-              backgroundSize: '60px 60px',
-            }}
-          />
-          {mounted && !isMobile && (
-            <>
-              <AmbientGlow position="top-left" color="var(--accent-primary)" size={500} opacity={0.12} />
-              <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={400} opacity={0.08} />
-            </>
-          )}
-          <div
-            className="absolute inset-0"
-            style={{
-              background: 'radial-gradient(ellipse at center, transparent 0%, var(--bg-primary) 70%)',
-            }}
-          />
-        </div>
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      {post.content && (
+        <ArticleSidebar
+          wordCount={getWordCount(post.content)}
+          readingTime={getReadingTime(post.content)}
+          date={post.date}
+          onBack={handleBack}
+          onPrevious={previousPost ? () => handleNavigate(previousPost.slug) : undefined}
+          onNext={nextPost ? () => handleNavigate(nextPost.slug) : undefined}
+          hasPrevious={!!previousPost}
+          hasNext={!!nextPost}
+          relatedPosts={relatedPosts}
+          onNavigate={handleNavigate}
+        />
+      )}
 
-        {mounted && !isMobile && post.content && (
-          <ArticleSidebar
-            wordCount={post.content ? getWordCount(post.content) : undefined}
-            readingTime={post.content ? getReadingTime(post.content) : undefined}
-            date={post.date}
-            onBack={handleBack}
-            onPrevious={previousPost ? () => handleNavigate(previousPost.slug) : undefined}
-            onNext={nextPost ? () => handleNavigate(nextPost.slug) : undefined}
-            hasPrevious={!!previousPost}
-            hasNext={!!nextPost}
-            relatedPosts={relatedPosts}
-            onNavigate={handleNavigate}
-          />
-        )}
+      <FloatingToolbar onExit={handleBack} content={post.content} title={post.title} />
 
-        <FloatingToolbar onExit={handleBack} content={post.content} title={post.title} />
-
-        <main className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 md:pb-12">
-          <motion.article
-            initial={{ opacity: 0, y: 30 }}
+      <main className="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-24">
+        <motion.article initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          {/* Header card */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="border-2 p-6 md:p-8 mb-6"
+            style={{
+              background: 'var(--bg-secondary)',
+              borderColor: 'var(--border-subtle)',
+              boxShadow: '6px 6px 0 var(--border-subtle)',
+            }}
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative overflow-hidden rounded-2xl mb-8"
-              style={{
-                background: 'var(--bg-card)',
-                border: '3px solid var(--border-subtle)',
-                boxShadow: '0 20px 40px var(--accent-glow)',
-              }}
+            <button
+              onClick={handleBack}
+              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider mb-5 transition-opacity hover:opacity-70"
+              style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
             >
-              <motion.div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: `radial-gradient(circle at 50% 0%, var(--accent-primary)20, transparent 60%)`,
-                }}
-              />
-              
-              <div className="relative z-10 p-6 md:p-8">
-                <h1 
-                  className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-4"
-                  style={{ 
-                    color: 'var(--text-primary)',
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  {post.title}
-                </h1>
-                
-                <div className="flex flex-wrap items-center gap-4 mb-6 text-sm" style={{ color: 'var(--text-muted)' }}>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    {formatDateDetail(post.date)}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-4 h-4" />
-                    {getReadingTime(post.content || '')}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Tag className="w-4 h-4" />
-                    {post.author}
-                  </span>
-                </div>
-                
-                {post.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {post.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-sm px-3 py-1 rounded-full"
-                        style={{
-                          background: 'var(--bg-secondary)',
-                          color: 'var(--accent-primary)',
-                          border: '1px solid var(--border-subtle)',
-                        }}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
+              <ArrowLeft className="w-4 h-4" />
+              返回列表
+            </button>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="relative rounded-2xl p-6 md:p-8"
-              style={{
-                background: 'var(--bg-card)',
-                border: '2px solid var(--border-subtle)',
-              }}
+            <h1
+              className="text-2xl sm:text-3xl md:text-4xl font-bold uppercase tracking-tight mb-5"
+              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
             >
-              {post.content && (
-                <MarkdownRenderer content={post.content} />
-              )}
-            </motion.div>
+              {post.title}
+            </h1>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35 }}
-              className="mt-8 flex items-center justify-between md:hidden"
-            >
-              <button
-                onClick={handleBack}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-200"
-                style={{
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-primary)'
-                }}
-              >
-                <ArrowLeft className="w-5 h-5" />
-                返回列表
-              </button>
-              
-              <button
-                onClick={handleShare}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-200"
-                style={{
-                  background: 'var(--accent-primary)',
-                  color: 'white',
-                  boxShadow: '0 4px 20px var(--accent-glow)',
-                }}
-              >
-                <Share2 className="w-5 h-5" />
-                分享文章
-              </button>
-            </motion.div>
+            <div className="flex flex-wrap items-center gap-4 mb-5 text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                {formatDateDetail(post.date)}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5" />
+                {getReadingTime(post.content || '')}
+              </span>
+              <span className="flex items-center gap-1">
+                <Tag className="w-3.5 h-3.5" />
+                {post.author}
+              </span>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-8 rounded-xl p-5 flex items-center gap-4"
-              style={{
-                background: 'linear-gradient(135deg, var(--bg-secondary), var(--bg-primary))',
-                border: '1px solid var(--border-subtle)',
-              }}
-            >
-              <div
-                className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
-                style={{
-                  background: 'var(--accent-primary)',
-                  boxShadow: '0 2px 10px var(--accent-glow)',
-                }}
-              >
-                <Scale className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                    本作品采用
-                  </span>
-                  <a
-                    href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-bold text-sm transition-all duration-200 hover:underline"
-                    style={{ color: 'var(--accent-primary)' }}
+            {post.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {post.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="text-[10px] px-2 py-1 border-2 font-mono uppercase"
+                    style={{
+                      background: 'var(--bg-primary)',
+                      borderColor: 'var(--border-subtle)',
+                      color: 'var(--accent-primary)',
+                    }}
                   >
-                    CC BY-NC-SA 4.0
-                  </a>
-                  <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                    许可协议
+                    {tag}
                   </span>
-                </div>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.8125rem', lineHeight: '1.4' }}>
-                  署名-非商业性使用-相同方式共享
-                </div>
+                ))}
               </div>
-            </motion.div>
+            )}
+          </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.45 }}
+          {/* Content */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="border-2 p-6 md:p-8"
+            style={{
+              background: 'var(--bg-secondary)',
+              borderColor: 'var(--border-subtle)',
+            }}
+          >
+            {post.content && <MarkdownRenderer content={post.content} />}
+          </motion.div>
+
+          {/* Mobile actions */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="mt-6 flex items-center justify-between md:hidden"
+          >
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase border-2"
+              style={{
+                background: 'var(--bg-secondary)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-primary)',
+              }}
             >
-              <CommentSection postId={slug} />
-            </motion.div>
-          </motion.article>
-        </main>
-      </div>
-    </>
+              <ArrowLeft className="w-4 h-4" />
+              返回列表
+            </button>
+
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-2 px-5 py-2.5 text-xs font-bold uppercase border-2"
+              style={{
+                background: 'var(--accent-primary)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--bg-primary)',
+              }}
+            >
+              <Share2 className="w-4 h-4" />
+              分享
+            </button>
+          </motion.div>
+
+          {/* License */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="mt-6 border-2 p-5 flex items-center gap-4"
+            style={{
+              background: 'var(--bg-secondary)',
+              borderColor: 'var(--border-subtle)',
+            }}
+          >
+            <div
+              className="w-12 h-12 border-2 flex items-center justify-center flex-shrink-0"
+              style={{
+                background: 'var(--accent-primary)',
+                borderColor: 'var(--border-subtle)',
+              }}
+            >
+              <Scale className="w-6 h-6" style={{ color: 'var(--bg-primary)' }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  本作品采用
+                </span>
+                <a
+                  href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-bold underline"
+                  style={{ color: 'var(--accent-primary)' }}
+                >
+                  CC BY-NC-SA 4.0
+                </a>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  许可协议
+                </span>
+              </div>
+              <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                署名-非商业性使用-相同方式共享
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Comments */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.35 }}>
+            <CommentSection postId={slug} />
+          </motion.div>
+        </motion.article>
+      </main>
+    </div>
   );
 }

@@ -9,6 +9,7 @@ public/blog/
 # content/ 只保留便于手动编辑的源文件；public/ 下的对应文件为生成产物，请勿直接编辑，也不提交
 public/data/friends.json
 public/data/playlist.json
+public/image/music-covers/
 public/data/site-data.json
 public/data/docs.json
 public/data/blog.json

@@ -3,9 +3,9 @@
 /**
  * MusicPlayerContext — global audio playback state.
  *
- * Centralises the audio element, playlist shuffle logic and playback controls
- * so multiple UI surfaces (the floating player and the home-page widget) can
- * stay perfectly in sync without prop drilling.
+ * Centralises the audio element, playlist playback-order logic and playback
+ * controls so multiple UI surfaces (the floating player and the dedicated
+ * music page) can stay perfectly in sync without prop drilling.
  */
 
 import {
@@ -20,16 +20,25 @@ import {
 import { useConfig, useIsDesktopClient } from '@/hooks';
 
 // Playlist type definitions
-interface Song {
+export interface LyricLine {
+  time?: number;
+  text: string;
+}
+
+export interface Song {
   id: string;
   title: string;
   artist: string;
   src: string;
+  cover?: string;
+  lyrics?: LyricLine[];
 }
 
 interface PlaylistConfig {
   songs: Song[];
 }
+
+export type PlayMode = 'shuffle' | 'repeat' | 'sequential';
 
 // Fisher-Yates shuffle
 const shuffleArray = (length: number): number[] => {
@@ -40,6 +49,9 @@ const shuffleArray = (length: number): number[] => {
   }
   return array;
 };
+
+const sequentialOrder = (length: number): number[] =>
+  Array.from({ length }, (_, i) => i);
 
 export type VisualizerMode = 'bars' | 'wave' | 'heatmap';
 
@@ -58,6 +70,10 @@ interface MusicPlayerState {
   currentSong: Song;
   visualizerMode: VisualizerMode;
   playlistLoading: boolean;
+  playlist: Song[];
+  playMode: PlayMode;
+  showLyrics: boolean;
+  showPlaylist: boolean;
 }
 
 interface MusicPlayerActions {
@@ -71,6 +87,10 @@ interface MusicPlayerActions {
   toggleMuted: () => void;
   changeVisualizer: () => void;
   seek: (time: number) => void;
+  playSong: (id: string) => void;
+  cyclePlayMode: () => void;
+  toggleLyrics: () => void;
+  togglePlaylist: () => void;
 }
 
 interface MusicPlayerContextValue extends MusicPlayerState, MusicPlayerActions {
@@ -104,12 +124,16 @@ export function MusicPlayerProvider({
   const [currentPosition, setCurrentPosition] = useState(0);
   const [visualizerMode, setVisualizerMode] =
     useState<VisualizerMode>('bars');
+  const [playMode, setPlayMode] = useState<PlayMode>('shuffle');
+  const [showLyrics, setShowLyrics] = useState(false);
+  const [showPlaylist, setShowPlaylist] = useState(false);
   // Defer audio loading until first user interaction to avoid 404 storms
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const preloadRef = useRef<HTMLAudioElement | null>(null);
   const failedSrcsRef = useRef<Set<string>>(new Set());
+  const prevPlayModeRef = useRef<PlayMode>('shuffle');
 
   // Build shuffle order once the playlist is known
   useEffect(() => {
@@ -117,6 +141,27 @@ export function MusicPlayerProvider({
       setShuffledOrder(shuffleArray(playlist.length));
     }
   }, [playlist.length, shuffledOrder.length]);
+
+  // Adjust playback order when the mode changes
+  useEffect(() => {
+    if (playlist.length === 0) return;
+    if (prevPlayModeRef.current === playMode) return;
+    prevPlayModeRef.current = playMode;
+
+    const currentIdx = shuffledOrder[currentPosition];
+    if (playMode === 'sequential') {
+      setShuffledOrder(sequentialOrder(playlist.length));
+      setCurrentPosition(currentIdx ?? 0);
+    } else if (playMode === 'shuffle') {
+      const newOrder = shuffleArray(playlist.length);
+      const pos =
+        currentIdx !== undefined
+          ? newOrder.findIndex((idx) => idx === currentIdx)
+          : 0;
+      setShuffledOrder(newOrder);
+      setCurrentPosition(pos >= 0 ? pos : 0);
+    }
+  }, [playMode, playlist.length, shuffledOrder, currentPosition]);
 
   const currentIndex = shuffledOrder[currentPosition] ?? 0;
   const currentSong = playlist[currentIndex] || DEFAULT_SONG;
@@ -289,22 +334,62 @@ export function MusicPlayerProvider({
 
   const next = useCallback(() => {
     if (playlist.length === 0) return;
+
+    if (playMode === 'repeat') {
+      // Replay the current track from the beginning
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        const promise = audioRef.current.play();
+        if (promise !== undefined) {
+          promise.catch(() => setIsPlaying(false));
+        }
+      }
+      setCurrentTime(0);
+      return;
+    }
+
     setCurrentPosition((prev) => {
       const nextPosition = prev + 1;
       if (nextPosition >= shuffledOrder.length) {
+        if (playMode === 'sequential') {
+          // Stop at the end of the playlist
+          return prev;
+        }
         const newOrder = shuffleArray(playlist.length);
         setShuffledOrder(newOrder);
         return 0;
       }
       return nextPosition;
     });
-  }, [shuffledOrder.length, playlist.length]);
+  }, [shuffledOrder.length, playlist.length, playMode]);
 
   const prev = useCallback(() => {
+    if (playlist.length === 0) return;
     setCurrentPosition((prevPos) =>
       prevPos <= 0 ? shuffledOrder.length - 1 : prevPos - 1
     );
   }, [shuffledOrder.length]);
+
+  const playSong = useCallback(
+    (id: string) => {
+      const targetIndex = playlist.findIndex((s) => s.id === id);
+      if (targetIndex === -1) return;
+      const targetPosition = shuffledOrder.findIndex((idx) => idx === targetIndex);
+      if (targetPosition !== -1) {
+        setCurrentPosition(targetPosition);
+      } else {
+        // Re-shuffle so the requested song is next.
+        const newOrder = shuffleArray(playlist.length);
+        const pos = newOrder.findIndex((idx) => idx === targetIndex);
+        setShuffledOrder(newOrder);
+        setCurrentPosition(pos >= 0 ? pos : 0);
+      }
+      setIsPlaying(true);
+      setIsOpen(true);
+      setHasUserInteracted(true);
+    },
+    [playlist, shuffledOrder]
+  );
 
   const handleNextRef = useRef<() => void>(() => {});
   useEffect(() => {
@@ -315,6 +400,20 @@ export function MusicPlayerProvider({
     setVisualizerMode((prev) =>
       prev === 'bars' ? 'wave' : prev === 'wave' ? 'heatmap' : 'bars'
     );
+  }, []);
+
+  const cyclePlayMode = useCallback(() => {
+    setPlayMode((prev) =>
+      prev === 'shuffle' ? 'repeat' : prev === 'repeat' ? 'sequential' : 'shuffle'
+    );
+  }, []);
+
+  const toggleLyrics = useCallback(() => {
+    setShowLyrics((prev) => !prev);
+  }, []);
+
+  const togglePlaylist = useCallback(() => {
+    setShowPlaylist((prev) => !prev);
   }, []);
 
   const seek = useCallback((time: number) => {
@@ -340,6 +439,10 @@ export function MusicPlayerProvider({
       currentSong,
       visualizerMode,
       playlistLoading,
+      playlist,
+      playMode,
+      showLyrics,
+      showPlaylist,
       togglePlay,
       next,
       prev,
@@ -350,6 +453,10 @@ export function MusicPlayerProvider({
       toggleMuted: () => setIsMuted((m) => !m),
       changeVisualizer,
       seek,
+      playSong,
+      cyclePlayMode,
+      toggleLyrics,
+      togglePlaylist,
       audioRef,
     }),
     [
@@ -367,11 +474,19 @@ export function MusicPlayerProvider({
       currentSong,
       visualizerMode,
       playlistLoading,
+      playlist,
+      playMode,
+      showLyrics,
+      showPlaylist,
       togglePlay,
       next,
       prev,
       changeVisualizer,
       seek,
+      playSong,
+      cyclePlayMode,
+      toggleLyrics,
+      togglePlaylist,
     ]
   );
 

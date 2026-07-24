@@ -8,6 +8,8 @@ export interface TerminalLine {
   type: 'input' | 'output' | 'error' | 'info';
   content: string;
   id: string;
+  /** Prompt shown before the command (only meaningful for type 'input'). */
+  prompt?: string;
 }
 
 export interface TerminalBlogPost {
