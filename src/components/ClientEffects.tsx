@@ -5,7 +5,7 @@
  *
  * 承担职责：
  * - MobileProvider / PerformanceProvider 全局 Provider
- * - Navigation 顶部导航（按路径白名单显隐，usePathname 替代 useLocation）
+ * - DynamicIsland 顶部统一控制岛（导航/音乐/主题/终端模式）
  * - MusicPlayer 全局音乐播放器（ssr:false，挂在 layout 内切换页面不中断）
  * - GlobalContextMenu 自定义右键菜单
  * - DebugProtection 调试保护
@@ -26,9 +26,8 @@ import { Toaster } from 'sonner';
 import { MobileProvider, useIsDesktopClient } from '@/contexts/MobileContext';
 import { PerformanceProvider, usePerformance } from '@/contexts/PerformanceContext';
 import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
-import { useTheme, useStylePreset } from '@/hooks';
-import { Navigation } from '@/components/sections/Navigation';
-import { TerminalLayout } from '@/components/themes/TerminalLayout';
+import { useStylePreset } from '@/hooks';
+import { TerminalShell } from '@/components/terminal/TerminalShell';
 import { GlobalContextMenu } from '@/components/CustomContextMenu';
 import { DebugProtection } from '@/components/DebugProtection';
 import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
@@ -39,7 +38,7 @@ import {
   MagneticCursor,
   VelocityCursor,
 } from '@/components/effects/MouseEffects';
-import type { SiteData } from '@/types';
+
 
 // 音乐播放器体积大且纯客户端，ssr:false 动态加载
 const MusicPlayer = dynamic(
@@ -94,14 +93,11 @@ function useStaggeredLoad(isReady: boolean) {
 }
 
 /**
- * 首屏加载管理器 - 加载关键资源（站点数据/字体）并就绪后放行，
- * 同时返回站点数据供 Navigation 使用（合并旧版 useInitialLoad 与
- * PageLayout 中重复的 site-data 拉取）。
+ * 首屏加载管理器 - 加载关键资源（站点数据/字体）并就绪后放行。
  */
 function useInitialLoad() {
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [siteData, setSiteData] = useState<SiteData | null>(null);
   const { effectiveQuality } = usePerformance();
 
   useEffect(() => {
@@ -109,10 +105,7 @@ function useInitialLoad() {
 
     const loadCriticalResources = async () => {
       try {
-        const [data] = await Promise.all([
-          fetch('/data/site-data.json')
-            .then((res) => (res.ok ? res.json() : null))
-            .catch(() => null),
+        await Promise.all([
           document.fonts.ready,
           new Promise((resolve) => requestAnimationFrame(resolve)),
         ]);
@@ -122,7 +115,6 @@ function useInitialLoad() {
         }
 
         if (mounted) {
-          setSiteData(data);
           setIsReady(true);
           setTimeout(() => {
             if (mounted) setIsLoading(false);
@@ -144,32 +136,16 @@ function useInitialLoad() {
     };
   }, [effectiveQuality]);
 
-  return { isReady, isLoading, siteData };
+  return { isReady, isLoading };
 }
-
-/** Navigation 显隐白名单（与旧版 PageLayout showNavPaths 一致） */
-const SHOW_NAV_PATHS = [
-  '/',
-  '/blog',
-  '/docs',
-  '/friends',
-  '/friends-circle',
-  '/about',
-  '/shuoshuo',
-  '/earth-online',
-  '/studio',
-  '/algo-viz',
-  '/projects',
-];
 
 function GlobalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isHomePage = pathname === '/';
   const isDesktopClient = useIsDesktopClient();
   const { enableMouseEffects, effectiveQuality } = usePerformance();
-  const { theme, isTransitioning, toggleTheme } = useTheme();
-  const { preset, setPreset } = useStylePreset();
-  const { isReady, isLoading, siteData } = useInitialLoad();
+  const { preset } = useStylePreset();
+  const { isReady, isLoading } = useInitialLoad();
   const phases = useStaggeredLoad(isReady);
 
   // 根据性能级别调整特效参数（与旧版一致）
@@ -181,14 +157,6 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
 
   const enableEffects = isReady && effectiveQuality !== 'low';
   const isTerminal = preset.id === 'terminal';
-
-  // 导航显隐：白名单 + /docs/*；/blog 仅列表页
-  const shouldShowNav =
-    !isTerminal &&
-    (SHOW_NAV_PATHS.includes(pathname) ||
-      pathname.startsWith('/docs/'));
-  // 算法可视化页面导航不固定
-  const isStickyNav = pathname !== '/algo-viz';
 
   return (
     <>
@@ -242,33 +210,10 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
         </>
       )}
 
-      {/* 顶部导航（按路径白名单显隐；终端风格使用自带侧边栏） */}
-      {shouldShowNav && siteData?.navigation && (
-        <Navigation
-          data={siteData.navigation}
-          theme={theme}
-          onThemeToggle={toggleTheme}
-          isThemeTransitioning={isTransitioning}
-          sticky={isStickyNav}
-        />
-      )}
+      {/* 顶部统一控制岛：导航 + 音乐 + 主题 + 终端模式 */}
+      {!isTerminal && <DynamicIsland />}
 
-      {/* Apple Dynamic Island —— 全局灵动岛，可形变为音乐控制台与命令面板 */}
-      {!isTerminal && shouldShowNav && <DynamicIsland />}
-
-      {isTerminal ? (
-        <TerminalLayout
-          siteData={siteData}
-          theme={theme}
-          onThemeToggle={toggleTheme}
-          preset={preset.id}
-          onPresetChange={setPreset}
-        >
-          {children}
-        </TerminalLayout>
-      ) : (
-        children
-      )}
+      {isTerminal ? <TerminalShell /> : children}
 
       {/* 全局音乐播放器 - 挂在 layout 内，切换页面不会中断 */}
       <MusicPlayer />

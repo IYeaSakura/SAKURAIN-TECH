@@ -11,6 +11,8 @@ public/data/friends.json
 public/data/playlist.json
 public/data/site-data.json
 public/data/docs.json
+public/data/blog.json
+public/data/notes.json
 public/data/beidou-satellites.json
 public/config/security-config.json
 public/config/welcome-modal.json

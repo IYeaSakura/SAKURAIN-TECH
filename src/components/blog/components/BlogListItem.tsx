@@ -50,8 +50,8 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
       <div
         className="relative transition-all duration-300"
         style={{
-          background: isHovered ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)',
-          border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.1)'}`,
+          background: isHovered ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
+          border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
           clipPath: clipPathRounded(8),
           transform: isHovered ? 'translateX(8px)' : 'none',
         }}
@@ -101,8 +101,8 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               className="flex-shrink-0 w-16 h-16 flex items-center justify-center overflow-hidden relative"
               style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.1)'}`,
+                background: 'var(--bg-tertiary)',
+                border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
                 clipPath: clipPathRounded(4),
               }}
             >
@@ -140,11 +140,11 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
                   <div
                     className="absolute left-0 -top-1 -translate-y-full opacity-0 group-hover/title:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap"
                     style={{
-                      background: 'rgba(15, 23, 42, 0.95)',
-                      border: '1px solid rgba(59, 130, 246, 0.5)',
+                      background: 'var(--bg-primary)',
+                      border: '2px solid var(--accent-primary)',
                       padding: '4px 12px',
                       clipPath: clipPathRounded(4),
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+                      boxShadow: '4px 4px 0 var(--border-subtle)',
                     }}
                   >
                     <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -158,9 +158,9 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
                   <div
                     className="flex-shrink-0 flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider"
                     style={{
-                      background: 'rgba(59, 130, 246, 0.15)',
-                      border: '1px solid rgba(59, 130, 246, 0.4)',
-                      color: '#60a5fa',
+                      background: 'var(--bg-tertiary)',
+                      border: '2px solid var(--accent-primary)',
+                      color: 'var(--accent-primary)',
                       clipPath: clipPathRounded(2),
                     }}
                   >
@@ -208,9 +208,9 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
                         transition={{ type: 'spring', stiffness: 400 }}
                         className="text-xs px-2 py-1"
                         style={{
-                          background: 'rgba(255, 255, 255, 0.05)',
+                          background: 'var(--bg-tertiary)',
                           color: 'var(--accent-primary)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          border: '2px solid var(--border-subtle)',
                           clipPath: clipPathRounded(2),
                         }}
                       >
