@@ -1,4 +1,12 @@
-"use client"
+'use client';
+
+/**
+ * CustomContextMenu —— brutalist right-click menu.
+ *
+ * Replaces the previous glass/rounded aesthetic with sharp corners, thick
+ * borders, pixel offset shadows and monospace labels to match the site-wide
+ * new-brutalism design system.
+ */
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -14,7 +22,7 @@ import {
   Info,
   ExternalLink,
   Link as LinkIcon,
-  RotateCcw
+  RotateCcw,
 } from 'lucide-react';
 import { deploymentConfig } from '@/config/deployment-config';
 import { toast } from 'sonner';
@@ -29,7 +37,18 @@ interface ContextMenuProps {
   linkText?: string;
 }
 
-export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, linkUrl, linkText }: ContextMenuProps) {
+const PIXEL_BORDER = '2px solid var(--border-subtle)';
+const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
+
+export function CustomContextMenu({
+  x,
+  y,
+  onClose,
+  selectedText,
+  isEditable,
+  linkUrl,
+  linkText,
+}: ContextMenuProps) {
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x, y });
@@ -62,9 +81,7 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       try {
         const now = Date.now();
         if (now - lastMouseDownTime.current < 100) return;
-
         if (isOpening) return;
-
         if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
           onClose();
         }
@@ -137,34 +154,29 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
 
   const handleCopy = useCallback(async () => {
     if (!selectedText) return;
-
     try {
       await navigator.clipboard.writeText(selectedText);
       onClose();
     } catch (error) {
       console.error('Failed to copy:', error);
-      const fallbackCopy = () => {
-        try {
-          const textArea = document.createElement('textarea');
-          textArea.value = selectedText;
-          textArea.style.position = 'fixed';
-          textArea.style.left = '-9999px';
-          document.body.appendChild(textArea);
-          textArea.select();
-          document.execCommand('copy');
-          document.body.removeChild(textArea);
-          onClose();
-        } catch (fallbackError) {
-          console.error('Fallback copy also failed:', fallbackError);
-        }
-      };
-      fallbackCopy();
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = selectedText;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        onClose();
+      } catch (fallbackError) {
+        console.error('Fallback copy also failed:', fallbackError);
+      }
     }
   }, [selectedText, onClose]);
 
   const handleCut = useCallback(async () => {
     if (!selectedText || !isEditable) return;
-
     try {
       await navigator.clipboard.writeText(selectedText);
       document.execCommand('delete');
@@ -186,7 +198,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
 
   const handleSearch = useCallback(() => {
     if (!selectedText) return;
-
     try {
       const searchUrl = `https://cn.bing.com/search?q=${encodeURIComponent(selectedText)}`;
       window.open(searchUrl, '_blank');
@@ -227,11 +238,10 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
   const handleShare = useCallback(async () => {
     try {
       const url = window.location.href;
-
       if (navigator.share) {
         await navigator.share({
           title: document.title,
-          url: url,
+          url,
         });
       } else {
         await navigator.clipboard.writeText(url);
@@ -258,7 +268,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
 
   const handleOpenLinkInNewTab = useCallback(() => {
     if (!linkUrl) return;
-
     try {
       window.open(linkUrl, '_blank');
       onClose();
@@ -269,7 +278,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
 
   const handleOpenLinkInNewWindow = useCallback(() => {
     if (!linkUrl) return;
-
     try {
       window.open(linkUrl, '_blank', 'width=800,height=600');
       onClose();
@@ -280,7 +288,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
 
   const handleCopyLinkUrl = useCallback(async () => {
     if (!linkUrl) return;
-
     try {
       await navigator.clipboard.writeText(linkUrl);
       onClose();
@@ -291,7 +298,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
 
   const handleCopyLinkText = useCallback(async () => {
     if (!linkText) return;
-
     try {
       await navigator.clipboard.writeText(linkText);
       onClose();
@@ -307,7 +313,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       onClick: handleCopy,
       disabled: !selectedText,
       shortcut: 'Ctrl+C',
-      color: '#60a5fa',
       show: !!selectedText && !linkUrl,
     },
     {
@@ -316,7 +321,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       onClick: handleCut,
       disabled: !selectedText || !isEditable,
       shortcut: 'Ctrl+X',
-      color: '#f472b6',
       show: !!selectedText && isEditable,
     },
     {
@@ -324,7 +328,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       label: '粘贴',
       onClick: handlePaste,
       shortcut: 'Ctrl+V',
-      color: '#a78bfa',
       show: isEditable,
     },
     {
@@ -333,7 +336,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       onClick: handleOpenLinkInNewTab,
       disabled: !linkUrl,
       shortcut: '',
-      color: '#60a5fa',
       show: !!linkUrl,
     },
     {
@@ -342,7 +344,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       onClick: handleOpenLinkInNewWindow,
       disabled: !linkUrl,
       shortcut: '',
-      color: '#34d399',
       show: !!linkUrl,
     },
     {
@@ -351,7 +352,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       onClick: handleCopyLinkUrl,
       disabled: !linkUrl,
       shortcut: '',
-      color: '#f472b6',
       show: !!linkUrl,
     },
     {
@@ -360,7 +360,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       onClick: handleCopyLinkText,
       disabled: !linkText,
       shortcut: '',
-      color: '#a78bfa',
       show: !!linkText,
     },
     {
@@ -369,7 +368,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       onClick: handleSearch,
       disabled: !selectedText,
       shortcut: 'Ctrl+K',
-      color: '#34d399',
       show: !!selectedText,
     },
     {
@@ -377,7 +375,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       label: '刷新页面',
       onClick: handleRefresh,
       shortcut: 'F5',
-      color: '#2dd4bf',
       show: true,
     },
     {
@@ -385,7 +382,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       label: '强制刷新',
       onClick: handleForceRefresh,
       shortcut: 'Ctrl+F5',
-      color: '#f97316',
       show: true,
     },
     {
@@ -393,7 +389,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       label: '返回首页',
       onClick: handleGoHome,
       shortcut: 'Alt+Home',
-      color: '#818cf8',
       show: true,
     },
     {
@@ -401,7 +396,6 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       label: '共享页面',
       onClick: handleShare,
       shortcut: '',
-      color: '#a3e635',
       show: true,
     },
     {
@@ -409,10 +403,9 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
       label: '关于',
       onClick: handleAbout,
       shortcut: '',
-      color: '#fb923c',
       show: true,
     },
-  ].filter(item => item.show);
+  ].filter((item) => item.show);
 
   if (!isMounted) return null;
 
@@ -420,84 +413,80 @@ export function CustomContextMenu({ x, y, onClose, selectedText, isEditable, lin
     <AnimatePresence>
       <motion.div
         ref={menuRef}
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="fixed z-[99999] min-w-[200px] rounded-2xl overflow-hidden backdrop-blur-xl pointer-events-auto"
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.15, ease: 'easeOut' }}
+        className="fixed z-[99999] min-w-[200px] pointer-events-auto"
         style={{
           left: position.x,
           top: position.y,
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-subtle)',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+          background: 'var(--bg-secondary)',
+          border: PIXEL_BORDER,
+          boxShadow: PIXEL_SHADOW,
         }}
       >
-        <div className="relative overflow-hidden pointer-events-auto">
-          <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/5 via-transparent to-[var(--accent-secondary)]/5 pointer-events-none" />
-
-          <div className="relative p-2 space-y-0.5">
-            {menuItems.map((item, index) => (
-              <motion.button
-                key={index}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.03 }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!item.disabled) {
-                    item.onClick();
-                  }
-                }}
-                disabled={item.disabled}
-                className="relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 disabled:hover:bg-transparent pointer-events-auto"
+        <div className="p-1.5 space-y-0.5">
+          {menuItems.map((item, index) => (
+            <motion.button
+              key={index}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.02 }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!item.disabled) {
+                  item.onClick();
+                }
+              }}
+              disabled={item.disabled}
+              className="relative flex w-full items-center gap-3 px-3 py-2 text-sm transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40 hover:-translate-x-0.5 hover:-translate-y-0.5 pointer-events-auto"
+              style={{
+                background: 'var(--bg-secondary)',
+                border: '2px solid transparent',
+                color: 'var(--text-primary)',
+              }}
+              onMouseEnter={(e) => {
+                if (!item.disabled) {
+                  e.currentTarget.style.background = 'var(--bg-tertiary)';
+                  e.currentTarget.style.borderColor = 'var(--border-subtle)';
+                  e.currentTarget.style.boxShadow = '2px 2px 0 var(--border-subtle)';
+                  e.currentTarget.style.color = 'var(--accent-primary)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--bg-secondary)';
+                e.currentTarget.style.borderColor = 'transparent';
+                e.currentTarget.style.boxShadow = 'none';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
+            >
+              <div
+                className="flex items-center justify-center w-7 h-7 border-2"
                 style={{
-                  color: 'var(--text-primary)',
-                }}
-                onMouseEnter={(e) => {
-                  try {
-                    if (!item.disabled) {
-                      e.currentTarget.style.background = `${item.color}15`;
-                      e.currentTarget.style.color = item.color;
-                    }
-                  } catch (error) {
-                    console.error('Error in onMouseEnter:', error);
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  try {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'var(--text-primary)';
-                  } catch (error) {
-                    console.error('Error in onMouseLeave:', error);
-                  }
+                  background: 'var(--bg-primary)',
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--accent-primary)',
                 }}
               >
-                <div
-                  className="flex items-center justify-center w-8 h-8 rounded-lg"
+                <item.icon className="w-4 h-4" />
+              </div>
+              <span className="flex-1 text-left font-medium">{item.label}</span>
+              {item.shortcut && (
+                <span
+                  className="text-[10px] px-1.5 py-0.5 border-2 font-mono"
                   style={{
-                    background: `${item.color}20`,
-                    color: item.color,
+                    background: 'var(--bg-primary)',
+                    borderColor: 'var(--border-subtle)',
+                    color: 'var(--text-muted)',
                   }}
                 >
-                  <item.icon className="w-4 h-4" />
-                </div>
-                <span className="flex-1 text-left font-medium">{item.label}</span>
-                {item.shortcut && (
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-md font-mono"
-                    style={{
-                      background: `${item.color}10`,
-                      color: `${item.color}80`,
-                    }}
-                  >
-                    {item.shortcut}
-                  </span>
-                )}
-              </motion.button>
-            ))}
-          </div>
+                  {item.shortcut}
+                </span>
+              )}
+            </motion.button>
+          ))}
         </div>
       </motion.div>
     </AnimatePresence>
@@ -539,11 +528,10 @@ export function GlobalContextMenu() {
 
     const handleContextMenu = (event: MouseEvent) => {
       try {
-        const isMobile = window.innerWidth < 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (isMobile) {
-          return;
-        }
-
+        const isMobile =
+          window.innerWidth < 768 ||
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) return;
         if (isHandlingContextMenu.current) return;
         isHandlingContextMenu.current = true;
 
@@ -554,11 +542,12 @@ export function GlobalContextMenu() {
         const text = selection?.toString().trim() || '';
 
         const target = event.target as HTMLElement;
-        const editable = target.isContentEditable ||
-                       target.tagName === 'INPUT' ||
-                       target.tagName === 'TEXTAREA' ||
-                       target.closest('input') !== null ||
-                       target.closest('textarea') !== null;
+        const editable =
+          target.isContentEditable ||
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.closest('input') !== null ||
+          target.closest('textarea') !== null;
 
         const linkFromElement = getLinkFromElement(target);
 

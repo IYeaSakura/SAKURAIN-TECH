@@ -15,7 +15,7 @@ import { Terminal, X, Moon, Sun } from 'lucide-react';
 import { useTheme, useStylePreset, useMusicPlayer } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { useTerminalData } from './useTerminalData';
-import { executeCommand } from './commands';
+import { executeCommand, getCompletions } from './commands';
 import type { TerminalLine } from './types';
 
 const WELCOME: TerminalLine[] = [
@@ -87,7 +87,12 @@ export function TerminalShell() {
       setInputHistory((prev) => [...prev, trimmed]);
       setHistoryIndex(-1);
       addOutput([
-        { type: 'input', content: `${getPrompt(cwd)} ${trimmed}`, id: `in-${Date.now()}` },
+        {
+          type: 'input',
+          prompt: getPrompt(cwd),
+          content: trimmed,
+          id: `in-${Date.now()}`,
+        },
       ]);
       setInput('');
 
@@ -117,6 +122,45 @@ export function TerminalShell() {
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         submitInput(input);
+        return;
+      }
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const completions = getCompletions(input, {
+          cwd,
+          setCwd,
+          data,
+          router,
+          setPreset,
+          theme,
+          toggleTheme,
+          player: {
+            isPlaying: player.isPlaying,
+            currentSong: player.currentSong,
+            togglePlay: player.togglePlay,
+            next: player.next,
+            prev: player.prev,
+          },
+          addOutput,
+          clearOutput,
+        });
+        if (completions.length === 1) {
+          const tokens = input.trimStart().split(/\s+/);
+          if (tokens.length <= 1) {
+            setInput(completions[0] + ' ');
+          } else {
+            tokens[tokens.length - 1] = completions[0];
+            setInput(tokens.join(' '));
+          }
+        } else if (completions.length > 1) {
+          addOutput([
+            {
+              type: 'info',
+              content: completions.join('  '),
+              id: `comp-${Date.now()}`,
+            },
+          ]);
+        }
         return;
       }
       if (e.key === 'ArrowUp') {
@@ -219,8 +263,10 @@ export function TerminalShell() {
           >
             {line.type === 'input' ? (
               <span>
-                <span className="text-[var(--accent-secondary)]">{getPrompt(cwd)}</span>{' '}
-                {line.content.replace(`${getPrompt(cwd)} `, '')}
+                <span className="text-[var(--accent-secondary)]">
+                  {line.prompt ?? getPrompt(cwd)}
+                </span>{' '}
+                {line.content}
               </span>
             ) : (
               line.content

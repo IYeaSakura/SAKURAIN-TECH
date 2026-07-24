@@ -603,3 +603,44 @@ export function executeCommand(input: string, ctx: CommandContext): void {
 }
 
 export { commands };
+
+/**
+ * Generate completion candidates for the current input.
+ *
+ * Supports command-name completion at the start of the line and file/path
+ * completion for the last whitespace-separated token.
+ */
+export function getCompletions(input: string, ctx: CommandContext): string[] {
+  const trimmed = input.trimStart();
+  const tokens = trimmed.split(/\s+/);
+
+  // Complete command names when typing the first token.
+  if (tokens.length <= 1 && !trimmed.includes(' ')) {
+    const prefix = tokens[0] ?? '';
+    const candidates = Array.from(commandMap.keys()).filter((name) =>
+      name.startsWith(prefix)
+    );
+    return Array.from(new Set(candidates));
+  }
+
+  // Complete the last token as a path.
+  const command = tokens[0] ?? '';
+  const needsPath = ['cd', 'ls', 'cat', 'open'].includes(command);
+  if (!needsPath) return [];
+
+  const lastToken = tokens[tokens.length - 1] ?? '';
+  const resolvedDir = lastToken.includes('/')
+    ? resolvePath(ctx.cwd, lastToken.slice(0, lastToken.lastIndexOf('/') + 1))
+    : ctx.cwd;
+  const prefix = lastToken.includes('/')
+    ? lastToken.slice(lastToken.lastIndexOf('/') + 1)
+    : lastToken;
+
+  const entries = getDirectoryEntries(ctx, resolvedDir);
+  const matches = entries.filter((entry) => entry.startsWith(prefix));
+
+  const base = lastToken.includes('/')
+    ? lastToken.slice(0, lastToken.lastIndexOf('/') + 1)
+    : '';
+  return matches.map((match) => `${base}${match}`);
+}
