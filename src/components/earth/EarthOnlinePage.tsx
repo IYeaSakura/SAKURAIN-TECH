@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * 地球Online子页面（迁移自旧 Vite 项目 src/pages/EarthOnline/index.tsx）
+ * Earth Online sub-page (migrated from legacy Vite project src/pages/EarthOnline/index.tsx)
  *
- * 布局：左侧信息栏 + 右侧展示容器
- * 复用主页的展示容器（GlobeShowcase组件）
+ * Layout: left info panel + right showcase container
+ * Reuses the homepage showcase container (GlobeShowcase component)
  *
  * @author SAKURAIN
  */
@@ -17,15 +17,13 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { GlobeShowcase, DEMOS, type DemoType } from './GlobeShowcase';
-import { AmbientGlow, GradientText } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
 import { RouteLoader } from '@/components/RouteLoader';
 import { useConfig } from '@/hooks';
-import { clipPathRounded } from '@/utils/styles';
 import { CommentSection } from '@/components/blog/components/CommentSection';
 import type { SiteData } from '@/types';
 
-// 特性卡片组件
+// Feature card with neo-brutalist border, offset shadow and hover nudge
 interface FeatureCardProps {
   icon: typeof Globe;
   title: string;
@@ -49,49 +47,50 @@ const FeatureCard = ({ icon: Icon, title, description, isActive, onClick, delay 
       className="w-full text-left relative group"
     >
       <div
-        className="relative p-4 overflow-hidden transition-all duration-300"
+        className="relative p-4 overflow-hidden transition-all duration-200"
         style={{
-          background: isActive
-            ? 'rgba(59, 130, 246, 0.1)'
-            : isHovered
-              ? 'rgba(255, 255, 255, 0.05)'
-              : 'rgba(255, 255, 255, 0.02)',
-          border: `2px solid ${isActive ? 'var(--accent-primary)' : isHovered ? 'rgba(59, 130, 246, 0.5)' : 'rgba(255, 255, 255, 0.08)'}`,
-          clipPath: clipPathRounded(8),
-          transform: isHovered ? 'translateX(8px)' : 'translateX(0)',
+          background: isActive ? 'var(--bg-secondary)' : 'var(--bg-primary)',
+          border: `2px solid ${isActive ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
+          boxShadow: isActive
+            ? '4px 4px 0 var(--accent-primary)'
+            : '4px 4px 0 var(--border-subtle)',
+          transform: isHovered ? 'translate(-2px, -2px)' : 'translate(0, 0)',
         }}
       >
-        {/* 左侧激活指示器 */}
+        {/* Active indicator on the left edge */}
         {isActive && (
           <div
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8"
             style={{ background: 'var(--accent-primary)' }}
           />
         )}
 
         <div className="flex items-start gap-4">
           <div
-            className="flex-shrink-0 w-12 h-12 flex items-center justify-center transition-all duration-300"
+            className="flex-shrink-0 w-12 h-12 flex items-center justify-center transition-all duration-200"
             style={{
-              background: isActive ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-              clipPath: clipPathRounded(6),
+              background: isActive ? 'var(--bg-primary)' : 'var(--bg-secondary)',
+              border: `2px solid ${isActive ? 'var(--accent-primary)' : 'var(--border-subtle)'}`,
             }}
           >
             <Icon
-              className="w-6 h-6 transition-colors duration-300"
+              className="w-6 h-6 transition-colors duration-200"
               style={{ color: isActive ? 'var(--accent-primary)' : 'var(--text-muted)' }}
             />
           </div>
 
           <div className="flex-1 min-w-0">
             <h3
-              className="font-bold text-base mb-1 transition-colors duration-300"
-              style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)' }}
+              className="font-bold text-sm mb-1 uppercase tracking-wider transition-colors duration-200"
+              style={{
+                fontFamily: 'var(--font-mono)',
+                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+              }}
             >
               {title}
             </h3>
             <p
-              className="text-sm line-clamp-2 transition-colors duration-300"
+              className="text-xs line-clamp-2 transition-colors duration-200"
               style={{ color: 'var(--text-muted)' }}
             >
               {description}
@@ -99,7 +98,7 @@ const FeatureCard = ({ icon: Icon, title, description, isActive, onClick, delay 
           </div>
 
           <ChevronRight
-            className="flex-shrink-0 w-5 h-5 transition-all duration-300"
+            className="flex-shrink-0 w-5 h-5 transition-all duration-200"
             style={{
               color: isActive ? 'var(--accent-primary)' : 'var(--text-muted)',
               opacity: isActive || isHovered ? 1 : 0,
@@ -112,7 +111,7 @@ const FeatureCard = ({ icon: Icon, title, description, isActive, onClick, delay 
   );
 };
 
-// 信息面板组件
+// Left info panel with brutalist header, current demo card and feature switcher
 const InfoPanel = ({
   selectedDemo,
   onSelectDemo
@@ -140,7 +139,7 @@ const InfoPanel = ({
 
   return (
     <div className="h-full flex flex-col">
-      {/* 标题区域 */}
+      {/* Header badge, title and description */}
       <div className="mb-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -148,62 +147,79 @@ const InfoPanel = ({
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="inline-flex items-center gap-2 px-3 py-1.5 mb-4"
           style={{
-            background: 'rgba(59, 130, 246, 0.1)',
-            border: '1px solid rgba(59, 130, 246, 0.3)',
-            clipPath: clipPathRounded(4),
+            background: 'var(--bg-secondary)',
+            border: '2px solid var(--accent-primary)',
+            boxShadow: '4px 4px 0 var(--accent-primary)',
           }}
         >
           <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-          <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>交互式展示</span>
+          <span
+            className="text-[10px] font-bold uppercase tracking-wider"
+            style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
+          >
+            交互式展示
+          </span>
         </motion.div>
 
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className="text-3xl font-bold mb-3"
+          className="text-3xl font-bold mb-3 uppercase tracking-wider"
+          style={{ fontFamily: 'var(--font-pixel)', color: 'var(--text-primary)' }}
         >
-          <GradientText animate={true}>地球 Online</GradientText>
+          地球 Online
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="text-base leading-relaxed"
+          className="text-sm leading-relaxed"
           style={{ color: 'var(--text-muted)' }}
         >
           探索两种不同的交互式可视化效果。从 3D 地球到中国地图，体验浏览器端的高性能图形渲染技术。
         </motion.p>
       </div>
 
-      {/* 当前选中的展示 */}
+      {/* Current selected demo card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
         className="mb-6 p-4"
         style={{
-          background: 'rgba(59, 130, 246, 0.05)',
-          border: '1px solid rgba(59, 130, 246, 0.2)',
-          clipPath: clipPathRounded(8),
+          background: 'var(--bg-secondary)',
+          border: '2px solid var(--accent-primary)',
+          boxShadow: '4px 4px 0 var(--accent-primary)',
         }}
       >
         <div className="flex items-center gap-3 mb-2">
           <Icon className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-          <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>当前展示</span>
+          <span
+            className="text-[10px] font-bold uppercase tracking-wider"
+            style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
+          >
+            当前展示
+          </span>
         </div>
-        <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
+        <h3
+          className="text-base font-bold mb-1 uppercase tracking-wide"
+          style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}
+        >
           {currentDemo.title}
         </h3>
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
           {currentDemo.description}
         </p>
       </motion.div>
 
-      {/* 功能切换列表 */}
+      {/* Feature switcher list */}
       <div className="flex-1 space-y-3 mb-6">
-        <h3 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: 'var(--text-muted)' }}>
+        <h3
+          className="text-[10px] font-bold uppercase tracking-wider mb-4"
+          style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}
+        >
           切换展示
         </h3>
         {features.map((feature, index) => (
@@ -218,20 +234,18 @@ const InfoPanel = ({
           />
         ))}
       </div>
-
-
     </div>
   );
 };
 
-// 主页面组件
+// Main page component
 export default function EarthOnlinePage() {
   const [selectedDemo, setSelectedDemo] = useState<DemoType>('cesium');
   const [isLoading, setIsLoading] = useState(true);
   const { data: siteData } = useConfig<SiteData>('/data/site-data.json');
 
   useEffect(() => {
-    // 模拟加载完成
+    // Simulate loading completion
     const timer = setTimeout(() => setIsLoading(false), 500);
     return () => clearTimeout(timer);
   }, []);
@@ -242,37 +256,35 @@ export default function EarthOnlinePage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
-      {/* 背景特效 */}
+      {/* Subtle grid background using theme border color */}
       <div className="fixed inset-0 pointer-events-none">
-        <AmbientGlow color="var(--accent-primary)" opacity={0.1} position="top-right" size={500} />
-        <AmbientGlow color="var(--accent-secondary)" opacity={0.08} position="bottom-left" size={400} />
-
-        {/* 网格背景 */}
         <div
-          className="absolute inset-0 opacity-[0.02]"
+          className="absolute inset-0"
           style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255, 0.1) 1px, transparent 1px),
-                             linear-gradient(90deg, rgba(255,255,255, 0.1) 1px, transparent 1px)`,
-            backgroundSize: '80px 80px'
+            backgroundImage: `linear-gradient(var(--border-subtle) 1px, transparent 1px),
+                             linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)`,
+            backgroundSize: '80px 80px',
+            opacity: 0.15,
           }}
         />
       </div>
 
-      {/* 主内容区域 */}
+      {/* Main content area */}
       <div className="relative z-10 min-h-screen flex flex-col">
-        {/* 顶部导航占位 - 导航由全局布局提供 */}
+        {/* Top navigation placeholder - global layout provides the actual nav */}
         <div className="h-16" />
 
-        {/* 主体内容 - 左右布局 */}
+        {/* Main body - left info panel + right showcase */}
         <main className="flex-1 flex flex-col lg:flex-row">
-          {/* 左侧信息栏 */}
+          {/* Left info panel */}
           <motion.aside
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full lg:w-[400px] xl:w-[450px] flex-shrink-0 p-6 lg:p-8 lg:border-r"
+            className="w-full lg:w-[400px] xl:w-[450px] flex-shrink-0 p-6 lg:p-8 lg:border-r-2"
             style={{
-              borderColor: 'rgba(255, 255, 255, 0.08)',
+              borderColor: 'var(--border-subtle)',
+              background: 'var(--bg-primary)',
             }}
           >
             <InfoPanel
@@ -281,31 +293,33 @@ export default function EarthOnlinePage() {
             />
           </motion.aside>
 
-          {/* 右侧展示区域 - 占满剩余空间 */}
+          {/* Right showcase area - fills remaining space */}
           <motion.section
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="flex-1 p-4 lg:p-8"
+            style={{ background: 'var(--bg-primary)' }}
           >
             <div className="w-full h-[500px] lg:h-[calc(100vh-140px)]">
               <GlobeShowcase
                 pageMode={true}
                 initialDemo={selectedDemo}
-                key={selectedDemo} // 强制重新挂载以响应切换
+                key={selectedDemo} // force remount on demo switch
               />
             </div>
           </motion.section>
         </main>
 
-        {/* 功能反馈评论区 */}
+        {/* Feedback comment section */}
         <motion.section
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full px-6 lg:px-8 py-8"
+          className="w-full px-6 lg:px-8 py-8 border-t-2"
           style={{
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+            background: 'var(--bg-primary)',
+            borderColor: 'var(--border-subtle)',
           }}
         >
           <div className="max-w-4xl mx-auto">

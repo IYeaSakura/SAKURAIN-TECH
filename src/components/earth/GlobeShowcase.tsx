@@ -252,7 +252,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
     }
   }, [pageMode, isLoaded]);
 
-  // 页面模式布局
+  // Page mode layout
   if (pageMode) {
     return (
       <div
@@ -262,60 +262,66 @@ export const GlobeShowcase = memo(function GlobeShowcase({
         onMouseLeave={() => setIsHovered(false)}
       >
         <div
-          className="relative w-full h-full rounded-2xl overflow-hidden"
+          className="relative w-full h-full"
           style={{
-            background: '#0D0D0D',
+            background: 'var(--bg-secondary)',
             border: '2px solid',
             borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
             boxShadow: isHovered
-              ? '0 25px 50px -12px var(--accent-glow), inset 0 0 60px var(--accent-primary)10'
-              : '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              ? '4px 4px 0 var(--accent-primary)'
+              : '4px 4px 0 var(--border-subtle)',
           }}
         >
-          {/* 顶部控制栏 */}
+          {/* Top control bar */}
           <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div
+              className="flex items-center gap-2 px-3 py-1.5"
+              style={{
+                background: 'var(--bg-primary)',
+                border: '2px solid var(--accent-primary)',
+              }}
+            >
               <Globe className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
               <span
-                className="text-sm font-bold tracking-wider"
-                style={{
-                  color: 'var(--accent-primary)',
-                  textShadow: '0 0 10px var(--accent-glow)',
-                }}
+                className="text-[10px] font-bold uppercase tracking-wider"
+                style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
               >
                 {demoConfig.title}
               </span>
             </div>
 
             <div className="flex items-center gap-2">
-              {/* 特效切换按钮 */}
+              {/* Effect switch button */}
               <button
                 onClick={handleSwitchDemo}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all duration-200 hover:bg-white/10"
+                className="flex items-center gap-1.5 px-3 py-1.5 transition-all duration-200 uppercase bg-[var(--bg-primary)] text-[var(--accent-primary)] border-2 border-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
                 style={{
-                  border: '1px solid rgba(59, 130, 246, 0.3)',
-                  background: 'rgba(0, 0, 0, 0.5)',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '10px',
+                  letterSpacing: '0.05em',
                   cursor: 'pointer',
                 }}
                 title="切换特效"
               >
-                <Layers className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />
-                <span className="text-xs" style={{ color: '#60a5fa' }}>切换</span>
+                <Layers className="w-3.5 h-3.5" />
+                <span>切换</span>
               </button>
 
-              {/* 下拉选择 */}
+              {/* Dropdown selector */}
               <div className="relative">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all duration-200"
+                  className="flex items-center gap-1.5 px-3 py-1.5 transition-all duration-200 uppercase bg-[var(--bg-primary)] text-[var(--accent-primary)] border-2 border-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
                   style={{
-                    border: '1px solid rgba(59, 130, 246, 0.3)',
-                    background: 'rgba(0, 0, 0, 0.5)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '10px',
+                    letterSpacing: '0.05em',
+                    cursor: 'pointer',
                   }}
                 >
-                  <demoConfig.icon className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />
-                  <span className="text-xs" style={{ color: '#60a5fa' }}>{demoConfig.label}</span>
-                  <ChevronDown className="w-3 h-3" style={{ color: '#60a5fa' }} />
+                  <demoConfig.icon className="w-3.5 h-3.5" />
+                  <span>{demoConfig.label}</span>
+                  <ChevronDown className="w-3 h-3" />
                 </button>
 
                 <AnimatePresence>
@@ -324,11 +330,11 @@ export const GlobeShowcase = memo(function GlobeShowcase({
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="absolute top-full right-0 mt-2 w-40 rounded-lg overflow-hidden z-50"
+                      className="absolute top-full right-0 mt-2 w-40 z-50"
                       style={{
-                        background: 'rgba(0, 0, 0, 0.9)',
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                        background: 'var(--bg-primary)',
+                        border: '2px solid var(--accent-primary)',
+                        boxShadow: '4px 4px 0 var(--accent-primary)',
                       }}
                     >
                       {DEMOS.map((demo) => {
@@ -338,20 +344,21 @@ export const GlobeShowcase = memo(function GlobeShowcase({
                           <button
                             key={demo.id}
                             onClick={() => handleSelectDemo(demo.id)}
-                            className="flex items-center gap-2 w-full px-4 py-2.5 text-left transition-all duration-200 hover:bg-white/10"
+                            className="flex items-center gap-2 w-full px-4 py-2.5 text-left transition-all duration-200 uppercase hover:bg-[var(--bg-secondary)] hover:text-[var(--accent-primary)]"
+                            style={{
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: '10px',
+                              letterSpacing: '0.05em',
+                              background: isActive ? 'var(--accent-primary)' : 'var(--bg-primary)',
+                              color: isActive ? 'var(--bg-primary)' : 'var(--text-muted)',
+                              borderBottom: '2px solid var(--border-subtle)',
+                              cursor: 'pointer',
+                            }}
                           >
-                            <Icon
-                              className="w-4 h-4"
-                              style={{ color: isActive ? '#60a5fa' : 'rgba(156, 163, 175, 0.8)' }}
-                            />
-                            <span
-                              className="text-sm"
-                              style={{ color: isActive ? '#60a5fa' : 'rgba(156, 163, 175, 0.8)' }}
-                            >
-                              {demo.label}
-                            </span>
+                            <Icon className="w-4 h-4" />
+                            <span>{demo.label}</span>
                             {isActive && (
-                              <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400" />
+                              <span className="ml-auto w-1.5 h-1.5" style={{ background: 'var(--bg-primary)' }} />
                             )}
                           </button>
                         );
@@ -361,49 +368,63 @@ export const GlobeShowcase = memo(function GlobeShowcase({
                 </AnimatePresence>
               </div>
 
-              {/* 全屏按钮 */}
+              {/* Fullscreen button */}
               <button
                 onClick={isFullscreen ? exitFullscreen : enterFullscreen}
-                className="flex items-center justify-center w-7 h-7 rounded-md transition-all duration-200 hover:bg-white/10"
-                style={{
-                  border: '1px solid rgba(59, 130, 246, 0.3)',
-                  background: 'rgba(0, 0, 0, 0.5)',
-                  cursor: 'pointer',
-                }}
+                className="flex items-center justify-center w-8 h-8 transition-all duration-200 bg-[var(--bg-primary)] text-[var(--accent-primary)] border-2 border-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
+                style={{ cursor: 'pointer' }}
                 title={isFullscreen ? "退出全屏" : "全屏观看"}
               >
                 {isFullscreen ? (
-                  <X className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />
+                  <X className="w-3.5 h-3.5" />
                 ) : (
-                  <Maximize2 className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />
+                  <Maximize2 className="w-3.5 h-3.5" />
                 )}
               </button>
 
-              <div className="flex items-center gap-1.5 ml-1">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>运行中</span>
+              <div
+                className="flex items-center gap-1.5 ml-1 px-2 py-1"
+                style={{
+                  background: 'var(--bg-primary)',
+                  border: '2px solid var(--border-subtle)',
+                }}
+              >
+                <span className="w-2 h-2 animate-pulse" style={{ background: '#22c55e' }} />
+                <span
+                  className="text-[10px] font-bold uppercase tracking-wider"
+                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}
+                >
+                  运行中
+                </span>
               </div>
             </div>
           </div>
 
-          {/* 渲染器信息 */}
+          {/* Renderer info tag */}
           <div className="absolute top-14 left-4 z-30 flex items-center gap-3">
             <div
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg"
+              className="flex items-center gap-2 px-3 py-1.5"
               style={{
-                background: 'rgba(0, 0, 0, 0.5)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(59, 130, 246, 0.3)',
+                background: 'var(--bg-primary)',
+                border: '2px solid var(--accent-primary)',
               }}
             >
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>渲染器:</span>
-              <span className="text-xs font-mono font-bold" style={{ color: '#fbbf24' }}>
+              <span
+                className="text-[10px] font-bold uppercase tracking-wider"
+                style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}
+              >
+                渲染器:
+              </span>
+              <span
+                className="text-xs font-bold uppercase tracking-wider"
+                style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
+              >
                 {currentDemo === 'cesium' ? 'Cesium' : 'Three.js'}
               </span>
             </div>
           </div>
 
-          {/* 内容区域 */}
+          {/* Content area */}
           <div
             className="absolute inset-0 pt-24 globe-showcase-content"
           >
@@ -419,27 +440,53 @@ export const GlobeShowcase = memo(function GlobeShowcase({
             />
           </div>
 
-          {/* 底部信息 */}
+          {/* Bottom cesium stats */}
           {currentDemo === 'cesium' && (
-            <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22c55e' }} />
-                <span style={{ color: 'var(--text-muted)' }}>全球玩家</span>
-                <span className="font-mono font-bold" style={{ color: '#60a5fa' }}>80.45亿</span>
-                <span className="ml-3" style={{ color: 'var(--text-muted)' }}>国服玩家:</span>
-                <span className="font-mono font-bold" style={{ color: '#fbbf24' }}>14.12亿</span>
+            <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center justify-between">
+              <div
+                className="flex items-center gap-1.5 px-3 py-1.5"
+                style={{
+                  background: 'var(--bg-primary)',
+                  border: '2px solid var(--border-subtle)',
+                }}
+              >
+                <span className="w-1.5 h-1.5 animate-pulse" style={{ background: '#22c55e' }} />
+                <span
+                  className="text-[10px] font-bold uppercase tracking-wider"
+                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}
+                >
+                  全球玩家
+                </span>
+                <span
+                  className="text-xs font-bold"
+                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
+                >
+                  80.45亿
+                </span>
+                <span
+                  className="ml-3 text-[10px] font-bold uppercase tracking-wider"
+                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}
+                >
+                  国服玩家:
+                </span>
+                <span
+                  className="text-xs font-bold"
+                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
+                >
+                  14.12亿
+                </span>
               </div>
             </div>
           )}
 
-          {/* 装饰角标 */}
+          {/* Decorative corner brackets */}
           <div className="absolute top-0 right-0 w-20 h-20 opacity-30">
-            <div className="absolute top-3 right-3 w-8 h-px" style={{ background: 'var(--accent-primary)' }} />
-            <div className="absolute top-3 right-3 w-px h-8" style={{ background: 'var(--accent-primary)' }} />
+            <div className="absolute top-3 right-3 w-8 h-0.5" style={{ background: 'var(--accent-primary)' }} />
+            <div className="absolute top-3 right-3 w-0.5 h-8" style={{ background: 'var(--accent-primary)' }} />
           </div>
           <div className="absolute bottom-0 left-0 w-20 h-20 opacity-30">
-            <div className="absolute bottom-3 left-3 w-8 h-px" style={{ background: 'var(--accent-primary)' }} />
-            <div className="absolute bottom-3 left-3 w-px h-8" style={{ background: 'var(--accent-primary)' }} />
+            <div className="absolute bottom-3 left-3 w-8 h-0.5" style={{ background: 'var(--accent-primary)' }} />
+            <div className="absolute bottom-3 left-3 w-0.5 h-8" style={{ background: 'var(--accent-primary)' }} />
           </div>
         </div>
       </div>

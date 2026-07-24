@@ -36,8 +36,6 @@ import {
   Settings,
   Search,
   ChevronUp,
-  Copy,
-  Check,
   Camera,
 } from 'lucide-react';
 import {
@@ -65,7 +63,6 @@ const NAV_LINKS: NavItem[] = [
   { label: '关于', href: '/about', icon: User },
   { label: '照片', href: '/photos', icon: Camera },
   { label: '音乐', href: '/music', icon: Music },
-  { label: '设置', href: '/settings', icon: Settings },
 ];
 
 function formatTime(time: number) {
@@ -79,7 +76,6 @@ export function DynamicIsland() {
   const [expanded, setExpanded] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const animationEnabled = useAnimationEnabled();
   const player = useMusicPlayer();
@@ -138,14 +134,6 @@ export function DynamicIsland() {
     setExpanded(false);
     cyclePreset();
   }, [cyclePreset]);
-
-  const handleCopyUrl = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  }, []);
 
   const handleScrollTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -270,21 +258,6 @@ export function DynamicIsland() {
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button
-                    onClick={handleCopyUrl}
-                    className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
-                    style={{
-                      borderColor: 'var(--border-subtle)',
-                      color: 'var(--text-secondary)',
-                    }}
-                    title="Copy current URL"
-                  >
-                    {copied ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </button>
                   <button
                     onClick={handleScrollTop}
                     className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
