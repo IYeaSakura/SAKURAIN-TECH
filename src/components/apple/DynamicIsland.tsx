@@ -41,6 +41,9 @@ import {
   Dices,
   History,
   Rss,
+  Camera,
+  Wrench,
+  Ruler,
 } from 'lucide-react';
 import {
   useMusicPlayer,
@@ -65,6 +68,9 @@ const NAV_LINKS: NavItem[] = [
   { label: '朋友圈', href: '/friends-circle', icon: Heart },
   { label: '地球', href: '/earth-online', icon: Globe },
   { label: '关于', href: '/about', icon: User },
+  { label: '照片', href: '/photolog', icon: Camera },
+  { label: 'Uses', href: '/uses', icon: Wrench },
+  { label: 'Colophon', href: '/colophon', icon: Ruler },
   { label: '音乐', href: '/music', icon: Music },
   { label: '设置', href: '/settings', icon: Settings },
 ];

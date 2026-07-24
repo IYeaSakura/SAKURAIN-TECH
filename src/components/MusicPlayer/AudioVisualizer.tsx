@@ -21,7 +21,7 @@ interface AudioConnection {
   source: MediaElementAudioSourceNode;
 }
 
-const globalAudioMap = new WeakMap<HTMLAudioElement, AudioConnection>();
+export const globalAudioMap = new WeakMap<HTMLAudioElement, AudioConnection>();
 
 export function AudioVisualizer({ audioRef, isPlaying }: AudioVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
