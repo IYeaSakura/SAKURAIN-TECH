@@ -31,7 +31,7 @@ interface Metrics {
 const MIN_FREQ = 30;
 const MAX_FREQ = 16000;
 const FFT_SIZE = 8192;
-const BAR_COUNT = 64;
+const BAR_COUNT = 96;
 const SMOOTHING = 0.75;
 
 function getLogBars(
@@ -177,7 +177,7 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
         : t.music.audioMetrics.paused;
 
   return (
-    <div className="flex items-center gap-3 h-10">
+    <div className="flex items-center gap-3 h-10 flex-1 min-w-0">
       {/* State badge */}
       <div
         className="hidden md:flex flex-col justify-center h-full px-2 text-[9px] font-bold uppercase tracking-wider border"
@@ -188,13 +188,13 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
       </div>
 
       {/* Spectrum bars */}
-      <div className="flex items-end gap-[1px] h-6">
+      <div className="flex items-end gap-[1px] h-6 flex-1 min-w-0">
         {metrics.bars.map((value, index) => {
           const height = Math.max(2, (value / 255) * 24);
           return (
             <div
               key={index}
-              className="w-[2px]"
+              className="flex-1 min-w-[1px]"
               style={{
                 height: `${height}px`,
                 background: value > 180 ? 'var(--accent-primary)' : 'var(--text-muted)',

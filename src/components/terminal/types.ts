@@ -147,7 +147,7 @@ export interface TerminalComment {
   replies?: TerminalComment[];
 }
 
-export type AppMode = 'earth' | 'reader' | 'image';
+export type AppMode = 'earth' | 'reader' | 'image' | 'game' | 'app';
 
 export interface CommandContext {
   cwd: string;
