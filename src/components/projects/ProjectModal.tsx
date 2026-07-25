@@ -1,18 +1,19 @@
 'use client';
 
 /**
- * ProjectModal —— 项目详情模态框（framer-motion AnimatePresence）。
+ * ProjectModal — project detail modal (framer-motion AnimatePresence).
  *
- * - 背景 bg-background/80 backdrop-blur，点击关闭
- * - 面板 max-w-2xl border border-border/40 bg-background
- * - 进入动画：scale 0.96→1 + opacity + y 弹簧；尊重 prefers-reduced-motion
- * - ESC 关闭；打开时锁定 body 滚动
- * - 可访问性：role="dialog" aria-modal aria-label
- * - 字段缺失优雅处理：无 demo/github 不渲染按钮，highlights 为空不渲染该区块
+ * - Backdrop bg-background/80 backdrop-blur, click to close
+ * - Panel max-w-2xl border border-border/40 bg-background
+ * - Entrance: scale 0.96→1 + opacity + y spring; respects prefers-reduced-motion
+ * - Close on ESC; lock body scroll while open
+ * - Accessibility: role="dialog" aria-modal aria-label
+ * - Missing fields handled gracefully: no demo/github means no button, empty highlights hidden
  */
 import { useEffect } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ExternalLink, FolderGit2, X } from 'lucide-react';
+import { useTranslation } from '@/hooks';
 import type { Project } from '@/data/projects';
 
 const STATUS_LABEL: Record<Project['status'], string> = {
@@ -29,8 +30,9 @@ interface ProjectModalProps {
 
 export function ProjectModal({ project, onClose }: ProjectModalProps) {
   const reduceMotion = useReducedMotion();
+  const { t, tReplace } = useTranslation();
 
-  // ESC 键关闭
+  // Close on Escape key
   useEffect(() => {
     if (!project) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -40,7 +42,7 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [project, onClose]);
 
-  // 打开时锁定 body 滚动
+  // Lock body scroll while the modal is open
   useEffect(() => {
     if (!project) return;
     const original = document.body.style.overflow;
@@ -70,7 +72,7 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
             key="project-modal-panel"
             role="dialog"
             aria-modal="true"
-            aria-label={`项目详情：${project.name}`}
+            aria-label={tReplace(t.projects.modalTitle, { name: project.name })}
             className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto border border-border/40 bg-background p-6 sm:p-10"
             initial={
               reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 16 }
@@ -84,34 +86,34 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
             transition={panelTransition}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* 关闭按钮 */}
+            {/* Close button */}
             <button
               onClick={onClose}
-              aria-label="关闭项目详情"
+              aria-label={t.common.close}
               className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
-            {/* 标题 */}
+            {/* Title */}
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight pr-10">
               {project.name}
             </h2>
 
-            {/* mono 元信息行 */}
+            {/* Mono metadata row */}
             <p className="mt-3 font-mono uppercase tracking-widest text-muted-foreground text-xs">
               {STATUS_LABEL[project.status]} · {project.period} ·{' '}
               {project.category}
             </p>
 
-            {/* 完整介绍（支持多段） */}
+            {/* Full description (supports multiple paragraphs) */}
             <div className="mt-6 space-y-4 text-sm sm:text-base text-foreground/90 leading-relaxed">
               {project.description.split(/\n\n+/).map((paragraph, i) => (
                 <p key={i}>{paragraph}</p>
               ))}
             </div>
 
-            {/* 亮点列表（mono 序号，空数组不渲染） */}
+            {/* Highlights list (mono numbering, hidden when empty) */}
             {project.highlights.length > 0 && (
               <div className="mt-8">
                 <h3 className="font-mono uppercase tracking-widest text-muted-foreground text-xs border-b border-border/40 pb-2 mb-4">
@@ -130,7 +132,7 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
               </div>
             )}
 
-            {/* 全部技术栈标签 */}
+            {/* Full tech stack tags */}
             {project.tech.length > 0 && (
               <div className="mt-8">
                 <h3 className="font-mono uppercase tracking-widest text-muted-foreground text-xs border-b border-border/40 pb-2 mb-4">
@@ -149,7 +151,7 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
               </div>
             )}
 
-            {/* 底部按钮组（demoUrl / githubUrl 存在才渲染） */}
+            {/* Bottom buttons (only rendered when demoUrl / githubUrl exist) */}
             {(project.demoUrl || project.githubUrl) && (
               <div className="mt-10 flex flex-wrap gap-3">
                 {project.demoUrl && (
@@ -160,7 +162,7 @@ export function ProjectModal({ project, onClose }: ProjectModalProps) {
                     className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-widest border border-border/40 px-4 py-2.5 hover:border-primary/50 hover:text-primary transition-colors"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    访问演示 ↗
+                    {t.projects.visitDemo} ↗
                   </a>
                 )}
                 {project.githubUrl && (

@@ -22,7 +22,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
         backgroundColor: 'var(--bg-primary)',
       }}
     >
-      {/* 顶部分割线 */}
+      {/* Top divider */}
       <div className="flex justify-center pt-8 pb-10">
         <div
           className="w-3/4 max-w-4xl h-px"
@@ -33,20 +33,20 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
         />
       </div>
 
-      {/* 浮动气泡 - 从底部上升 */}
+      {/* Floating bubbles rising from the bottom */}
       <div className="absolute inset-0 pointer-events-none opacity-15">
         <FloatingBubbles count={8} colors={['var(--accent-primary)', 'var(--accent-secondary)']} />
       </div>
 
-      {/* 闪烁星星 */}
+      {/* Twinkling stars */}
       <div className="absolute inset-0 pointer-events-none hidden lg:block">
         <TwinklingStars count={20} color="var(--accent-primary)" secondaryColor="var(--accent-secondary)" />
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto pb-12 px-4 sm:px-6 lg:px-8">
-        {/* 三层布局：左侧 LOGO，中间导航链接，右侧版权备案 */}
+        {/* Three-column layout: logo on the left, nav links in the middle, copyright/filing on the right */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
-          {/* 左侧：Logo & Slogan */}
+          {/* Left: Logo & Slogan */}
           <div className="flex items-center gap-3">
             <img
               src="/image/logo.webp"
@@ -79,7 +79,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
             </div>
           </div>
 
-          {/* 中间：导航链接 */}
+          {/* Middle: Navigation links */}
           <div className="flex items-center gap-6">
             <button
               onClick={() => navigateTo('/docs')}
@@ -110,9 +110,9 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
             </button>
           </div>
 
-          {/* 右侧：版权和备案 */}
+          {/* Right: Copyright and filing info */}
           <div className="flex flex-col items-end gap-1">
-            {/* 版权信息 */}
+            {/* Copyright */}
             <p
               className="flex items-center gap-2 font-primary"
               style={{
@@ -126,7 +126,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
               {t.footer.builtWith}
             </p>
 
-            {/* 备案信息 */}
+            {/* Filing info */}
             <div
               className="flex items-center gap-3 font-primary"
               style={{
@@ -147,7 +147,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
                   e.currentTarget.style.color = 'var(--text-muted)';
                 }}
               >
-                皖ICP备2025073165号-1
+                {t.footer.icp}
               </a>
               <span>|</span>
               <a
@@ -165,10 +165,10 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
               >
                 <img
                   src="/image/ghs.png"
-                  alt="Beian"
+                  alt={t.footer.beian}
                   className="w-3 h-3"
                 />
-                皖公网安备34130202000598号
+                {t.footer.beian}
               </a>
             </div>
           </div>

@@ -9,7 +9,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, CalendarDays } from 'lucide-react';
-import { useAnimationEnabled } from '@/hooks';
+import { useAnimationEnabled, useTranslation } from '@/hooks';
 
 function pad(n: number) {
   return n.toString().padStart(2, '0');
@@ -17,6 +17,7 @@ function pad(n: number) {
 
 export function CalendarWidget() {
   const animationEnabled = useAnimationEnabled();
+  const { t, locale } = useTranslation();
   const [now, setNow] = useState<Date | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -34,13 +35,13 @@ export function CalendarWidget() {
 
   const dateStr = useMemo(() => {
     if (!now) return '';
-    return now.toLocaleDateString('zh-CN', {
+    return now.toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       weekday: 'long',
     });
-  }, [now]);
+  }, [now, locale]);
 
   if (!mounted) {
     return (
@@ -66,7 +67,7 @@ export function CalendarWidget() {
       <div className="flex items-center gap-2 mb-4">
         <CalendarDays className="w-4 h-4" style={{ color: 'var(--accent-tertiary)' }} />
         <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-          Today
+          {t.widgets.calendar.title}
         </span>
       </div>
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { ChevronRight, Search, X } from 'lucide-react';
+import { useTranslation } from '@/hooks';
 import type { TocItem } from '../types';
 
 // Toc Tree Item Component
@@ -83,6 +84,7 @@ interface TocNavProps {
 }
 
 export function TocNav({ toc, activeHeading, onSelect }: TocNavProps) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
@@ -142,12 +144,12 @@ export function TocNav({ toc, activeHeading, onSelect }: TocNavProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="p-3 border-b flex-shrink-0" style={{ borderColor: 'var(--border-color)' }}>
-        <h3 className="text-xs font-semibold uppercase tracking-wider mb-2 px-2" style={{ color: 'var(--text-muted)' }}>目录导航</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wider mb-2 px-2" style={{ color: 'var(--text-muted)' }}>{t.docs.tocNav}</h3>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
-            placeholder="搜索目录..."
+            placeholder={t.docs.searchToc}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-8 py-2 rounded-lg text-sm border outline-none focus:ring-2 transition-all"
@@ -162,7 +164,7 @@ export function TocNav({ toc, activeHeading, onSelect }: TocNavProps) {
       </div>
       <div className="flex-1 overflow-y-auto p-3">
         {filteredToc.length === 0 ? (
-          <div className="text-center py-8 text-sm" style={{ color: 'var(--text-muted)' }}>未找到匹配的目录</div>
+          <div className="text-center py-8 text-sm" style={{ color: 'var(--text-muted)' }}>{t.docs.noMatchingToc}</div>
         ) : (
           <ul className="space-y-0.5">
             {filteredToc.map((item) => (

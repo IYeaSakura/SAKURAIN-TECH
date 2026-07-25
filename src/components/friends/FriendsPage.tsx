@@ -36,7 +36,7 @@ import {
   Shuffle,
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
-import { useAnimationEnabled } from '@/hooks';
+import { useAnimationEnabled, useTranslation } from '@/hooks';
 import { RouteLoader } from '@/components/RouteLoader';
 import type { SiteData } from '@/types';
 
@@ -108,11 +108,7 @@ const statusColor: Record<string, string> = {
   offline: '#ef4444',
 };
 
-const statusLabel: Record<string, string> = {
-  online: '在线',
-  maintenance: '维护',
-  offline: '离线',
-};
+
 
 // Debug Panel Component
 function DebugPanel({
@@ -122,6 +118,7 @@ function DebugPanel({
   friends: Friend[];
   onClose: () => void;
 }) {
+  const { t, locale } = useTranslation();
   const onlineCount = friends.filter((f) => f.status === 'online').length;
   const offlineCount = friends.filter((f) => f.status === 'offline').length;
   const maintenanceCount = friends.filter((f) => f.status === 'maintenance').length;
@@ -129,7 +126,7 @@ function DebugPanel({
 
   const formatDate = (dateStr: string) => {
     try {
-      return new Date(dateStr).toLocaleString('zh-CN', {
+      return new Date(dateStr).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
@@ -166,7 +163,7 @@ function DebugPanel({
           <div className="flex items-center gap-2">
             <Bug className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
             <h3 className="text-base font-bold uppercase" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
-              友链连通性调试
+              {t.friends.debugPanelTitle}
             </h3>
           </div>
           <div className="flex items-center gap-4">
@@ -235,7 +232,11 @@ function DebugPanel({
                         color: statusColor[friend.status],
                       }}
                     >
-                      {statusLabel[friend.status]}
+                      {friend.status === 'online'
+                      ? t.friends.online
+                      : friend.status === 'maintenance'
+                        ? t.friends.maintenance
+                        : t.friends.offline}
                     </span>
                   )}
                   {friend.checkInfo?.statusCode && (
@@ -267,7 +268,7 @@ function DebugPanel({
                       className="text-[10px] px-2 py-0.5 border-2 font-mono"
                       style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)', color: '#eab308' }}
                     >
-                      HTTP降级
+                      {t.friends.httpFallback}
                     </span>
                   )}
                   {friend.checkInfo?.isMaintenance && (
@@ -275,7 +276,7 @@ function DebugPanel({
                       className="text-[10px] px-2 py-0.5 border-2 font-mono"
                       style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)', color: '#eab308' }}
                     >
-                      维护状态
+                      {t.friends.maintenanceStatus}
                     </span>
                   )}
                   {friend.checkInfo?.isJsChallenge && (
@@ -284,7 +285,7 @@ function DebugPanel({
                       style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)', color: '#f97316' }}
                       title={friend.checkInfo.jsChallengeIndicator || undefined}
                     >
-                      JS验证{friend.checkInfo.jsChallengeIndicator ? ` (${friend.checkInfo.jsChallengeIndicator})` : ''}
+                      {t.friends.jsChallenge}{friend.checkInfo.jsChallengeIndicator ? ` (${friend.checkInfo.jsChallengeIndicator})` : ''}
                     </span>
                   )}
                   {friend.checkInfo?.isAntiBot && (
@@ -292,7 +293,7 @@ function DebugPanel({
                       className="text-[10px] px-2 py-0.5 border-2 font-mono"
                       style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)', color: '#f97316' }}
                     >
-                      反爬检测
+                      {t.friends.antiBot}
                     </span>
                   )}
                   {friend.checkInfo?.hasProtection && (
@@ -300,7 +301,7 @@ function DebugPanel({
                       className="text-[10px] px-2 py-0.5 border-2 font-mono"
                       style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)', color: '#06b6d4' }}
                     >
-                      CDN防护
+                      {t.friends.cdnProtection}
                     </span>
                   )}
                 </div>
@@ -309,8 +310,8 @@ function DebugPanel({
                 </div>
                 {friend.checkInfo && (
                   <div className="text-xs mt-1 flex items-center gap-3 font-mono" style={{ color: 'var(--text-muted)' }}>
-                    <span>检测时间: {formatDate(friend.checkInfo.lastChecked)}</span>
-                    <span>重试次数: {friend.checkInfo.attempts}</span>
+                    <span>{t.friends.checkTime}: {formatDate(friend.checkInfo.lastChecked)}</span>
+                    <span>{t.friends.attempts}: {friend.checkInfo.attempts}</span>
                   </div>
                 )}
                 {friend.checkInfo?.error && (
@@ -323,7 +324,7 @@ function DebugPanel({
                       color: '#f87171',
                     }}
                   >
-                    <span className="font-bold">失败原因: </span>
+                    <span className="font-bold">{t.friends.failReason}: </span>
                     {friend.checkInfo.error}
                   </div>
                 )}
@@ -349,6 +350,7 @@ const FriendCard = memo(function FriendCard({
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
   const animationEnabled = useAnimationEnabled();
+  const { t } = useTranslation();
 
   return (
     <motion.div
@@ -418,7 +420,11 @@ const FriendCard = memo(function FriendCard({
                         boxShadow: friend.status === 'online' ? `0 0 4px ${statusColor[friend.status]}` : 'none',
                       }}
                     />
-                    {statusLabel[friend.status]}
+                    {friend.status === 'online'
+                      ? t.friends.online
+                      : friend.status === 'maintenance'
+                        ? t.friends.maintenance
+                        : t.friends.offline}
                   </span>
                 )}
 
@@ -431,7 +437,7 @@ const FriendCard = memo(function FriendCard({
                       color: 'var(--text-muted)',
                     }}
                   >
-                    单向
+                    {t.friends.oneWay}
                   </span>
                 )}
               </div>
@@ -450,7 +456,7 @@ const FriendCard = memo(function FriendCard({
                   }}
                 >
                   <Star className="w-3 h-3" />
-                  友链
+                  {t.friends.featured}
                 </div>
               )}
             </div>
@@ -540,6 +546,7 @@ const HeroSection = memo(function HeroSection({
   showDebug: boolean;
 }) {
   const animationEnabled = useAnimationEnabled();
+  const { t, locale } = useTranslation();
 
   return (
     <section className="pt-28 lg:pt-36 pb-12">
@@ -560,7 +567,7 @@ const HeroSection = memo(function HeroSection({
                 className="text-[10px] font-bold uppercase tracking-wider"
                 style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
               >
-                Friends
+                {t.friends.title}
               </span>
             </div>
 
@@ -586,7 +593,7 @@ const HeroSection = memo(function HeroSection({
                 }}
               >
                 <Mail className="w-4 h-4" />
-                申请友链
+                {t.friends.apply}
               </button>
 
               <button
@@ -600,7 +607,7 @@ const HeroSection = memo(function HeroSection({
                 }}
               >
                 <Bug className="w-4 h-4" />
-                调试
+                {t.friends.debug}
               </button>
             </div>
 
@@ -614,8 +621,8 @@ const HeroSection = memo(function HeroSection({
                 }}
               >
                 <Clock className="w-3 h-3" />
-                最后更新:{' '}
-                {new Date(lastUpdated).toLocaleString('zh-CN', {
+                {t.friends.lastUpdated}:{' '}
+                {new Date(lastUpdated).toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
                   year: 'numeric',
                   month: '2-digit',
                   day: '2-digit',
@@ -634,9 +641,9 @@ const HeroSection = memo(function HeroSection({
             className="grid grid-cols-3 gap-3 sm:gap-4"
           >
             {[
-              { icon: Users, value: stats.friends, label: '友链站点' },
-              { icon: FolderOpen, value: stats.categories, label: '分类目录' },
-              { icon: Wifi, value: stats.online, label: '在线站点' },
+              { icon: Users, value: stats.friends, label: t.friends.friendSites },
+              { icon: FolderOpen, value: stats.categories, label: t.friends.categories },
+              { icon: Wifi, value: stats.online, label: t.friends.onlineSites },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -680,18 +687,25 @@ const ApplyModal = memo(function ApplyModal({
   contact: string;
 }) {
   const animationEnabled = useAnimationEnabled();
+  const { t, tReplace } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [siteInfoCopied, setSiteInfoCopied] = useState(false);
 
-  const siteInfo = {
-    name: 'SAKURAIN TEAM',
-    url: 'https://sakurain.net',
-    icon: 'https://sakurain.net/favicon',
-    rss: 'https://sakurain.net/feed',
-    description: '用代码构建未来',
-  };
+  const siteInfo = useMemo(
+    () => ({
+      name: 'SAKURAIN TEAM',
+      url: 'https://sakurain.net',
+      icon: 'https://sakurain.net/favicon',
+      rss: 'https://sakurain.net/feed',
+      description: t.footer.builtWith,
+    }),
+    [t.footer.builtWith]
+  );
 
-  const emailTemplate = `此邮件用于申请添加友链。\n\n网站名称：${siteInfo.name}\n网站链接：${siteInfo.url}\n网站图标：${siteInfo.icon}\nRSS订阅（可选）：${siteInfo.rss}\n网站描述：${siteInfo.description}\n\n已添加到友链列表中，并替换为自己的站点信息。\n发送本邮件即代表承诺网站内容健康、合法、无恶意代码。`;
+  const emailTemplate = useMemo(
+    () => tReplace(t.friends.applyEmailBody, siteInfo),
+    [tReplace, t.friends.applyEmailBody, siteInfo]
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -708,23 +722,23 @@ const ApplyModal = memo(function ApplyModal({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('复制失败:', err);
+      console.error('Failed to copy email:', err);
     }
   };
 
   const handleCopySiteInfo = async () => {
     try {
-      const siteInfoText = `网站名称：${siteInfo.name}\n网站链接：${siteInfo.url}\n网站图标：${siteInfo.icon}\nRSS订阅：${siteInfo.rss}\n网站描述：${siteInfo.description}`;
+      const siteInfoText = tReplace(t.friends.siteInfo.template, siteInfo);
       await navigator.clipboard.writeText(siteInfoText);
       setSiteInfoCopied(true);
       setTimeout(() => setSiteInfoCopied(false), 2000);
     } catch (err) {
-      console.error('复制失败:', err);
+      console.error('Failed to copy site info:', err);
     }
   };
 
   const handleOpenMailto = () => {
-    const subject = '申请友链 - SAKURAIN';
+    const subject = t.friends.applyEmailSubject;
     const mailtoLink = `mailto:${contact}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailTemplate)}`;
     window.location.href = mailtoLink;
   };
@@ -765,10 +779,10 @@ const ApplyModal = memo(function ApplyModal({
           </div>
           <div>
             <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
-              申请友链
+              {t.friends.apply}
             </h3>
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              请先添加本站友链，再提交申请
+              {t.friends.applySubtitle}
             </p>
           </div>
         </div>
@@ -785,10 +799,10 @@ const ApplyModal = memo(function ApplyModal({
             <span style={{ color: 'var(--accent-secondary)' }}>⚠️</span>
             <div>
               <p className="text-xs font-bold uppercase font-mono" style={{ color: 'var(--text-primary)' }}>
-                重要提示
+                {t.friends.importantNotice}
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                请在发送申请邮件之前，先在自己的站点上添加本站友链信息
+                {t.friends.applyNotice}
               </p>
             </div>
           </div>
@@ -804,7 +818,7 @@ const ApplyModal = memo(function ApplyModal({
         >
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-bold uppercase font-mono" style={{ color: 'var(--accent-primary)' }}>
-              本站友链信息
+              {t.friends.ourInfo}
             </p>
             <button
               onClick={handleCopySiteInfo}
@@ -815,28 +829,28 @@ const ApplyModal = memo(function ApplyModal({
                 color: 'var(--bg-primary)',
               }}
             >
-              {siteInfoCopied ? '已复制' : '复制'}
+              {siteInfoCopied ? t.friends.copied : t.friends.copy}
             </button>
           </div>
           <div className="space-y-1.5 text-sm" style={{ color: 'var(--text-primary)' }}>
             <p>
-              <span style={{ color: 'var(--text-muted)' }}>网站名称：</span>
+              <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.name}:</span>
               {siteInfo.name}
             </p>
             <p>
-              <span style={{ color: 'var(--text-muted)' }}>网站链接：</span>
+              <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.url}:</span>
               {siteInfo.url}
             </p>
             <p>
-              <span style={{ color: 'var(--text-muted)' }}>网站图标：</span>
+              <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.icon}:</span>
               {siteInfo.icon}
             </p>
             <p>
-              <span style={{ color: 'var(--text-muted)' }}>RSS订阅：</span>
+              <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.rss}:</span>
               {siteInfo.rss}
             </p>
             <p>
-              <span style={{ color: 'var(--text-muted)' }}>网站描述：</span>
+              <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.description}:</span>
               {siteInfo.description}
             </p>
           </div>
@@ -851,7 +865,7 @@ const ApplyModal = memo(function ApplyModal({
           }}
         >
           <p className="text-xs font-bold uppercase font-mono mb-2" style={{ color: 'var(--text-muted)' }}>
-            收件邮箱
+            {t.friends.recipientEmail}
           </p>
           <div className="flex items-center gap-2">
             <code
@@ -873,7 +887,7 @@ const ApplyModal = memo(function ApplyModal({
                 color: 'var(--bg-primary)',
               }}
             >
-              {copied ? '已复制' : '复制'}
+              {copied ? t.friends.copied : t.friends.copy}
             </button>
           </div>
         </div>
@@ -881,7 +895,7 @@ const ApplyModal = memo(function ApplyModal({
         {/* Action Buttons */}
         <div className="space-y-3">
           <p className="text-xs font-bold uppercase font-mono" style={{ color: 'var(--text-muted)' }}>
-            选择申请方式
+            {t.friends.chooseApplyMethod}
           </p>
           <div className="flex gap-3">
             <button
@@ -895,7 +909,7 @@ const ApplyModal = memo(function ApplyModal({
               }}
             >
               <Send className="w-4 h-4" />
-              邮箱申请
+              {t.friends.emailApply}
             </button>
             <button
               onClick={handleOpenForm}
@@ -908,7 +922,7 @@ const ApplyModal = memo(function ApplyModal({
               }}
             >
               <FileText className="w-4 h-4" />
-              表单申请
+              {t.friends.formApply}
             </button>
           </div>
         </div>
@@ -923,7 +937,7 @@ const ApplyModal = memo(function ApplyModal({
             color: 'var(--text-muted)',
           }}
         >
-          关闭
+          {t.friends.close}
         </button>
       </motion.div>
     </div>
@@ -939,6 +953,7 @@ const ApplySection = memo(function ApplySection({
   onApplyClick: () => void;
 }) {
   const animationEnabled = useAnimationEnabled();
+  const { t } = useTranslation();
 
   return (
     <motion.section
@@ -1000,7 +1015,7 @@ const ApplySection = memo(function ApplySection({
             }}
           >
             <Mail className="w-5 h-5" />
-            申请友链
+            {t.friends.apply}
           </button>
         </div>
       </div>
@@ -1021,6 +1036,7 @@ const RedirectModal = memo(function RedirectModal({
   onCancel: () => void;
 }) {
   const animationEnabled = useAnimationEnabled();
+  const { t, tReplace } = useTranslation();
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(3);
 
@@ -1091,10 +1107,10 @@ const RedirectModal = memo(function RedirectModal({
           </div>
           <div>
             <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
-              即将离开本站
+              {t.friends.leavingSite}
             </h3>
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              跳转到友链网站
+              {t.friends.jumpToFriend}
             </p>
           </div>
         </div>
@@ -1125,10 +1141,10 @@ const RedirectModal = memo(function RedirectModal({
             <span style={{ color: 'var(--accent-secondary)' }}>⚠️</span>
             <div>
               <p className="text-xs font-bold uppercase font-mono" style={{ color: 'var(--text-primary)' }}>
-                注意
+                {t.friends.warning}
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                即将访问外部网站，本站无法保证其安全性，请保持警惕
+                {t.friends.externalWarning}
               </p>
             </div>
           </div>
@@ -1136,8 +1152,8 @@ const RedirectModal = memo(function RedirectModal({
 
         <div className="mb-4">
           <div className="flex justify-between text-sm mb-2 font-mono">
-            <span style={{ color: 'var(--text-muted)' }}>自动跳转</span>
-            <span style={{ color: 'var(--text-primary)' }}>{timeLeft} 秒</span>
+            <span style={{ color: 'var(--text-muted)' }}>{t.friends.redirectLabel}</span>
+            <span style={{ color: 'var(--text-primary)' }}>{tReplace(t.friends.seconds, { seconds: timeLeft })}</span>
           </div>
           <div
             className="h-3 border-2 overflow-hidden"
@@ -1164,7 +1180,7 @@ const RedirectModal = memo(function RedirectModal({
               color: 'var(--text-primary)',
             }}
           >
-            取消跳转
+            {t.friends.cancelRedirect}
           </button>
           <button
             onClick={onConfirm}
@@ -1176,7 +1192,7 @@ const RedirectModal = memo(function RedirectModal({
               boxShadow: '3px 3px 0 var(--border-subtle)',
             }}
           >
-            立即访问
+            {t.friends.visitNow}
           </button>
         </div>
       </motion.div>
@@ -1195,6 +1211,7 @@ export default function FriendsPage() {
   const [mailtoModalOpen, setMailtoModalOpen] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
   const animationEnabled = useAnimationEnabled();
+  const { t } = useTranslation();
 
   const handleFriendClick = useCallback((friend: Friend) => {
     setSelectedFriend(friend);
@@ -1236,7 +1253,7 @@ export default function FriendsPage() {
     setError(null);
     Promise.all([
       fetch('/data/friends.json').then((res) => {
-        if (!res.ok) throw new Error('Failed to load friends data');
+        if (!res.ok) throw new Error('Network response was not ok');
         return res.json();
       }),
       fetch('/data/site-data.json').then((res) => res.json()),
@@ -1246,11 +1263,11 @@ export default function FriendsPage() {
         setFooterData(siteData.footer);
         setLoading(false);
       })
-      .catch((err) => {
-        setError(err.message);
+      .catch(() => {
+        setError(t.friends.loadFailed);
         setLoading(false);
       });
-  }, []);
+  }, [t.friends.loadFailed]);
 
   useEffect(() => {
     loadData();
@@ -1307,7 +1324,7 @@ export default function FriendsPage() {
           }}
         >
           <p className="mb-4 font-mono text-sm" style={{ color: 'var(--text-muted)' }}>
-            {error || '无法加载友链数据'}
+            {error || t.friends.loadFailed}
           </p>
           <button
             onClick={loadData}
@@ -1319,7 +1336,7 @@ export default function FriendsPage() {
               boxShadow: '3px 3px 0 var(--border-subtle)',
             }}
           >
-            重试
+            {t.common.retry}
           </button>
         </div>
       </div>
@@ -1380,7 +1397,7 @@ export default function FriendsPage() {
                   className="text-xl sm:text-2xl font-bold uppercase"
                   style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
                 >
-                  友链推荐
+                  {t.friends.featured}
                 </h2>
                 <button
                   onClick={handleRandomVisit}
@@ -1393,7 +1410,7 @@ export default function FriendsPage() {
                   }}
                 >
                   <Shuffle className="w-4 h-4" />
-                  随机访问
+                  {t.friends.randomVisit}
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">

@@ -13,7 +13,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { useTheme } from '@/hooks';
+import { useTheme, useTranslation } from '@/hooks';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -29,7 +29,7 @@ interface FloatingToolbarProps {
   className?: string;
 }
 
-const ExportProgressDialog = ({ isOpen, progress }: { isOpen: boolean; progress: string }) => {
+const ExportProgressDialog = ({ isOpen, title, progress }: { isOpen: boolean; title: string; progress: string }) => {
   if (!isOpen) return null;
 
   return createPortal(
@@ -47,7 +47,7 @@ const ExportProgressDialog = ({ isOpen, progress }: { isOpen: boolean; progress:
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 animate-spin" style={{ color: 'var(--accent-primary)' }} />
           <h3 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>
-            正在导出PDF
+            {title}
           </h3>
           <p className="text-sm text-center" style={{ color: 'var(--text-secondary)' }}>
             {progress}
@@ -91,6 +91,7 @@ const markdownComponents = {
 
 export function FloatingToolbar({ onExit, content, title, className = '' }: FloatingToolbarProps) {
   const { theme, isTransitioning, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -138,9 +139,9 @@ export function FloatingToolbar({ onExit, content, title, className = '' }: Floa
       }
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert('链接已复制到剪贴板');
+      alert(t.blog.linkCopied);
     }
-  }, []);
+  }, [t.blog.linkCopied]);
 
   const handlePrint = useCallback(() => {
     window.print();
@@ -160,29 +161,29 @@ export function FloatingToolbar({ onExit, content, title, className = '' }: Floa
 
   const handleExportPDF = useCallback(async () => {
     if (!content || !title) {
-      alert('无法导出PDF：缺少文章内容');
+      alert(t.blog.exportPDFMissingContent);
       return;
     }
 
     setIsExporting(true);
-    setExportProgress('正在渲染内容...');
+    setExportProgress(t.blog.exportPDFRendering);
 
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       if (!exportContainerRef.current) {
-        throw new Error('导出容器未找到');
+        throw new Error(t.blog.exportContainerNotFound);
       }
 
-      setExportProgress('正在加载图片和公式...');
+      setExportProgress(t.blog.exportPDFLoadingAssets);
 
       await new Promise(resolve => setTimeout(resolve, 500));
 
       await waitForImages(exportContainerRef.current);
 
-      setExportProgress('正在生成PDF...');
+      setExportProgress(t.blog.exportPDFGenerating);
 
-      // 动态加载：html2pdf.js 依赖浏览器环境（self/window），SSR 下直接 require 会抛错
+      // Dynamic import: html2pdf.js depends on browser globals (self/window) and will throw during SSR.
       const { default: html2pdf } = await import('html2pdf.js');
 
       const element = exportContainerRef.current.cloneNode(true) as HTMLElement;
@@ -208,16 +209,16 @@ export function FloatingToolbar({ onExit, content, title, className = '' }: Floa
 
       await html2pdf().set(opt).from(element).save();
 
-      setExportProgress('导出完成！');
+      setExportProgress(t.blog.exportPDFComplete);
       await new Promise(resolve => setTimeout(resolve, 1000));
     } catch (error: unknown) {
-      console.error('PDF导出错误:', error);
-      alert('PDF导出失败，请重试');
+      console.error('PDF export error:', error);
+      alert(t.blog.exportPDFFailed);
     } finally {
       setIsExporting(false);
       setExportProgress('');
     }
-  }, [content, title]);
+  }, [content, title, t]);
 
   const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -227,14 +228,14 @@ export function FloatingToolbar({ onExit, content, title, className = '' }: Floa
     {
       id: 'exit',
       icon: X,
-      label: '退出',
+      label: t.blog.floatingToolbar.exit,
       onClick: onExit,
       show: true,
     },
     {
       id: 'theme',
       icon: isDark ? Sun : Moon,
-      label: isDark ? '日间模式' : '夜间模式',
+      label: isDark ? t.blog.floatingToolbar.dayMode : t.blog.floatingToolbar.nightMode,
       onClick: toggleTheme,
       show: true,
       rotating: isTransitioning,
@@ -242,21 +243,21 @@ export function FloatingToolbar({ onExit, content, title, className = '' }: Floa
     {
       id: 'fullscreen',
       icon: isFullscreen ? Minimize : Maximize,
-      label: isFullscreen ? '退出全屏' : '全屏',
+      label: isFullscreen ? t.blog.floatingToolbar.exitFullscreen : t.blog.floatingToolbar.fullscreen,
       onClick: handleFullscreen,
       show: true,
     },
     {
       id: 'print',
       icon: Printer,
-      label: '打印',
+      label: t.blog.floatingToolbar.print,
       onClick: handlePrint,
       show: true,
     },
     {
       id: 'exportPdf',
       icon: FileDown,
-      label: '导出PDF',
+      label: t.blog.floatingToolbar.exportPDF,
       onClick: handleExportPDF,
       show: true,
       disabled: isExporting,
@@ -264,14 +265,14 @@ export function FloatingToolbar({ onExit, content, title, className = '' }: Floa
     {
       id: 'share',
       icon: Share2,
-      label: '分享',
+      label: t.blog.floatingToolbar.share,
       onClick: handleShare,
       show: true,
     },
     {
       id: 'scrollTop',
       icon: ArrowUp,
-      label: '回到顶部',
+      label: t.blog.floatingToolbar.backToTop,
       onClick: scrollToTop,
       show: showScrollTop,
     },
@@ -280,7 +281,7 @@ export function FloatingToolbar({ onExit, content, title, className = '' }: Floa
   return (
     <>
       <AnimatePresence>
-        <ExportProgressDialog isOpen={isExporting} progress={exportProgress} />
+        <ExportProgressDialog isOpen={isExporting} title={t.blog.exportingPDF} progress={exportProgress} />
       </AnimatePresence>
 
       <div

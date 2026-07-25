@@ -11,7 +11,7 @@
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Tag, Share2, ArrowLeft, Scale } from 'lucide-react';
-import { useTheme } from '@/hooks';
+import { useTheme, useTranslation } from '@/hooks';
 import { ImagePreviewProvider, useImagePreview } from '@/contexts/ImagePreviewContext';
 import { MarkdownRenderer } from '@/components/markdown/MarkdownRenderer';
 import { ArticleSidebar } from './components/ArticleSidebar';
@@ -39,6 +39,7 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
   const navigate = useRouter().push;
   useTheme();
   useImagePreview();
+  const { t, tReplace } = useTranslation();
 
   const slug = post.slug;
 
@@ -59,7 +60,7 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
       }
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert('链接已复制到剪贴板');
+      alert(t.blog.linkCopied);
     }
   };
 
@@ -86,7 +87,7 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
       {post.content && (
         <ArticleSidebar
           wordCount={getWordCount(post.content)}
-          readingTime={getReadingTime(post.content)}
+          readingTime={tReplace(t.blog.readingTime, { time: getReadingTime(post.content) })}
           date={post.date}
           onBack={handleBack}
           onPrevious={previousPost ? () => handleNavigate(previousPost.slug) : undefined}
@@ -120,7 +121,7 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
               style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
             >
               <ArrowLeft className="w-4 h-4" />
-              返回列表
+              {t.blog.backToList}
             </button>
 
             <h1
@@ -137,7 +138,7 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
               </span>
               <span className="flex items-center gap-1">
                 <Clock className="w-3.5 h-3.5" />
-                {getReadingTime(post.content || '')}
+                {tReplace(t.blog.readingTime, { time: getReadingTime(post.content || '') })}
               </span>
               <span className="flex items-center gap-1">
                 <Tag className="w-3.5 h-3.5" />
@@ -195,7 +196,7 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
               }}
             >
               <ArrowLeft className="w-4 h-4" />
-              返回列表
+              {t.blog.backToList}
             </button>
 
             <button
@@ -208,7 +209,7 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
               }}
             >
               <Share2 className="w-4 h-4" />
-              分享
+              {t.blog.share}
             </button>
           </motion.div>
 
@@ -235,7 +236,7 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  本作品采用
+                  {t.blog.licensePrefix}
                 </span>
                 <a
                   href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh"
@@ -247,11 +248,11 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
                   CC BY-NC-SA 4.0
                 </a>
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  许可协议
+                  {t.blog.licenseSuffix}
                 </span>
               </div>
               <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                署名-非商业性使用-相同方式共享
+                {t.blog.licenseDescription}
               </div>
             </div>
           </motion.div>

@@ -4,9 +4,10 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import * as Cesium from 'cesium';
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { usePrefersReducedMotion } from '@/lib/performance';
+import { useTranslation } from '@/hooks';
 import { DanmakuSatellite } from './DanmakuSatellite';
 
-// 城市数据 - 主要国际贸易城市
+// Major international trade cities used as data points on the globe
 const CITIES = [
   { name: 'Beijing', lat: 39.9042, lon: 116.4074 },
   { name: 'Shanghai', lat: 31.2304, lon: 121.4737 },
@@ -27,20 +28,20 @@ const CITIES = [
   { name: 'Sydney', lat: -33.8688, lon: 151.2093 },
 ];
 
-// 国际贸易主要航线
+// Major international trade routes connecting the city data points
 const TRADE_ROUTES: Array<[number, number]> = [
-  [1, 13], [3, 12], // 中国-美国
-  [1, 10], [3, 9],  // 中国-欧洲
-  [1, 5], [3, 5],   // 中国-东南亚
-  [0, 4], [0, 6],   // 中国-日韩
-  [12, 9], [13, 10], // 美国-欧洲
-  [9, 8], [10, 8],  // 欧洲-中东
-  [5, 16], [4, 16], // 亚太-澳洲
-  [12, 15],         // 美国-南美
-  [4, 12], [6, 13], // 日韩-美国
-  [4, 9],           // 日韩-欧洲
-  [5, 10],          // 东南亚-欧洲
-  [8, 5],           // 中东-亚太
+  [1, 13], [3, 12], // China - US
+  [1, 10], [3, 9],  // China - Europe
+  [1, 5], [3, 5],   // China - Southeast Asia
+  [0, 4], [0, 6],   // China - Japan/Korea
+  [12, 9], [13, 10], // US - Europe
+  [9, 8], [10, 8],  // Europe - Middle East
+  [5, 16], [4, 16], // Asia Pacific - Australia
+  [12, 15],         // US - South America
+  [4, 12], [6, 13], // Japan/Korea - US
+  [4, 9],           // Japan/Korea - Europe
+  [5, 10],          // Southeast Asia - Europe
+  [8, 5],           // Middle East - Asia Pacific
 ];
 
 interface CesiumGlobeProps {
@@ -48,6 +49,7 @@ interface CesiumGlobeProps {
 }
 
 export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<Cesium.Viewer | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -60,7 +62,7 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
   const cityEntitiesRef = useRef<Cesium.Entity[]>([]);
   const tradeLine = useRef<Cesium.Entity[]>([]);
 
-  // 更新北京时间
+  // Update Beijing (UTC+8) time every second
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -79,12 +81,12 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
     };
   }, []);
 
-  // 同步滚动暂停状态
+  // Keep the ref in sync with the latest rotation-paused state
   useEffect(() => {
     isRotationPausedRef.current = isRotationPaused;
   }, [isRotationPaused]);
 
-  // 控制城市点和连线的显示/隐藏
+  // Toggle visibility of city markers and trade lines
   useEffect(() => {
     if (!viewerRef.current) return;
 
@@ -101,7 +103,7 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
     });
   }, [isRotationPaused]);
 
-  // 创建国际贸易连线
+  // Create curved trade-route polylines between city pairs
   const createTradeLines = useCallback((viewer: Cesium.Viewer) => {
     TRADE_ROUTES.forEach(([i, j]) => {
       const city1 = CITIES[i];
@@ -156,7 +158,8 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
       // Cesium static runtime assets live under public/cesium/ (ignored by git).
       // Copy them from node_modules/cesium/Build/Cesium if the directory is missing.
       (window as Window & { CESIUM_BASE_URL?: string }).CESIUM_BASE_URL = '/cesium/';
-      // Ion token 通过环境变量注入；影像实际使用高德瓦片，token 仅用于 Cesium 内部资源兜底
+      // Ion token is injected via environment variables. Imagery actually uses
+      // Amap tiles; the token only serves as a fallback for internal Cesium assets.
       const ionToken = process.env.NEXT_PUBLIC_CESIUM_ION_TOKEN;
       if (ionToken) {
         Cesium.Ion.defaultAccessToken = ionToken;
@@ -194,14 +197,14 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
       viewer.imageryLayers.removeAll();
       const imageryLayer = viewer.imageryLayers.addImageryProvider(imageryProvider);
 
-      // 保持影像原色
+      // Keep imagery colors unchanged
       imageryLayer.alpha = 1.0;
       imageryLayer.brightness = 1.0;
       imageryLayer.contrast = 1.0;
 
       const scene = viewer.scene;
       scene.globe.show = true;
-      // 使用较深的基色作为夜间 fallback
+      // Dark base color used as a night-side fallback
       scene.globe.baseColor = Cesium.Color.fromCssColorString('#0a1628');
 
       scene.backgroundColor = Cesium.Color.fromCssColorString(
@@ -212,14 +215,14 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
         scene.skyAtmosphere.show = true;
       }
 
-      // 配置光照 - 启用昼夜光照效果
+      // Configure globe lighting for day/night effects
       scene.globe.enableLighting = true;
       scene.globe.lightingFadeOutDistance = 50000000;
       scene.globe.lightingFadeInDistance = 1000000;
       scene.globe.dynamicAtmosphereLighting = true;
       scene.globe.dynamicAtmosphereLightingFromSun = true;
 
-      // 增强光照对比 - 亮处更亮，暗处更暗
+      // Increase lighting contrast for stronger day/night definition
       scene.globe.atmosphereLightIntensity = 2.0;
       scene.globe.lightingFadeOutDistance = 100000000;
       scene.globe.lightingFadeInDistance = 100000;
@@ -263,9 +266,9 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
         },
       });
 
-      // 缩放限制 - 允许观察高轨道卫星（北斗GEO/IGSO约36000km）
-      viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000; // 最近1000km
-      viewer.scene.screenSpaceCameraController.maximumZoomDistance = 80000000; // 最远80000km，可清晰观察高轨卫星
+      // Zoom limits: allow viewing high-orbit satellites such as Beidou GEO/IGSO (~36,000 km)
+      viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1000; // closest 1,000 km
+      viewer.scene.screenSpaceCameraController.maximumZoomDistance = 80000000; // farthest 80,000 km, enough for high-orbit satellites
       viewer.scene.screenSpaceCameraController.enableTilt = false;
 
       if (!prefersReducedMotion) {
@@ -315,7 +318,7 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
         }}
       />
 
-      {/* 暂停/恢复滚动按钮 */}
+      {/* Pause / resume rotation control */}
       <div className="absolute top-4 right-4 z-20">
         <button
           onClick={() => setIsRotationPaused(!isRotationPaused)}
@@ -326,11 +329,11 @@ export function CesiumGlobe({ isDark }: CesiumGlobeProps) {
             color: '#60a5fa',
           }}
         >
-          {isRotationPaused ? '▶ 恢复滚动' : '⏸ 暂停滚动'}
+          {isRotationPaused ? `▶ ${t.earth.resumeRotation}` : `⏸ ${t.earth.pauseRotation}`}
         </button>
       </div>
 
-      {/* 北京时间显示 */}
+      {/* Beijing time display */}
       <div className="absolute bottom-4 right-4 z-20 pointer-events-none">
         <div
           className="px-3 py-2 rounded-lg backdrop-blur-sm text-right"

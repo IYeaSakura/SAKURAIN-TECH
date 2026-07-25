@@ -4,14 +4,15 @@ import { getAllNotes } from "@/lib/content/notes";
 import { getAllPosts } from "@/lib/content/blog";
 
 /**
- * 首页 —— Server Component 外壳。
- * 实际内容为迁移自旧 Vite 项目 src/App.tsx 的整页客户端组件（Phase 1 务实起步）。
- * 近期文章与说说数据由服务端内容管线在构建期读取并注入。
+ * Home page —— Server Component shell.
+ * The actual content is the full-page client component migrated from the legacy
+ * Vite project src/App.tsx (Phase 1 pragmatic bootstrap).
+ * Recent posts and notes are injected at build time by the server content pipeline.
  */
 export const metadata: Metadata = {
-  title: "SAKURAIN —— 个人博客",
+  title: "SAKURAIN — Personal Blog",
   description:
-    "SAKURAIN 的个人博客：博弈算法、量化系统、数据分析与 Web 工程。",
+    "SAKURAIN's personal blog: game algorithms, quantitative systems, data analysis, and Web engineering.",
 };
 
 export default function Page() {

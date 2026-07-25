@@ -1,17 +1,18 @@
 'use client';
 
 /**
- * 地球Online展示容器组件
- * 复用主页Hero区域的3D地球/地图展示功能
- * 支持全屏、切换特效等操作
+ * Earth Online showcase container.
+ * Reuses the 3D globe / map display from the homepage hero section.
+ * Supports fullscreen, effect switching and lazy loading of 3D assets.
  */
-import { memo, useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
+import { memo, useState, useCallback, useRef, useEffect, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, Map, Maximize2, X, Layers, ChevronDown, Play } from 'lucide-react';
 import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
-import { useTheme } from '@/hooks';
+import { useTheme, useTranslation } from '@/hooks';
+import type { Dictionary } from '@/i18n/types';
 
-// 浏览器厂商前缀全屏 API（TS 标准 DOM 类型未覆盖）
+// Vendor-prefixed fullscreen APIs not covered by standard TS DOM types.
 type VendorFullscreenElement = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void>;
   msRequestFullscreen?: () => Promise<void>;
@@ -36,20 +37,38 @@ export interface DemoConfig {
   description: string;
 }
 
-export const DEMOS: DemoConfig[] = [
+export const getDemos = (earth: Dictionary['earth']): DemoConfig[] => [
   {
     id: 'cesium',
     icon: Globe,
-    label: 'Cesium 地球',
-    title: '地球Online',
-    description: '全球玩家实时数据可视化，基于 CesiumJS 的 3D 地球渲染'
+    label: earth.cesiumLabel,
+    title: earth.cesiumTitle,
+    description: earth.cesiumDescription,
   },
   {
     id: 'chinamap',
     icon: Map,
-    label: '中国地图',
-    title: '地球Online-国服',
-    description: '中国区域高精度 3D 地图，基于 Three.js 的立体渲染'
+    label: earth.chinaMapLabel,
+    title: earth.chinaMapTitle,
+    description: earth.chinaMapDescription,
+  },
+];
+
+/** @deprecated Use getDemos(t.earth) for translated labels. */
+export const DEMOS: DemoConfig[] = [
+  {
+    id: 'cesium',
+    icon: Globe,
+    label: 'Cesium Globe',
+    title: 'Earth Online',
+    description: 'Global real-time data visualization with CesiumJS 3D earth rendering',
+  },
+  {
+    id: 'chinamap',
+    icon: Map,
+    label: 'China Map',
+    title: 'Earth Online - China',
+    description: 'High-precision 3D China map with stereo terrain rendering',
   },
 ];
 
@@ -65,6 +84,7 @@ interface DemoContentProps {
 }
 
 const DemoContent = ({ demo, isDark, isLoaded, onLoad }: DemoContentProps) => {
+  const { t } = useTranslation();
   const isCesium = demo.type === 'cesium';
   const isChinaMap = demo.type === 'chinamap';
 
@@ -88,7 +108,7 @@ const DemoContent = ({ demo, isDark, isLoaded, onLoad }: DemoContentProps) => {
             >
               <Play className="w-10 h-10" style={{ color: 'var(--accent-primary)' }} />
               <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                点击加载 3D 场景
+                {t.earth.loadScene}
               </span>
             </button>
           </motion.div>
@@ -128,39 +148,40 @@ const DemoContent = ({ demo, isDark, isLoaded, onLoad }: DemoContentProps) => {
   );
 };
 
-const getDemoConfig = (demo: DemoType): DemoConfig => {
-  return DEMOS.find(d => d.id === demo) || DEMOS[0];
+const getDemoConfig = (demos: DemoConfig[], demo: DemoType): DemoConfig => {
+  return demos.find(d => d.id === demo) || demos[0];
 };
 
-const getNextDemo = (current: DemoType): DemoType => {
-  const currentIndex = DEMOS.findIndex(d => d.id === current);
-  const nextIndex = (currentIndex + 1) % DEMOS.length;
-  return DEMOS[nextIndex].id as DemoType;
+const getNextDemo = (demos: DemoConfig[], current: DemoType): DemoType => {
+  const currentIndex = demos.findIndex(d => d.id === current);
+  const nextIndex = (currentIndex + 1) % demos.length;
+  return demos[nextIndex].id as DemoType;
 };
 
 export interface GlobeShowcaseProps {
-  /** 是否作为独立页面模式（占满右侧全部区域） */
+  /** Whether to render as a standalone page mode (fills the right-hand area). */
   pageMode?: boolean;
-  /** 初始显示的演示类型 */
+  /** Initial demo type to display. */
   initialDemo?: DemoType;
-  /** 容器类名 */
+  /** Container class name. */
   className?: string;
 }
 
 /**
- * 地球Online展示容器
+ * Earth Online showcase container.
  *
- * 功能特性：
- * - 支持两种展示模式：3D地球、中国地图
- * - 支持全屏/退出全屏
- * - 支持特效切换
- * - 懒加载 3D 资源，需要用户点击后才加载
+ * Features:
+ * - Supports two display modes: 3D globe and China map.
+ * - Supports fullscreen / exit fullscreen.
+ * - Supports effect switching.
+ * - Lazily loads 3D assets after a user click.
  */
 export const GlobeShowcase = memo(function GlobeShowcase({
   pageMode = false,
   initialDemo = 'cesium',
   className = ''
 }: GlobeShowcaseProps) {
+  const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
   const [currentDemo, setCurrentDemo] = useState<DemoType>(initialDemo);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -169,8 +190,8 @@ export const GlobeShowcase = memo(function GlobeShowcase({
   const containerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const isDark = theme !== 'light';
-
-  const demoConfig = getDemoConfig(currentDemo);
+  const demos = useMemo(() => getDemos(t.earth), [t.earth]);
+  const demoConfig = getDemoConfig(demos, currentDemo);
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
@@ -236,8 +257,8 @@ export const GlobeShowcase = memo(function GlobeShowcase({
 
   const handleSwitchDemo = useCallback(() => {
     setIsLoaded(false);
-    setCurrentDemo(prev => getNextDemo(prev));
-  }, []);
+    setCurrentDemo(prev => getNextDemo(demos, prev));
+  }, [demos]);
 
   const handleSelectDemo = useCallback((demoId: DemoType) => {
     setIsLoaded(false);
@@ -245,7 +266,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
     setShowDropdown(false);
   }, []);
 
-  // 页面模式下自动加载
+  // Auto-load in page mode.
   useEffect(() => {
     if (pageMode && !isLoaded) {
       setIsLoaded(true);
@@ -301,10 +322,10 @@ export const GlobeShowcase = memo(function GlobeShowcase({
                   letterSpacing: '0.05em',
                   cursor: 'pointer',
                 }}
-                title="切换特效"
+                title={t.earth.switchEffects}
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>切换</span>
+                <span>{t.earth.switch}</span>
               </button>
 
               {/* Dropdown selector */}
@@ -373,7 +394,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
                 onClick={isFullscreen ? exitFullscreen : enterFullscreen}
                 className="flex items-center justify-center w-8 h-8 transition-all duration-200 bg-[var(--bg-primary)] text-[var(--accent-primary)] border-2 border-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
                 style={{ cursor: 'pointer' }}
-                title={isFullscreen ? "退出全屏" : "全屏观看"}
+                title={isFullscreen ? t.earth.exitFullscreen : t.earth.enterFullscreen}
               >
                 {isFullscreen ? (
                   <X className="w-3.5 h-3.5" />
@@ -394,7 +415,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
                   className="text-[10px] font-bold uppercase tracking-wider"
                   style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}
                 >
-                  运行中
+                  {t.earth.running}
                 </span>
               </div>
             </div>
@@ -413,7 +434,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
                 className="text-[10px] font-bold uppercase tracking-wider"
                 style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}
               >
-                渲染器:
+                {t.earth.renderer}
               </span>
               <span
                 className="text-xs font-bold uppercase tracking-wider"
@@ -455,25 +476,25 @@ export const GlobeShowcase = memo(function GlobeShowcase({
                   className="text-[10px] font-bold uppercase tracking-wider"
                   style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}
                 >
-                  全球玩家
+                  {t.earth.globalPlayers}
                 </span>
                 <span
                   className="text-xs font-bold"
                   style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
                 >
-                  80.45亿
+                  8.045B
                 </span>
                 <span
                   className="ml-3 text-[10px] font-bold uppercase tracking-wider"
                   style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}
                 >
-                  国服玩家:
+                  {t.earth.chinaPlayers}:
                 </span>
                 <span
                   className="text-xs font-bold"
                   style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
                 >
-                  14.12亿
+                  1.412B
                 </span>
               </div>
             </div>
@@ -493,7 +514,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
     );
   }
 
-  // 首页模式 - 原始卡片样式
+  // Homepage mode - original card style.
   return (
     <motion.div
       ref={containerRef}
@@ -518,7 +539,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
           }}
         >
           <span className="text-xs font-medium whitespace-nowrap" style={{ color: 'var(--accent-primary)' }}>
-            双击全屏体验
+            {t.earth.doubleClickFullscreen}
           </span>
           <div
             className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45"
@@ -583,7 +604,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
                   background: 'rgba(0, 0, 0, 0.5)',
                   cursor: 'pointer',
                 }}
-                title="切换特效"
+                title={t.earth.switchEffects}
               >
                 <Layers className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />
               </button>
@@ -597,7 +618,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
                 background: 'rgba(0, 0, 0, 0.5)',
                 cursor: 'pointer',
               }}
-              title={isFullscreen ? "退出全屏" : "全屏观看"}
+              title={isFullscreen ? t.earth.exitFullscreen : t.earth.enterFullscreen}
             >
               {isFullscreen ? (
                 <X className="w-3.5 h-3.5" style={{ color: '#60a5fa' }} />
@@ -608,7 +629,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
 
             <div className="flex items-center gap-1.5 ml-1">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>运行中</span>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.earth.running}</span>
             </div>
           </div>
         </div>
@@ -630,7 +651,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
                     border: '1px solid rgba(59, 130, 246, 0.3)',
                   }}
                 >
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>渲染器:</span>
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{t.earth.renderer}</span>
                   <span className="text-xs font-mono font-bold" style={{ color: '#fbbf24' }}>
                     {currentDemo === 'cesium' ? 'Cesium' : 'Three.js'}
                   </span>
@@ -653,7 +674,7 @@ export const GlobeShowcase = memo(function GlobeShowcase({
                   }}
                 >
                   <Layers className="w-4 h-4" style={{ color: '#60a5fa' }} />
-                  <span className="text-sm font-medium" style={{ color: '#60a5fa' }}>切换特效</span>
+                  <span className="text-sm font-medium" style={{ color: '#60a5fa' }}>{t.earth.switchEffects}</span>
                 </button>
 
                 <div className="relative">
@@ -738,10 +759,10 @@ export const GlobeShowcase = memo(function GlobeShowcase({
           <div className="absolute bottom-4 left-4 right-4 z-20 flex items-center text-xs">
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#22c55e' }} />
-              <span style={{ color: 'var(--text-muted)' }}>全球玩家</span>
-              <span className="font-mono font-bold" style={{ color: '#60a5fa' }}>80.45亿</span>
-              <span className="ml-3" style={{ color: 'var(--text-muted)' }}>国服玩家:</span>
-              <span className="font-mono font-bold" style={{ color: '#fbbf24' }}>14.12亿</span>
+              <span style={{ color: 'var(--text-muted)' }}>{t.earth.globalPlayers}</span>
+              <span className="font-mono font-bold" style={{ color: '#60a5fa' }}>8.045B</span>
+              <span className="ml-3" style={{ color: 'var(--text-muted)' }}>{t.earth.chinaPlayers}:</span>
+              <span className="font-mono font-bold" style={{ color: '#fbbf24' }}>1.412B</span>
             </div>
           </div>
         )}

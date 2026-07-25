@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, BookOpen, Clock, BarChart3, ChevronRight, PlayCircle, Sparkles, Layers } from 'lucide-react';
 import { ThemeToggleButton } from './ThemeToggleButton';
 import { AmbientGlow } from '@/components/effects';
+import { useTranslation } from '@/hooks';
 import type { DocSeries, DocCategory, Chapter } from '../types';
 
 interface SeriesDetailViewProps {
@@ -12,7 +13,7 @@ interface SeriesDetailViewProps {
   onSelectChapter: (category: DocCategory, series: DocSeries, chapter: Chapter) => void;
 }
 
-// 浮动代码装饰
+// Floating code decoration
 const CodeDecoration = memo(({ className }: { className?: string }) => {
   return (
     <div 
@@ -28,7 +29,7 @@ const CodeDecoration = memo(({ className }: { className?: string }) => {
 
 CodeDecoration.displayName = 'CodeDecoration';
 
-// 章节项组件
+// Chapter list item component
 const ChapterItem = memo(({
   chapter,
   index,
@@ -69,7 +70,7 @@ const ChapterItem = memo(({
         transition={{ duration: 0.3 }}
       />
 
-      {/* 章节编号 */}
+      {/* Chapter number */}
       <div 
         className="flex items-center justify-center w-12 h-12 rounded-lg flex-shrink-0 font-bold text-lg transition-all duration-300 relative z-10"
         style={{ 
@@ -81,7 +82,7 @@ const ChapterItem = memo(({
         {index + 1}
       </div>
       
-      {/* 章节信息 */}
+      {/* Chapter info */}
       <div className="flex-1 min-w-0 relative z-10">
         <h3 
           className="font-primary font-semibold text-lg mb-1 truncate transition-all duration-300"
@@ -100,7 +101,7 @@ const ChapterItem = memo(({
         </p>
       </div>
       
-      {/* 箭头 */}
+      {/* Arrow indicator */}
       <ChevronRight 
         className="w-5 h-5 flex-shrink-0 transition-all duration-300 relative z-10"
         style={{ 
@@ -115,7 +116,7 @@ const ChapterItem = memo(({
 
 ChapterItem.displayName = 'ChapterItem';
 
-// 发光徽章组件
+// Glowing badge component
 const GlowBadge = memo(({ text }: { text: string }) => {
   return (
     <motion.div
@@ -124,7 +125,7 @@ const GlowBadge = memo(({ text }: { text: string }) => {
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="inline-flex items-center gap-2 mb-4 relative"
     >
-      {/* 外发光 */}
+      {/* Outer glow */}
       <div 
         className="absolute -inset-2 rounded-xl animate-pulse-glow"
         style={{
@@ -142,7 +143,7 @@ const GlowBadge = memo(({ text }: { text: string }) => {
           boxShadow: '0 0 20px var(--accent-glow), inset 0 0 10px var(--accent-primary)10',
         }}
       >
-        {/* 内部光效 */}
+        {/* Inner light effect */}
         <div 
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{
@@ -164,15 +165,16 @@ const GlowBadge = memo(({ text }: { text: string }) => {
 GlowBadge.displayName = 'GlowBadge';
 
 export function SeriesDetailView({ series, category, onBack, onSelectChapter }: SeriesDetailViewProps) {
+  const { t, tReplace } = useTranslation();
   const totalChapters = series.chapters.length;
-  const estimatedTime = `${Math.ceil(totalChapters * 15)} 分钟`;
-  const difficulty = totalChapters > 10 ? '进阶' : '入门';
+  const estimatedTime = `${Math.ceil(totalChapters * 15)}`;
+  const difficulty = totalChapters > 10 ? t.docs.difficultyAdvanced : t.docs.difficultyBeginner;
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
-      {/* 背景效果 */}
+      {/* Background effects */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* 静态网格背景 */}
+        {/* Static grid background */}
         <div
           className="absolute inset-0 opacity-5"
           style={{
@@ -184,11 +186,11 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
           }}
         />
         
-        {/* 环境光效 */}
+        {/* Ambient glow effects */}
         <AmbientGlow position="top-left" color="var(--accent-primary)" size={400} opacity={0.1} />
         <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={300} opacity={0.06} />
         
-        {/* 径向渐变遮罩 */}
+        {/* Radial gradient mask */}
         <div
           className="absolute inset-0"
           style={{
@@ -197,7 +199,7 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
         />
       </div>
 
-      {/* 浮动代码装饰 */}
+      {/* Floating code decoration */}
       <CodeDecoration className="top-32 left-8 hidden lg:block" />
       <CodeDecoration className="bottom-32 right-8 hidden lg:block" />
 
@@ -222,7 +224,7 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
               whileTap={{ scale: 0.98 }}
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">返回</span>
+              <span className="font-medium">{t.docs.back}</span>
             </motion.button>
 
             <div className="flex items-center">
@@ -240,7 +242,7 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
             animate={{ opacity: 1, y: 0 }} 
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            {/* 徽章 */}
+            {/* Badge */}
             <div className="flex items-center gap-3 mb-4">
               <GlowBadge text={category.name} />
               <div 
@@ -251,12 +253,12 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
                   border: '2px solid var(--accent-secondary)',
                 }}
               >
-                {totalChapters} 章
+                {tReplace(t.docs.chapterCount, { count: totalChapters })}
               </div>
             </div>
             
             <div className="flex items-start gap-6">
-              {/* 图标 */}
+              {/* Icon */}
               <motion.div 
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -272,7 +274,7 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
               </motion.div>
               
               <div className="flex-1">
-                {/* 标题 */}
+                {/* Title */}
                 <h1 
                   className="font-primary text-2xl sm:text-3xl lg:text-4xl font-black mb-4"
                   style={{ 
@@ -284,7 +286,7 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
                   {series.title}
                 </h1>
                 
-                {/* 描述 */}
+                {/* Description */}
                 <p 
                   className="text-lg mb-6 font-primary"
                   style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}
@@ -292,7 +294,7 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
                   {series.description}
                 </p>
                 
-                {/* 元信息 */}
+                {/* Metadata */}
                 <div className="flex flex-wrap gap-4 text-sm">
                   <div 
                     className="flex items-center gap-2 px-4 py-2 rounded-lg"
@@ -302,7 +304,7 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
                     }}
                   >
                     <Clock className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                    <span style={{ color: 'var(--text-secondary)' }}>预计 {estimatedTime}</span>
+                    <span style={{ color: 'var(--text-secondary)' }}>{tReplace(t.docs.estimatedTime, { time: estimatedTime })}</span>
                   </div>
                   <div 
                     className="flex items-center gap-2 px-4 py-2 rounded-lg"
@@ -342,7 +344,7 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
             e.currentTarget.style.boxShadow = '0 4px 20px var(--accent-glow)';
           }}
         >
-          {/* 光效背景 */}
+          {/* Light effect background */}
           <div 
             className="absolute inset-0 transition-transform duration-600"
             style={{
@@ -351,7 +353,7 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
             }}
           />
           <PlayCircle className="w-6 h-6 relative z-10" />
-          <span className="relative z-10 font-primary">开始学习</span>
+          <span className="relative z-10 font-primary">{t.docs.startLearning}</span>
         </motion.button>
       </div>
 
@@ -368,7 +370,7 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
             className="text-xl font-bold font-primary"
             style={{ color: 'var(--text-primary)' }}
           >
-            章节列表
+            {t.docs.chaptersTitle}
           </h2>
           <div className="flex-1 h-px" style={{ background: 'var(--border-subtle)' }} />
         </motion.div>
@@ -385,7 +387,7 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
         </div>
       </div>
       
-      {/* 底部渐变 */}
+      {/* Bottom gradient fade */}
       <div
         className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
         style={{

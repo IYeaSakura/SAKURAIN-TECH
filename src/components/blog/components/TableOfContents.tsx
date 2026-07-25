@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { List } from 'lucide-react';
+import { useTranslation } from '@/hooks';
 
 interface Heading {
   id: string;
@@ -14,10 +15,11 @@ interface TableOfContentsProps {
 }
 
 export function TableOfContents({ content, className = '' }: TableOfContentsProps) {
+  const { t } = useTranslation();
   const [activeId, setActiveId] = useState<string>('');
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // 解析文章内容提取 h2 和 h3 标题
+  // Parse article content to extract h2 and h3 headings.
   const headings = useMemo(() => {
     const result: Heading[] = [];
     const lines = content.split('\n');
@@ -44,7 +46,7 @@ export function TableOfContents({ content, className = '' }: TableOfContentsProp
     return result;
   }, [content]);
 
-  // 监听滚动事件，高亮当前可见的标题
+  // Listen to scroll events and highlight the currently visible heading.
   const handleScroll = useCallback(() => {
     if (headings.length === 0) return;
 
@@ -54,8 +56,8 @@ export function TableOfContents({ content, className = '' }: TableOfContentsProp
 
     if (headingElements.length === 0) return;
 
-    // 找到当前在视口中最接近顶部的标题
-    const scrollPosition = window.scrollY + 150; // 偏移量，提前高亮
+    // Find the heading closest to the top of the viewport.
+    const scrollPosition = window.scrollY + 150; // offset to highlight early
 
     let currentActiveId = headings[0]?.id || '';
     
@@ -77,11 +79,11 @@ export function TableOfContents({ content, className = '' }: TableOfContentsProp
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
-  // 点击跳转到对应标题
+  // Scroll smoothly to the selected heading.
   const handleClick = useCallback((id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      const offset = 120; // 顶部偏移量
+      const offset = 120; // top offset for fixed headers
       const elementPosition = element.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({
         top: elementPosition - offset,
@@ -115,12 +117,12 @@ export function TableOfContents({ content, className = '' }: TableOfContentsProp
           transition: 'width 0.3s ease, min-width 0.3s ease, max-width 0.3s ease',
         }}
       >
-        {/* 标题栏 */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-3 shrink-0">
           {!isCollapsed && (
             <div className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
               <List className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-              <span className="text-sm font-medium">目录</span>
+              <span className="text-sm font-medium">{t.blog.tableOfContents}</span>
             </div>
           )}
           <button
@@ -130,13 +132,13 @@ export function TableOfContents({ content, className = '' }: TableOfContentsProp
               background: 'var(--bg-secondary)',
               color: 'var(--text-muted)',
             }}
-            title={isCollapsed ? '展开目录' : '收起目录'}
+            title={isCollapsed ? t.blog.expandToc : t.blog.collapseToc}
           >
             <List className="w-4 h-4" />
           </button>
         </div>
 
-        {/* 目录列表 */}
+        {/* Table of contents list */}
         {!isCollapsed && (
           <nav className="overflow-y-auto overflow-x-hidden" style={{ maxHeight: 'calc(100vh - 280px)' }}>
             <ul className="space-y-1">
@@ -162,7 +164,7 @@ export function TableOfContents({ content, className = '' }: TableOfContentsProp
                       opacity: activeId === heading.id ? 1 : 0.7,
                     }}
                   >
-                    {/* 左侧指示条 */}
+                    {/* Left active indicator */}
                     <span
                       className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 rounded-full transition-all duration-200"
                       style={{
@@ -182,7 +184,7 @@ export function TableOfContents({ content, className = '' }: TableOfContentsProp
           </nav>
         )}
 
-        {/* 收起状态下的提示 */}
+        {/* Collapsed state hint */}
         {isCollapsed && (
           <div className="text-center">
             <div 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Calendar, FileText, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Sparkles, TrendingUp, Bookmark } from 'lucide-react';
-import { useAnimationEnabled } from '@/hooks';
+import { useAnimationEnabled, useTranslation } from '@/hooks';
 
 interface ArticleSidebarProps {
   wordCount?: number;
@@ -107,6 +107,7 @@ function ArticleStatsCard({
   isBookmarked?: boolean;
 }) {
   const animationEnabled = useAnimationEnabled();
+  const { t, tReplace } = useTranslation();
 
   return (
     <motion.div
@@ -123,7 +124,7 @@ function ArticleStatsCard({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
           <Sparkles className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
-          <span className="text-xs font-medium">文章信息</span>
+          <span className="text-xs font-medium">{t.blog.articleInfo}</span>
         </div>
         {onBookmark && (
           <motion.button
@@ -135,7 +136,7 @@ function ArticleStatsCard({
               background: isBookmarked ? 'var(--accent-primary)' : 'var(--bg-secondary)',
               color: isBookmarked ? 'white' : 'var(--text-muted)',
             }}
-            title={isBookmarked ? '已收藏' : '收藏文章'}
+            title={isBookmarked ? t.blog.bookmarked : t.blog.bookmark}
           >
             <Bookmark className="w-3.5 h-3.5" fill={isBookmarked ? 'currentColor' : 'none'} />
           </motion.button>
@@ -152,9 +153,9 @@ function ArticleStatsCard({
               <FileText className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
             </div>
             <div className="flex-1 min-w-0">
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.6875rem' }}>字数</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.6875rem' }}>{t.blog.wordCountLabel}</div>
               <div className="font-semibold" style={{ color: 'var(--text-primary)', fontSize: '0.8125rem' }}>
-                {wordCount.toLocaleString()}
+                {tReplace(t.blog.wordCount, { count: wordCount })}
               </div>
             </div>
           </div>
@@ -169,7 +170,7 @@ function ArticleStatsCard({
               <Clock className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
             </div>
             <div className="flex-1 min-w-0">
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.6875rem' }}>阅读时间</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.6875rem' }}>{t.blog.readingTimeLabel}</div>
               <div className="font-semibold" style={{ color: 'var(--text-primary)', fontSize: '0.8125rem' }}>
                 {readingTime}
               </div>
@@ -186,9 +187,9 @@ function ArticleStatsCard({
               <Calendar className="w-4 h-4" style={{ color: 'var(--accent-tertiary)' }} />
             </div>
             <div className="flex-1 min-w-0">
-              <div style={{ color: 'var(--text-muted)', fontSize: '0.6875rem' }}>发布日期</div>
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.6875rem' }}>{t.blog.publishDateLabel}</div>
               <div className="font-semibold" style={{ color: 'var(--text-primary)', fontSize: '0.8125rem' }}>
-                {date}
+                {tReplace(t.blog.publishDate, { date })}
               </div>
             </div>
           </div>
@@ -200,6 +201,7 @@ function ArticleStatsCard({
 
 function ReadingProgressCard({ progress }: { progress: number }) {
   const animationEnabled = useAnimationEnabled();
+  const { t, tReplace } = useTranslation();
 
   return (
     <motion.div
@@ -215,13 +217,13 @@ function ReadingProgressCard({ progress }: { progress: number }) {
     >
       <div className="flex items-center gap-1.5 mb-2" style={{ color: 'var(--text-primary)' }}>
         <TrendingUp className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
-        <span className="text-xs font-medium">阅读进度</span>
+        <span className="text-xs font-medium">{t.blog.readingProgress}</span>
       </div>
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
           <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-            已读 {Math.round(progress)}%
+            {tReplace(t.blog.readingProgressText, { percent: Math.round(progress) })}
           </span>
           <motion.span
             animate={animationEnabled ? { scale: [1, 1.05, 1] } : undefined}
@@ -229,7 +231,7 @@ function ReadingProgressCard({ progress }: { progress: number }) {
             className="font-semibold"
             style={{ color: 'var(--accent-primary)', fontSize: '0.75rem' }}
           >
-            {progress >= 100 ? '✓ 已读完' : '继续阅读'}
+            {progress >= 100 ? `✓ ${t.blog.finished}` : t.blog.continueReading}
           </motion.span>
         </div>
 
@@ -263,6 +265,7 @@ function QuickNavigationCard({
   hasNext?: boolean;
 }) {
   const animationEnabled = useAnimationEnabled();
+  const { t } = useTranslation();
 
   return (
     <motion.div
@@ -278,7 +281,7 @@ function QuickNavigationCard({
     >
       <div className="flex items-center gap-1.5 mb-3" style={{ color: 'var(--text-primary)' }}>
         <ArrowRight className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
-        <span className="text-xs font-medium">快速导航</span>
+        <span className="text-xs font-medium">{t.blog.quickNav}</span>
       </div>
 
       <div className="space-y-1.5">
@@ -295,7 +298,7 @@ function QuickNavigationCard({
             }}
           >
             <ArrowLeft className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
-            <span className="text-xs font-medium">返回列表</span>
+            <span className="text-xs font-medium">{t.blog.backToList}</span>
           </motion.button>
         )}
 
@@ -312,7 +315,7 @@ function QuickNavigationCard({
             }}
           >
             <ChevronLeft className="w-3.5 h-3.5" style={{ color: 'var(--accent-secondary)' }} />
-            <span className="text-xs font-medium">上一篇</span>
+            <span className="text-xs font-medium">{t.blog.previousPost}</span>
           </motion.button>
         )}
 
@@ -329,7 +332,7 @@ function QuickNavigationCard({
             }}
           >
             <ChevronRight className="w-3.5 h-3.5" style={{ color: 'var(--accent-tertiary)' }} />
-            <span className="text-xs font-medium">下一篇</span>
+            <span className="text-xs font-medium">{t.blog.nextPost}</span>
           </motion.button>
         )}
       </div>
@@ -349,6 +352,7 @@ function RelatedPostsCard({
   onNavigate: (slug: string) => void;
 }) {
   const animationEnabled = useAnimationEnabled();
+  const { t } = useTranslation();
 
   return (
     <motion.div
@@ -364,7 +368,7 @@ function RelatedPostsCard({
     >
       <div className="flex items-center gap-1.5 mb-3" style={{ color: 'var(--text-primary)' }}>
         <TrendingUp className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
-        <span className="text-xs font-medium">推荐文章</span>
+        <span className="text-xs font-medium">{t.blog.recommended}</span>
       </div>
 
       <div className="space-y-2">

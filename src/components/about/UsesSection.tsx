@@ -35,7 +35,7 @@ import {
   Workflow,
   Wrench,
 } from 'lucide-react';
-import { useAnimationEnabled } from '@/hooks';
+import { useAnimationEnabled, useTranslation } from '@/hooks';
 import type { UsesData } from '@/types';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
@@ -65,18 +65,12 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string; style?:
   Workflow,
 };
 
-const SECTION_LABELS: Record<string, string> = {
-  hardware: '硬件装备',
-  software: '日常软件',
-  development: '技术栈',
-  services: '云端服务',
-};
-
 const PIXEL_BORDER = '2px solid var(--border-subtle)';
 const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
 
 export function UsesSection() {
   const animationEnabled = useAnimationEnabled();
+  const { t } = useTranslation();
   const [data, setData] = useState<UsesData | null>(null);
 
   useEffect(() => {
@@ -89,6 +83,12 @@ export function UsesSection() {
   if (!data) return null;
 
   const sections = Object.entries(data).filter(([key]) => key !== 'updatedAt');
+  const sectionLabels: Record<string, string> = {
+    hardware: t.about.uses.hardware,
+    software: t.about.uses.software,
+    development: t.about.uses.development,
+    services: t.about.uses.services,
+  };
 
   return (
     <motion.section
@@ -102,7 +102,7 @@ export function UsesSection() {
         className="text-sm font-bold uppercase tracking-wider mb-4"
         style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
       >
-        Uses
+        {t.about.uses.title}
       </h2>
 
       <div className="space-y-8">
@@ -114,7 +114,7 @@ export function UsesSection() {
                 className="text-xs font-bold uppercase tracking-wider mb-3"
                 style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}
               >
-                {SECTION_LABELS[key] || key}
+                {sectionLabels[key] || key}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {usesItems.map((item, index) => {

@@ -12,7 +12,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Grid, List, X, ChevronLeft, ChevronRight, BarChart3, BookOpen, Calendar, Tag } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
-import { useAnimationEnabled } from '@/hooks';
+import { useAnimationEnabled, useTranslation } from '@/hooks';
 import type { SiteData } from '@/types';
 
 import { BlogCard } from './components/BlogCard';
@@ -74,6 +74,7 @@ function StatCard({
 
 export default function BlogIndex({ posts, tags, description, footer }: BlogPageProps) {
   const animationEnabled = useAnimationEnabled();
+  const { t, tReplace } = useTranslation();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -170,7 +171,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
                 className="text-3xl sm:text-5xl font-bold uppercase tracking-tight mb-4"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
               >
-                博客
+                {t.blog.title}
               </h1>
               <p className="text-base sm:text-lg max-w-xl" style={{ color: 'var(--text-secondary)' }}>
                 {description}
@@ -178,9 +179,9 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
             </div>
 
             <div className="grid grid-cols-3 gap-3 lg:w-[420px] shrink-0">
-              <StatCard icon={Calendar} value={sortedYears.length} label="年份" delay={0} />
-              <StatCard icon={Tag} value={tags.length} label="标签" delay={1} />
-              <StatCard icon={BookOpen} value={posts.length} label="文章" delay={2} />
+              <StatCard icon={Calendar} value={sortedYears.length} label={t.blog.stats.years} delay={0} />
+              <StatCard icon={Tag} value={tags.length} label={t.blog.stats.tagsCount} delay={1} />
+              <StatCard icon={BookOpen} value={posts.length} label={t.blog.stats.postsCount} delay={2} />
             </div>
           </div>
         </motion.section>
@@ -204,7 +205,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
               />
               <input
                 type="text"
-                placeholder="搜索文章..."
+                placeholder={t.blog.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 text-sm outline-none"
@@ -228,7 +229,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
                 }}
               >
                 <BarChart3 className="w-4 h-4" />
-                统计
+                {t.blog.stats.title}
               </button>
 
               <div className="flex items-center border-2" style={{ borderColor: 'var(--border-subtle)' }}>
@@ -276,7 +277,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
                 className="text-xl font-bold uppercase tracking-tight"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
               >
-                精选文章
+                {t.blog.stats.featured}
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -309,7 +310,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
                 className="text-xl font-bold uppercase tracking-tight"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
               >
-                全部文章
+                {t.blog.allPosts}
               </h2>
             </div>
 
@@ -328,7 +329,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
                       className="text-xs font-mono px-2 py-1 border-2"
                       style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}
                     >
-                      {postsByYear[year].length} 篇
+                      {tReplace(t.blog.postCountShort, { count: postsByYear[year].length })}
                     </span>
                   </div>
 
@@ -365,7 +366,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
                   }}
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  上一页
+                  {t.blog.prevPage}
                 </button>
 
                 <div className="flex items-center gap-1">
@@ -395,7 +396,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
                     color: 'var(--text-primary)',
                   }}
                 >
-                  下一页
+                  {t.blog.nextPage}
                   <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
@@ -408,7 +409,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
             className="text-center py-20 text-sm font-mono"
             style={{ color: 'var(--text-muted)' }}
           >
-            没有找到匹配的文章
+            {t.blog.noMatches}
           </motion.div>
         )}
       </main>
@@ -443,7 +444,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
                   className="text-xl font-bold uppercase tracking-tight"
                   style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
                 >
-                  博客统计
+                  {t.blog.stats.pageTitle}
                 </h2>
                 <button
                   onClick={() => setShowStats(false)}
@@ -456,10 +457,10 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
                 {[
-                  { value: featuredPosts.length, label: '精选文章' },
-                  { value: posts.length - featuredPosts.length, label: '普通文章' },
-                  { value: totalTagRefs, label: '标签总数' },
-                  { value: archiveMonthCount, label: '归档月份' },
+                  { value: featuredPosts.length, label: t.blog.stats.featured },
+                  { value: posts.length - featuredPosts.length, label: t.blog.stats.regular },
+                  { value: totalTagRefs, label: t.blog.stats.totalTagsLabel },
+                  { value: archiveMonthCount, label: t.blog.stats.archiveMonths },
                 ].map((stat) => (
                   <div
                     key={stat.label}
@@ -480,7 +481,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
                 className="text-sm font-bold uppercase tracking-wider mb-4"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
               >
-                标签词云
+                {t.blog.stats.tagCloud}
               </h3>
               <BlogTagCloud tags={tags} selectedTag={null} onSelectTag={() => {}} />
             </motion.div>

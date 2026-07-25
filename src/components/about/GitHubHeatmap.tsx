@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar } from 'lucide-react';
 import { GithubIcon as Github } from './GithubIcon';
+import { useTranslation } from '@/hooks';
 
 interface GitHubHeatmapProps {
   username: string;
@@ -13,9 +14,10 @@ interface GitHubHeatmapProps {
 export function GitHubHeatmap({ username, year = new Date().getFullYear() }: GitHubHeatmapProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const { t, tReplace } = useTranslation();
 
-  // 使用 ghchart.rshah.org 服务生成贡献图
-  // 颜色格式: 409ba5 是蓝绿色
+  // Generate the contribution chart via ghchart.rshah.org
+  // Color format: 409ba5 is a blue-green tone
   const chartUrl = `https://ghchart.rshah.org/409ba5/${username}`;
   const githubProfileUrl = `https://github.com/${username}`;
 
@@ -30,7 +32,7 @@ export function GitHubHeatmap({ username, year = new Date().getFullYear() }: Git
         border: '1px solid var(--border-subtle)',
       }}
     >
-      {/* 标题栏 */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div
@@ -44,10 +46,10 @@ export function GitHubHeatmap({ username, year = new Date().getFullYear() }: Git
           </div>
           <div>
             <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-              GitHub 贡献热力图
+              {t.about.githubHeatmapTitle}
             </h3>
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              {year} 年 · @{username}
+              {tReplace(t.about.githubYear, { year, username })}
             </p>
           </div>
         </div>
@@ -64,11 +66,11 @@ export function GitHubHeatmap({ username, year = new Date().getFullYear() }: Git
           }}
         >
           <Github className="w-4 h-4" />
-          查看主页
+          {t.about.viewGithubProfile}
         </a>
       </div>
 
-      {/* 贡献图 */}
+      {/* Contribution chart */}
       <div
         className="relative rounded-xl overflow-hidden p-4 flex items-center justify-center"
         style={{
@@ -84,14 +86,14 @@ export function GitHubHeatmap({ username, year = new Date().getFullYear() }: Git
                 className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
                 style={{ borderColor: 'var(--accent-primary)', borderTopColor: 'transparent' }}
               />
-              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>加载中...</p>
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t.common.loading}</p>
             </div>
           </div>
         )}
 
         {error ? (
           <div className="text-center">
-            <p className="text-sm mb-2" style={{ color: 'var(--text-muted)' }}>无法加载贡献图</p>
+            <p className="text-sm mb-2" style={{ color: 'var(--text-muted)' }}>{t.about.githubLoadFailed}</p>
             <a
               href={githubProfileUrl}
               target="_blank"
@@ -99,7 +101,7 @@ export function GitHubHeatmap({ username, year = new Date().getFullYear() }: Git
               className="text-sm hover:underline"
               style={{ color: 'var(--accent-primary)' }}
             >
-              访问 GitHub 主页查看
+              {t.about.visitGithubProfile}
             </a>
           </div>
         ) : (
@@ -120,29 +122,29 @@ export function GitHubHeatmap({ username, year = new Date().getFullYear() }: Git
         )}
       </div>
 
-      {/* 图例说明 */}
-      <div className="flex items-center justify-between mt-4">
-        <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            <span>最近一年的贡献记录</span>
+      {/* Legend */}
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              <span>{t.about.githubContributionNote}</span>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-          <span>少</span>
-          <div className="flex gap-1">
-            {['var(--bg-secondary)', '#8ecdd6', '#5fb3bf', '#409ba5', '#2d7a8a'].map((color, i) => (
-              <div
-                key={i}
-                className="w-3 h-3 rounded-sm"
-                style={{ background: color }}
-              />
-            ))}
+          <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
+            <span>{t.about.githubHeatmapLow}</span>
+            <div className="flex gap-1">
+              {['var(--bg-secondary)', '#8ecdd6', '#5fb3bf', '#409ba5', '#2d7a8a'].map((color, i) => (
+                <div
+                  key={i}
+                  className="w-3 h-3 rounded-sm"
+                  style={{ background: color }}
+                />
+              ))}
+            </div>
+            <span>{t.about.githubHeatmapHigh}</span>
           </div>
-          <span>多</span>
         </div>
-      </div>
     </motion.div>
   );
 }

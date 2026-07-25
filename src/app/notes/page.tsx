@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 /**
- * 开发日志已重构为说说，旧 /notes 路径 301 跳转至 /shuoshuo。
- * 保留外链与搜索引擎索引兼容性。
+ * Dev notes have been refactored into "Shuoshuo"; the legacy /notes path
+ * redirects (301) to /shuoshuo to preserve external links and search index compatibility.
  */
 export const metadata: Metadata = {
-  title: "说说 —— SAKURAIN",
-  description: "记录日常灵感、心情与碎碎念。",
+  title: "Shuoshuo — SAKURAIN",
+  description: "Daily inspirations, moods, and casual thoughts.",
 };
 
 export default function Page() {

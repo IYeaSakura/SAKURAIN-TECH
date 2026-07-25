@@ -13,7 +13,7 @@ import { Calendar, Clock, ArrowRight, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { BlogPost } from '../types';
 import { formatDateCard, getReadingTime } from '../utils';
-import { useAnimationEnabled } from '@/hooks';
+import { useAnimationEnabled, useTranslation } from '@/hooks';
 
 interface BlogCardProps {
   /** 文章数据 */
@@ -35,6 +35,7 @@ export const BlogCard = memo(function BlogCard({
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useRouter().push;
   const animationEnabled = useAnimationEnabled();
+  const { t, tReplace } = useTranslation();
 
   const handleClick = () => {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -99,7 +100,7 @@ export const BlogCard = memo(function BlogCard({
                     }}
                   >
                     <Sparkles className="w-3 h-3" />
-                    精选
+                    {t.blog.featuredLabel}
                   </div>
                 )}
 
@@ -128,7 +129,9 @@ export const BlogCard = memo(function BlogCard({
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {post.readingTime || getReadingTime(post.content || '')}
+                    {tReplace(t.blog.readingTime, {
+                      time: post.readingTime ? parseInt(post.readingTime, 10) || 0 : getReadingTime(post.content || ''),
+                    })}
                   </span>
                 </div>
 

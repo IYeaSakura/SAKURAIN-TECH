@@ -53,6 +53,20 @@ const shuffleArray = (length: number): number[] => {
 const sequentialOrder = (length: number): number[] =>
   Array.from({ length }, (_, i) => i);
 
+// Normalise audio src values so absolute element URLs can be compared with
+// the relative paths stored in the playlist.
+const resolveAudioSrc = (src: string): string => {
+  if (typeof window === 'undefined' || !src) return src;
+  try {
+    return new URL(src, window.location.href).pathname;
+  } catch {
+    return src;
+  }
+};
+
+const isSameAudioSource = (audioSrc: string, songSrc: string): boolean =>
+  resolveAudioSrc(audioSrc) === resolveAudioSrc(songSrc);
+
 export type VisualizerMode = 'bars' | 'wave' | 'heatmap';
 
 interface MusicPlayerState {
@@ -132,14 +146,34 @@ export function MusicPlayerProvider({
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [systemPaused, setSystemPaused] = useState(false);
 
+  // Keep refs in sync with the latest state for synchronous reads in handlers.
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  const currentPositionRef = useRef(currentPosition);
+  useEffect(() => {
+    currentPositionRef.current = currentPosition;
+  }, [currentPosition]);
+
+  const shuffledOrderRef = useRef(shuffledOrder);
+  useEffect(() => {
+    shuffledOrderRef.current = shuffledOrder;
+  }, [shuffledOrder]);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const preloadRef = useRef<HTMLAudioElement | null>(null);
   const failedSrcsRef = useRef<Set<string>>(new Set());
   const prevPlayModeRef = useRef<PlayMode>('shuffle');
-  // Distinguish user-initiated pause from system-initiated pause.
-  const userPausedRef = useRef(false);
-  // Tracks whether the next loaded track should start playing automatically.
-  const autoPlayRef = useRef(false);
+  // Tracks whether playback is intended to be active. Distinguishes user pause
+  // from system pause and preserves play intent across track changes.
+  const intendedPlayingRef = useRef(false);
+  // Suppress pause/abort events emitted while swapping audio src. Held true
+  // from the moment src changes until the new track fires 'playing' or 'error'.
+  const trackChangeRef = useRef(false);
+  // Mirror of isPlaying for event handlers so they see the latest state without
+  // recreating the audio element.
+  const isPlayingRef = useRef(isPlaying);
 
   // Build shuffle order once the playlist is known
   useEffect(() => {
@@ -174,6 +208,18 @@ export function MusicPlayerProvider({
   const currentNumber = currentPosition + 1;
   const totalSongs = playlist.length;
 
+  // Mirror of the current song so event handlers can verify which resource
+  // the element is actually playing without recreating listeners.
+  const currentSongRef = useRef(currentSong);
+  // Synchronise the ref immediately during render so event handlers fired
+  // between the src change and the effect flush always see the latest song.
+  if (currentSongRef.current.src !== currentSong.src) {
+    currentSongRef.current = currentSong;
+  }
+  useEffect(() => {
+    currentSongRef.current = currentSong;
+  }, [currentSong]);
+
   // Initialise the single shared audio element
   useEffect(() => {
     if (!isDesktopClient) return;
@@ -183,54 +229,132 @@ export function MusicPlayerProvider({
     audio.volume = volume;
     audioRef.current = audio;
 
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handleTimeUpdate = () => {
+      const src = audio.currentSrc || audio.src;
+      if (!isSameAudioSource(src, currentSongRef.current.src)) return;
+      setCurrentTime(audio.currentTime);
+    };
     const handleLoadedMetadata = () => {
+      const src = audio.currentSrc || audio.src;
+      if (!isSameAudioSource(src, currentSongRef.current.src)) return;
       setDuration(audio.duration);
       setIsLoading(false);
     };
     const handleEnded = () => handleNextRef.current();
     const handleError = () => {
+      // Errors raised during a transition belong to the old resource and must
+      // not stop the newly requested track.
+      if (trackChangeRef.current) return;
+
       const failedSrc = audio.currentSrc || audio.src;
-      if (failedSrc && !failedSrcsRef.current.has(failedSrc)) {
-        failedSrcsRef.current.add(failedSrc);
+      // Ignore errors raised by a previous resource after we have already
+      // moved on to another track.
+      if (!isSameAudioSource(failedSrc, currentSongRef.current.src)) return;
+
+      if (
+        failedSrc &&
+        !failedSrcsRef.current.has(resolveAudioSrc(failedSrc))
+      ) {
+        failedSrcsRef.current.add(resolveAudioSrc(failedSrc));
         if (process.env.NODE_ENV === 'development') {
           console.warn(`[MusicPlayer] audio load failed: ${failedSrc}`);
         }
       }
       setError('Audio resource unavailable');
       setIsLoading(false);
+      // A failed current resource ends the transition and clears playback intent.
+      trackChangeRef.current = false;
+      intendedPlayingRef.current = false;
       setIsPlaying(false);
     };
-    const handleCanPlay = () => setIsLoading(false);
-    const handleWaiting = () => setIsLoading(true);
-    const handlePlaying = () => {
+    const handleCanPlay = () => {
+      const src = audio.currentSrc || audio.src;
+      if (!isSameAudioSource(src, currentSongRef.current.src)) return;
+      setIsLoading(false);
+    };
+    const handleWaiting = () => {
+      const src = audio.currentSrc || audio.src;
+      if (!isSameAudioSource(src, currentSongRef.current.src)) return;
+      setIsLoading(true);
+    };
+    const handlePlay = () => {
+      const src = audio.currentSrc || audio.src;
+      if (!isSameAudioSource(src, currentSongRef.current.src)) return;
+      // The 'play' event fires as soon as playback is requested. Update the
+      // UI immediately but keep the transition lock active so any delayed
+      // pause / abort events from the previous track are still ignored.
       setIsLoading(false);
       setSystemPaused(false);
+      setIsPlaying(true);
+    };
+    const handlePlaying = () => {
+      const src = audio.currentSrc || audio.src;
+      if (!isSameAudioSource(src, currentSongRef.current.src)) return;
+      // If the user already paused during the transition, do not resurrect
+      // playback state from the buffered 'playing' event.
+      if (audio.paused) return;
+      // The 'playing' event confirms the new track is actually producing
+      // audio. Release the transition lock and reflect the real playing state.
+      trackChangeRef.current = false;
+      setIsLoading(false);
+      setSystemPaused(false);
+      setIsPlaying(true);
     };
     const handleProgress = () => {
+      const src = audio.currentSrc || audio.src;
+      if (!isSameAudioSource(src, currentSongRef.current.src)) return;
       if (audio.buffered.length > 0) {
         const bufferedEnd = audio.buffered.end(audio.buffered.length - 1);
         setBuffered(bufferedEnd);
       }
     };
-    const handlePause = () => {
-      if (userPausedRef.current) {
-        // User explicitly paused: stop auto-play for the next track.
-        autoPlayRef.current = false;
-      } else if (isPlaying) {
-        // Pause was not triggered by the user (e.g. system suspend).
+    const handleAbort = () => {
+      // A load abort is expected during track changes when src is swapped.
+      if (trackChangeRef.current) return;
+      // If the element is currently playing, this event belongs to an
+      // already-discarded resource and should not pause the active track.
+      if (!audio.paused) return;
+      const src = audio.currentSrc || audio.src;
+      if (!isSameAudioSource(src, currentSongRef.current.src)) return;
+      if (intendedPlayingRef.current) {
         setSystemPaused(true);
       }
       setIsPlaying(false);
-      userPausedRef.current = false;
     };
-    const handleSuspend = () => {
-      if (isPlaying) {
+    const handlePause = () => {
+      // A genuine pause event always leaves the element paused. If playback
+      // is active, this is a stale event from a previous track and must be
+      // ignored so the next song is not accidentally stopped.
+      if (!audio.paused) return;
+      // Changing the audio src implicitly pauses the element. Ignore that
+      // synthetic pause so the playback state is preserved for the new track.
+      if (trackChangeRef.current) return;
+      const src = audio.currentSrc || audio.src;
+      if (!isSameAudioSource(src, currentSongRef.current.src)) return;
+      setIsPlaying(false);
+      // If we still intend to play, this pause came from the system (suspend,
+      // stall, browser policy) rather than the user, so show the resume hint.
+      if (intendedPlayingRef.current) {
         setSystemPaused(true);
-        setIsPlaying(false);
       }
     };
-    const handleStalled = () => setIsLoading(true);
+    const handleSuspend = () => {
+      // Ignore suspend events that are part of a track change (e.g. the old
+      // resource being suspended while the new src loads).
+      if (trackChangeRef.current) return;
+      if (!audio.paused) return;
+      const src = audio.currentSrc || audio.src;
+      if (!isSameAudioSource(src, currentSongRef.current.src)) return;
+      setIsPlaying(false);
+      if (intendedPlayingRef.current) {
+        setSystemPaused(true);
+      }
+    };
+    const handleStalled = () => {
+      const src = audio.currentSrc || audio.src;
+      if (!isSameAudioSource(src, currentSongRef.current.src)) return;
+      setIsLoading(true);
+    };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
@@ -238,8 +362,10 @@ export function MusicPlayerProvider({
     audio.addEventListener('error', handleError);
     audio.addEventListener('canplay', handleCanPlay);
     audio.addEventListener('waiting', handleWaiting);
+    audio.addEventListener('play', handlePlay);
     audio.addEventListener('playing', handlePlaying);
     audio.addEventListener('progress', handleProgress);
+    audio.addEventListener('abort', handleAbort);
     audio.addEventListener('pause', handlePause);
     audio.addEventListener('suspend', handleSuspend);
     audio.addEventListener('stalled', handleStalled);
@@ -251,8 +377,10 @@ export function MusicPlayerProvider({
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('canplay', handleCanPlay);
       audio.removeEventListener('waiting', handleWaiting);
+      audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('playing', handlePlaying);
       audio.removeEventListener('progress', handleProgress);
+      audio.removeEventListener('abort', handleAbort);
       audio.removeEventListener('pause', handlePause);
       audio.removeEventListener('suspend', handleSuspend);
       audio.removeEventListener('stalled', handleStalled);
@@ -268,54 +396,106 @@ export function MusicPlayerProvider({
   // Load current track after user interaction
   useEffect(() => {
     if (!audioRef.current || !isDesktopClient || !hasUserInteracted) return;
+    if (!currentSong.src) return;
 
     const audio = audioRef.current;
+
+    // Avoid redundant reloads when the same source is already bound. This
+    // prevents a race where rapid state updates abort an in-flight play()
+    // promise and incorrectly flip isPlaying back to false.
+    if (
+      isSameAudioSource(audio.src, currentSong.src) &&
+      !failedSrcsRef.current.has(resolveAudioSrc(currentSong.src))
+    ) {
+      if (intendedPlayingRef.current && audio.paused) {
+        // Re-using the current resource can still emit pause/abort events
+        // from the previous playback state. Hold the transition lock until
+        // playback actually resumes so those stale events are ignored.
+        trackChangeRef.current = true;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err: unknown) => {
+            if ((err as Error | undefined)?.name === 'AbortError') return;
+            trackChangeRef.current = false;
+            intendedPlayingRef.current = false;
+            setIsPlaying(false);
+            setIsLoading(false);
+          });
+        }
+      } else {
+        // No transition is happening; release the lock so subsequent pause
+        // events are handled normally.
+        trackChangeRef.current = false;
+      }
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setCurrentTime(0);
     setBuffered(0);
 
-    if (currentSong.src && failedSrcsRef.current.has(currentSong.src)) {
+    if (failedSrcsRef.current.has(resolveAudioSrc(currentSong.src))) {
+      trackChangeRef.current = false;
+      intendedPlayingRef.current = false;
       setError('Audio resource unavailable');
       setIsLoading(false);
       setIsPlaying(false);
       return;
     }
 
+    // Mark that we are about to swap src so the implicit pause/abort events
+    // from the previous resource are ignored.
+    trackChangeRef.current = true;
     audio.src = currentSong.src;
     audio.load();
 
-    // Auto-play the new track when playback was active or when advancing
-    // automatically after the previous song finished.
-    if (isPlaying || autoPlayRef.current) {
+    // Auto-play the new track when playback is intended. Keep the transition
+    // lock active until the 'playing' event confirms the new resource is
+    // actually producing audio.
+    if (intendedPlayingRef.current) {
       const playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
+        playPromise.catch((err: unknown) => {
+          // A newer load() can abort this play attempt; ignore those errors.
+          if ((err as Error | undefined)?.name === 'AbortError') return;
+          trackChangeRef.current = false;
+          intendedPlayingRef.current = false;
           setIsPlaying(false);
           setIsLoading(false);
         });
       }
+    } else {
+      trackChangeRef.current = false;
+      setIsLoading(false);
     }
   }, [currentIndex, currentPosition, isDesktopClient, hasUserInteracted, currentSong.src]);
 
-  // Play / pause whenever the playing flag changes
+  // Play / pause whenever the playing flag changes. The load-track effect
+  // already handles playback when the track changes, so this effect is skipped
+  // while a transition is in progress.
   useEffect(() => {
     if (!audioRef.current || !isDesktopClient) return;
 
     const audio = audioRef.current;
     if (isPlaying) {
-      if (currentSong.src && failedSrcsRef.current.has(currentSong.src)) {
-        setIsPlaying(false);
-        return;
-      }
+      if (trackChangeRef.current) return;
+      if (!audio.paused) return;
       const playPromise = audio.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => setIsPlaying(false));
+        playPromise.catch((err: unknown) => {
+          // Ignore aborts caused by a concurrent track change.
+          if ((err as Error | undefined)?.name === 'AbortError') return;
+          intendedPlayingRef.current = false;
+          setIsPlaying(false);
+        });
       }
     } else {
-      audio.pause();
+      if (!audio.paused) {
+        audio.pause();
+      }
     }
-  }, [isPlaying, isDesktopClient, currentSong.src]);
+  }, [isPlaying, isDesktopClient]);
 
   // Volume / mute synchronisation
   useEffect(() => {
@@ -355,56 +535,57 @@ export function MusicPlayerProvider({
     setIsOpen(true);
     setSystemPaused(false);
     setIsPlaying((prev) => {
+      const next = !prev;
+      intendedPlayingRef.current = next;
       if (error) {
         setError(null);
-        failedSrcsRef.current.delete(currentSong.src);
-        if (audioRef.current) {
-          audioRef.current.src = currentSong.src;
-          audioRef.current.load();
-        }
-        autoPlayRef.current = true;
-        return true;
+        failedSrcsRef.current.delete(resolveAudioSrc(currentSong.src));
       }
-      if (prev) {
-        // Mark the next pause as user-initiated when switching to paused state.
-        userPausedRef.current = true;
-        autoPlayRef.current = false;
-      } else {
-        // Resuming playback should auto-play the current track.
-        autoPlayRef.current = true;
-      }
-      return !prev;
+      return next;
     });
   }, [error, currentSong.src]);
 
   const next = useCallback(() => {
     if (playlist.length === 0) return;
+    setHasUserInteracted(true);
+    setSystemPaused(false);
+    // A manual track change expresses intent to keep playback active.
+    intendedPlayingRef.current = true;
 
     if (playMode === 'repeat') {
-      // Replay the current track from the beginning
-      autoPlayRef.current = true;
+      // Replay the current track from the beginning. No src change happens
+      // here, so there is no implicit pause event to suppress.
+      setIsPlaying(true);
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
         const promise = audioRef.current.play();
         if (promise !== undefined) {
-          promise.catch(() => setIsPlaying(false));
+          promise.catch((err: unknown) => {
+            if ((err as Error | undefined)?.name === 'AbortError') return;
+            intendedPlayingRef.current = false;
+            setIsPlaying(false);
+          });
         }
       }
       setCurrentTime(0);
       return;
     }
 
-    let shouldPlay = false;
+    // In sequential mode, stop when the playlist reaches its end.
+    const nextPos = currentPositionRef.current + 1;
+    if (nextPos >= shuffledOrderRef.current.length && playMode === 'sequential') {
+      intendedPlayingRef.current = false;
+      setIsPlaying(false);
+      return;
+    }
+
+    // Track changes always suppress pause events until the new track plays.
+    trackChangeRef.current = true;
+    setIsPlaying(true);
     setCurrentPosition((prev) => {
-      const nextPosition = prev + 1;
-      if (nextPosition >= shuffledOrder.length) {
-        if (playMode === 'sequential') {
-          // Stop at the end of the playlist
-          autoPlayRef.current = false;
-          setIsPlaying(false);
-          return prev;
-        }
-        const currentIdx = shuffledOrder[prev];
+      const computedNext = prev + 1;
+      if (computedNext >= shuffledOrderRef.current.length) {
+        const currentIdx = shuffledOrderRef.current[prev];
         const newOrder = shuffleArray(playlist.length);
         // Ensure the next loop starts with a different track when possible,
         // otherwise the current index would not change and the audio effect
@@ -414,30 +595,31 @@ export function MusicPlayerProvider({
           [newOrder[0], newOrder[swapIndex]] = [newOrder[swapIndex], newOrder[0]];
         }
         setShuffledOrder(newOrder);
-        shouldPlay = true;
         return 0;
       }
-      shouldPlay = true;
-      return nextPosition;
+      return computedNext;
     });
-
-    if (shouldPlay) {
-      autoPlayRef.current = true;
-      setIsPlaying(true);
-    }
-  }, [shuffledOrder.length, playlist.length, playMode]);
+  }, [playlist.length, playMode]);
 
   const prev = useCallback(() => {
     if (playlist.length === 0) return;
+    setHasUserInteracted(true);
+    setSystemPaused(false);
+    intendedPlayingRef.current = true;
+    trackChangeRef.current = true;
+    setIsPlaying(true);
     setCurrentPosition((prevPos) =>
-      prevPos <= 0 ? shuffledOrder.length - 1 : prevPos - 1
+      prevPos <= 0 ? shuffledOrderRef.current.length - 1 : prevPos - 1
     );
-  }, [shuffledOrder.length]);
+  }, []);
 
   const playSong = useCallback(
     (id: string) => {
       const targetIndex = playlist.findIndex((s) => s.id === id);
       if (targetIndex === -1) return;
+      intendedPlayingRef.current = true;
+      trackChangeRef.current = true;
+      setIsPlaying(true);
       const targetPosition = shuffledOrder.findIndex((idx) => idx === targetIndex);
       if (targetPosition !== -1) {
         setCurrentPosition(targetPosition);
@@ -448,8 +630,6 @@ export function MusicPlayerProvider({
         setShuffledOrder(newOrder);
         setCurrentPosition(pos >= 0 ? pos : 0);
       }
-      autoPlayRef.current = true;
-      setIsPlaying(true);
       setIsOpen(true);
       setHasUserInteracted(true);
     },

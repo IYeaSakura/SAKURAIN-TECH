@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import FriendsPageLoader from "@/components/friends/FriendsPageLoader";
 
 /**
- * 友情链接 —— Server Component 外壳。
- * 实际内容为迁移自旧 Vite 项目 src/pages/Friends/index.tsx 的整页客户端组件。
+ * Friends Links —— Server Component shell.
+ * The actual content is the full-page client component migrated from the legacy
+ * Vite project src/pages/Friends/index.tsx.
  */
 export const metadata: Metadata = {
-  title: "友情链接 —— SAKURAIN",
-  description: "友情链接：与我相关的朋友们、友链推荐与演示站点。",
+  title: "Friends Links — SAKURAIN",
+  description: "Friend links: people related to me, link recommendations, and demo sites.",
 };
 
 export default function Page() {

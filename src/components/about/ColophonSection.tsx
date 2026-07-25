@@ -7,6 +7,7 @@
  * personal introduction.
  */
 
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   FileCode,
@@ -19,7 +20,7 @@ import {
   Zap,
   Package,
 } from 'lucide-react';
-import { useAnimationEnabled } from '@/hooks';
+import { useAnimationEnabled, useTranslation } from '@/hooks';
 
 interface StackItem {
   name: string;
@@ -29,65 +30,57 @@ interface StackItem {
 
 interface StackGroup {
   key: string;
-  label: string;
   items: StackItem[];
 }
 
-const STACK: StackGroup[] = [
+const getStack = (t: ReturnType<typeof useTranslation>['t']): StackGroup[] => [
   {
     key: 'framework',
-    label: '框架与语言',
     items: [
-      { name: 'Next.js 15', desc: 'React 全栈框架，静态导出', icon: FileCode },
-      { name: 'TypeScript', desc: '类型安全与工程化', icon: FileCode },
-      { name: 'React 19', desc: 'UI 组件与状态管理', icon: FileCode },
+      { name: 'Next.js 15', desc: t.about.colophon.stack.nextjs, icon: FileCode },
+      { name: 'TypeScript', desc: t.about.colophon.stack.typescript, icon: FileCode },
+      { name: 'React 19', desc: t.about.colophon.stack.react, icon: FileCode },
     ],
   },
   {
     key: 'style',
-    label: '样式与字体',
     items: [
-      { name: 'Tailwind CSS', desc: '原子化样式与响应式布局', icon: Paintbrush },
-      { name: 'Framer Motion', desc: '交互动画与页面过渡', icon: Zap },
-      { name: 'JetBrains Mono', desc: '等宽字体，代码与标签', icon: Type },
-      { name: 'VT323 / Press Start 2P', desc: '像素字体，标题与强调', icon: Type },
+      { name: 'Tailwind CSS', desc: t.about.colophon.stack.tailwind, icon: Paintbrush },
+      { name: 'Framer Motion', desc: t.about.colophon.stack.framer, icon: Zap },
+      { name: 'JetBrains Mono', desc: t.about.colophon.stack.jetbrains, icon: Type },
+      { name: 'VT323 / Press Start 2P', desc: t.about.colophon.stack.pixelFonts, icon: Type },
     ],
   },
   {
     key: 'hosting',
-    label: '托管与部署',
     items: [
-      { name: 'EdgeOne', desc: '边缘函数、CDN 与静态托管', icon: Cloud },
-      { name: 'Cloudflare', desc: 'DNS、Workers 与 R2 存储', icon: Globe },
-      { name: 'GitHub Actions', desc: '自动化构建与发布', icon: GitBranch },
+      { name: 'EdgeOne', desc: t.about.colophon.stack.edgeone, icon: Cloud },
+      { name: 'Cloudflare', desc: t.about.colophon.stack.cloudflare, icon: Globe },
+      { name: 'GitHub Actions', desc: t.about.colophon.stack.githubActions, icon: GitBranch },
     ],
   },
   {
     key: 'tools',
-    label: '内容工具',
     items: [
-      { name: 'gray-matter', desc: 'Markdown 前置元数据解析', icon: Package },
-      { name: 'Remark / Rehype', desc: 'Markdown 渲染与代码高亮', icon: Package },
-      { name: 'Lucide Icons', desc: '轻量矢量图标', icon: Package },
+      { name: 'gray-matter', desc: t.about.colophon.stack.grayMatter, icon: Package },
+      { name: 'Remark / Rehype', desc: t.about.colophon.stack.remark, icon: Package },
+      { name: 'Lucide Icons', desc: t.about.colophon.stack.lucide, icon: Package },
     ],
   },
 ];
 
-const DESIGN_NOTES = [
+const getDesignNotes = (t: ReturnType<typeof useTranslation>['t']) => [
   {
-    title: '新粗犷主义 + 像素风格',
-    content:
-      '界面以粗边框、硬边角、像素偏移阴影为主，避免过度圆润与光晕。色彩高对比，信息层级通过边框与间距建立。',
+    title: t.about.colophon.designNotes.neoBrutalism.title,
+    content: t.about.colophon.designNotes.neoBrutalism.content,
   },
   {
-    title: '内容优先',
-    content:
-      '首页与个人页回归博客气质，突出文章、说说与照片。去掉产品化的营销文案，让站点更像数字花园。',
+    title: t.about.colophon.designNotes.contentFirst.title,
+    content: t.about.colophon.designNotes.contentFirst.content,
   },
   {
-    title: '终端模式',
-    content:
-      '通过灵动岛可切换终端模式，使用 ls / cd / cat / open 等命令浏览内容，保留极客玩家的操作感。',
+    title: t.about.colophon.designNotes.terminalMode.title,
+    content: t.about.colophon.designNotes.terminalMode.content,
   },
 ];
 
@@ -96,6 +89,17 @@ const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
 
 export function ColophonSection() {
   const animationEnabled = useAnimationEnabled();
+  const { t } = useTranslation();
+
+  const stack = useMemo(() => getStack(t), [t]);
+  const designNotes = useMemo(() => getDesignNotes(t), [t]);
+
+  const categoryLabels: Record<string, string> = {
+    framework: t.about.colophon.categories.framework,
+    style: t.about.colophon.categories.style,
+    hosting: t.about.colophon.categories.hosting,
+    tools: t.about.colophon.categories.tools,
+  };
 
   return (
     <motion.section
@@ -109,12 +113,12 @@ export function ColophonSection() {
         className="text-sm font-bold uppercase tracking-wider mb-4"
         style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
       >
-        Colophon
+        {t.about.colophon.title}
       </h2>
 
       {/* Design notes */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        {DESIGN_NOTES.map((note, index) => (
+        {designNotes.map((note, index) => (
           <motion.div
             key={index}
             initial={animationEnabled ? { opacity: 0, y: 12 } : undefined}
@@ -143,13 +147,13 @@ export function ColophonSection() {
 
       {/* Stack groups */}
       <div className="space-y-8">
-        {STACK.map((group, groupIndex) => (
+        {stack.map((group, groupIndex) => (
           <div key={group.key}>
             <h3
               className="text-xs font-bold uppercase tracking-wider mb-3"
               style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}
             >
-              {group.label}
+              {categoryLabels[group.key] || group.key}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {group.items.map((item, index) => {
@@ -208,10 +212,7 @@ export function ColophonSection() {
       >
         <div className="flex items-start gap-3">
           <Server className="w-5 h-5 shrink-0 mt-0.5" style={{ color: 'var(--accent-primary)' }} />
-          <p>
-            站点源码托管于 GitHub，构建流程为：sync-content → check-friends → next build → submit-sitemap。
-            所有内容源文件保存在 content/ 目录，构建期同步到 public/。
-          </p>
+          <p>{t.about.colophon.footerNote}</p>
         </div>
       </div>
     </motion.section>

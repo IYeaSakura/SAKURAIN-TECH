@@ -1,26 +1,28 @@
 'use client';
 
 import { memo, useState, useEffect } from 'react';
+import { useTranslation } from '@/hooks';
 import { usePerformance } from '@/contexts/PerformanceContext';
 
 /**
- * 统一的首屏加载占位符 - 错峰动画避免卡顿
- * 优先使用 CSS 动画，减少 JS 计算负担
+ * Unified full-screen loading placeholder with staggered animations.
+ * Prefer CSS animations to reduce JavaScript overhead.
  */
 export const LoadingPlaceholder = memo(() => {
+  const { t } = useTranslation();
   const { effectiveQuality } = usePerformance();
   const [animationPhase, setAnimationPhase] = useState(0);
   const isLowQuality = effectiveQuality === 'low';
 
-  // 错峰启动动画，避免同时开始造成卡顿
+  // Stagger animation starts to avoid jank from simultaneous transitions.
   useEffect(() => {
-    if (isLowQuality) return; // 低性能设备不使用复杂动画
+    if (isLowQuality) return; // Skip complex animations on low-performance devices.
 
     const timers = [
-      setTimeout(() => setAnimationPhase(1), 100),   // 旋转动画
-      setTimeout(() => setAnimationPhase(2), 300),   // 文字显示
-      setTimeout(() => setAnimationPhase(3), 500),   // 进度条
-      setTimeout(() => setAnimationPhase(4), 700),   // 骨架屏
+      setTimeout(() => setAnimationPhase(1), 100),   // spinner
+      setTimeout(() => setAnimationPhase(2), 300),   // text fade-in
+      setTimeout(() => setAnimationPhase(3), 500),   // progress bar
+      setTimeout(() => setAnimationPhase(4), 700),   // skeleton screen
     ];
 
     return () => timers.forEach(clearTimeout);
@@ -31,7 +33,7 @@ export const LoadingPlaceholder = memo(() => {
       className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
       style={{ background: 'var(--bg-primary)' }}
     >
-      {/* 静态背景网格 - 无动画 */}
+      {/* Static background grid - no animation */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -44,9 +46,9 @@ export const LoadingPlaceholder = memo(() => {
         }}
       />
 
-      {/* 主加载动画 - 使用 CSS 动画而非 framer-motion */}
+      {/* Main loading animation - uses CSS instead of framer-motion */}
       <div className="relative">
-        {/* 外层旋转 - CSS 动画 */}
+        {/* Outer spinner */}
         <div
           className="w-16 h-16 rounded-lg"
           style={{
@@ -58,8 +60,8 @@ export const LoadingPlaceholder = memo(() => {
               : 'none',
           }}
         />
-        
-        {/* 内层反向旋转 - 低性能设备不显示 */}
+
+        {/* Inner reverse spinner - hidden on low-performance devices */}
         {!isLowQuality && (
           <div
             className="absolute inset-2 rounded"
@@ -75,29 +77,29 @@ export const LoadingPlaceholder = memo(() => {
         )}
       </div>
 
-      {/* 加载文字 - 淡入显示 */}
-      <div 
+      {/* Loading text - fades in */}
+      <div
         className="mt-6 text-center space-y-2 transition-opacity duration-300"
         style={{ opacity: animationPhase >= 2 ? 1 : 0 }}
       >
-        <p 
+        <p
           className="font-pixel text-lg tracking-wider"
           style={{ color: 'var(--accent-primary)' }}
         >
           LOADING...
         </p>
-        <p 
+        <p
           className="text-sm"
           style={{ color: 'var(--text-muted)' }}
         >
-          正在初始化系统
+          {t.common.initializingSystem}
         </p>
       </div>
 
-      {/* 进度条 - CSS 动画 */}
-      <div 
+      {/* Progress bar - CSS animation */}
+      <div
         className="mt-8 w-48 h-1 rounded-full overflow-hidden transition-opacity duration-300"
-        style={{ 
+        style={{
           background: 'var(--bg-tertiary)',
           opacity: animationPhase >= 3 ? 1 : 0,
         }}
@@ -113,34 +115,34 @@ export const LoadingPlaceholder = memo(() => {
         />
       </div>
 
-      {/* 骨架屏预览 - 错峰淡入 */}
-      <div 
+      {/* Skeleton preview - fades in with a delay */}
+      <div
         className="mt-12 w-full max-w-md space-y-4 transition-opacity duration-500"
         style={{ opacity: animationPhase >= 4 ? 1 : 0 }}
       >
-        {/* 模拟标题 */}
-        <div 
+        {/* Mock title */}
+        <div
           className="h-8 rounded w-2/3 mx-auto skeleton-pulse"
           style={{ background: 'var(--bg-card)' }}
         />
-        {/* 模拟段落 */}
+        {/* Mock paragraphs */}
         <div className="space-y-2">
-          <div 
+          <div
             className="h-4 rounded w-full skeleton-pulse"
             style={{ background: 'var(--bg-card)', animationDelay: '0.1s' }}
           />
-          <div 
+          <div
             className="h-4 rounded w-5/6 mx-auto skeleton-pulse"
             style={{ background: 'var(--bg-card)', animationDelay: '0.2s' }}
           />
         </div>
-        {/* 模拟卡片 */}
+        {/* Mock cards */}
         <div className="grid grid-cols-3 gap-3 mt-6">
           {[...Array(3)].map((_, i) => (
-            <div 
+            <div
               key={i}
               className="h-20 rounded-lg skeleton-pulse"
-              style={{ 
+              style={{
                 background: 'var(--bg-card)',
                 animationDelay: `${0.3 + i * 0.15}s`,
               }}
@@ -149,7 +151,7 @@ export const LoadingPlaceholder = memo(() => {
         </div>
       </div>
 
-      {/* CSS 动画定义 */}
+      {/* CSS animation keyframes */}
       <style>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
@@ -178,28 +180,31 @@ export const LoadingPlaceholder = memo(() => {
 LoadingPlaceholder.displayName = 'LoadingPlaceholder';
 
 /**
- * 简化版加载占位符 - 用于区域加载
+ * Simplified loading placeholder for section-level loading states.
  */
-export const SectionLoadingPlaceholder = memo(() => (
-  <div className="min-h-[300px] flex flex-col items-center justify-center">
-    <div
-      className="w-10 h-10 rounded-lg"
-      style={{
-        border: '3px solid var(--bg-tertiary)',
-        borderTopColor: 'var(--accent-primary)',
-        animation: 'spin 1s linear infinite',
-      }}
-    />
-    <p className="mt-3 text-sm" style={{ color: 'var(--text-muted)' }}>
-      加载中...
-    </p>
-    <style>{`
-      @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-    `}</style>
-  </div>
-));
+export const SectionLoadingPlaceholder = memo(() => {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-[300px] flex flex-col items-center justify-center">
+      <div
+        className="w-10 h-10 rounded-lg"
+        style={{
+          border: '3px solid var(--bg-tertiary)',
+          borderTopColor: 'var(--accent-primary)',
+          animation: 'spin 1s linear infinite',
+        }}
+      />
+      <p className="mt-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+        {t.common.loadingSection}
+      </p>
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
+});
 
 SectionLoadingPlaceholder.displayName = 'SectionLoadingPlaceholder';

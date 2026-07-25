@@ -12,29 +12,36 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, MessageCircle, Smile, Meh, Frown, Calendar, BarChart3, Clock, Sparkles } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
-import { useAnimationEnabled } from '@/hooks';
+import { useAnimationEnabled, useTranslation } from '@/hooks';
 import type { Note } from '@/lib/content/notes';
 import type { SiteData } from '@/types';
 
 type Mood = 'happy' | 'neutral' | 'sad';
 
-const moodConfig: Record<Mood, { icon: typeof Heart; color: string; label: string }> = {
-  happy: { icon: Smile, color: '#22c55e', label: '开心' },
-  neutral: { icon: Meh, color: '#f59e0b', label: '平静' },
-  sad: { icon: Frown, color: '#ef4444', label: '难过' },
+const MOOD_ICONS: Record<Mood, typeof Heart> = {
+  happy: Smile,
+  neutral: Meh,
+  sad: Frown,
+};
+
+const MOOD_COLORS: Record<Mood, string> = {
+  happy: '#22c55e',
+  neutral: '#f59e0b',
+  sad: '#ef4444',
 };
 
 const NOTES_PER_LOAD = 12;
 
 interface NotesPageProps {
-  /** 全部随记（构建期注入，按时间倒序） */
+  /** All notes injected at build time, sorted newest first */
   notes: Note[];
-  /** 倒序月份列表（用于月份筛选） */
+  /** Descending month list used by the month filter */
   months: string[];
 }
 
 export default function NotesPage({ notes, months }: NotesPageProps) {
   const animationEnabled = useAnimationEnabled();
+  const { t, tReplace } = useTranslation();
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
   const [loadedCount, setLoadedCount] = useState(NOTES_PER_LOAD);
@@ -101,16 +108,16 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
   const stats = useMemo(
     () => [
       {
-        label: '记录时长',
+        label: t.notes.stats.duration,
         value: developmentTime
-          ? `${developmentTime.days}天${developmentTime.hours}时${developmentTime.minutes}分${developmentTime.seconds}秒`
+          ? `${developmentTime.days}d${developmentTime.hours}h${developmentTime.minutes}m${developmentTime.seconds}s`
           : '-',
         icon: MessageCircle,
       },
-      { label: '随记数量', value: notes.length.toString(), icon: Calendar },
-      { label: '心情分布', value: `${moodCounts.happy}/${moodCounts.neutral}/${moodCounts.sad}`, icon: BarChart3 },
+      { label: t.notes.stats.count, value: notes.length.toString(), icon: Calendar },
+      { label: t.notes.stats.moodDistribution, value: `${moodCounts.happy}/${moodCounts.neutral}/${moodCounts.sad}`, icon: BarChart3 },
     ],
-    [developmentTime, notes.length, moodCounts]
+    [developmentTime, notes.length, moodCounts, t]
   );
 
   const loadMoreNotes = () => setLoadedCount((prev) => prev + NOTES_PER_LOAD);
@@ -136,7 +143,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                   className="text-[10px] font-bold uppercase tracking-wider"
                   style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
                 >
-                  Shuoshuo
+                  {t.nav.shuoshuo}
                 </span>
               </div>
 
@@ -144,10 +151,10 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                 className="text-3xl sm:text-5xl font-bold uppercase tracking-tight mb-4"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
               >
-                说说
+                {t.notes.title}
               </h1>
               <p className="text-base sm:text-lg max-w-xl" style={{ color: 'var(--text-secondary)' }}>
-                记录日常灵感、心情与碎碎念，本站的生活与技术随笔。
+                {t.notes.description}
               </p>
             </div>
 
@@ -197,7 +204,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
               className="text-[10px] font-bold uppercase tracking-wider mb-3"
               style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
             >
-              月份筛选
+              {t.notes.monthFilter}
             </h3>
             <div className="flex flex-wrap gap-2">
               <button
@@ -209,7 +216,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                   color: !selectedMonth ? 'var(--bg-primary)' : 'var(--text-primary)',
                 }}
               >
-                全部
+                {t.common.all}
               </button>
               {months.map((month) => (
                 <button
@@ -233,12 +240,13 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
               className="text-[10px] font-bold uppercase tracking-wider mb-3"
               style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
             >
-              心情筛选
+              {t.notes.moodFilter}
             </h3>
             <div className="flex flex-wrap gap-2">
               {Object.entries(moodCounts).map(([mood, count]) => {
-                const config = moodConfig[mood as Mood];
-                const Icon = config.icon;
+                const Icon = MOOD_ICONS[mood as Mood];
+                const color = MOOD_COLORS[mood as Mood];
+                const label = t.notes.moods[mood as Mood];
                 const isSelected = selectedMood === mood;
                 return (
                   <button
@@ -246,13 +254,13 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                     onClick={() => setSelectedMood(isSelected ? null : (mood as Mood))}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase border-2 transition-all"
                     style={{
-                      background: isSelected ? config.color : 'var(--bg-secondary)',
-                      borderColor: isSelected ? config.color : 'var(--border-subtle)',
+                      background: isSelected ? color : 'var(--bg-secondary)',
+                      borderColor: isSelected ? color : 'var(--border-subtle)',
                       color: isSelected ? 'var(--bg-primary)' : 'var(--text-primary)',
                     }}
                   >
                     <Icon className="w-3.5 h-3.5" />
-                    <span>{config.label}</span>
+                    <span>{label}</span>
                     <span className="opacity-70">({count})</span>
                   </button>
                 );
@@ -272,7 +280,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
               className="text-center py-20 text-sm font-mono border-2"
               style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}
             >
-              还没有说说，去写一条吧 ~
+              {t.notes.emptyHint}
             </div>
           ) : (
             <div className="space-y-8">
@@ -290,14 +298,16 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                       className="text-[10px] font-mono px-2 py-1 border-2"
                       style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}
                     >
-                      {groupedNotes[date].length} 条
+                      {tReplace(t.notes.count, { count: groupedNotes[date].length })}
                     </span>
                   </div>
 
                   <div className="space-y-3">
                     {groupedNotes[date].map((note, index) => {
-                      const currentMoodConfig = moodConfig[note.mood as Mood] || moodConfig.neutral;
-                      const MoodIcon = currentMoodConfig.icon;
+                      const mood = (note.mood as Mood) in MOOD_ICONS ? (note.mood as Mood) : 'neutral';
+                      const MoodIcon = MOOD_ICONS[mood];
+                      const moodColor = MOOD_COLORS[mood];
+                      const moodLabel = t.notes.moods[mood];
 
                       return (
                         <motion.div
@@ -317,12 +327,12 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                               className="flex items-center gap-1.5 px-2 py-0.5 border-2 text-[10px] font-bold uppercase"
                               style={{
                                 background: 'var(--bg-primary)',
-                                borderColor: `${currentMoodConfig.color}40`,
-                                color: currentMoodConfig.color,
+                                borderColor: `${moodColor}40`,
+                                color: moodColor,
                               }}
                             >
                               <MoodIcon className="w-3 h-3" />
-                              {currentMoodConfig.label}
+                              {moodLabel}
                             </div>
                             <div className="flex items-center gap-1 text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
                               <Clock className="w-3 h-3" />
@@ -366,7 +376,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                   boxShadow: '4px 4px 0 var(--accent-primary)',
                 }}
               >
-                加载更多
+                {t.notes.loadMore}
               </button>
             </div>
           )}

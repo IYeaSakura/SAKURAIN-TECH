@@ -1,5 +1,6 @@
 import { memo, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from '@/hooks';
 
 interface Tag {
   name: string;
@@ -73,16 +74,16 @@ const TAG_CATEGORIES: Record<string, string> = {
   '优化': 'algorithm',
 };
 
-const CATEGORY_COLORS: Record<string, { color: string; label: string }> = {
-  frontend: { color: '#61DAFB', label: '前端' },
-  backend: { color: '#00D4AA', label: '后端' },
-  database: { color: '#F59E0B', label: '数据库' },
-  devops: { color: '#8B5CF6', label: 'DevOps' },
-  ai: { color: '#FF6B6B', label: 'AI/ML' },
-  cloud: { color: '#EC4899', label: '云服务' },
-  security: { color: '#EF4444', label: '安全' },
-  algorithm: { color: '#10B981', label: '算法' },
-  default: { color: '#9CA3AF', label: '其他' },
+const CATEGORY_COLORS: Record<string, { color: string }> = {
+  frontend: { color: '#61DAFB' },
+  backend: { color: '#00D4AA' },
+  database: { color: '#F59E0B' },
+  devops: { color: '#8B5CF6' },
+  ai: { color: '#FF6B6B' },
+  cloud: { color: '#EC4899' },
+  security: { color: '#EF4444' },
+  algorithm: { color: '#10B981' },
+  default: { color: '#9CA3AF' },
 };
 
 // 预定义的颜色池，用于无分类标签
@@ -94,8 +95,9 @@ const COLOR_POOL = [
 
 export const BlogTagCloud = memo(function BlogTagCloud({ tags, selectedTag, onSelectTag }: BlogTagCloudProps) {
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
+  const { t, tReplace } = useTranslation();
 
-  // 打乱标签顺序
+  // Shuffle tag order for visual variety
   const shuffledTags = useMemo(() => {
     const array = [...tags];
     for (let i = array.length - 1; i > 0; i--) {
@@ -133,7 +135,7 @@ export const BlogTagCloud = memo(function BlogTagCloud({ tags, selectedTag, onSe
     if (category !== 'default') {
       return CATEGORY_COLORS[category].color;
     }
-    // 无分类标签使用颜色池
+    // Uncategorized tags use the color pool
     return COLOR_POOL[index % COLOR_POOL.length];
   };
 
@@ -151,7 +153,7 @@ export const BlogTagCloud = memo(function BlogTagCloud({ tags, selectedTag, onSe
     return offsets[index % offsets.length];
   };
 
-  // 收集所有使用的分类
+  // Collect all categories used by the current tags
   const usedCategories = useMemo(() => {
     const categories = new Set<string>();
     tags.forEach(tag => {
@@ -166,18 +168,19 @@ export const BlogTagCloud = memo(function BlogTagCloud({ tags, selectedTag, onSe
   if (tags.length === 0) {
     return (
       <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>
-        暂无标签
+        {t.blog.tagCloud.noTags}
       </div>
     );
   }
 
   return (
     <div className="relative">
-      {/* 类别图例 */}
+      {/* Category legend */}
       {usedCategories.length > 0 && (
         <div className="flex flex-wrap justify-center gap-3 mb-6">
           {usedCategories.map((key) => {
-            const { label, color } = CATEGORY_COLORS[key];
+            const { color } = CATEGORY_COLORS[key];
+            const label = t.blog.tagCloud.categories[key as keyof typeof t.blog.tagCloud.categories] ?? key;
             return (
               <div
                 key={key}
@@ -196,7 +199,7 @@ export const BlogTagCloud = memo(function BlogTagCloud({ tags, selectedTag, onSe
         </div>
       )}
 
-      {/* 词云 */}
+      {/* Tag cloud */}
       <div
         className="relative min-h-[320px] p-6 rounded-3xl overflow-hidden"
         style={{
@@ -205,14 +208,14 @@ export const BlogTagCloud = memo(function BlogTagCloud({ tags, selectedTag, onSe
           backdropFilter: 'blur(10px)',
         }}
       >
-        {/* 背景装饰 */}
+        {/* Decorative background blobs */}
         <div className="absolute inset-0 opacity-[0.08] dark:opacity-20">
           <div className="absolute top-10 left-10 w-32 h-32 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, var(--accent-primary), transparent)' }} />
           <div className="absolute bottom-20 right-10 w-40 h-40 rounded-full blur-3xl" style={{ background: 'radial-gradient(circle, var(--accent-secondary), transparent)' }} />
           <div className="absolute top-1/2 left-1/2 w-48 h-48 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" style={{ background: 'radial-gradient(circle, var(--accent-tertiary), transparent)' }} />
         </div>
 
-        {/* 标签词汇 */}
+        {/* Tag words */}
         <div className="relative flex flex-wrap justify-center items-center gap-3">
           {shuffledTags.map((tag, index) => {
             const isSelected = tag.name === selectedTag;
@@ -228,16 +231,16 @@ export const BlogTagCloud = memo(function BlogTagCloud({ tags, selectedTag, onSe
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ 
-                  duration: 0.5, 
-                  delay: index * 0.02, 
-                  type: 'spring', 
-                  stiffness: 100 
+                transition={{
+                  duration: 0.5,
+                  delay: index * 0.02,
+                  type: 'spring',
+                  stiffness: 100
                 }}
-                whileHover={{ 
-                  scale: 1.15, 
-                  zIndex: 10, 
-                  textShadow: `0 0 20px ${color}` 
+                whileHover={{
+                  scale: 1.15,
+                  zIndex: 10,
+                  textShadow: `0 0 20px ${color}`
                 }}
                 onMouseEnter={() => setHoveredTag(tag.name)}
                 onMouseLeave={() => setHoveredTag(null)}
@@ -259,13 +262,13 @@ export const BlogTagCloud = memo(function BlogTagCloud({ tags, selectedTag, onSe
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded text-xs whitespace-nowrap z-20"
-                    style={{ 
-                      background: 'rgba(0,0,0,0.8)', 
-                      color: color, 
-                      border: `1px solid ${color}40` 
+                    style={{
+                      background: 'rgba(0,0,0,0.8)',
+                      color: color,
+                      border: `1px solid ${color}40`
                     }}
                   >
-                    {tag.count} 篇文章
+                    {tReplace(t.blog.tagCloud.count, { count: tag.count })}
                   </motion.span>
                 )}
               </motion.span>
@@ -274,7 +277,7 @@ export const BlogTagCloud = memo(function BlogTagCloud({ tags, selectedTag, onSe
         </div>
 
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs" style={{ color: 'var(--text-muted)' }}>
-          悬停查看文章数 · 点击筛选
+          {t.blog.tagCloud.footerHint}
         </div>
       </div>
     </div>

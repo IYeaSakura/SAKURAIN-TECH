@@ -3,8 +3,9 @@
 import dynamic from 'next/dynamic';
 
 /**
- * Phase 1：/about 为重度客户端页面（特效/Context/浏览器 API 深度耦合），
- * 按迁移原则用 ssr:false 动态加载，避免 SSR 阶段的 window/document 访问。
+ * Phase 1: /about is a heavy client-side page (effects / Context / browser APIs
+ * are deeply coupled), so load it dynamically with ssr:false to avoid accessing
+ * window/document during SSR.
  */
 const AboutPage = dynamic(() => import('./AboutPage'), {
   ssr: false,
