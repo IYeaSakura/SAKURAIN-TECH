@@ -6,6 +6,7 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
+const isCI = Boolean(process.env.CI || process.env.SKIP_FRIEND_CHECK);
 
 /**
  * Cross-platform wrapper for `next build` that bumps the V8 heap limit.
@@ -34,7 +35,7 @@ if (result.status !== 0) {
 }
 
 /**
- * Align EdgeOne's opennext plugin with the custom distDir.
+ * Align EdgeOne's opennext plugin with the custom distDir and free up /dev/shm.
  *
  * Next.js keeps internal build metadata (BUILD_ID, required-server-files.json,
  * export-detail.json) inside .next even when distDir is set to "dist". The
@@ -43,9 +44,12 @@ if (result.status !== 0) {
  * static copy fails the deployment falls back to .next and every route returns
  * 404.
  *
- * To fix this we mirror the metadata files into dist and remove .next/BUILD_ID
- * so the plugin detects dist as the publish directory, reads the mirrored
- * metadata, and copies the static export successfully.
+ * We mirror the metadata files into dist and remove .next/BUILD_ID so the
+ * plugin detects dist as the publish directory. Additionally, EdgeOne builds
+ * run on a tmpfs with limited space; the .next/cache directory alone can be
+ * hundreds of megabytes and is not needed for a static export, so we delete
+ * the entire .next directory after mirroring to prevent "ENOSPC: no space left
+ * on device" when opennext copies dist to .edgeone/assets.
  */
 const dotNextDir = path.join(rootDir, '.next');
 const distDir = path.join(rootDir, 'dist');
@@ -82,38 +86,14 @@ try {
       JSON.stringify(exportDetail, null, 2)
     );
 
-    // Remove BUILD_ID from .next so detectPublishDir() falls through to dist.
-    fs.unlinkSync(buildIdSource);
-
-    console.log('[build-next] Mirrored EdgeOne metadata into dist and removed .next/BUILD_ID');
+    console.log('[build-next] Mirrored EdgeOne metadata into dist');
   }
 
-  /**
-   * Debug: reproduce the same cp() that opennext's copyStaticExport performs.
-   * The opennext plugin is loaded from outside the project node_modules, so
-   * patching its source does not work. We copy dist to a temporary directory
-   * here to surface the actual error message if Node.js fs.cp fails in this
-   * environment.
-   */
-  const edgeoneDir = path.join(rootDir, '.edgeone');
-  if (fs.existsSync(distDir) && fs.existsSync(edgeoneDir)) {
-    const testDest = path.join(edgeoneDir, 'assets-test');
-    if (fs.existsSync(testDest)) {
-      fs.rmSync(testDest, { recursive: true, force: true });
-    }
-    try {
-      fs.cpSync(distDir, testDest, { recursive: true });
-      const destStat = fs.statSync(testDest);
-      console.log('[build-next] fs.cp test succeeded, dest is directory:', destStat.isDirectory());
-      fs.rmSync(testDest, { recursive: true, force: true });
-    } catch (cpError) {
-      console.error('[build-next] fs.cp test failed:', cpError.message);
-      if (cpError.stack) {
-        console.error(cpError.stack);
-      }
-    }
-  } else {
-    console.log('[build-next] Skipping fs.cp test, dist or .edgeone not found');
+  // Remove the internal Next.js build directory on CI to free tmpfs space for
+  // the opennext static-export copy. Locally we keep it for incremental builds.
+  if (isCI && fs.existsSync(dotNextDir)) {
+    fs.rmSync(dotNextDir, { recursive: true, force: true });
+    console.log('[build-next] Removed .next to free tmpfs space on CI');
   }
 } catch (error) {
   console.error('[build-next] Failed to prepare EdgeOne publish metadata:', error);
