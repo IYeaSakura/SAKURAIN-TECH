@@ -89,6 +89,15 @@ try {
     console.log('[build-next] Mirrored EdgeOne metadata into dist');
   }
 
+  // Audio files are sourced from an external COS bucket; the local copies in
+  // public/music are only build-time material. Strip them from the export so
+  // the deploy package does not bloat with duplicated media assets.
+  const distMusicDir = path.join(distDir, 'music');
+  if (fs.existsSync(distMusicDir)) {
+    fs.rmSync(distMusicDir, { recursive: true, force: true });
+    console.log('[build-next] Removed duplicated dist/music assets (served from COS)');
+  }
+
   // Remove the internal Next.js build directory on CI to free tmpfs space for
   // the opennext static-export copy. Locally we keep it for incremental builds.
   if (isCI && fs.existsSync(dotNextDir)) {

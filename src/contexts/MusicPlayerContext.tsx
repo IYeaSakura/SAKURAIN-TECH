@@ -18,20 +18,16 @@ import {
   useState,
 } from 'react';
 import { useConfig, useIsDesktopClient } from '@/hooks';
+import { fetchLyrics, type LyricLine } from '@/lib/lyrics';
 
 // Playlist type definitions
-export interface LyricLine {
-  time?: number;
-  text: string;
-}
-
 export interface Song {
   id: string;
   title: string;
   artist: string;
   src: string;
   cover?: string;
-  lyrics?: LyricLine[];
+  lyricUrl?: string;
 }
 
 interface PlaylistConfig {
@@ -82,6 +78,8 @@ interface MusicPlayerState {
   currentNumber: number;
   totalSongs: number;
   currentSong: Song;
+  currentLyrics: LyricLine[];
+  lyricsLoading: boolean;
   visualizerMode: VisualizerMode;
   playlistLoading: boolean;
   playlist: Song[];
@@ -145,6 +143,8 @@ export function MusicPlayerProvider({
   // Defer audio loading until first user interaction to avoid 404 storms
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [systemPaused, setSystemPaused] = useState(false);
+  const [currentLyrics, setCurrentLyrics] = useState<LyricLine[]>([]);
+  const [lyricsLoading, setLyricsLoading] = useState(false);
 
   // Keep refs in sync with the latest state for synchronous reads in handlers.
   useEffect(() => {
@@ -207,6 +207,20 @@ export function MusicPlayerProvider({
   const currentSong = playlist[currentIndex] || DEFAULT_SONG;
   const currentNumber = currentPosition + 1;
   const totalSongs = playlist.length;
+
+  // Fetch lyrics from the external COS URL whenever the current track changes.
+  useEffect(() => {
+    let cancelled = false;
+    setLyricsLoading(true);
+    fetchLyrics(currentSong.lyricUrl).then((lyrics) => {
+      if (cancelled) return;
+      setCurrentLyrics(lyrics);
+      setLyricsLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentSong.lyricUrl]);
 
   // Mirror of the current song so event handlers can verify which resource
   // the element is actually playing without recreating listeners.
@@ -682,6 +696,8 @@ export function MusicPlayerProvider({
       currentNumber,
       totalSongs,
       currentSong,
+      currentLyrics,
+      lyricsLoading,
       visualizerMode,
       playlistLoading,
       playlist,
@@ -718,6 +734,8 @@ export function MusicPlayerProvider({
       currentNumber,
       totalSongs,
       currentSong,
+      currentLyrics,
+      lyricsLoading,
       visualizerMode,
       playlistLoading,
       playlist,

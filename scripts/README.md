@@ -13,8 +13,8 @@ npm run build
 ```
 
 1. `node scripts/generate-playlist.js`
-   - Scans `public/music/` for audio files and lyric files, then writes `content/data/playlist.json`.
-   - Keeps the music playlist in sync with the actual files in the repository.
+   - Scans `public/music/mp3/`, `public/music/lyric/` and `public/music/music-covers/`.
+   - Writes `content/data/playlist.json` with external COS URLs for audio, lyrics and cover art.
 
 2. `node scripts/sync-content-to-public.js`
    - Copies all managed content from `content/` to `public/` so the static build can consume it.
@@ -51,7 +51,7 @@ npm run build:fast
 
 ### 1. `generate-playlist.js`
 
-**Purpose**: Keep the music playlist JSON in sync with the files in `public/music/`.
+**Purpose**: Keep the music playlist JSON in sync with the files in `public/music/` while pointing the player at the external COS bucket.
 
 **Usage**: Automatically runs as the first step of `npm run build`, or manually:
 
@@ -59,9 +59,17 @@ npm run build:fast
 node scripts/generate-playlist.js
 ```
 
-**Input**: `public/music/` audio files (`.mp3`, `.flac`, `.wav`, `.ogg`, `.m4a`) and matching `.lrc` lyric files.
+**Input**: Local media arranged as three sibling directories under `public/music/`:
+- `public/music/mp3/` — audio files
+- `public/music/lyric/` — `.lrc` lyric files
+- `public/music/music-covers/` — optional cover image files (also auto-populated by extracting embedded covers from MP3s)
 
-**Output**: `content/data/playlist.json`.
+These files remain local as build-time material but are not committed.
+
+**Output**: `content/data/playlist.json` with:
+- `src`: external audio URL (`https://cos.sakurain.net/mp3/<url-encoded filename>`)
+- `lyricUrl`: external lyric URL (`https://cos.sakurain.net/lyric/<url-encoded filename>.lrc`)
+- `cover`: external cover URL (`https://cos.sakurain.net/music-covers/<url-encoded filename>.<ext>`)
 
 ---
 

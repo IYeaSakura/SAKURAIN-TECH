@@ -37,7 +37,8 @@ import {
 } from 'lucide-react';
 import { useMusicPlayer, useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
 import { AudioMetrics } from '@/components/MusicPlayer/AudioMetrics';
-import type { Song, LyricLine } from '@/contexts/MusicPlayerContext';
+import type { Song } from '@/contexts/MusicPlayerContext';
+import type { LyricLine } from '@/lib/lyrics';
 
 const PIXEL_BORDER = '2px solid var(--border-subtle)';
 const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
@@ -368,6 +369,7 @@ export default function MusicPage() {
     isLoading,
     buffered,
     currentSong,
+    currentLyrics,
     playlist,
     playMode,
     showPlaylist,
@@ -468,7 +470,7 @@ export default function MusicPage() {
             transition={{ duration: 0.4, delay: 0.1 }}
             className="flex-1 min-h-0 lg:flex-1"
           >
-            <LyricsPanel lyrics={currentSong.lyrics} currentTime={currentTime} />
+            <LyricsPanel lyrics={currentLyrics} currentTime={currentTime} />
           </motion.section>
         </div>
 

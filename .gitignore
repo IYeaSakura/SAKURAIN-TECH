@@ -5,6 +5,9 @@ out/
 # 博客 Markdown 源文件统一由 content/blog/ 管理，构建期注入页面
 public/blog/
 
+# 音频和歌词文件统一托管到外部 COS，本地仅作为构建期素材，不提交
+public/music/
+
 # 以下内容统一由 content/ 目录管理，构建期通过 scripts/sync-content-to-public.js 同步到 public/
 # content/ 只保留便于手动编辑的源文件；public/ 下的对应文件为生成产物，请勿直接编辑，也不提交
 public/data/friends.json
