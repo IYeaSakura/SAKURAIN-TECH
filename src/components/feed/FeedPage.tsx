@@ -395,19 +395,19 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   const feedOptions = [
     {
       name: 'RSS 2.0',
-      url: 'https://sakurain.net/feed/',
+      url: 'https://sakurain.net/feed',
       description: t.feed.formatDescriptions.rss,
       color: '#f97316',
     },
     {
       name: 'Atom',
-      url: 'https://sakurain.net/feed/atom/',
+      url: 'https://sakurain.net/feed/atom',
       description: t.feed.formatDescriptions.atom,
       color: '#3b82f6',
     },
     {
       name: 'JSON Feed',
-      url: 'https://sakurain.net/feed/json/',
+      url: 'https://sakurain.net/feed/json',
       description: t.feed.formatDescriptions.json,
       color: '#22c55e',
     },
