@@ -569,6 +569,21 @@ async function checkFriendsConnectivity() {
     }
     console.log('');
 
+    // Skip the expensive HTTP connectivity checks when building in
+    // memory-constrained environments (e.g. EdgeOne Pages builder). The source
+    // friends.json already contains statuses and checkInfo.
+    const shouldSkipFriendCheck = process.env.SKIP_FRIEND_CHECK === 'true' || process.env.CI === 'true';
+    if (shouldSkipFriendCheck) {
+      console.log('Skipping HTTP connectivity checks (CI or SKIP_FRIEND_CHECK).');
+      const unidirectionalFriends = data.friends.filter(friend => friend.unidirectional === true);
+      const bidirectionalFriends = data.friends.filter(friend => friend.unidirectional !== true);
+      data.friends = [...bidirectionalFriends, ...unidirectionalFriends];
+      data.lastUpdated = getBuildTimestamp();
+      fs.writeFileSync(FRIENDS_FILE, JSON.stringify(data, null, 2));
+      console.log(`Updated ${FRIENDS_FILE}`);
+      return;
+    }
+
     const friendsToCheck = data.friends.filter(friend => friend.url);
     console.log(`Checking connectivity for ${friendsToCheck.length} friends (concurrency: ${CONCURRENCY_LIMIT})...`);
     console.log('');
