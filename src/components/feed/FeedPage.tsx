@@ -1619,13 +1619,13 @@ export default function FeedPage() {
           initial={animationEnabled ? { opacity: 0, y: -20 } : undefined}
           animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
           transition={animationEnabled ? { duration: 0.5 } : undefined}
-          className="fixed top-16 lg:top-20 left-0 right-0 z-40 px-4 sm:px-6 lg:px-8 py-3 border-b-2"
+          className="px-4 sm:px-6 lg:px-8 py-3 border-b-2 mb-8"
           style={{
             background: 'var(--bg-primary)',
             borderColor: 'var(--border-subtle)',
           }}
         >
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex-1" />
 
             <div className="flex items-center gap-2">
