@@ -44,25 +44,26 @@ import {
   useStylePreset,
   useTheme,
   useNavigation,
+  useTranslation,
 } from '@/hooks';
 
 interface NavItem {
-  label: string;
+  labelKey: keyof import('@/i18n/types').Dictionary['nav'];
   href: string;
   icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
 }
 
 const NAV_LINKS: NavItem[] = [
-  { label: '首页', href: '/', icon: Home },
-  { label: '博客', href: '/blog', icon: BookOpen },
-  { label: '项目', href: '/projects', icon: FolderKanban },
-  { label: '说说', href: '/shuoshuo', icon: MessageSquare },
-  { label: '友链', href: '/friends', icon: Users },
-  { label: '朋友圈', href: '/friends-circle', icon: Heart },
-  { label: '地球', href: '/earth-online', icon: Globe },
-  { label: '关于', href: '/about', icon: User },
-  { label: '照片', href: '/photos', icon: Camera },
-  { label: '音乐', href: '/music', icon: Music },
+  { labelKey: 'home', href: '/', icon: Home },
+  { labelKey: 'blog', href: '/blog', icon: BookOpen },
+  { labelKey: 'projects', href: '/projects', icon: FolderKanban },
+  { labelKey: 'shuoshuo', href: '/shuoshuo', icon: MessageSquare },
+  { labelKey: 'friends', href: '/friends', icon: Users },
+  { labelKey: 'friendsCircle', href: '/friends-circle', icon: Heart },
+  { labelKey: 'earth', href: '/earth-online', icon: Globe },
+  { labelKey: 'about', href: '/about', icon: User },
+  { labelKey: 'photos', href: '/photos', icon: Camera },
+  { labelKey: 'music', href: '/music', icon: Music },
 ];
 
 function formatTime(time: number) {
@@ -82,6 +83,7 @@ export function DynamicIsland() {
   const { preset, cyclePreset } = useStylePreset();
   const { theme, toggleTheme } = useTheme();
   const { navigateTo } = useNavigation();
+  const { t, locale, toggleLocale } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -147,15 +149,24 @@ export function DynamicIsland() {
     [toggleTheme]
   );
 
+  const navLinks = useMemo(
+    () =>
+      NAV_LINKS.map((link) => ({
+        ...link,
+        label: t.nav[link.labelKey],
+      })),
+    [t.nav]
+  );
+
   const filteredNav = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return NAV_LINKS;
-    return NAV_LINKS.filter(
+    if (!q) return navLinks;
+    return navLinks.filter(
       (link) =>
         link.label.toLowerCase().includes(q) ||
         link.href.toLowerCase().includes(q)
     );
-  }, [searchQuery]);
+  }, [searchQuery, navLinks]);
 
   if (!mounted) return null;
 
@@ -251,11 +262,11 @@ export function DynamicIsland() {
                     SK
                   </span>
                   <span
-                    className="text-sm font-bold tracking-wider uppercase"
-                    style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
-                  >
-                    Control
-                  </span>
+                  className="text-sm font-bold tracking-wider uppercase"
+                  style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
+                >
+                  {t.common.control}
+                </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
@@ -265,9 +276,22 @@ export function DynamicIsland() {
                       borderColor: 'var(--border-subtle)',
                       color: 'var(--text-secondary)',
                     }}
-                    title="Scroll to top"
+                    title={t.common.scrollToTop}
                   >
                     <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={toggleLocale}
+                    className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
+                    style={{
+                      borderColor: 'var(--border-subtle)',
+                      color: 'var(--text-secondary)',
+                    }}
+                    title={t.common.language}
+                  >
+                    <span className="text-[10px] font-bold uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
+                      {locale === 'en' ? 'EN' : '中'}
+                    </span>
                   </button>
                   <button
                     onClick={() => handleNav('/settings')}
@@ -276,7 +300,7 @@ export function DynamicIsland() {
                       borderColor: 'var(--border-subtle)',
                       color: 'var(--text-secondary)',
                     }}
-                    title="Settings"
+                    title={t.common.settingsTitle}
                   >
                     <Settings className="w-4 h-4" />
                   </button>
@@ -303,7 +327,7 @@ export function DynamicIsland() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="搜索导航..."
+                  placeholder={t.common.search + '...'}
                   className="flex-1 bg-transparent outline-none text-xs min-w-0"
                   style={{ color: 'var(--text-primary)', caretColor: 'var(--accent-primary)' }}
                 />
@@ -313,7 +337,7 @@ export function DynamicIsland() {
                     className="text-[10px] font-bold uppercase"
                     style={{ color: 'var(--text-muted)' }}
                   >
-                    清除
+                    {t.common.clear}
                   </button>
                 )}
               </div>
@@ -359,10 +383,10 @@ export function DynamicIsland() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>
-                      {player.currentSong?.title || 'Unknown Track'}
+                      {player.currentSong?.title || t.music.unknownTrack}
                     </p>
                     <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>
-                      {player.currentSong?.artist || 'Unknown Artist'}
+                      {player.currentSong?.artist || t.music.unknownArtist}
                     </p>
                   </div>
                   <button
@@ -373,7 +397,7 @@ export function DynamicIsland() {
                       color: 'var(--text-secondary)',
                     }}
                   >
-                    打开
+                    {t.common.open}
                   </button>
                 </div>
                 <div
@@ -433,7 +457,7 @@ export function DynamicIsland() {
                 >
                   {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                   <span className="text-[10px] font-bold uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
-                    {theme === 'light' ? 'Dark' : 'Light'}
+                    {theme === 'light' ? t.common.dark : t.common.light}
                   </span>
                 </button>
                 <button
@@ -446,7 +470,7 @@ export function DynamicIsland() {
                 >
                   {preset.id === 'default' ? <Terminal className="w-4 h-4" /> : <Layout className="w-4 h-4" />}
                   <span className="text-[10px] font-bold uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
-                    {preset.id === 'default' ? 'Term' : 'Visual'}
+                    {preset.id === 'default' ? t.nav.terminal : t.common.settingsTitle}
                   </span>
                 </button>
               </div>

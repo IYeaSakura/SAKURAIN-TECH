@@ -1,11 +1,12 @@
 'use client';
 
 /**
- * 全站音乐播放器 —— 新粗犷主义风格。
+ * Global music player —— brutalism / pixel style.
  *
- * 固定在页面右下角，切换页面不会中断播放。
- * 支持切换播放顺序（随机/单曲循环/顺序）、展开播放列表、开关底部歌词。
- * 在 /music 页面自动隐藏，由音乐页面自身承载完整控件。
+ * Fixed to the bottom-right corner; playback continues across page navigations.
+ * Supports shuffle / repeat-one / sequential modes, expandable playlist and a
+ * bottom lyrics line. Hidden on /music since the music page provides its own
+ * full controls.
  */
 
 import { useRef, useCallback, useMemo, useEffect, useState } from 'react';
@@ -27,7 +28,8 @@ import {
   X,
   Loader2,
 } from 'lucide-react';
-import { useAnimationEnabled, useMusicPlayer, useStylePreset } from '@/hooks';
+import { useAnimationEnabled, useMusicPlayer, useStylePreset, useTranslation } from '@/hooks';
+import { AudioVisualizer } from './AudioVisualizer';
 import type { Song, LyricLine } from '@/contexts/MusicPlayerContext';
 
 const PIXEL_BORDER = '2px solid var(--border-subtle)';
@@ -126,6 +128,7 @@ export function MusicPlayer() {
   const player = useMusicPlayer();
   const pathname = usePathname();
   const { preset } = useStylePreset();
+  const { t, tReplace } = useTranslation();
   const isMusicPage = pathname === '/music';
   const isTerminalMode = preset.id === 'terminal';
   const progressRef = useRef<HTMLDivElement>(null);
@@ -166,6 +169,7 @@ export function MusicPlayer() {
     cyclePlayMode,
     toggleLyrics,
     togglePlaylist,
+    audioRef,
   } = player;
 
   const handleSeek = useCallback(
@@ -190,9 +194,9 @@ export function MusicPlayer() {
   if (!isClient || playlistLoading || totalSongs === 0 || isMusicPage || isTerminalMode) return null;
 
   const modeConfig = {
-    shuffle: { icon: Shuffle, label: '随机' },
-    repeat: { icon: Repeat1, label: '单曲' },
-    sequential: { icon: ListOrdered, label: '顺序' },
+    shuffle: { icon: Shuffle, label: t.music.shuffle },
+    repeat: { icon: Repeat1, label: t.music.repeat },
+    sequential: { icon: ListOrdered, label: t.music.sequential },
   }[playMode];
 
   const ModeIcon = modeConfig.icon;
@@ -207,9 +211,9 @@ export function MusicPlayer() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.25 }}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[99] max-w-xl w-[calc(100%-2rem)] px-4 py-2 text-center"
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[99] max-w-xl w-[calc(100%-2rem)] px-4 py-2 text-center pointer-events-none"
             style={{
-              background: 'var(--bg-secondary)',
+              background: 'transparent',
               color: 'var(--accent-primary)',
               fontFamily: 'var(--font-mono)',
             }}
@@ -256,32 +260,19 @@ export function MusicPlayer() {
                 {currentSong.title}
               </span>
               <span className="text-[10px] max-w-[90px] truncate" style={{ color: 'var(--text-muted)' }}>
-                {isLoading ? 'Loading...' : error ? 'Unavailable' : isPlaying ? 'Playing' : `${currentNumber}/${totalSongs}`}
+                {isLoading ? t.music.loading : error ? t.music.unavailable : isPlaying ? t.music.playing : `${currentNumber}/${totalSongs}`}
               </span>
             </div>
 
-            <motion.div
-              animate={{ opacity: isPlaying && !isLoading ? 1 : 0 }}
-              className="flex items-end gap-[2px] h-3"
-            >
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  className="w-[3px] bg-[var(--accent-primary)]"
-                  animate={
-                    isPlaying && !isLoading
-                      ? { height: [4, 12, 5, 10, 4] }
-                      : { height: 4 }
-                  }
-                  transition={{
-                    duration: 0.7,
-                    repeat: Infinity,
-                    delay: i * 0.12,
-                    ease: 'easeInOut',
-                  }}
-                />
-              ))}
-            </motion.div>
+            <div className="w-10 h-6 flex items-end">
+              <AudioVisualizer
+                audioRef={audioRef}
+                isPlaying={isPlaying && !isLoading}
+                barCount={16}
+                width={40}
+                height={24}
+              />
+            </div>
           </motion.button>
         </motion.div>
       ) : (
@@ -319,7 +310,7 @@ export function MusicPlayer() {
                   onClick={cyclePlayMode}
                   className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
                   style={{ color: 'var(--text-muted)' }}
-                  title="切换播放顺序"
+                  title={t.music.playMode}
                 >
                   <ModeIcon className="w-4 h-4" />
                 </button>
@@ -327,7 +318,7 @@ export function MusicPlayer() {
                   onClick={togglePlaylist}
                   className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
                   style={{ color: showPlaylist ? 'var(--accent-primary)' : 'var(--text-muted)' }}
-                  title="播放列表"
+                  title={t.music.playlist}
                 >
                   <ListMusic className="w-4 h-4" />
                 </button>
@@ -335,7 +326,7 @@ export function MusicPlayer() {
                   onClick={toggleLyrics}
                   className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
                   style={{ color: showLyrics ? 'var(--accent-primary)' : 'var(--text-muted)' }}
-                  title="底部歌词"
+                  title={t.music.bottomLyrics}
                 >
                   <Mic2 className="w-4 h-4" />
                 </button>
@@ -343,7 +334,7 @@ export function MusicPlayer() {
                   onClick={close}
                   className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
                   style={{ color: 'var(--text-muted)' }}
-                  title="收起"
+                  title={t.music.collapse}
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -382,9 +373,14 @@ export function MusicPlayer() {
                   style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-subtle)', color: 'var(--error)' }}
                   onClick={togglePlay}
                 >
-                  {error} — 点击重试
+                  {tReplace(t.music.clickToRetry, { error })}
                 </div>
               )}
+
+              {/* Spectrum visualizer */}
+              <div className="mt-3">
+                <AudioVisualizer audioRef={audioRef} isPlaying={isPlaying} barCount={64} height={40} />
+              </div>
 
               {/* Progress */}
               <div className="mt-4">
@@ -419,7 +415,7 @@ export function MusicPlayer() {
                   onClick={prev}
                   className="p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
                   style={{ border: PIXEL_BORDER, color: 'var(--text-secondary)' }}
-                  title="Previous"
+                  title={t.music.previous}
                 >
                   <SkipBack className="w-5 h-5" />
                 </button>
@@ -445,7 +441,7 @@ export function MusicPlayer() {
                   onClick={next}
                   className="p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
                   style={{ border: PIXEL_BORDER, color: 'var(--text-secondary)' }}
-                  title="Next"
+                  title={t.music.next}
                 >
                   <SkipForward className="w-5 h-5" />
                 </button>
@@ -482,7 +478,7 @@ export function MusicPlayer() {
               >
                 <Shuffle className="w-3 h-3" style={{ color: 'var(--accent-primary)' }} />
                 <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
-                  Track {currentNumber} / {totalSongs} · {visualizerMode}
+                  {tReplace(t.music.trackInfo, { current: currentNumber, total: totalSongs, mode: visualizerMode })}
                 </span>
               </div>
 

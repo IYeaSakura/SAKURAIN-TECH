@@ -2,19 +2,35 @@ import type { Metadata } from "next";
 import ClientEffects from "@/components/ClientEffects";
 import { StylePresetProvider } from "@/contexts/StylePresetContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import "./globals.css";
 import "./fonts/google-fonts.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://sakurain.net"),
   title: "SAKURAIN",
-  description: "SAKURAIN 个人品牌站 —— 有用、有料、有趣的技术创作者门户",
+  description: "SAKURAIN personal brand site — a practical, insightful and fun portal for tech creators.",
 };
 
 /**
- * Hydration script: restore the persisted style preset, color theme and user
- * settings before the first paint to prevent a flash of the default style.
+ * Hydration script: restore the persisted locale, style preset, color theme and
+ * user settings before the first paint to prevent a flash of defaults.
  */
+const LOCALE_HYDRATION_SCRIPT = `
+(function () {
+  try {
+    const locale = localStorage.getItem('sakurain-locale') || 'en';
+    if (locale === 'zh') {
+      document.documentElement.setAttribute('lang', 'zh-CN');
+    } else {
+      document.documentElement.setAttribute('lang', 'en');
+    }
+  } catch (e) {
+    document.documentElement.setAttribute('lang', 'en');
+  }
+})();
+`;
+
 const THEME_HYDRATION_SCRIPT = `
 (function () {
   try {
@@ -77,22 +93,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="darkreader-lock" />
+        <script dangerouslySetInnerHTML={{ __html: LOCALE_HYDRATION_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: THEME_HYDRATION_SCRIPT }} />
       </head>
       <body>
         {/*
-          全局布局层（迁移自旧版 main.tsx 的 GlobalLayout/PageLayout）：
-          Provider、Navigation、MusicPlayer、右键菜单、特效、首屏 Loading
-          均在 ClientEffects 内挂载，children 保持 SSR 传递。
+          Global layout layer (migrated from the old main.tsx GlobalLayout/PageLayout):
+          Providers, Navigation, MusicPlayer, context menu, effects and first-screen
+          loading are all mounted inside ClientEffects; children stays SSR-passed.
         */}
-        <SettingsProvider>
-          <StylePresetProvider>
-            <ClientEffects>{children}</ClientEffects>
-          </StylePresetProvider>
-        </SettingsProvider>
+        <LanguageProvider>
+          <SettingsProvider>
+            <StylePresetProvider>
+              <ClientEffects>{children}</ClientEffects>
+            </StylePresetProvider>
+          </SettingsProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { Heart, FileText, MessageCircle, Zap } from 'lucide-react';
 import { FloatingBubbles, TwinklingStars } from '@/components/effects';
-import { useNavigation } from '@/hooks';
+import { useNavigation, useTranslation } from '@/hooks';
 import type { SiteData } from '@/types';
 
 interface FooterProps {
@@ -13,6 +13,7 @@ interface FooterProps {
 export const Footer = memo(function Footer({ data }: FooterProps) {
   const currentYear = new Date().getFullYear();
   const { navigateTo } = useNavigation();
+  const { t } = useTranslation();
 
   return (
     <footer
@@ -73,7 +74,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
                   letterSpacing: '0.02em',
                 }}
               >
-                {data.slogan}
+                {data.slogan || t.footer.builtWith}
               </span>
             </div>
           </div>
@@ -86,7 +87,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
               style={{ color: 'var(--text-muted)' }}
             >
               <FileText className="w-4 h-4" />
-              <span>技术文档</span>
+              <span>{t.footer.docs}</span>
             </button>
             <button
               onClick={() => navigateTo('/shuoshuo')}
@@ -94,7 +95,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
               style={{ color: 'var(--text-muted)' }}
             >
               <MessageCircle className="w-4 h-4" />
-              <span>说说</span>
+              <span>{t.footer.shuoshuo}</span>
             </button>
             <button
               onClick={() => {
@@ -105,7 +106,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
               style={{ color: 'var(--text-muted)' }}
             >
               <Zap className="w-4 h-4" />
-              <span>算法可视化</span>
+              <span>{t.footer.algoViz}</span>
             </button>
           </div>
 
@@ -122,7 +123,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
             >
               © {currentYear} SAKURAIN
               <Heart className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-              用代码构建未来
+              {t.footer.builtWith}
             </p>
 
             {/* 备案信息 */}
@@ -164,7 +165,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
               >
                 <img
                   src="/image/ghs.png"
-                  alt="公安备案图标"
+                  alt="Beian"
                   className="w-3 h-3"
                 />
                 皖公网安备34130202000598号
