@@ -17,6 +17,9 @@ const nextConfig: NextConfig = {
 
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion", "@react-three/drei"],
+    // Offload webpack compilation to a worker process to reduce peak memory
+    // usage in the main process during builds with heavy dependencies.
+    webpackBuildWorker: true,
   },
 
   webpack: (config) => {
