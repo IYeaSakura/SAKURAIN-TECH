@@ -98,10 +98,10 @@ function parseSettings(raw: string | null): UserSettings {
 }
 
 function getCurrentThemeMode(): 'light' | 'dark' {
-  if (typeof document === 'undefined') return 'light';
-  return document.documentElement.getAttribute('data-theme') === 'dark'
-    ? 'dark'
-    : 'light';
+  if (typeof document === 'undefined') return 'dark';
+  return document.documentElement.getAttribute('data-theme') === 'light'
+    ? 'light'
+    : 'dark';
 }
 
 function applyColorTokens(themeId: ColorThemeId) {

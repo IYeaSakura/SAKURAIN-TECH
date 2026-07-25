@@ -406,7 +406,7 @@ export default function AboutPage() {
           >
             <div className="grid grid-cols-1 lg:grid-cols-2">
               <div
-                className="relative aspect-[4/3] lg:aspect-auto overflow-hidden border-b-2 lg:border-b-0 lg:border-r-2"
+                className="relative aspect-[4/3] overflow-hidden border-b-2 lg:border-b-0 lg:border-r-2"
                 style={{ borderColor: 'var(--border-subtle)' }}
               >
                 <AnimatePresence mode="wait">

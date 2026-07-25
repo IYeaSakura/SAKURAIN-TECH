@@ -6,7 +6,7 @@ import type { Dictionary } from '../types';
 
 export const zh: Dictionary = {
   meta: {
-    title: 'SAKURAIN',
+    title: 'SAKURAIN | 2026',
     description: 'SAKURAIN 个人品牌站 —— 有用、有料、有趣的技术创作者门户。',
   },
   nav: {
@@ -61,8 +61,7 @@ export const zh: Dictionary = {
     loadingSection: '加载中...',
   },
   home: {
-    intro:
-      '个人博客，记录博弈算法、量化系统、数据分析与 Web 工程中的思考与实践。这里更像一个数字花园，而不是产品展厅。',
+    intro: '代码构建未来',
     tagline: '有用、有料、有趣的技术创作。',
     readBlog: '阅读博客',
     viewShuoshuo: '看看说说',

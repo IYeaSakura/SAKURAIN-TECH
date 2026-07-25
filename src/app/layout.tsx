@@ -8,7 +8,7 @@ import "./fonts/google-fonts.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://sakurain.net"),
-  title: "SAKURAIN",
+  title: "SAKURAIN | 2026",
   description: "SAKURAIN personal brand site — a practical, insightful and fun portal for tech creators.",
 };
 
@@ -38,7 +38,7 @@ const THEME_HYDRATION_SCRIPT = `
     if (preset === 'default' || preset === 'terminal') {
       document.documentElement.setAttribute('data-preset', preset);
     }
-    const theme = localStorage.getItem('sakurain-theme') || 'light';
+    const theme = localStorage.getItem('sakurain-theme') || 'dark';
     if (theme === 'light' || theme === 'dark') {
       document.documentElement.setAttribute('data-theme', theme);
     }
