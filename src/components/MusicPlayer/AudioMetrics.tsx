@@ -4,12 +4,14 @@
  * AudioMetrics — real-time audio statistics for the music page.
  *
  * Connects to the shared HTMLAudioElement via Web Audio API and renders a
- * compact spectrum bar graph together with numeric read-outs for sample rate,
- * bitrate and playback state.
+ * compact spectrum bar graph using a logarithmic 30 Hz ~ 16 kHz frequency
+ * range, together with numeric read-outs for sample rate, bitrate and
+ * playback state.
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { globalAudioMap } from './AudioVisualizer';
+import { useTranslation } from '@/hooks';
 
 interface AudioMetricsProps {
   audioRef: React.RefObject<HTMLAudioElement | null>;
@@ -26,14 +28,47 @@ interface Metrics {
   bitrate: number;
 }
 
-const DEFAULT_BARS = Array.from({ length: 16 }, () => 0);
+const MIN_FREQ = 30;
+const MAX_FREQ = 16000;
+const FFT_SIZE = 8192;
+const BAR_COUNT = 64;
+const SMOOTHING = 0.75;
+
+function getLogBars(
+  dataArray: Uint8Array,
+  sampleRate: number,
+  fftSize: number,
+  barCount: number
+): number[] {
+  const binCount = dataArray.length;
+  const binSize = sampleRate / fftSize;
+  const ratio = Math.log(MAX_FREQ / MIN_FREQ);
+  const bars: number[] = [];
+
+  for (let i = 0; i < barCount; i++) {
+    const startFreq = MIN_FREQ * Math.exp((i / barCount) * ratio);
+    const endFreq = MIN_FREQ * Math.exp(((i + 1) / barCount) * ratio);
+    const startBin = Math.max(0, Math.floor(startFreq / binSize));
+    const endBin = Math.min(binCount, Math.max(startBin + 1, Math.floor(endFreq / binSize)));
+
+    let sum = 0;
+    for (let j = startBin; j < endBin; j++) {
+      sum += dataArray[j];
+    }
+    bars.push(sum / (endBin - startBin));
+  }
+
+  return bars;
+}
 
 export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: AudioMetricsProps) {
+  const { t } = useTranslation();
   const animationRef = useRef<number>(0);
   const isInitializedRef = useRef(false);
   const lastFrameRef = useRef(0);
+  const smoothedBarsRef = useRef<number[]>(Array.from({ length: BAR_COUNT }, () => 0));
   const [metrics, setMetrics] = useState<Metrics>({
-    bars: DEFAULT_BARS,
+    bars: smoothedBarsRef.current,
     peakDb: -96,
     sampleRate: 44100,
     channels: 2,
@@ -59,7 +94,7 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
     try {
       const audioContext = new AudioContextClass();
       const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 128;
+      analyser.fftSize = FFT_SIZE;
       analyser.smoothingTimeConstant = 0.82;
 
       const source = audioContext.createMediaElementSource(audio);
@@ -80,7 +115,7 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
     const connection = audio ? globalAudioMap.get(audio) : undefined;
     const analyser = connection?.analyser;
 
-    let bars = DEFAULT_BARS;
+    let bars = smoothedBarsRef.current;
     let peakDb = -96;
 
     if (analyser) {
@@ -88,15 +123,12 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
       const dataArray = new Uint8Array(bufferLength);
       analyser.getByteFrequencyData(dataArray);
 
-      const barCount = 16;
-      const samplesPerBar = Math.max(1, Math.floor(bufferLength / barCount));
-      bars = Array.from({ length: barCount }, (_, i) => {
-        let sum = 0;
-        for (let j = 0; j < samplesPerBar; j++) {
-          sum += dataArray[i * samplesPerBar + j] ?? 0;
-        }
-        return sum / samplesPerBar;
+      const rawBars = getLogBars(dataArray, analyser.context.sampleRate, analyser.fftSize, BAR_COUNT);
+      smoothedBarsRef.current = rawBars.map((value, i) => {
+        const prev = smoothedBarsRef.current[i] ?? 0;
+        return prev * SMOOTHING + value * (1 - SMOOTHING);
       });
+      bars = smoothedBarsRef.current;
 
       const peak = Math.max(...dataArray, 1);
       peakDb = Math.round(20 * Math.log10(peak / 255));
@@ -137,12 +169,12 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
   }, [isPlaying, readMetrics, audioRef]);
 
   const stateLabel = systemPaused
-    ? 'SYSTEM PAUSED'
+    ? t.music.audioMetrics.systemPaused
     : isLoading
-      ? 'BUFFERING'
+      ? t.music.audioMetrics.buffering
       : isPlaying
-        ? 'PLAYING'
-        : 'PAUSED';
+        ? t.music.audioMetrics.playing
+        : t.music.audioMetrics.paused;
 
   return (
     <div className="flex items-center gap-3 h-10">
@@ -156,13 +188,13 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
       </div>
 
       {/* Spectrum bars */}
-      <div className="flex items-end gap-0.5 h-6">
+      <div className="flex items-end gap-[1px] h-6">
         {metrics.bars.map((value, index) => {
           const height = Math.max(2, (value / 255) * 24);
           return (
             <div
               key={index}
-              className="w-1"
+              className="w-[2px]"
               style={{
                 height: `${height}px`,
                 background: value > 180 ? 'var(--accent-primary)' : 'var(--text-muted)',

@@ -18,8 +18,9 @@ import {
   ZapOff,
   Check,
   ArrowLeft,
+  Globe,
 } from 'lucide-react';
-import { useSettings } from '@/hooks';
+import { useSettings, useTranslation } from '@/hooks';
 import { useNavigation, useAnimationEnabled } from '@/hooks';
 import { COLOR_THEMES } from '@/config/color-themes';
 import { Footer } from '@/components/sections/Footer';
@@ -126,6 +127,7 @@ function ThemeCard({
 }
 
 function PreviewCard() {
+  const { t } = useTranslation();
   return (
     <div
       className="p-5 transition-all"
@@ -150,10 +152,10 @@ function PreviewCard() {
             className="text-sm font-bold"
             style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
           >
-            Preview Card
+            {t.settings.previewTitle}
           </h4>
           <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            实时预览当前主题与强度
+            {t.settings.previewSubtitle}
           </p>
         </div>
       </div>
@@ -166,7 +168,7 @@ function PreviewCard() {
             borderColor: 'var(--border-subtle)',
           }}
         >
-          Primary
+          {t.settings.primary}
         </span>
         <span
           className="text-xs px-2 py-1 border-2"
@@ -176,7 +178,7 @@ function PreviewCard() {
             borderColor: 'var(--border-subtle)',
           }}
         >
-          Secondary
+          {t.settings.secondary}
         </span>
         <span
           className="text-xs px-2 py-1 border-2"
@@ -186,7 +188,7 @@ function PreviewCard() {
             borderColor: 'var(--border-subtle)',
           }}
         >
-          Tertiary
+          {t.settings.tertiary}
         </span>
       </div>
     </div>
@@ -206,6 +208,7 @@ export default function SettingsPage() {
     resetSettings,
   } = useSettings();
   const { navigateTo } = useNavigation();
+  const { t, locale, toggleLocale } = useTranslation();
   const animationEnabled = useAnimationEnabled();
   const [mounted, setMounted] = useState(false);
 
@@ -243,16 +246,16 @@ export default function SettingsPage() {
             style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
           >
             <ArrowLeft className="w-4 h-4" />
-            返回首页
+            {t.settings.backHome}
           </button>
           <h1
             className="text-3xl sm:text-5xl font-bold uppercase tracking-tight mb-3"
             style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
           >
-            设置
+            {t.settings.title}
           </h1>
           <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
-            自定义配色、边框强度与交互偏好。所有更改会立即生效并保存在本地。
+            {t.settings.description}
           </p>
         </motion.section>
 
@@ -277,7 +280,7 @@ export default function SettingsPage() {
                 className="text-sm font-bold uppercase tracking-wider"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
               >
-                配色主题
+                {t.settings.colorTheme}
               </h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -314,24 +317,79 @@ export default function SettingsPage() {
                 className="text-sm font-bold uppercase tracking-wider"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
               >
-                样式强度
+                {t.settings.styleIntensity}
               </h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
               <IntensitySlider
-                label="边框粗细"
+                label={t.settings.borderWidth}
                 value={borderIntensity}
                 onChange={setBorderIntensity}
                 icon={BoxSelect}
               />
               <IntensitySlider
-                label="阴影强度"
+                label={t.settings.shadowIntensity}
                 value={shadowIntensity}
                 onChange={setShadowIntensity}
                 icon={CloudSun}
               />
             </div>
             <PreviewCard />
+          </div>
+        </motion.section>
+
+        {/* Language */}
+        <motion.section
+          initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.25 }}
+          className="mb-8"
+        >
+          <div
+            className="p-5"
+            style={{
+              background: 'var(--bg-secondary)',
+              border: '2px solid var(--border-subtle)',
+              boxShadow: '4px 4px 0 var(--border-subtle)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-5">
+              <Globe className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+              <h2
+                className="text-sm font-bold uppercase tracking-wider"
+                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
+              >
+                {t.settings.language}
+              </h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => locale !== 'en' && toggleLocale()}
+                className="px-4 py-2 text-xs font-bold uppercase tracking-wider border-2 transition-all"
+                style={{
+                  background: locale === 'en' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                  color: locale === 'en' ? 'var(--bg-primary)' : 'var(--text-primary)',
+                  borderColor: 'var(--border-subtle)',
+                  boxShadow: locale === 'en' ? '3px 3px 0 var(--border-subtle)' : 'none',
+                  fontFamily: 'var(--font-mono)',
+                }}
+              >
+                {t.common.en}
+              </button>
+              <button
+                onClick={() => locale !== 'zh' && toggleLocale()}
+                className="px-4 py-2 text-xs font-bold uppercase tracking-wider border-2 transition-all"
+                style={{
+                  background: locale === 'zh' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                  color: locale === 'zh' ? 'var(--bg-primary)' : 'var(--text-primary)',
+                  borderColor: 'var(--border-subtle)',
+                  boxShadow: locale === 'zh' ? '3px 3px 0 var(--border-subtle)' : 'none',
+                  fontFamily: 'var(--font-mono)',
+                }}
+              >
+                {t.common.zh}
+              </button>
+            </div>
           </div>
         </motion.section>
 
@@ -356,12 +414,12 @@ export default function SettingsPage() {
                 className="text-sm font-bold uppercase tracking-wider"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
               >
-                无障碍
+                {t.settings.accessibility}
               </h2>
             </div>
             <label className="flex items-center justify-between cursor-pointer group">
               <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                减少动画效果
+                {t.settings.reducedMotion}
               </span>
               <button
                 onClick={() => setReducedMotion(!reducedMotion)}
@@ -382,7 +440,10 @@ export default function SettingsPage() {
               </button>
             </label>
 
-            <div className="mt-6 pt-5" style={{ borderTop: '2px solid var(--border-subtle)' }}>
+            <div
+              className="mt-6 pt-5 flex items-center justify-between"
+              style={{ borderTop: '2px solid var(--border-subtle)' }}
+            >
               <button
                 onClick={resetSettings}
                 className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
@@ -395,7 +456,7 @@ export default function SettingsPage() {
                 }}
               >
                 <RotateCcw className="w-4 h-4" />
-                恢复默认
+                {t.settings.reset}
               </button>
             </div>
           </div>
@@ -405,7 +466,7 @@ export default function SettingsPage() {
       <Footer
         data={{
           copyright: `© ${new Date().getFullYear()} SAKURAIN`,
-          slogan: '用代码构建未来',
+          slogan: t.footer.builtWith,
           links: [],
         }}
       />

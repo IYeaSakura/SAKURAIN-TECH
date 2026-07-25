@@ -94,6 +94,7 @@ export const en: Dictionary = {
     primary: 'Primary',
     secondary: 'Secondary',
     tertiary: 'Tertiary',
+    language: 'Language',
   },
   music: {
     nowPlaying: 'Now Playing',
@@ -125,11 +126,13 @@ export const en: Dictionary = {
     paused: 'Paused',
     buffering: 'Buffering',
     systemPaused: 'System Paused',
+    systemPausedNotice: 'System paused playback. Click play to resume.',
     clickToRetry: '{error} — click to retry',
     playMode: 'Play mode',
     bottomLyrics: 'Bottom lyrics',
     collapse: 'Collapse',
     trackNumber: 'Track',
+    backToHome: 'Back to Home',
     audioMetrics: {
       playing: 'PLAYING',
       paused: 'PAUSED',

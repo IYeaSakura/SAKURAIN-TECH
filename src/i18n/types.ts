@@ -101,6 +101,7 @@ export interface Dictionary {
     primary: string;
     secondary: string;
     tertiary: string;
+    language: string;
   };
   music: {
     nowPlaying: string;
@@ -132,11 +133,13 @@ export interface Dictionary {
     paused: string;
     buffering: string;
     systemPaused: string;
+    systemPausedNotice: string;
     clickToRetry: string;
     playMode: string;
     bottomLyrics: string;
     collapse: string;
     trackNumber: string;
+    backToHome: string;
     audioMetrics: {
       playing: string;
       paused: string;

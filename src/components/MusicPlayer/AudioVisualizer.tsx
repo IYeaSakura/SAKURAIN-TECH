@@ -1,11 +1,12 @@
 'use client';
 
 /**
- * AudioVisualizer — compact frequency bars for the music player.
+ * AudioVisualizer — real-time frequency spectrum for the music player.
  *
  * Connects to the shared HTMLAudioElement via Web Audio API and renders
- * theme-aware rectangular bars. The connection is cached globally so the
- * visualizer can be mounted/unmounted without recreating the audio graph.
+ * theme-aware rectangular bars using a logarithmic frequency scale focused
+ * on the 30 Hz ~ 16 kHz audible range. The connection is cached globally so
+ * the visualizer can be mounted/unmounted without recreating the audio graph.
  */
 
 import { useEffect, useRef, useCallback } from 'react';
@@ -13,6 +14,9 @@ import { useEffect, useRef, useCallback } from 'react';
 interface AudioVisualizerProps {
   audioRef: React.RefObject<HTMLAudioElement | null>;
   isPlaying: boolean;
+  barCount?: number;
+  width?: number;
+  height?: number;
 }
 
 interface AudioConnection {
@@ -23,7 +27,46 @@ interface AudioConnection {
 
 export const globalAudioMap = new WeakMap<HTMLAudioElement, AudioConnection>();
 
-export function AudioVisualizer({ audioRef, isPlaying }: AudioVisualizerProps) {
+/** Audible range used for visualization; 16 kHz+ carries little musical energy. */
+const MIN_FREQ = 30;
+const MAX_FREQ = 16000;
+const DEFAULT_FFT_SIZE = 8192;
+const SMOOTHING = 0.75;
+
+function getLogBars(
+  dataArray: Uint8Array,
+  sampleRate: number,
+  fftSize: number,
+  barCount: number
+): number[] {
+  const binCount = dataArray.length;
+  const binSize = sampleRate / fftSize;
+  const ratio = Math.log(MAX_FREQ / MIN_FREQ);
+  const bars: number[] = [];
+
+  for (let i = 0; i < barCount; i++) {
+    const startFreq = MIN_FREQ * Math.exp((i / barCount) * ratio);
+    const endFreq = MIN_FREQ * Math.exp(((i + 1) / barCount) * ratio);
+    const startBin = Math.max(0, Math.floor(startFreq / binSize));
+    const endBin = Math.min(binCount, Math.max(startBin + 1, Math.floor(endFreq / binSize)));
+
+    let sum = 0;
+    for (let j = startBin; j < endBin; j++) {
+      sum += dataArray[j];
+    }
+    bars.push(sum / (endBin - startBin));
+  }
+
+  return bars;
+}
+
+export function AudioVisualizer({
+  audioRef,
+  isPlaying,
+  barCount = 64,
+  width = 240,
+  height = 40,
+}: AudioVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const dataArrayRef = useRef<Uint8Array<ArrayBuffer> | null>(null);
@@ -31,6 +74,7 @@ export function AudioVisualizer({ audioRef, isPlaying }: AudioVisualizerProps) {
   const isInitializedRef = useRef(false);
   const isActiveRef = useRef(false);
   const colorRef = useRef('var(--accent-primary)');
+  const smoothedBarsRef = useRef<number[]>(Array.from({ length: barCount }, () => 0));
 
   const draw = useCallback(() => {
     if (!isActiveRef.current) return;
@@ -49,29 +93,34 @@ export function AudioVisualizer({ audioRef, isPlaying }: AudioVisualizerProps) {
     const dataArray = dataArrayRef.current;
     analyser.getByteFrequencyData(dataArray);
 
+    const sampleRate = analyser.context.sampleRate;
+    const fftSize = analyser.fftSize;
+    const bars = getLogBars(dataArray, sampleRate, fftSize, barCount);
+
+    // Temporal smoothing for fluid motion.
+    smoothedBarsRef.current = bars.map((value, i) => {
+      const prev = smoothedBarsRef.current[i] ?? 0;
+      return prev * SMOOTHING + value * (1 - SMOOTHING);
+    });
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const gap = 1;
-    const barCount = 40;
-    const barWidth = (canvas.width - (barCount - 1) * gap) / barCount;
-    const samplesPerBar = Math.max(1, Math.floor(bufferLength / barCount));
+    const drawWidth = canvas.width - (barCount - 1) * gap;
+    const barWidth = Math.max(1, drawWidth / barCount);
+    const fillWidth = Math.max(1, barWidth - 0);
 
     ctx.fillStyle = colorRef.current;
 
-    for (let i = 0; i < barCount; i++) {
-      let sum = 0;
-      for (let j = 0; j < samplesPerBar; j++) {
-        sum += dataArray[i * samplesPerBar + j];
-      }
-      const average = sum / samplesPerBar;
-      const barHeight = (average / 255) * canvas.height;
+    smoothedBarsRef.current.forEach((value, i) => {
+      const barHeight = (value / 255) * canvas.height;
       const x = i * (barWidth + gap);
       const y = canvas.height - barHeight;
-      ctx.fillRect(x, y, barWidth, barHeight);
-    }
+      ctx.fillRect(x, y, fillWidth, barHeight);
+    });
 
     animationRef.current = requestAnimationFrame(draw);
-  }, []);
+  }, [barCount]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -82,11 +131,12 @@ export function AudioVisualizer({ audioRef, isPlaying }: AudioVisualizerProps) {
       analyserRef.current = existing.analyser;
       isInitializedRef.current = true;
     } else {
-      const AudioContextClass = window.AudioContext ||
+      const AudioContextClass =
+        window.AudioContext ||
         (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const audioContext = new AudioContextClass();
       const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 128;
+      analyser.fftSize = DEFAULT_FFT_SIZE;
       analyser.smoothingTimeConstant = 0.82;
 
       try {
@@ -147,20 +197,21 @@ export function AudioVisualizer({ audioRef, isPlaying }: AudioVisualizerProps) {
       if (canvas && ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
+      smoothedBarsRef.current = Array.from({ length: barCount }, () => 0);
     }
 
     return () => {
       cancelAnimationFrame(animationRef.current);
     };
-  }, [isPlaying, draw, audioRef]);
+  }, [isPlaying, draw, audioRef, barCount]);
 
   return (
     <canvas
       ref={canvasRef}
-      width={240}
-      height={40}
-      className="w-full h-10 opacity-90"
-      style={{ imageRendering: 'crisp-edges' }}
+      width={width}
+      height={height}
+      className="opacity-90"
+      style={{ width: `${width}px`, height: `${height}px`, imageRendering: 'crisp-edges' }}
     />
   );
 }

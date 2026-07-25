@@ -3,7 +3,7 @@
 /**
  * Music page — dedicated full-screen music player.
  *
- * Layout references mainstream players (Kugou, QQ Music, NetEase Cloud):
+ * Layout references mainstream desktop players:
  * - A fixed bottom bar holds the progress slider and playback controls.
  * - The main viewport shows the cover art and lyrics side by side.
  * - The playlist is a collapsible sidebar that overlays the main area and is
@@ -35,7 +35,7 @@ import {
   AlignCenter,
   AlignLeft,
 } from 'lucide-react';
-import { useMusicPlayer, useAnimationEnabled, useNavigation } from '@/hooks';
+import { useMusicPlayer, useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
 import { AudioMetrics } from '@/components/MusicPlayer/AudioMetrics';
 import type { Song, LyricLine } from '@/contexts/MusicPlayerContext';
 
@@ -96,10 +96,11 @@ function CoverArt({ song }: { song: Song }) {
 const LYRIC_FONT_SIZES = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl'];
 
 function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined; currentTime: number }) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [scaleIndex, setScaleIndex] = useState(3);
-  const [centered, setCentered] = useState(false);
+  const [centered, setCentered] = useState(true);
 
   useEffect(() => {
     try {
@@ -127,10 +128,10 @@ function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined;
 
   const lines = useMemo(() => {
     if (!lyrics || lyrics.length === 0) {
-      return [{ text: '暂无歌词' }, { text: '请欣赏音乐' }] as LyricLine[];
+      return [{ text: t.music.noLyrics }, { text: t.music.enjoyMusic }] as LyricLine[];
     }
     return lyrics;
-  }, [lyrics]);
+  }, [lyrics, t.music.noLyrics, t.music.enjoyMusic]);
 
   useEffect(() => {
     if (!lyrics || lyrics.length === 0) return;
@@ -172,7 +173,7 @@ function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined;
             className="text-xs font-bold uppercase tracking-wider"
             style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
           >
-            歌词
+            {t.music.lyrics}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -180,7 +181,7 @@ function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined;
             onClick={() => setScaleIndex((i) => Math.max(0, i - 1))}
             className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
             style={{ border: PIXEL_BORDER, color: 'var(--text-muted)' }}
-            title="缩小歌词"
+            title={t.music.shrinkLyrics}
           >
             <Minus className="w-3 h-3" />
           </button>
@@ -188,7 +189,7 @@ function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined;
             onClick={() => setScaleIndex((i) => Math.min(LYRIC_FONT_SIZES.length - 1, i + 1))}
             className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
             style={{ border: PIXEL_BORDER, color: 'var(--text-muted)' }}
-            title="放大歌词"
+            title={t.music.enlargeLyrics}
           >
             <Plus className="w-3 h-3" />
           </button>
@@ -196,7 +197,7 @@ function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined;
             onClick={() => setCentered((c) => !c)}
             className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
             style={{ border: PIXEL_BORDER, color: centered ? 'var(--accent-primary)' : 'var(--text-muted)' }}
-            title={centered ? '左对齐' : '居中'}
+            title={centered ? t.music.alignLeft : t.music.alignCenter}
           >
             {centered ? <AlignCenter className="w-3 h-3" /> : <AlignLeft className="w-3 h-3" />}
           </button>
@@ -246,6 +247,7 @@ function PlaylistPanel({
   onSelect: (id: string) => void;
   onClose: () => void;
 }) {
+  const { t, tReplace } = useTranslation();
   return (
     <div
       className="h-full flex flex-col"
@@ -261,14 +263,14 @@ function PlaylistPanel({
             className="text-xs font-bold uppercase tracking-wider"
             style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
           >
-            Playlist ({playlist.length})
+            {tReplace(t.music.playlistCount, { count: playlist.length })}
           </span>
         </div>
         <button
           onClick={onClose}
           className="p-1 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
           style={{ color: 'var(--text-muted)' }}
-          title="关闭播放列表"
+          title={t.music.closePlaylist}
         >
           <X className="w-4 h-4" />
         </button>
@@ -333,6 +335,7 @@ export default function MusicPage() {
   const player = useMusicPlayer();
   const animationEnabled = useAnimationEnabled();
   const { navigateTo } = useNavigation();
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -389,9 +392,9 @@ export default function MusicPage() {
   const bufferedPercent = duration ? (buffered / duration) * 100 : 0;
 
   const modeConfig = {
-    shuffle: { icon: Shuffle, label: '随机' },
-    repeat: { icon: Repeat1, label: '单曲循环' },
-    sequential: { icon: ListOrdered, label: '顺序播放' },
+    shuffle: { icon: Shuffle, label: t.music.shuffle },
+    repeat: { icon: Repeat1, label: t.music.repeat },
+    sequential: { icon: ListOrdered, label: t.music.sequential },
   }[playMode];
 
   const ModeIcon = modeConfig.icon;
@@ -429,7 +432,7 @@ export default function MusicPage() {
             style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
           >
             <ArrowLeft className="w-4 h-4" />
-            返回首页
+            {t.music.backToHome}
           </button>
           <div className="flex items-center gap-2">
             <Music className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
@@ -437,7 +440,7 @@ export default function MusicPage() {
               className="text-xl sm:text-2xl font-bold uppercase"
               style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
             >
-              音乐
+              {t.nav.music}
             </h1>
           </div>
         </motion.div>
@@ -536,7 +539,7 @@ export default function MusicPage() {
             style={{ borderColor: 'var(--border-subtle)', color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
           >
             <span className="w-1.5 h-1.5 bg-[var(--accent-primary)] animate-pulse" />
-            系统已暂停播放，点击播放按钮恢复
+            {t.music.systemPausedNotice}
           </motion.div>
         )}
 
@@ -553,7 +556,7 @@ export default function MusicPage() {
               onClick={prev}
               className="p-1.5 sm:p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
               style={{ border: PIXEL_BORDER, color: 'var(--text-secondary)' }}
-              title="Previous"
+              title={t.music.previous}
             >
               <SkipBack className="w-5 h-5" />
             </button>
@@ -579,7 +582,7 @@ export default function MusicPage() {
               onClick={next}
               className="p-1.5 sm:p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
               style={{ border: PIXEL_BORDER, color: 'var(--text-secondary)' }}
-              title="Next"
+              title={t.music.next}
             >
               <SkipForward className="w-5 h-5" />
             </button>
@@ -599,7 +602,7 @@ export default function MusicPage() {
               onClick={toggleMuted}
               className="p-1.5 sm:p-2 rounded-sm"
               style={{ border: PIXEL_BORDER, color: 'var(--text-muted)' }}
-              title={isMuted || volume === 0 ? '取消静音' : '静音'}
+              title={isMuted || volume === 0 ? t.music.unmute : t.music.mute}
             >
               {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
@@ -623,7 +626,7 @@ export default function MusicPage() {
                 border: PIXEL_BORDER,
                 color: showPlaylist ? 'var(--accent-primary)' : 'var(--text-muted)',
               }}
-              title="播放列表"
+              title={t.music.playlist}
             >
               <ListMusic className="w-4 h-4" />
             </button>
@@ -631,7 +634,7 @@ export default function MusicPage() {
               onClick={toggleFullscreen}
               className="p-1.5 sm:p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
               style={{ border: PIXEL_BORDER, color: 'var(--text-muted)' }}
-              title={isFullscreen ? '退出全屏' : '全屏'}
+              title={isFullscreen ? t.music.exitFullscreen : t.music.fullscreen}
             >
               {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
             </button>

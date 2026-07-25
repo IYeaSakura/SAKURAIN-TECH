@@ -18,7 +18,7 @@ import { RecentShuoshuo } from '@/components/home/RecentShuoshuo';
 import { MusicWidget } from '@/components/home/MusicWidget';
 import { CalendarWidget } from '@/components/home/CalendarWidget';
 import { StatsWidget } from '@/components/home/StatsWidget';
-import { useTheme, useStylePreset, useAnimationEnabled, useNavigation } from '@/hooks';
+import { useTheme, useStylePreset, useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
 import type { SiteData } from '@/types';
 import type { Note } from '@/lib/content/notes';
 import type { BlogPost } from '@/components/blog/types';
@@ -37,6 +37,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
   const [dataLoaded, setDataLoaded] = useState(false);
   const { setPreset } = useStylePreset();
   const { navigateTo } = useNavigation();
+  const { t } = useTranslation();
   const animationEnabled = useAnimationEnabled();
   useTheme();
 
@@ -69,7 +70,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
               borderTopColor: 'transparent',
             }}
           />
-          <p style={{ color: 'var(--text-muted)' }}>{'>'} loading...</p>
+          <p style={{ color: 'var(--text-muted)' }}>{'>'} {t.common.loading}</p>
         </div>
       </div>
     );
@@ -103,8 +104,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
                 className="text-base sm:text-lg leading-relaxed mb-4"
                 style={{ color: 'var(--text-secondary)' }}
               >
-                个人博客，记录博弈算法、量化系统、数据分析与 Web 工程中的思考与实践。
-                这里更像一个数字花园，而不是产品展厅。
+                {t.home.intro}
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <button
@@ -119,7 +119,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
                   }}
                 >
                   <BookOpen className="w-4 h-4" />
-                  阅读博客
+                  {t.home.readBlog}
                 </button>
                 <button
                   onClick={() => navigateTo('/shuoshuo')}
@@ -133,7 +133,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
                   }}
                 >
                   <MessageSquare className="w-4 h-4" />
-                  看看说说
+                  {t.home.viewShuoshuo}
                 </button>
                 <button
                   onClick={() => setPreset('terminal')}
@@ -147,7 +147,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
                   }}
                 >
                   <Terminal className="w-4 h-4" />
-                  终端模式
+                  {t.home.terminalMode}
                 </button>
               </div>
             </div>
@@ -180,21 +180,21 @@ export default function HomePage({ posts, notes }: HomePageProps) {
               className="text-xl sm:text-2xl font-bold uppercase tracking-tight"
               style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
             >
-              近期文章
+              {t.home.recentPosts}
             </h2>
             <button
               onClick={() => navigateTo('/blog')}
               className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors hover:opacity-80"
               style={{ color: 'var(--accent-primary)', borderColor: 'var(--accent-primary)' }}
             >
-              全部文章
+              {t.home.allPosts}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
           {recentPosts.length === 0 ? (
             <div className="py-12 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
-              还没有文章
+              {t.home.noPosts}
             </div>
           ) : (
             <div className="space-y-4">
