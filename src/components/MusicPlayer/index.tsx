@@ -27,7 +27,7 @@ import {
   X,
   Loader2,
 } from 'lucide-react';
-import { useAnimationEnabled, useMusicPlayer } from '@/hooks';
+import { useAnimationEnabled, useMusicPlayer, useStylePreset } from '@/hooks';
 import type { Song, LyricLine } from '@/contexts/MusicPlayerContext';
 
 const PIXEL_BORDER = '2px solid var(--border-subtle)';
@@ -125,7 +125,9 @@ export function MusicPlayer() {
   const animationEnabled = useAnimationEnabled();
   const player = useMusicPlayer();
   const pathname = usePathname();
+  const { preset } = useStylePreset();
   const isMusicPage = pathname === '/music';
+  const isTerminalMode = preset.id === 'terminal';
   const progressRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -183,8 +185,9 @@ export function MusicPlayer() {
     [currentSong.lyrics, currentTime]
   );
 
-  // Skip rendering on mobile, while loading playlist, on the music page, or when playlist is empty
-  if (!isClient || playlistLoading || totalSongs === 0 || isMusicPage) return null;
+  // Skip rendering on mobile, while loading playlist, on the music page,
+  // in terminal mode, or when playlist is empty
+  if (!isClient || playlistLoading || totalSongs === 0 || isMusicPage || isTerminalMode) return null;
 
   const modeConfig = {
     shuffle: { icon: Shuffle, label: '随机' },
@@ -211,7 +214,7 @@ export function MusicPlayer() {
               fontFamily: 'var(--font-mono)',
             }}
           >
-            <p className="text-sm font-bold truncate">{activeLyric}</p>
+            <p className="text-base font-bold truncate">{activeLyric}</p>
           </motion.div>
         )}
       </AnimatePresence>
