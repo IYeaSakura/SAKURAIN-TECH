@@ -89,31 +89,31 @@ try {
   }
 
   /**
-   * Patch the opennext plugin so that copyStaticExport logs the underlying
-   * error message. The plugin's failBuild() helper only prints the static
-   * message and swallows the original Error object, which makes it impossible
-   * to tell whether cp() failed because of permissions, disk space, or a
-   * missing directory. This is a temporary debug patch applied at build time.
+   * Debug: reproduce the same cp() that opennext's copyStaticExport performs.
+   * The opennext plugin is loaded from outside the project node_modules, so
+   * patching its source does not work. We copy dist to a temporary directory
+   * here to surface the actual error message if Node.js fs.cp fails in this
+   * environment.
    */
-  const staticJsPath = path.join(
-    rootDir,
-    'node_modules',
-    '@edgeone',
-    'opennextjs-pages',
-    'dist',
-    'build',
-    'content',
-    'static.js'
-  );
-  if (fs.existsSync(staticJsPath)) {
-    let staticJs = fs.readFileSync(staticJsPath, 'utf-8');
-    const originalHandler = `} catch (error) {\n      ctx.failBuild("Failed copying static export", error);\n    }`;
-    const patchedHandler = `} catch (error) {\n      const errorDetail = error && error.message ? error.message : String(error);\n      console.error("[opennext debug] copyStaticExport error:", errorDetail, error && error.stack ? error.stack : "");\n      ctx.failBuild("Failed copying static export: " + errorDetail, error);\n    }`;
-    if (staticJs.includes(originalHandler)) {
-      staticJs = staticJs.replace(originalHandler, patchedHandler);
-      fs.writeFileSync(staticJsPath, staticJs, 'utf-8');
-      console.log('[build-next] Patched opennext copyStaticExport error logging');
+  const edgeoneDir = path.join(rootDir, '.edgeone');
+  if (fs.existsSync(distDir) && fs.existsSync(edgeoneDir)) {
+    const testDest = path.join(edgeoneDir, 'assets-test');
+    if (fs.existsSync(testDest)) {
+      fs.rmSync(testDest, { recursive: true, force: true });
     }
+    try {
+      fs.cpSync(distDir, testDest, { recursive: true });
+      const destStat = fs.statSync(testDest);
+      console.log('[build-next] fs.cp test succeeded, dest is directory:', destStat.isDirectory());
+      fs.rmSync(testDest, { recursive: true, force: true });
+    } catch (cpError) {
+      console.error('[build-next] fs.cp test failed:', cpError.message);
+      if (cpError.stack) {
+        console.error(cpError.stack);
+      }
+    }
+  } else {
+    console.log('[build-next] Skipping fs.cp test, dist or .edgeone not found');
   }
 } catch (error) {
   console.error('[build-next] Failed to prepare EdgeOne publish metadata:', error);
