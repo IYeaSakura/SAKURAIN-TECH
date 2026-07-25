@@ -32,6 +32,8 @@ const MIN_FREQ = 30;
 const MAX_FREQ = 16000;
 const DEFAULT_FFT_SIZE = 8192;
 const SMOOTHING = 0.75;
+/** Curve power > 1 expands the low-frequency (left) bands visually. */
+const FREQ_CURVE_POWER = 1.5;
 
 function getLogBars(
   dataArray: Uint8Array,
@@ -45,8 +47,10 @@ function getLogBars(
   const bars: number[] = [];
 
   for (let i = 0; i < barCount; i++) {
-    const startFreq = MIN_FREQ * Math.exp((i / barCount) * ratio);
-    const endFreq = MIN_FREQ * Math.exp(((i + 1) / barCount) * ratio);
+    const startT = Math.pow(i / barCount, FREQ_CURVE_POWER);
+    const endT = Math.pow((i + 1) / barCount, FREQ_CURVE_POWER);
+    const startFreq = MIN_FREQ * Math.exp(startT * ratio);
+    const endFreq = MIN_FREQ * Math.exp(endT * ratio);
     const startBin = Math.max(0, Math.floor(startFreq / binSize));
     const endBin = Math.min(binCount, Math.max(startBin + 1, Math.floor(endFreq / binSize)));
 
