@@ -12,9 +12,9 @@ The npm build workflow is defined in `package.json` and runs the following steps
 npm run build
 ```
 
-1. `node scripts/copy-cesium.mjs`
-   - Copies Cesium runtime assets from `node_modules/cesium/Build/Cesium` to `public/cesium/`.
-   - `CesiumGlobe.tsx` sets `window.CESIUM_BASE_URL = '/cesium/'`, so the browser must be able to fetch Workers and Assets from this directory.
+1. `node scripts/generate-playlist.js`
+   - Scans `public/music/` for audio files and lyric files, then writes `content/data/playlist.json`.
+   - Keeps the music playlist in sync with the actual files in the repository.
 
 2. `node scripts/sync-content-to-public.js`
    - Copies all managed content from `content/` to `public/` so the static build can consume it.
@@ -22,18 +22,24 @@ npm run build
    - Generates `public/data/docs.json` from `content/docs-index.json`; the index stores only metadata and file names, while the script fills in public paths.
    - Validates that every file referenced by `content/docs-index.json` exists under `content/docs` and warns about missing entries.
    - Preserves auto-generated friend link check info in `public/data/friends.json` when possible.
+   - Auto-completes `process.steps[*].id` and `services[*].details.sections[*].total` in `site-data.json`.
 
 3. `node scripts/check-friends-connectivity.js`
    - Checks the connectivity of friend links listed in `public/data/friends.json` and updates their `status` and `checkInfo` fields.
+   - Uses multi-threaded workers and URL deduplication to avoid redundant HTTP checks.
+   - Skips the check automatically when `CI=true` or `SKIP_FRIEND_CHECK=true`.
    - Runs before `next build` so the friends page reflects the latest statuses.
 
-4. `next build`
-   - Runs Next.js production build with `output: "export"`, exporting 46 static pages and the RSS/Atom/JSON feed files to `dist/`.
-   - Because the site is fully static, there is no SSR Node function package and no `.next/standalone` output.
+4. `node scripts/build-next.js`
+   - Wraps `next build` with `--max-old-space-size=3072` to avoid OOM on large builds.
+   - Exports static pages and feeds to `dist/`.
+   - Copies `.next/BUILD_ID`, `required-server-files.json`, and `export-detail.json` into `dist/` and adjusts paths for EdgeOne Pages.
+   - In CI environments, removes the `.next` directory after the export to free tmpfs space.
 
 5. `node scripts/submit-sitemap.js`
    - Submits the generated sitemap to search engines.
-   - Reads `dist/sitemap.xml` first, falling back to `.next/server/app/sitemap.xml.body` for legacy setups.
+   - Supports Bing (primary via `BING_API_KEY`), Baidu (via `BAIDU_PUSH_TOKEN`), and Google Search Console (via `GOOGLE_SERVICE_ACCOUNT_JSON`).
+   - Reads `dist/sitemap.xml` first, falling back to `.next/server/app/sitemap.xml.body` or `public/sitemap.xml` for legacy setups.
 
 To skip all build scripts and run only `next build`, use:
 
@@ -43,7 +49,23 @@ npm run build:fast
 
 ## Auxiliary Scripts
 
-### 1. `sync-content-to-public.js`
+### 1. `generate-playlist.js`
+
+**Purpose**: Keep the music playlist JSON in sync with the files in `public/music/`.
+
+**Usage**: Automatically runs as the first step of `npm run build`, or manually:
+
+```bash
+node scripts/generate-playlist.js
+```
+
+**Input**: `public/music/` audio files (`.mp3`, `.flac`, `.wav`, `.ogg`, `.m4a`) and matching `.lrc` lyric files.
+
+**Output**: `content/data/playlist.json`.
+
+---
+
+### 2. `sync-content-to-public.js`
 
 **Purpose**: Copy managed content from `content/` to `public/` before the static build, and generate derived catalogs that are not stored in `content/`.
 
@@ -57,37 +79,58 @@ npm run build:fast
 
 ---
 
-### 2. `check-friends-connectivity.js`
+### 3. `check-friends-connectivity.js`
 
 **Purpose**: Check the connectivity status of friend links and update their online/offline/maintenance status.
 
-**Usage**: Automatically runs during `npm run build`.
+**Usage**: Automatically runs during `npm run build`. Skipped when `CI=true` or `SKIP_FRIEND_CHECK=true`.
 
 **Input**: `public/data/friends.json`
 
 **Output**: Updates `public/data/friends.json` with `status` and `checkInfo` fields for each friend entry.
 
+**Optimizations**:
+- Normalizes URLs and groups friend entries by normalized URL to avoid duplicate checks.
+- Distributes checks across `worker_threads` workers (capped by CPU count and friend count).
+- Falls back to `curl` when Node.js HTTP requests fail.
+
 ---
 
-### 3. `submit-sitemap.js`
+### 4. `build-next.js`
 
-**Purpose**: Submit sitemap URLs to search engines. Currently supports Baidu; Google and Bing require manual submission.
+**Purpose**: Wrap `next build` for the EdgeOne Pages static-export workflow.
+
+**Usage**: Automatically runs as the fourth step of `npm run build`.
+
+**What it does**:
+- Runs `next build` with increased Node heap memory.
+- Copies required EdgeOne metadata files from `.next/` into `dist/`.
+- Adjusts paths inside `export-detail.json` and `required-server-files.json` to match the `dist/` layout.
+- Removes `.next` in CI to avoid ENOSPC on tmpfs builds.
+
+---
+
+### 5. `submit-sitemap.js`
+
+**Purpose**: Submit sitemap URLs to search engines. Primary engine is Bing; Baidu and Google Search Console are also supported.
 
 **Usage**: Automatically runs as the final step of `npm run build`, or manually:
 
 ```bash
-# Submit to Baidu
-BAIDU_PUSH_TOKEN=<token> node scripts/submit-sitemap.js
+# Submit to Bing (primary)
+BING_API_KEY=<key> node scripts/submit-sitemap.js
 
 # Submit to multiple engines
-SEARCH_ENGINE_SUBMIT=baidu,google,bing BAIDU_PUSH_TOKEN=<token> node scripts/submit-sitemap.js
+SEARCH_ENGINE_SUBMIT=bing,baidu,google BING_API_KEY=<key> BAIDU_PUSH_TOKEN=<token> GOOGLE_SERVICE_ACCOUNT_JSON='{...}' node scripts/submit-sitemap.js
 ```
 
 **Input**: `dist/sitemap.xml` (generated by static export). Falls back to `.next/server/app/sitemap.xml.body` or `public/sitemap.xml` for legacy setups.
 
 **Environment Variables**:
+- `BING_API_KEY`: Bing Webmaster URL Submission API key (required for Bing).
 - `BAIDU_PUSH_TOKEN`: Baidu push token (required for Baidu).
-- `SEARCH_ENGINE_SUBMIT`: Comma-separated list of engines (default: `baidu`).
+- `GOOGLE_SERVICE_ACCOUNT_JSON`: Google service-account JSON string with `client_email` and `private_key` (required for Google).
+- `SEARCH_ENGINE_SUBMIT`: Comma-separated list of engines (default: `bing,baidu`).
 
 ## Build Integration
 
@@ -97,8 +140,9 @@ The automatic build integration is defined in `package.json`:
 {
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/copy-cesium.mjs && node scripts/sync-content-to-public.js && node scripts/check-friends-connectivity.js && next build && node scripts/submit-sitemap.js",
+    "build": "node scripts/generate-playlist.js && node scripts/sync-content-to-public.js && node scripts/check-friends-connectivity.js && node scripts/build-next.js && node scripts/submit-sitemap.js",
     "build:fast": "next build",
+    "generate-playlist": "node scripts/generate-playlist.js",
     "submit-sitemap": "node scripts/submit-sitemap.js",
     "start": "next start",
     "lint": "next lint"

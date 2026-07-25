@@ -77,7 +77,7 @@ const HeadingAnchorElement = memo(({ heading }: { heading: HeadingAnchor }) => {
   const renderHeadingContent = () => (
     <ReactMarkdown 
       remarkPlugins={[remarkGfm, remarkMath]} 
-      rehypePlugins={[rehypeKatex]}
+      rehypePlugins={[[rehypeKatex, { strict: false }]]}
       components={{
         p: ({ children }: any) => <>{children}</>,  // 移除 p 标签包装
       } as any}
@@ -141,7 +141,7 @@ const ContentChunk = memo(({ content, index }: { content: string; index: number 
   return (
     <div ref={chunkRef} className="min-h-[20px]">
       {shouldRender ? (
-        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={finalContentOnlyComponents}>{content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[[rehypeKatex, { strict: false }]]} components={finalContentOnlyComponents}>{content}</ReactMarkdown>
       ) : (
         <div className="py-4" style={{ color: 'var(--text-muted)' }}>
           <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: 'var(--accent-primary)' }} />
@@ -241,7 +241,7 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
   if (content.length < 10000 || sections.length < 5) {
     return (
       <div className="markdown-body" style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}>
-        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]} components={finalMarkdownComponents}>{content}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[[rehypeKatex, { strict: false }]]} components={finalMarkdownComponents}>{content}</ReactMarkdown>
       </div>
     );
   }
