@@ -282,15 +282,15 @@ export function DynamicIsland() {
                   </button>
                   <button
                     onClick={toggleLocale}
-                    className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
+                    className="w-7 h-7 flex items-center justify-center border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
                     style={{
                       borderColor: 'var(--border-subtle)',
                       color: 'var(--text-secondary)',
                     }}
                     title={t.common.language}
                   >
-                    <span className="text-[10px] font-bold uppercase" style={{ fontFamily: 'var(--font-mono)' }}>
-                      {locale === 'en' ? 'EN' : '中'}
+                    <span className="text-[10px] font-bold uppercase leading-none" style={{ fontFamily: 'var(--font-mono)' }}>
+                      {locale.toUpperCase()}
                     </span>
                   </button>
                   <button

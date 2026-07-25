@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, Send, User, Mail, Reply, ChevronDown, ChevronUp, AlertCircle, Check, Loader2, Monitor } from 'lucide-react';
 import { generateAuthHeaders } from '@/lib/api-auth';
 import { MarkdownRenderer } from '@/components/markdown/MarkdownRenderer';
+import { useTranslation } from '@/hooks';
 import './comments.css';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
@@ -40,6 +41,7 @@ const initialFormData: FormData = {
 };
 
 export function CommentSection({ postId }: CommentSectionProps) {
+  const { t, tReplace } = useTranslation();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -62,11 +64,11 @@ export function CommentSection({ postId }: CommentSectionProps) {
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!email) {
-      setEmailError('请输入邮箱地址');
+      setEmailError(t.blog.commentForm.emailRequired);
       return false;
     }
     if (!emailRegex.test(email)) {
-      setEmailError('邮箱格式不正确');
+      setEmailError(t.blog.commentForm.emailInvalid);
       return false;
     }
     setEmailError(null);
@@ -99,13 +101,13 @@ export function CommentSection({ postId }: CommentSectionProps) {
         setTotalComments(data.total || 0);
       }
     } catch (err) {
-      // 评论接口未部署/网络异常时静默降级：展示已有的空态与错误提示，仅开发态告警一行
+      // Degrade silently when the comments API is unavailable; only warn in development.
       if (process.env.NODE_ENV === 'development') {
         console.warn('[Comments] 评论加载失败（接口可能未部署），已进入降级态:', err);
       }
       setComments([]);
       setTotalComments(0);
-      setError('评论服务暂不可用');
+      setError(t.blog.commentForm.serviceUnavailable);
     } finally {
       setLoading(false);
     }
@@ -195,12 +197,12 @@ export function CommentSection({ postId }: CommentSectionProps) {
     e.preventDefault();
     
     if (!sliderVerified) {
-      setError('请完成人机验证');
+      setError(t.blog.commentForm.captchaRequired);
       return;
     }
 
     if (!formData.nickname.trim() || formData.nickname.length < 2 || formData.nickname.length > 20) {
-      setError('昵称需要2-20个字符');
+      setError(t.blog.commentForm.nicknameLength);
       return;
     }
 
@@ -209,12 +211,12 @@ export function CommentSection({ postId }: CommentSectionProps) {
     }
 
     if (!formData.content.trim()) {
-      setError('请输入评论内容');
+      setError(t.blog.commentForm.contentRequired);
       return;
     }
 
     if (formData.content.length > 2000) {
-      setError('评论内容不能超过2000字符');
+      setError(t.blog.commentForm.contentTooLong);
       return;
     }
 
@@ -244,10 +246,10 @@ export function CommentSection({ postId }: CommentSectionProps) {
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data?.error || '评论服务暂不可用，请稍后重试');
+        throw new Error(data?.error || t.blog.commentForm.serviceUnavailable);
       }
 
-      setSuccess('评论提交成功！');
+      setSuccess(t.blog.commentForm.success);
       setFormData(initialFormData);
       setReplyTo(null);
       resetSlider();
@@ -257,7 +259,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
       setTimeout(() => setSuccess(null), 3000);
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : '提交失败，请稍后重试');
+      setError(err instanceof Error ? err.message : t.blog.commentForm.serviceUnavailable);
     } finally {
       setSubmitting(false);
     }
@@ -288,28 +290,26 @@ export function CommentSection({ postId }: CommentSectionProps) {
     const date = new Date(dateString);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    
+    const { relativeTime } = t.blog.commentForm;
+
     const seconds = Math.floor(diff / 1000);
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
-    
+    const days = Math.floor(diff / 86400000);
+
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today.getTime() - 86400000);
     const commentDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    
-    if (seconds < 60) return `${seconds}秒前`;
-    if (minutes < 60) return `${minutes}分钟前`;
-    if (hours < 24) return `${hours}小时前`;
-    
+
+    if (seconds < 60) return tReplace(relativeTime.seconds, { count: seconds });
+    if (minutes < 60) return tReplace(relativeTime.minutes, { count: minutes });
+    if (hours < 24) return tReplace(relativeTime.hours, { count: hours });
+
     if (commentDate.getTime() === yesterday.getTime()) {
-      return '昨天';
+      return relativeTime.yesterday;
     }
-    
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+
+    return tReplace(relativeTime.days, { count: days });
   };
 
   const renderContent = (content: string, isMarkdown: boolean) => {
@@ -365,9 +365,9 @@ export function CommentSection({ postId }: CommentSectionProps) {
             onClick={() => handleReply(comment.id, comment.nickname, isReply ? comment.parentId : comment.id)}
           >
             <Reply size={14} />
-            回复
+            {t.blog.reply}
           </button>
-          
+
           {!isReply && comment.replies.length > 0 && (
             <button
               className="comment-action-btn"
@@ -376,12 +376,12 @@ export function CommentSection({ postId }: CommentSectionProps) {
               {expandedReplies.has(comment.id) ? (
                 <>
                   <ChevronUp size={14} />
-                  收起回复 ({comment.replies.length})
+                  {tReplace(t.blog.commentForm.collapseReplies, { count: comment.replies.length })}
                 </>
               ) : (
                 <>
                   <ChevronDown size={14} />
-                  展开回复 ({comment.replies.length})
+                  {tReplace(t.blog.commentForm.expandReplies, { count: comment.replies.length })}
                 </>
               )}
             </button>
@@ -409,19 +409,19 @@ export function CommentSection({ postId }: CommentSectionProps) {
       <div className="comment-header-section">
         <h3 className="comment-title">
           <MessageCircle size={20} />
-          评论 ({totalComments}/{maxComments})
+          {tReplace(t.blog.commentForm.title, { count: totalComments, max: maxComments })}
         </h3>
       </div>
 
       {totalComments < maxComments && (
         <form ref={formRef} className="comment-form" onSubmit={handleSubmit}>
           <h4 className="form-title">
-            {replyTo ? `回复 @${replyTo.nickname}` : '发表评论'}
+            {replyTo ? tReplace(t.blog.commentForm.replyTo, { name: replyTo.nickname }) : t.blog.commentForm.submit}
           </h4>
-          
+
           {replyTo && (
             <button type="button" className="cancel-reply-btn" onClick={cancelReply}>
-              取消回复
+              {t.blog.commentForm.cancelReply}
             </button>
           )}
 
@@ -429,28 +429,28 @@ export function CommentSection({ postId }: CommentSectionProps) {
             <div className="form-group">
               <label htmlFor="nickname">
                 <User size={14} />
-                昵称 *
+                {t.blog.nickname} *
               </label>
               <input
                 id="nickname"
                 type="text"
-                placeholder="请输入昵称"
+                placeholder={t.blog.commentForm.nicknamePlaceholder}
                 value={formData.nickname}
                 onChange={e => setFormData(prev => ({ ...prev, nickname: e.target.value }))}
                 maxLength={20}
                 required
               />
             </div>
-            
+
             <div className="form-group">
               <label htmlFor="email">
                 <Mail size={14} />
-                邮箱 *
+                {t.blog.email} *
               </label>
               <input
                 id="email"
                 type="email"
-                placeholder="请输入邮箱"
+                placeholder={t.blog.commentForm.emailPlaceholder}
                 value={formData.email}
                 onChange={e => handleEmailChange(e.target.value)}
                 onBlur={() => formData.email && validateEmail(formData.email)}
@@ -464,12 +464,12 @@ export function CommentSection({ postId }: CommentSectionProps) {
           <div className="form-group">
             <label htmlFor="content">
               <MessageCircle size={14} />
-              内容 *
+              {t.blog.content} *
               <span className="char-count">{formData.content.length}/2000</span>
             </label>
             <textarea
               id="content"
-              placeholder="请输入评论内容..."
+              placeholder={t.blog.commentForm.contentPlaceholder}
               value={formData.content}
               onChange={e => setFormData(prev => ({ ...prev, content: e.target.value }))}
               maxLength={2000}
@@ -485,7 +485,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
                 checked={formData.isMarkdown}
                 onChange={e => setFormData(prev => ({ ...prev, isMarkdown: e.target.checked }))}
               />
-              <span className="toggle-label">Markdown 语法</span>
+              <span className="toggle-label">{t.blog.commentForm.markdownSyntax}</span>
             </label>
           </div>
 
@@ -511,7 +511,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
                   )}
                 </div>
                 <span className="slider-text">
-                  {sliderVerified ? '已验证' : '滑动验证'}
+                  {sliderVerified ? t.blog.commentForm.verified : t.blog.commentForm.slideToVerify}
                 </span>
               </div>
             </div>
@@ -524,12 +524,12 @@ export function CommentSection({ postId }: CommentSectionProps) {
               {submitting ? (
                 <>
                   <Loader2 className="spin" size={16} />
-                  提交中...
+                  {t.blog.commentForm.loading}
                 </>
               ) : (
                 <>
                   <Send size={16} />
-                  发表评论
+                  {t.blog.commentForm.submit}
                 </>
               )}
             </button>
@@ -554,14 +554,14 @@ export function CommentSection({ postId }: CommentSectionProps) {
       {loading ? (
         <div className="comment-loading">
           <Loader2 className="spin" size={24} />
-          <span>加载评论中...</span>
+          <span>{t.blog.commentForm.loadingComments}</span>
         </div>
       ) : (
         <div className="comment-list">
           {comments.length === 0 ? (
             <div className="comment-empty">
               <MessageCircle size={40} />
-              <p>暂无评论，来抢沙发吧~</p>
+              <p>{t.blog.commentForm.emptyHint}</p>
             </div>
           ) : (
             comments.map(comment => renderComment(comment))
@@ -572,7 +572,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
       {totalComments >= maxComments && (
         <div className="comment-limit-notice">
           <AlertCircle size={16} />
-          该文章评论已达上限
+          {t.blog.commentForm.limitReached}
         </div>
       )}
     </div>

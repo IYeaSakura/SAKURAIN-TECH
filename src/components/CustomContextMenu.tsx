@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { deploymentConfig } from '@/config/deployment-config';
 import { toast } from 'sonner';
+import { useTranslation } from '@/hooks';
 
 interface ContextMenuProps {
   x: number;
@@ -50,6 +51,7 @@ export function CustomContextMenu({
   linkText,
 }: ContextMenuProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x, y });
   const [isMounted, setIsMounted] = useState(false);
@@ -245,7 +247,7 @@ export function CustomContextMenu({
         });
       } else {
         await navigator.clipboard.writeText(url);
-        toast.success('链接已复制到剪贴板！');
+        toast.success(t.customContextMenu.linkCopied);
       }
       onClose();
     } catch (error) {
@@ -309,7 +311,7 @@ export function CustomContextMenu({
   const menuItems = [
     {
       icon: Copy,
-      label: '复制',
+      label: t.customContextMenu.copy,
       onClick: handleCopy,
       disabled: !selectedText,
       shortcut: 'Ctrl+C',
@@ -317,7 +319,7 @@ export function CustomContextMenu({
     },
     {
       icon: Scissors,
-      label: '剪切',
+      label: t.customContextMenu.cut,
       onClick: handleCut,
       disabled: !selectedText || !isEditable,
       shortcut: 'Ctrl+X',
@@ -325,14 +327,14 @@ export function CustomContextMenu({
     },
     {
       icon: FileText,
-      label: '粘贴',
+      label: t.customContextMenu.paste,
       onClick: handlePaste,
       shortcut: 'Ctrl+V',
       show: isEditable,
     },
     {
       icon: ExternalLink,
-      label: '在新标签页中打开',
+      label: t.customContextMenu.openInNewTab,
       onClick: handleOpenLinkInNewTab,
       disabled: !linkUrl,
       shortcut: '',
@@ -340,7 +342,7 @@ export function CustomContextMenu({
     },
     {
       icon: LinkIcon,
-      label: '在新窗口中打开',
+      label: t.customContextMenu.openInNewWindow,
       onClick: handleOpenLinkInNewWindow,
       disabled: !linkUrl,
       shortcut: '',
@@ -348,7 +350,7 @@ export function CustomContextMenu({
     },
     {
       icon: Copy,
-      label: '复制链接',
+      label: t.customContextMenu.copyLinkUrl,
       onClick: handleCopyLinkUrl,
       disabled: !linkUrl,
       shortcut: '',
@@ -356,7 +358,7 @@ export function CustomContextMenu({
     },
     {
       icon: Copy,
-      label: '复制链接文本',
+      label: t.customContextMenu.copyLinkText,
       onClick: handleCopyLinkText,
       disabled: !linkText,
       shortcut: '',
@@ -364,7 +366,7 @@ export function CustomContextMenu({
     },
     {
       icon: Search,
-      label: '必应搜索',
+      label: t.customContextMenu.searchWithBing,
       onClick: handleSearch,
       disabled: !selectedText,
       shortcut: 'Ctrl+K',
@@ -372,35 +374,35 @@ export function CustomContextMenu({
     },
     {
       icon: RefreshCw,
-      label: '刷新页面',
+      label: t.customContextMenu.refreshPage,
       onClick: handleRefresh,
       shortcut: 'F5',
       show: true,
     },
     {
       icon: RotateCcw,
-      label: '强制刷新',
+      label: t.customContextMenu.forceRefresh,
       onClick: handleForceRefresh,
       shortcut: 'Ctrl+F5',
       show: true,
     },
     {
       icon: Home,
-      label: '返回首页',
+      label: t.customContextMenu.backToHome,
       onClick: handleGoHome,
       shortcut: 'Alt+Home',
       show: true,
     },
     {
       icon: Share,
-      label: '共享页面',
+      label: t.customContextMenu.sharePage,
       onClick: handleShare,
       shortcut: '',
       show: true,
     },
     {
       icon: Info,
-      label: '关于',
+      label: t.customContextMenu.about,
       onClick: handleAbout,
       shortcut: '',
       show: true,

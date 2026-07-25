@@ -1,8 +1,9 @@
 import { RouteLoader } from "@/components/RouteLoader";
 
 /**
- * 路由级加载反馈 —— 页面为 ssr:false 客户端大包，
- * 跳转时立即渲染占位，避免白屏等待 chunk 下载与执行。
+ * Route-level loading feedback — the page is a client-only heavy bundle,
+ * so render a placeholder immediately on navigation to avoid a blank screen
+ * while the chunk downloads and executes.
  */
 export default function Loading() {
   return <RouteLoader />;

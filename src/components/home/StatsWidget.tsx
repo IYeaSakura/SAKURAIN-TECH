@@ -10,7 +10,7 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { FileText, MessageSquare, Tag } from 'lucide-react';
-import { useAnimationEnabled } from '@/hooks';
+import { useAnimationEnabled, useTranslation } from '@/hooks';
 import type { BlogPost } from '@/components/blog/types';
 import type { Note } from '@/lib/content/notes';
 
@@ -21,6 +21,7 @@ interface StatsWidgetProps {
 
 export function StatsWidget({ posts, notes }: StatsWidgetProps) {
   const animationEnabled = useAnimationEnabled();
+  const { t } = useTranslation();
 
   const tagCount = useMemo(() => {
     const tags = new Set<string>();
@@ -29,9 +30,9 @@ export function StatsWidget({ posts, notes }: StatsWidgetProps) {
   }, [posts]);
 
   const items = [
-    { icon: FileText, label: '文章', value: posts.length },
-    { icon: MessageSquare, label: '说说', value: notes.length },
-    { icon: Tag, label: '标签', value: tagCount },
+    { icon: FileText, label: t.widgets.stats.posts, value: posts.length },
+    { icon: MessageSquare, label: t.widgets.stats.notes, value: notes.length },
+    { icon: Tag, label: t.widgets.stats.tags, value: tagCount },
   ];
 
   return (
@@ -49,7 +50,7 @@ export function StatsWidget({ posts, notes }: StatsWidgetProps) {
       <div className="flex items-center gap-2 mb-4">
         <Tag className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
         <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-          Stats
+          {t.widgets.stats.title}
         </span>
       </div>
 

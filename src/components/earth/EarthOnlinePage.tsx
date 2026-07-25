@@ -16,10 +16,10 @@ import {
   Sparkles,
   ChevronRight
 } from 'lucide-react';
-import { GlobeShowcase, DEMOS, type DemoType } from './GlobeShowcase';
+import { GlobeShowcase, getDemos, type DemoType } from './GlobeShowcase';
 import { Footer } from '@/components/sections/Footer';
 import { RouteLoader } from '@/components/RouteLoader';
-import { useConfig } from '@/hooks';
+import { useConfig, useTranslation } from '@/hooks';
 import { CommentSection } from '@/components/blog/components/CommentSection';
 import type { SiteData } from '@/types';
 
@@ -119,21 +119,23 @@ const InfoPanel = ({
   selectedDemo: DemoType;
   onSelectDemo: (demo: DemoType) => void;
 }) => {
-  const currentDemo = DEMOS.find(d => d.id === selectedDemo) || DEMOS[0];
+  const { t } = useTranslation();
+  const demos = getDemos(t.earth);
+  const currentDemo = demos.find(d => d.id === selectedDemo) || demos[0];
   const Icon = currentDemo.icon;
 
   const features = [
     {
       id: 'cesium' as DemoType,
       icon: Globe,
-      title: '3D 地球可视化',
-      description: '基于 CesiumJS 的全球实时数据渲染，支持卫星影像和地形数据',
+      title: t.earth.featureCesiumTitle,
+      description: t.earth.featureCesiumDescription,
     },
     {
       id: 'chinamap' as DemoType,
       icon: Map,
-      title: '中国区域地图',
-      description: '高精度 3D 中国地图，立体地形渲染与省份边界可视化',
+      title: t.earth.featureChinaTitle,
+      description: t.earth.featureChinaDescription,
     },
   ];
 
@@ -157,7 +159,7 @@ const InfoPanel = ({
             className="text-[10px] font-bold uppercase tracking-wider"
             style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
           >
-            交互式展示
+            {t.earth.interactiveDemo}
           </span>
         </motion.div>
 
@@ -168,7 +170,7 @@ const InfoPanel = ({
           className="text-3xl font-bold mb-3 uppercase tracking-wider"
           style={{ fontFamily: 'var(--font-pixel)', color: 'var(--text-primary)' }}
         >
-          地球 Online
+          {t.earth.earthOnlineTitle}
         </motion.h1>
 
         <motion.p
@@ -178,7 +180,7 @@ const InfoPanel = ({
           className="text-sm leading-relaxed"
           style={{ color: 'var(--text-muted)' }}
         >
-          探索两种不同的交互式可视化效果。从 3D 地球到中国地图，体验浏览器端的高性能图形渲染技术。
+          {t.earth.earthOnlineDescription}
         </motion.p>
       </div>
 
@@ -200,7 +202,7 @@ const InfoPanel = ({
             className="text-[10px] font-bold uppercase tracking-wider"
             style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
           >
-            当前展示
+            {t.earth.currentDemo}
           </span>
         </div>
         <h3
@@ -220,7 +222,7 @@ const InfoPanel = ({
           className="text-[10px] font-bold uppercase tracking-wider mb-4"
           style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}
         >
-          切换展示
+          {t.earth.switchDemo}
         </h3>
         {features.map((feature, index) => (
           <FeatureCard

@@ -1,8 +1,9 @@
 import type { CSSProperties } from 'react';
 
 /**
- * GitHub 品牌图标 —— lucide-react 1.x 已移除品牌图标（Github），
- * 此处内联旧版 lucide github 路径作为替代，接口与 lucide 图标保持一致。
+ * GitHub brand icon — lucide-react 1.x removed brand icons (Github),
+ * so the legacy lucide github path is inlined here as a drop-in replacement
+ * with the same interface as a lucide icon.
  */
 export function GithubIcon({ className, style }: { className?: string; style?: CSSProperties }) {
   return (

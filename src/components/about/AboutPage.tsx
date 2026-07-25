@@ -26,7 +26,7 @@ import {
   Terminal,
   Star,
 } from 'lucide-react';
-import { useAnimationEnabled, useNavigation } from '@/hooks';
+import { useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
 import { Footer } from '@/components/sections/Footer';
 import { GithubIcon as Github } from './GithubIcon';
 import type { SiteData } from '@/types';
@@ -35,6 +35,17 @@ interface TechItem {
   name: string;
   category: string;
   color: string;
+}
+
+interface AchievementSlide {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  color: string;
+  year: string;
+  image: string;
+  fallbackIcon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
 }
 
 const techStack: TechItem[] = [
@@ -64,12 +75,12 @@ const techStack: TechItem[] = [
   { name: 'Cloudflare', category: 'Cloud', color: '#F1C40F' },
 ];
 
-const achievementSlides = [
+const getAchievementSlides = (t: ReturnType<typeof useTranslation>['t']): AchievementSlide[] => [
   {
     id: 1,
-    title: '2024年中国大学生计算机博弈大赛',
-    subtitle: '全国冠军',
-    description: '算法设计与高性能对局引擎实现获得国家级冠军。',
+    title: t.about.achievements.gameTheory2024.title,
+    subtitle: t.about.achievements.gameTheory2024.subtitle,
+    description: t.about.achievements.gameTheory2024.description,
     color: '#fbbf24',
     year: '2024',
     image: '/image/about/by2024.webp',
@@ -77,9 +88,9 @@ const achievementSlides = [
   },
   {
     id: 2,
-    title: '2025年计算机博弈大赛',
-    subtitle: '全国亚军',
-    description: '连续两年在国家级博弈赛事中保持顶尖竞争力。',
+    title: t.about.achievements.gameTheory2025.title,
+    subtitle: t.about.achievements.gameTheory2025.subtitle,
+    description: t.about.achievements.gameTheory2025.description,
     color: '#c0c0c0',
     year: '2025',
     image: '/image/about/by2025.webp',
@@ -87,9 +98,9 @@ const achievementSlides = [
   },
   {
     id: 3,
-    title: '2024年挑战杯大赛',
-    subtitle: '辽宁省铜奖',
-    description: '创新创业项目中展现工程落地与团队协作能力。',
+    title: t.about.achievements.challengeCup2024.title,
+    subtitle: t.about.achievements.challengeCup2024.subtitle,
+    description: t.about.achievements.challengeCup2024.description,
     color: '#cd7f32',
     year: '2024',
     image: '/image/about/tzb.webp',
@@ -97,11 +108,11 @@ const achievementSlides = [
   },
 ];
 
-const projectStats = [
-  { label: '项目模块', value: '120+', icon: Layers },
-  { label: '代码行数', value: '70K+', icon: Code2 },
-  { label: '技术栈', value: '15+', icon: Cpu },
-  { label: '开源依赖', value: '90+', icon: Github },
+const getProjectStats = (t: ReturnType<typeof useTranslation>['t']) => [
+  { label: t.about.statsProjects, value: '120+', icon: Layers },
+  { label: t.about.statsLines, value: '70K+', icon: Code2 },
+  { label: t.about.statsStack, value: '15+', icon: Cpu },
+  { label: t.about.statsDeps, value: '90+', icon: Github },
 ];
 
 const contactLinks = [
@@ -118,6 +129,7 @@ export default function AboutPage() {
   const [footerData, setFooterData] = useState<SiteData['footer'] | null>(null);
   const animationEnabled = useAnimationEnabled();
   const { navigateTo } = useNavigation();
+  const { t, tReplace } = useTranslation();
 
   // Scroll to top immediately when the page mounts.
   useEffect(() => {
@@ -159,6 +171,9 @@ export default function AboutPage() {
     return grouped;
   }, []);
 
+  const projectStats = useMemo(() => getProjectStats(t), [t]);
+  const achievementSlides = useMemo(() => getAchievementSlides(t), [t]);
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-24 lg:py-28">
@@ -180,7 +195,7 @@ export default function AboutPage() {
             }}
           >
             <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-            返回首页
+            {t.about.backToHome}
           </button>
         </motion.div>
 
@@ -214,7 +229,7 @@ export default function AboutPage() {
                 }}
               >
                 <Globe className="w-3 h-3" />
-                全栈开发 · 博弈算法 · AI 研究
+                {t.about.role}
               </div>
 
               <h1
@@ -227,15 +242,15 @@ export default function AboutPage() {
                 className="text-base sm:text-lg font-bold uppercase tracking-wide mb-6"
                 style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}
               >
-                软件工程 · 26届本科 · 中共党员
+                {t.about.education}
               </p>
 
               <div className="flex flex-wrap gap-2">
                 {[
-                  { icon: Trophy, text: '博弈算法冠军' },
-                  { icon: Rocket, text: '全栈工程师' },
-                  { icon: Terminal, text: 'AI 工程化' },
-                  { icon: GraduationCap, text: '26届本科' },
+                  { icon: Trophy, text: t.about.badges.gameTheoryChampion },
+                  { icon: Rocket, text: t.about.badges.fullStack },
+                  { icon: Terminal, text: t.about.badges.aiEngineering },
+                  { icon: GraduationCap, text: t.about.badges.undergraduate },
                 ].map((item, index) => (
                   <span
                     key={index}
@@ -309,20 +324,20 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <HighlightCard
               icon={Zap}
-              title="Algorithm & Game Theory"
-              description="国家级博弈赛事冠军，擅长搜索剪枝与高性能对局引擎。"
+              title={t.about.skillGameTheory}
+              description={t.about.skillGameTheoryDesc}
               index={0}
             />
             <HighlightCard
               icon={Rocket}
-              title="Full-Stack Engineering"
-              description="React / Next.js 到 FastAPI / Go，构建可落地的工程系统。"
+              title={t.about.skillFullStack}
+              description={t.about.skillFullStackDesc}
               index={1}
             />
             <HighlightCard
               icon={Terminal}
-              title="AI & Research"
-              description="关注 AI 工程化与科研实践，持续探索前沿技术。"
+              title={t.about.skillAI}
+              description={t.about.skillAIDesc}
               index={2}
             />
           </div>
@@ -340,7 +355,7 @@ export default function AboutPage() {
             className="text-sm font-bold uppercase tracking-wider mb-4"
             style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
           >
-            技术栈
+            {t.about.techStack}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.entries(techByCategory).map(([category, items], categoryIndex) => (
@@ -383,7 +398,7 @@ export default function AboutPage() {
             className="text-sm font-bold uppercase tracking-wider mb-4"
             style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
           >
-            荣誉成就
+            {t.about.honors}
           </h2>
           <div
             className="relative overflow-hidden"
@@ -467,15 +482,15 @@ export default function AboutPage() {
                           height: 8,
                           background: currentSlide === index ? 'var(--accent-primary)' : 'var(--border-subtle)',
                         }}
-                        aria-label={`切换到第 ${index + 1} 项`}
+                        aria-label={tReplace(t.about.carousel.goToSlide, { index: index + 1 })}
                       />
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
-                    <CarouselArrow onClick={prevSlide} ariaLabel="上一项">
+                    <CarouselArrow onClick={prevSlide} ariaLabel={t.about.carousel.prev}>
                       <ChevronLeft className="w-4 h-4" />
                     </CarouselArrow>
-                    <CarouselArrow onClick={nextSlide} ariaLabel="下一项">
+                    <CarouselArrow onClick={nextSlide} ariaLabel={t.about.carousel.next}>
                       <ChevronRight className="w-4 h-4" />
                     </CarouselArrow>
                   </div>
@@ -503,10 +518,10 @@ export default function AboutPage() {
                   className="text-2xl sm:text-3xl font-bold mb-2"
                   style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
                 >
-                  一起搞点事情
+                  {t.about.contactTitle}
                 </h2>
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  对博弈算法、全栈开发或 AI 项目感兴趣？随时联系我。
+                  {t.about.contactDesc}
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -543,7 +558,7 @@ export default function AboutPage() {
                   }}
                 >
                   <QqIcon className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                  QQ
+                  {t.about.qq}
                 </a>
               </div>
             </div>
@@ -630,7 +645,7 @@ function TechTag({ tech, index }: { tech: TechItem; index: number }) {
 /**
  * Renders an honor slide image with a pixel fallback icon on load failure.
  */
-function AchievementImage({ slide }: { slide: typeof achievementSlides[0] }) {
+function AchievementImage({ slide }: { slide: AchievementSlide }) {
   const [error, setError] = useState(false);
   const IconComponent = slide.fallbackIcon;
 

@@ -6,13 +6,13 @@ import { getAllPosts, getAllTags } from "@/lib/content/blog";
 import type { SiteData } from "@/types";
 
 export const metadata: Metadata = {
-  title: "博客 —— SAKURAIN",
-  description: "技术博客：探索前端、可视化与创作。有用、有料、有趣。",
+  title: "Blog — SAKURAIN",
+  description: "Tech blog: exploring frontend, visualization, and creation. Useful, substantial, and fun.",
 };
 
-const BLOG_DESCRIPTION = "技术博客：探索前端、可视化与创作。有用、有料、有趣。";
+const BLOG_DESCRIPTION = "Tech blog: exploring frontend, visualization, and creation. Useful, substantial, and fun.";
 
-/** 服务端读取站点公共数据（footer），避免客户端二次 fetch */
+/** Server-side read of site-wide shared data (footer) to avoid a second client-side fetch */
 function getFooterData(): SiteData["footer"] | null {
   try {
     const raw = fs.readFileSync(
@@ -26,9 +26,9 @@ function getFooterData(): SiteData["footer"] | null {
 }
 
 /**
- * 博客列表 —— 真正 SSG。
- * 构建期通过内容管线解析 content/blog/*.md，
- * 数据以 props 注入客户端展示组件（不再 fetch /blog/*.json）。
+ * Blog list —— true SSG.
+ * Parses content/blog/*.md via the content pipeline at build time and
+ * injects data into the client presentation component as props (no fetch /blog/*.json).
  */
 export default function Page() {
   const posts = getAllPosts();

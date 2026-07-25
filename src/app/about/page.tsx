@@ -2,13 +2,14 @@ import type { Metadata } from 'next';
 import AboutPageLoader from '@/components/about/AboutPageLoader';
 
 /**
- * /about —— Server Component 外壳。
- * 实际内容为迁移自旧 Vite 项目 src/pages/About 的整页客户端组件（Phase 1 务实起步）。
+ * /about —— Server Component shell.
+ * The actual content is the full-page client component migrated from the legacy
+ * Vite project src/pages/About (Phase 1 pragmatic bootstrap).
  */
 export const metadata: Metadata = {
-  title: '关于 | SAKURAIN',
+  title: 'About | SAKURAIN',
   description:
-    '关于 Yuyang：全栈开发、博弈算法与 AI 研究，技术栈、项目数据与荣誉成就。',
+    'About Yuyang: full-stack development, game algorithms, and AI research, including tech stack, project data, and honors.',
 };
 
 export default function Page() {

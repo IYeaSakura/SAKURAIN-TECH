@@ -7,7 +7,7 @@ import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, Chevr
 import type { LucideProps } from 'lucide-react';
 import { MagneticCursor, VelocityCursor, AmbientGlow, GradientText, LightBeam } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
-import { useAnimationEnabled, useIsDesktopClient } from '@/hooks';
+import { useAnimationEnabled, useIsDesktopClient, useTranslation } from '@/hooks';
 import { deploymentConfig } from '@/config/deployment-config';
 import { DocListView } from './components/DocListView';
 import { SeriesDetailView } from './components/SeriesDetailView';
@@ -16,7 +16,7 @@ import { ImagePreviewProvider } from '@/contexts/ImagePreviewContext';
 import type { DocCategory, DocItem, DocSeries, Chapter, DocsConfig } from './types';
 import type { SiteData } from '@/types';
 
-// 直接导入组件（不使用懒加载）
+// Import components directly (no lazy loading)
 import { DocDetailView as DocDetailViewComponent } from './components/DocDetailView';
 import { ChapterReader as ChapterReaderComponent } from './components/ChapterReader';
 const DocDetailView = DocDetailViewComponent;
@@ -27,9 +27,11 @@ const iconMap: Record<string, React.ComponentType<LucideProps>> = {
 };
 
 /**
- * Phase 2：目录树与站点数据由服务端 SSG 注入；
- * 四级参数（categoryId/itemId/chapterId）由路由适配层解析后以 props 传入；
- * 章节 / 单文档 md 正文由服务端 gray-matter 管线读取后经 content 注入。
+ * Phase 2: the catalog tree and site data are injected by server-side SSG.
+ * The four-level route params (categoryId/itemId/chapterId) are resolved by
+ * the route adapter and passed as props. Chapter / single-document markdown
+ * content is read by the server-side gray-matter pipeline and injected via
+ * the `content` prop.
  */
 interface DocsPageProps {
   config: DocsConfig;
@@ -51,7 +53,7 @@ export default function DocsPage({
   const navigate = useRouter().push;
   const isDesktopClient = useIsDesktopClient();
 
-  // 由 props 派生当前选中态（服务端已校验合法性，非法路径在上层 notFound）
+  // Derive the current selection from props (server already validated paths)
   const selectedCategory = useMemo<DocCategory | null>(
     () => (categoryId ? config.categories.find((c) => c.id === categoryId) ?? null : null),
     [config, categoryId],
@@ -144,7 +146,7 @@ export default function DocsPage({
 
   return (
     <ImagePreviewProvider>
-      {/* 鼠标效果 - 仅桌面端显示 */}
+      {/* Mouse effects - desktop only */}
       {isDesktopClient && (
         <>
           <MagneticCursor /><VelocityCursor />
@@ -207,7 +209,7 @@ export default function DocsPage({
   );
 }
 
-// 首页组件
+// Docs home view component
 interface DocHomeViewProps {
   config: DocsConfig;
   onSelectCategory: (category: DocCategory) => void;
@@ -215,7 +217,7 @@ interface DocHomeViewProps {
   siteData?: SiteData | null;
 }
 
-// 统计卡片组件 - 像素风格
+// Stat card with pixel-style border
 const StatCard = memo(({ value, label, icon: Icon, color, delay }: { 
   value: string | number; 
   label: string; 
@@ -256,7 +258,7 @@ const StatCard = memo(({ value, label, icon: Icon, color, delay }: {
 
 StatCard.displayName = 'StatCard';
 
-// 分类卡片组件 - 像素风格
+// Category card with pixel-style borders and hover glow effects
 const CategoryCard = memo(({
   category,
   index,
@@ -271,6 +273,7 @@ const CategoryCard = memo(({
   const [isHovered, setIsHovered] = useState(false);
   const animationEnabled = useAnimationEnabled();
   const isDesktopClient = useIsDesktopClient();
+  const { t, tReplace } = useTranslation();
   const Icon = iconMap[category.icon] || Folder;
   const seriesCount = category.items.filter((i: DocItem) => i.type === 'series').length;
   const docCount = category.items.filter((i: DocItem) => i.type === 'doc').length;
@@ -287,7 +290,7 @@ const CategoryCard = memo(({
       className="group text-left relative cursor-pointer"
       style={{ perspective: '1000px' }}
     >
-      {/* 像素边框 */}
+      {/* Pixel-style border */}
       <div
         className="relative p-6 overflow-hidden transition-all duration-300"
         style={{
@@ -297,7 +300,7 @@ const CategoryCard = memo(({
           transform: isHovered ? 'translateY(-4px)' : 'none',
         }}
       >
-        {/* 四角发光效果 - 仅桌面端显示 */}
+        {/* Corner glow effects - desktop only */}
         {isDesktopClient && (
           <>
             <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
@@ -331,7 +334,7 @@ const CategoryCard = memo(({
           </>
         )}
 
-        {/* 顶部渐变光效 - 仅桌面端显示 */}
+        {/* Top gradient glow - desktop only */}
         {isDesktopClient && (
           <motion.div
             className="absolute inset-0 pointer-events-none"
@@ -341,7 +344,7 @@ const CategoryCard = memo(({
           />
         )}
 
-        {/* 光泽扫过效果 - 仅桌面端显示 */}
+        {/* Shine sweep effect - desktop only */}
         {isDesktopClient && (
           <motion.div
             className="absolute inset-0 pointer-events-none"
@@ -386,13 +389,13 @@ const CategoryCard = memo(({
           {seriesCount > 0 && (
             <span className="flex items-center gap-1.5">
               <BookMarked className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-              <span>{seriesCount} 个系列</span>
+              <span>{tReplace(t.docs.seriesCount, { count: seriesCount })}</span>
             </span>
           )}
           {docCount > 0 && (
             <span className="flex items-center gap-1.5">
               <FileText className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
-              <span>{docCount} 篇文档</span>
+              <span>{tReplace(t.docs.docCount, { count: docCount })}</span>
             </span>
           )}
         </div>
@@ -404,9 +407,10 @@ const CategoryCard = memo(({
 CategoryCard.displayName = 'CategoryCard';
 
 function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeViewProps) {
+  const { t } = useTranslation();
   const isDesktopClient = useIsDesktopClient();
 
-  // 计算统计数据
+  // Compute overview statistics
   const categoryCount = config.categories.length;
   const docCount = config.categories.reduce((acc: number, cat: DocCategory) => 
     acc + cat.items.filter((i: DocItem) => i.type === 'doc').length, 0);
@@ -415,13 +419,13 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
-      {/* 统一背景特效 - 蓝绿配色 */}
+      {/* Unified background effects - blue-green palette */}
       <div className="fixed inset-0 pointer-events-none">
         <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
         <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
         <AmbientGlow color="var(--accent-primary)" opacity={0.08} position="center" size={600} />
 
-        {/* 80px 网格背景 */}
+        {/* 80px grid background */}
         <div
           className="absolute inset-0 opacity-[0.02]"
           style={{
@@ -432,18 +436,18 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
         />
       </div>
 
-      {/* Hero 区域 - 非对称布局 */}
+      {/* Hero section - asymmetric layout */}
       <section className="relative pt-32 pb-20 overflow-hidden">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* 左侧：标题 + 描述 */}
+            {/* Left side: title + description */}
             <div className="">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
               >
-                {/* 徽章 */}
+                {/* Badge */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -456,15 +460,15 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
                   }}
                 >
                   <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                  <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>知识库</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>{t.docs.knowledgeBase}</span>
                 </motion.div>
 
-                {/* 主标题 - 蓝绿渐变 */}
+                {/* Main title - blue-green gradient */}
                 <h1 className="font-sans font-bold text-4xl sm:text-5xl lg:text-6xl font-black mb-6">
                   <GradientText animate={true}>{config.title}</GradientText>
                 </h1>
 
-                {/* 描述 */}
+                {/* Description */}
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -477,26 +481,26 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
               </motion.div>
             </div>
 
-            {/* 右侧：统计卡片 - 像素风格 */}
+            {/* Right side: stat cards - pixel style */}
             <div className="">
               <div className="grid grid-cols-3 gap-4">
                 <StatCard
                   value={categoryCount}
-                  label="分类"
+                  label={t.docs.categoryLabel}
                   icon={Layers}
                   color="var(--accent-primary)"
                   delay={0.4}
                 />
                 <StatCard
                   value={docCount}
-                  label="文档"
+                  label={t.docs.docsLabel}
                   icon={FileText}
                   color="var(--accent-secondary)"
                   delay={0.5}
                 />
                 <StatCard
                   value={seriesCount}
-                  label="系列"
+                  label={t.docs.seriesLabel}
                   icon={BookMarked}
                   color="#22c55e"
                   delay={0.6}
@@ -507,7 +511,7 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
         </div>
       </section>
 
-      {/* Categories 区域 */}
+      {/* Categories section */}
       <section className="relative py-20">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -517,9 +521,9 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
             className="mb-12"
           >
             <h2 className="font-sans font-bold text-2xl mb-4">
-            <GradientText animate={true}>文档分类</GradientText>
+            <GradientText animate={true}>{t.docs.docCategories}</GradientText>
             </h2>
-            <p style={{ color: 'var(--text-muted)' }}>探索各类技术文档与学习资源</p>
+            <p style={{ color: 'var(--text-muted)' }}>{t.docs.exploreDocs}</p>
           </motion.div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -536,10 +540,10 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
         </div>
       </section>
 
-      {/* Footer - 使用共享组件 */}
+      {/* Footer - shared component */}
       {siteData?.footer && <Footer data={siteData.footer} />}
 
-      {/* 底部光剑 - 仅桌面端显示 */}
+      {/* Bottom light beam - desktop only */}
       {isDesktopClient && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
     </div>
   );

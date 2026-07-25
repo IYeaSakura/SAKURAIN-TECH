@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { usePerformance } from '@/contexts/PerformanceContext';
+import { useTranslation } from '@/hooks';
 
 /**
- * 路由加载占位符 - 错峰动画避免卡顿
- * （迁移自旧版 src/components/RouterTransition.tsx 中的 RouteLoader，
- *   原文件的路由过渡逻辑依赖 react-router，Next 迁移后不再适用）
+ * Route-level loading placeholder with staggered animation to avoid jank.
+ * Migrated from the legacy RouterTransition.tsx RouteLoader; the original
+ * transition logic depended on react-router and is no longer applicable
+ * after the Next.js migration.
  */
 export function RouteLoader() {
+  const { t } = useTranslation();
   const { effectiveQuality } = usePerformance();
   const [animationPhase, setAnimationPhase] = useState(0);
   const isLowQuality = effectiveQuality === 'low';
@@ -77,7 +80,7 @@ export function RouteLoader() {
           className="text-sm"
           style={{ color: 'var(--text-muted)' }}
         >
-          正在加载页面资源
+          {t.common.loadingPage}
         </p>
       </div>
 

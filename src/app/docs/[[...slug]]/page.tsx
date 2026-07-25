@@ -11,11 +11,13 @@ import {
 import type { SiteData } from "@/types";
 
 /**
- * 文档站 —— Phase 2 真 SSG。
- * optional catch-all 覆盖 /docs 及 /docs/:category/:item/:chapter 任意深度
- * （旧版四级参数语义，slug 数组 -> categoryId/itemId/chapterId 适配层在此保留）。
- * 目录树与章节 md 全部由服务端内容层（@/lib/content/docs）注入，
- * 客户端组件不再 fetch public JSON/md。
+ * Docs site —— Phase 2 true SSG.
+ * Optional catch-all covers /docs and /docs/:category/:item/:chapter at any depth
+ * (legacy four-level parameter semantics; slug array -> categoryId/itemId/chapterId
+ * adapter kept here).
+ * The table of contents and chapter markdown are fully injected by the server
+ * content layer (@/lib/content/docs); the client component no longer fetches
+ * public JSON/md.
  */
 
 export const dynamicParams = false;
@@ -38,7 +40,7 @@ function resolveTitles(segments: string[]) {
   if (!category) return null;
   if (!itemId) {
     return {
-      title: `${category.name} —— 文档`,
+      title: `${category.name} — Documentation`,
       description: tree.description,
     };
   }
@@ -46,14 +48,14 @@ function resolveTitles(segments: string[]) {
   if (!item) return null;
   if (item.type === "series") {
     if (!chapterId) {
-      return { title: `${item.title} —— ${category.name}`, description: item.description };
+      return { title: `${item.title} — ${category.name}`, description: item.description };
     }
     const chapter = item.chapters.find((c) => c.id === chapterId);
     if (!chapter) return null;
-    return { title: `${chapter.title} —— ${item.title}`, description: chapter.description };
+    return { title: `${chapter.title} — ${item.title}`, description: chapter.description };
   }
   if (chapterId) return null;
-  return { title: `${item.title} —— ${category.name}`, description: item.description };
+  return { title: `${item.title} — ${category.name}`, description: item.description };
 }
 
 export async function generateMetadata({
@@ -64,15 +66,15 @@ export async function generateMetadata({
   const { slug } = await params;
   const resolved = resolveTitles(slug ?? []);
   if (!resolved) {
-    return { title: "文档 —— SAKURAIN" };
+    return { title: "Documentation — SAKURAIN" };
   }
   return {
-    title: `${resolved.title} —— SAKURAIN`,
+    title: `${resolved.title} — SAKURAIN`,
     description: resolved.description,
   };
 }
 
-/** 站点公共数据（页脚），构建期直读 JSON，避免客户端 fetch */
+/** Site-wide shared data (footer) read directly from JSON at build time to avoid client-side fetch */
 function getSiteData(): SiteData | null {
   try {
     const abs = path.join(process.cwd(), "public", "data", "site-data.json");
@@ -84,7 +86,7 @@ function getSiteData(): SiteData | null {
 
 export default async function Page({ params }: { params: Promise<PageParams> }) {
   const { slug } = await params;
-  // 四级参数适配层：slug 数组 -> categoryId / itemId / chapterId
+  // Four-level parameter adapter: slug array -> categoryId / itemId / chapterId
   const segments = slug ?? [];
   if (segments.length > 3) notFound();
   const [categoryId, itemId, chapterId] = segments;
@@ -92,7 +94,7 @@ export default async function Page({ params }: { params: Promise<PageParams> }) 
   const tree = getDocsTree();
   const siteData = getSiteData();
 
-  // 章节 / 单文档页：服务端读 md（gray-matter 已解析），注入客户端
+  // Chapter / single-doc page: server reads parsed md (gray-matter) and injects into client
   if (categoryId && itemId) {
     const data = getDocChapter(categoryId, itemId, chapterId);
     if (!data) notFound();
@@ -108,7 +110,7 @@ export default async function Page({ params }: { params: Promise<PageParams> }) 
     );
   }
 
-  // 首页 / 分类页：仅注入目录树
+  // Home / category page: inject only the table of contents
   if (categoryId) {
     const category = tree.categories.find((c) => c.id === categoryId);
     if (!category) notFound();

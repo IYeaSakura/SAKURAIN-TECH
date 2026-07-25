@@ -11,7 +11,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Camera, MapPin, Calendar, Tag, X, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
-import { useAnimationEnabled, useNavigation } from '@/hooks';
+import { useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
 import type { PhotoLogData, PhotoLogPhoto } from '@/types';
 
 const PIXEL_BORDER = '2px solid var(--border-subtle)';
@@ -22,6 +22,7 @@ const NICKNAME = 'Yuyang';
 export function PhotosPage() {
   const animationEnabled = useAnimationEnabled();
   const { navigateTo } = useNavigation();
+  const { t } = useTranslation();
   const [data, setData] = useState<PhotoLogData | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -100,7 +101,7 @@ export function PhotosPage() {
             style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
           >
             <ArrowLeft className="w-4 h-4" />
-            返回首页
+            {t.photos.backToHome}
           </button>
           <div className="flex items-center gap-3 mb-3">
             <Camera className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
@@ -128,7 +129,7 @@ export function PhotosPage() {
               fontFamily: 'var(--font-mono)',
             }}
           >
-            暂无照片
+            {t.photos.noPhotos}
           </div>
         ) : (
           <div className="space-y-8">
@@ -165,7 +166,7 @@ export function PhotosPage() {
                 borderColor: 'var(--border-subtle)',
                 color: 'var(--text-primary)',
               }}
-              aria-label="关闭"
+              aria-label={t.common.close}
             >
               <X className="w-5 h-5" />
             </button>
@@ -183,7 +184,7 @@ export function PhotosPage() {
                     borderColor: 'var(--border-subtle)',
                     color: 'var(--text-primary)',
                   }}
-                  aria-label="上一张"
+                  aria-label={t.photos.previousPhoto}
                 >
                   <ChevronLeft className="w-6 h-6" />
                 </button>
@@ -198,7 +199,7 @@ export function PhotosPage() {
                     borderColor: 'var(--border-subtle)',
                     color: 'var(--text-primary)',
                   }}
-                  aria-label="下一张"
+                  aria-label={t.photos.nextPhoto}
                 >
                   <ChevronRight className="w-6 h-6" />
                 </button>
@@ -252,6 +253,7 @@ function MomentEntry({
   photos: PhotoLogPhoto[];
   onOpen: (globalIndex: number) => void;
 }) {
+  const { t } = useTranslation();
   const caption = entry.items[0]?.caption || '';
   const location = entry.items[0]?.location || '';
   const tags = entry.items[0]?.tags ?? [];
@@ -312,10 +314,10 @@ function MomentEntry({
           <button
             className="inline-flex items-center gap-1 text-xs transition-opacity hover:opacity-70"
             style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
-            aria-label="喜欢"
+            aria-label={t.photos.like}
           >
             <Heart className="w-3.5 h-3.5" />
-            赞
+            {t.photos.like}
           </button>
         </div>
       </div>

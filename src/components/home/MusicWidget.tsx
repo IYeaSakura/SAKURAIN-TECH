@@ -10,7 +10,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Pause, SkipBack, SkipForward, Music } from 'lucide-react';
-import { useMusicPlayer, useAnimationEnabled } from '@/hooks';
+import { useMusicPlayer, useAnimationEnabled, useTranslation } from '@/hooks';
 
 function formatTime(time: number) {
   if (!time || Number.isNaN(time)) return '0:00';
@@ -22,6 +22,7 @@ function formatTime(time: number) {
 export function MusicWidget() {
   const player = useMusicPlayer();
   const animationEnabled = useAnimationEnabled();
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -56,7 +57,7 @@ export function MusicWidget() {
       <div className="flex items-center gap-2 mb-4">
         <Music className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
         <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-          Now Playing
+          {t.widgets.music.title}
         </span>
       </div>
 
@@ -72,10 +73,10 @@ export function MusicWidget() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
-            {player.currentSong?.title || 'Unknown Track'}
+            {player.currentSong?.title || t.music.unknownTrack}
           </p>
           <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
-            {player.currentSong?.artist || 'Unknown Artist'}
+            {player.currentSong?.artist || t.music.unknownArtist}
           </p>
         </div>
       </div>

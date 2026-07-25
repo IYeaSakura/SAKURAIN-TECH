@@ -1,14 +1,15 @@
 'use client';
 
 /**
- * 404 Not Found Page (Next.js App Router 迁移版)
+ * 404 Not Found Page (Next.js App Router migration).
  *
- * 迁移自旧 Vite 项目 src/pages/NotFound/index.tsx：
+ * Migrated from the legacy Vite project src/pages/NotFound/index.tsx:
  * - react-router useNavigate → next/navigation useRouter
- * - 全局布局层（Navigation / MagneticCursor / VelocityCursor /
- *   TwinklingStars / FlowingGradient / LightBeam / 主题切换）已由
- *   next-app 根布局 ClientEffects 统一挂载，此处不再重复渲染，
- *   仅保留 404 主体内容（像素大字号 / 浮动幽灵 / 操作按钮 / 推荐链接 / 页脚）。
+ * - Global layout layers (Navigation / MagneticCursor / VelocityCursor /
+ *   TwinklingStars / FlowingGradient / LightBeam / theme toggle) are mounted
+ *   by the root-layout ClientEffects, so they are not repeated here.
+ * - Only the 404 body remains: large pixel text / floating ghost / action
+ *   buttons / suggested links / footer.
  *
  * @author SAKURAIN
  */
@@ -17,6 +18,7 @@ import { useState, memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Home, Ghost, Search, ArrowRight, Sparkles, Heart, RefreshCw } from 'lucide-react';
+import { useTranslation } from '@/hooks';
 
 // Floating Ghost Component
 const FloatingGhost = memo(function FloatingGhost() {
@@ -126,10 +128,11 @@ const ActionButton = memo(function ActionButton({
 // Suggestion List Component
 const SuggestionList = memo(function SuggestionList() {
   const router = useRouter();
+  const { t } = useTranslation();
   const suggestions = [
-    { icon: Home, label: '返回首页', path: '/' },
-    { icon: Search, label: '搜索文档', path: '/docs' },
-    { icon: Heart, label: '友情链接', path: '/friends' },
+    { icon: Home, label: t.notFound.suggestions.home, path: '/' },
+    { icon: Search, label: t.notFound.suggestions.docs, path: '/docs' },
+    { icon: Heart, label: t.notFound.suggestions.friends, path: '/friends' },
   ];
 
   const handleNavigate = (path: string) => {
@@ -147,7 +150,7 @@ const SuggestionList = memo(function SuggestionList() {
         className="text-center mb-6"
         style={{ color: 'var(--text-muted)' }}
       >
-        你可能在寻找：
+        {t.notFound.suggestionsTitle}
       </p>
       <div className="flex flex-wrap justify-center gap-4">
         {suggestions.map((suggestion, index) => (
@@ -189,6 +192,7 @@ const SuggestionList = memo(function SuggestionList() {
 // Main 404 Page Component
 export default function NotFoundPage() {
   const router = useRouter();
+  const { t, tReplace } = useTranslation();
 
   const handleGoHome = useCallback(() => {
     router.push('/');
@@ -259,7 +263,7 @@ export default function NotFoundPage() {
               className="font-pixel text-2xl sm:text-3xl mb-4"
               style={{ color: 'var(--text-primary)' }}
             >
-              页面未找到
+              {t.notFound.pageTitle}
             </motion.h2>
             <motion.p
               initial={{ opacity: 0 }}
@@ -268,7 +272,7 @@ export default function NotFoundPage() {
               className="text-lg"
               style={{ color: 'var(--text-secondary)' }}
             >
-              哎呀！这个页面好像被外星人劫持了...
+              {t.notFound.message1}
             </motion.p>
             <motion.p
               initial={{ opacity: 0 }}
@@ -277,7 +281,7 @@ export default function NotFoundPage() {
               className="text-base mt-2"
               style={{ color: 'var(--text-muted)' }}
             >
-              或者它可能根本就不存在
+              {t.notFound.message2}
             </motion.p>
           </motion.div>
 
@@ -285,13 +289,13 @@ export default function NotFoundPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
             <ActionButton
               icon={Home}
-              label="返回首页"
+              label={t.notFound.backHome}
               onClick={handleGoHome}
               delay={0.7}
             />
             <ActionButton
               icon={RefreshCw}
-              label="刷新页面"
+              label={t.notFound.refresh}
               onClick={handleRefresh}
               delay={0.8}
             />
@@ -341,7 +345,7 @@ export default function NotFoundPage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p style={{ color: 'var(--text-muted)' }}>
-            © {new Date().getFullYear()} SAKURAIN 技术工作室 · 用代码构建未来
+            {tReplace(t.notFound.footer, { year: new Date().getFullYear(), builtWith: t.footer.builtWith })}
           </p>
         </div>
       </footer>

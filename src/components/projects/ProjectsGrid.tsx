@@ -13,6 +13,7 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Star } from 'lucide-react';
+import { useTranslation } from '@/hooks';
 import type { Project } from '@/data/projects';
 import { ProjectModal } from './ProjectModal';
 
@@ -52,9 +53,24 @@ interface ProjectsGridProps {
 export function ProjectsGrid({ projects }: ProjectsGridProps) {
   const [selected, setSelected] = useState<Project | null>(null);
   const reduceMotion = useReducedMotion();
+  const { t, tReplace } = useTranslation();
 
   return (
     <>
+      <header className="flex items-end justify-between border-b border-border/40 pb-4 mb-8">
+        <div>
+          <p className="font-mono uppercase tracking-widest text-muted-foreground text-xs">
+            /projects
+          </p>
+          <h1 className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight">
+            {t.projects.title}
+          </h1>
+        </div>
+        <p className="font-mono uppercase tracking-widest text-muted-foreground text-xs">
+          TOTAL: {String(projects.length).padStart(2, '0')}
+        </p>
+      </header>
+
       <motion.div
         variants={reduceMotion ? undefined : containerVariants}
         initial="hidden"
@@ -74,7 +90,7 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
               onClick={() => setSelected(project)}
               role="button"
               tabIndex={0}
-              aria-label={`查看项目 ${project.name} 详情`}
+              aria-label={tReplace(t.projects.viewDetails, { name: project.name })}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
@@ -82,7 +98,7 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
                 }
               }}
             >
-              {/* 顶部：编号 + featured + 状态 */}
+              {/* Top row: index + featured + status */}
               <div className="flex items-center justify-between gap-2">
                 <span className="font-mono text-xs bg-primary/10 text-primary px-1.5 py-0.5">
                   P.{String(index + 1).padStart(2, '0')}
@@ -92,7 +108,7 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
                     <Star
                       className="w-3.5 h-3.5 text-primary"
                       fill="currentColor"
-                      aria-label="精选项目"
+                      aria-label={t.projects.featured}
                     />
                   )}
                   <span className="font-mono uppercase tracking-widest text-muted-foreground text-xs">
@@ -101,7 +117,7 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
                 </div>
               </div>
 
-              {/* 标题（hover 微移） */}
+              {/* Title with hover nudge */}
               <h2 className="mt-4 text-xl sm:text-2xl font-bold tracking-tight transition-transform duration-300 group-hover:translate-x-1">
                 {project.name}
               </h2>
@@ -110,7 +126,7 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
                 {project.tagline}
               </p>
 
-              {/* 技术栈标签（前 4 个 + 折叠） */}
+              {/* Tech tags (first 4 + fold) */}
               {project.tech.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-1.5">
                   {visibleTech.map((tech) => (
@@ -129,7 +145,7 @@ export function ProjectsGrid({ projects }: ProjectsGridProps) {
                 </div>
               )}
 
-              {/* 底部：分类 / 日期 + DETAILS → */}
+              {/* Bottom: category / period + DETAILS → */}
               <div className="mt-6 flex items-end justify-between">
                 <span className="font-mono uppercase tracking-widest text-muted-foreground text-xs">
                   {project.category} · {project.period}

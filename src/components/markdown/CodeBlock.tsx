@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { Code, Check, Copy } from 'lucide-react';
+import { useTranslation } from '@/hooks';
 import '@/styles/code-block.css';
 
 interface CodeBlockProps {
@@ -30,6 +31,7 @@ const customStyle = {
 
 export const CodeBlock = ({ language, value }: CodeBlockProps) => {
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslation();
 
   const handleCopy = async () => {
     try {
@@ -58,20 +60,20 @@ export const CodeBlock = ({ language, value }: CodeBlockProps) => {
           <Code className="code-block-lang-icon" />
           <span>{displayLang}</span>
         </div>
-        <button 
-          onClick={handleCopy} 
+        <button
+          onClick={handleCopy}
           className={`code-block-copy ${copied ? 'copied' : ''}`}
-          aria-label={copied ? '已复制' : '复制代码'}
+          aria-label={copied ? t.common.copied : t.common.copy}
         >
           {copied ? (
             <>
               <Check className="code-block-copy-icon" />
-              <span>已复制</span>
+              <span>{t.common.copied}</span>
             </>
           ) : (
             <>
               <Copy className="code-block-copy-icon" />
-              <span>复制</span>
+              <span>{t.common.copy}</span>
             </>
           )}
         </button>

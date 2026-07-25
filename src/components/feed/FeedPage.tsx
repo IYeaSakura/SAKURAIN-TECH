@@ -25,9 +25,10 @@ import {
   Shuffle,
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
-import { useAnimationEnabled, useIsDesktopClient } from '@/hooks';
+import { useAnimationEnabled, useIsDesktopClient, useTranslation } from '@/hooks';
 
 import type { SiteData } from '@/types';
+import type { Dictionary } from '@/i18n/types';
 
 // Types
 interface Friend {
@@ -139,11 +140,11 @@ const clearFeedCache = (): void => {
   }
 };
 
-// Format a date string to Chinese locale
-const formatDate = (dateStr: string): string => {
+// Format a date string to the current locale
+const formatDate = (dateStr: string, locale: string): string => {
   try {
     const date = new Date(dateStr);
-    return date.toLocaleString('zh-CN', {
+    return date.toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -156,38 +157,42 @@ const formatDate = (dateStr: string): string => {
 };
 
 // Return a relative time string (e.g. 5 minutes ago, 2 hours ago)
-const getRelativeTime = (dateStr: string): string => {
+const getRelativeTime = (
+  dateStr: string,
+  tReplace: (template: string, values: Record<string, string | number>) => string,
+  relativeTime: Dictionary['feed']['relativeTime']
+): string => {
   try {
     const now = new Date();
     const date = new Date(dateStr);
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffInSeconds < 60) {
-      return `${diffInSeconds}秒前`;
+      return tReplace(relativeTime.seconds, { count: diffInSeconds });
     }
 
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     if (diffInMinutes < 60) {
-      return `${diffInMinutes}分钟前`;
+      return tReplace(relativeTime.minutes, { count: diffInMinutes });
     }
 
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) {
-      return `${diffInHours}小时前`;
+      return tReplace(relativeTime.hours, { count: diffInHours });
     }
 
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 30) {
-      return `${diffInDays}天前`;
+      return tReplace(relativeTime.days, { count: diffInDays });
     }
 
     const diffInMonths = Math.floor(diffInDays / 30);
     if (diffInMonths < 12) {
-      return `${diffInMonths}月前`;
+      return tReplace(relativeTime.months, { count: diffInMonths });
     }
 
     const diffInYears = Math.floor(diffInMonths / 12);
-    return `${diffInYears}年前`;
+    return tReplace(relativeTime.years, { count: diffInYears });
   } catch {
     return dateStr;
   }
@@ -252,6 +257,7 @@ function StatsPanel({
   items: FeedItem[];
   onClose: () => void;
 }) {
+  const { t, tReplace } = useTranslation();
   const stats = useMemo(() => {
     // Count articles per source
     const sourceStats: Record<string, number> = {};
@@ -302,7 +308,7 @@ function StatsPanel({
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-            统计详情
+            {t.feed.statsDetails}
           </h3>
           <button
             onClick={onClose}
@@ -317,7 +323,7 @@ function StatsPanel({
           {/* Source distribution */}
           <div>
             <h4 className="font-mono uppercase tracking-wider text-[10px] mb-4" style={{ color: 'var(--text-muted)' }}>
-              文章来源分布
+              {t.feed.sourceDistribution}
             </h4>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {stats.sourceStats.map(([source, count], index) => (
@@ -337,7 +343,7 @@ function StatsPanel({
                       color: 'var(--accent-primary)',
                     }}
                   >
-                    {count} 篇
+                    {tReplace(t.feed.articleCount, { count })}
                   </span>
                 </div>
               ))}
@@ -347,7 +353,7 @@ function StatsPanel({
           {/* Daily activity */}
           <div>
             <h4 className="font-mono uppercase tracking-wider text-[10px] mb-4" style={{ color: 'var(--text-muted)' }}>
-              最近7天更新
+              {t.feed.last7DaysUpdates}
             </h4>
             <div className="space-y-2">
               {Object.entries(stats.dateStats).map(([date, count]) => (
@@ -383,25 +389,26 @@ function StatsPanel({
 // Subscribe modal with sharp borders and mono labels
 function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const animationEnabled = useAnimationEnabled();
+  const { t } = useTranslation();
   const [copied, setCopied] = useState<string | null>(null);
 
   const feedOptions = [
     {
       name: 'RSS 2.0',
       url: 'https://sakurain.net/feed/',
-      description: '标准 RSS 格式',
+      description: t.feed.formatDescriptions.rss,
       color: '#f97316',
     },
     {
       name: 'Atom',
       url: 'https://sakurain.net/feed/atom/',
-      description: 'Atom 订阅格式',
+      description: t.feed.formatDescriptions.atom,
       color: '#3b82f6',
     },
     {
       name: 'JSON Feed',
       url: 'https://sakurain.net/feed/json/',
-      description: 'JSON 格式订阅',
+      description: t.feed.formatDescriptions.json,
       color: '#22c55e',
     },
   ];
@@ -412,7 +419,7 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
       setCopied(name);
       setTimeout(() => setCopied(null), 2000);
     } catch (err) {
-      console.error('复制失败:', err);
+      console.error('Copy failed:', err);
     }
   };
 
@@ -454,10 +461,10 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             </div>
             <div>
               <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
-                订阅本站
+                {t.feed.subscribeTitle}
               </h3>
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                多种格式支持
+                {t.feed.subscribeSubtitle}
               </p>
             </div>
           </div>
@@ -519,12 +526,12 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                   {copied === option.name ? (
                     <span className="flex items-center gap-1">
                       <Check className="w-4 h-4" />
-                      已复制
+                      {t.common.copied}
                     </span>
                   ) : (
                     <span className="flex items-center gap-1">
                       <Copy className="w-4 h-4" />
-                      复制
+                      {t.common.copy}
                     </span>
                   )}
                 </motion.button>
@@ -543,11 +550,10 @@ function SubscribeModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
           }}
         >
           <p className="mb-1">
-            <strong style={{ color: 'var(--text-primary)' }}>关于 Feed</strong>
+            <strong style={{ color: 'var(--text-primary)' }}>{t.feed.aboutFeed}</strong>
           </p>
           <p>
-            本站部署于腾讯云 EdgeOne，Feed 功能通过构建时脚本自动生成。
-            订阅后可及时获取最新文章更新。
+            {t.feed.aboutFeedDescription}
           </p>
         </div>
       </motion.div>
@@ -563,6 +569,7 @@ function DebugPanel({
   sources: FeedSourceStatus[];
   onClose: () => void;
 }) {
+  const { t, tReplace } = useTranslation();
   const successCount = sources.filter(s => s.status === 'success').length;
   const errorCount = sources.filter(s => s.status === 'error').length;
   const timeoutCount = sources.filter(s => s.status === 'timeout').length;
@@ -584,13 +591,13 @@ function DebugPanel({
   const getStatusText = (status: FeedSourceStatus['status']) => {
     switch (status) {
       case 'success':
-        return '成功';
+        return t.feed.statusSuccess;
       case 'error':
-        return '失败';
+        return t.feed.statusFail;
       case 'timeout':
-        return '超时';
+        return t.feed.statusTimeout;
       case 'pending':
-        return '加载中';
+        return t.feed.statusLoading;
     }
   };
 
@@ -626,7 +633,7 @@ function DebugPanel({
           <div className="flex items-center gap-3">
             <Bug className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
             <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-              订阅源调试
+              {t.feed.debugPanel}
             </h3>
           </div>
           <div className="flex items-center gap-4">
@@ -675,7 +682,7 @@ function DebugPanel({
                     </span>
                     {source.itemCount > 0 && (
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {source.itemCount} 篇文章
+                        {tReplace(t.feed.itemCount, { count: source.itemCount })}
                       </span>
                     )}
                   </div>
@@ -690,7 +697,7 @@ function DebugPanel({
                         borderColor: '#ef4444',
                       }}
                     >
-                      <span className="font-medium">失败原因: </span>
+                      <span className="font-medium">{t.feed.failReason}: </span>
                       {source.error}
                     </div>
                   )}
@@ -723,7 +730,7 @@ interface RawJsonFeedItem {
 }
 
 // Parse feed content and auto-detect the format
-const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> => {
+const parseFeed = async (content: string, source: Friend, untitled: string): Promise<FeedItem[]> => {
   const items: FeedItem[] = [];
 
   // Try JSON format first
@@ -734,7 +741,7 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
       (jsonData.items as RawJsonFeedItem[]).forEach((item) => {
         const authorName = typeof item.author === 'string' ? item.author : item.author?.name;
         items.push({
-          title: item.title || '无标题',
+          title: item.title || untitled,
           link: item.url || item.external_url || source.url,
           description: (item.content_text || item.content || item.summary || '').replace(/<[^>]+>/g, '').slice(0, 200),
           pubDate: item.date_published || item.date_modified || '',
@@ -751,7 +758,7 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
       (jsonData.entries as RawJsonFeedItem[]).forEach((item) => {
         const authorName = typeof item.author === 'string' ? item.author : item.author?.name;
         items.push({
-          title: item.title || '无标题',
+          title: item.title || untitled,
           link: item.link || item.url || source.url,
           description: (item.description || item.content || item.summary || '').replace(/<[^>]+>/g, '').slice(0, 200),
           pubDate: item.published || item.updated || item.date || '',
@@ -777,7 +784,7 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
   if (isRSS) {
     const itemElements = xmlDoc.querySelectorAll('item');
     itemElements.forEach((item) => {
-      const title = item.querySelector('title')?.textContent || '无标题';
+      const title = item.querySelector('title')?.textContent || untitled;
       const link = item.querySelector('link')?.textContent || source.url;
       const description = item.querySelector('description')?.textContent || '';
       const pubDate = item.querySelector('pubDate')?.textContent || '';
@@ -798,7 +805,7 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
   } else if (isAtom) {
     const entryElements = xmlDoc.querySelectorAll('entry');
     entryElements.forEach((entry) => {
-      const title = entry.querySelector('title')?.textContent || '无标题';
+      const title = entry.querySelector('title')?.textContent || untitled;
       const link = entry.querySelector('link')?.getAttribute('href') || source.url;
       const content = entry.querySelector('content')?.textContent ||
                      entry.querySelector('summary')?.textContent || '';
@@ -826,10 +833,13 @@ const parseFeed = async (content: string, source: Friend): Promise<FeedItem[]> =
 const FeedCard = memo(function FeedCard({
   item,
   index,
+  locale,
 }: {
   item: FeedItem;
   index: number;
+  locale: string;
 }) {
+  const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
 
   return (
@@ -906,7 +916,7 @@ const FeedCard = memo(function FeedCard({
             className="text-sm line-clamp-3 mb-4 flex-1"
             style={{ color: 'var(--text-muted)' }}
           >
-            {item.description || '暂无摘要'}
+            {item.description || t.feed.noSummary}
           </p>
 
           {/* Footer */}
@@ -918,7 +928,7 @@ const FeedCard = memo(function FeedCard({
               {item.pubDate && (
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  {formatDate(item.pubDate).split(' ')[0]}
+                  {formatDate(item.pubDate, locale).split(' ')[0]}
                 </span>
               )}
               {item.author && (
@@ -1035,6 +1045,7 @@ const Pagination = memo(function Pagination({
 
 // Loading progress with a sharp bordered bar
 function LoadingProgress({ loaded, total }: { loaded: number; total: number }) {
+  const { t, tReplace } = useTranslation();
   const progress = total > 0 ? Math.round((loaded / total) * 100) : 0;
 
   return (
@@ -1052,7 +1063,7 @@ function LoadingProgress({ loaded, total }: { loaded: number; total: number }) {
         />
       </div>
       <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-        正在加载朋友圈... {loaded}/{total}
+        {tReplace(t.feed.loadingFriends, { loaded, total })}
       </p>
     </div>
   );
@@ -1063,6 +1074,7 @@ const REFRESH_COOLDOWN_MS = 90 * 1000; // 90 seconds
 
 // Main feed page component
 export default function FeedPage() {
+  const { t, tReplace, locale } = useTranslation();
   const [, setFriends] = useState<Friend[]>([]);
   const [allItems, setAllItems] = useState<FeedItem[]>([]);
   const [displayItems, setDisplayItems] = useState<FeedItem[]>([]);
@@ -1131,12 +1143,12 @@ export default function FeedPage() {
 
         // If marked as failed, show more specific info
         if (isMarkedFailed) {
-          errorMsg = '该订阅源已被标记为不可访问';
+          errorMsg = t.feed.errors.sourceMarkedInaccessible;
           if (failedReason) {
             errorMsg += ` (${failedReason})`;
           }
           if (failedAttempts) {
-            errorMsg += ` [已尝试 ${failedAttempts} 次]`;
+            errorMsg += tReplace(t.feed.errors.attempts, { count: failedAttempts });
           }
         } else {
           try {
@@ -1147,7 +1159,7 @@ export default function FeedPage() {
                 errorMsg += `: ${errorData.message}`;
               }
               if (errorData.hint) {
-                errorMsg += ` | 提示: ${errorData.hint}`;
+                errorMsg += tReplace(t.feed.errors.hint, { hint: errorData.hint });
               }
             }
           } catch {
@@ -1163,17 +1175,17 @@ export default function FeedPage() {
       // Detect JavaScript challenge/anti-bot protection
       if (content.includes('__test=') ||
           (content.includes('<script') && content.includes('slowAES.decrypt') && content.includes('location.href'))) {
-        throw new Error('JavaScript Challenge: 该站点启用了反爬虫保护，无法获取RSS');
+        throw new Error(t.feed.errors.jsChallenge);
       }
 
       // Detect generic HTML error pages
       if (content.includes('<html') && !content.includes('<rss') && !content.includes('<feed') && !content.includes('<?xml')) {
         const titleMatch = content.match(/<title>([^<]*)<\/title>/i);
-        const title = titleMatch ? titleMatch[1] : '未知错误';
-        throw new Error(`返回HTML页面: ${title.slice(0, 50)}`);
+        const title = titleMatch ? titleMatch[1] : t.common.unknown;
+        throw new Error(tReplace(t.feed.errors.returnedHTML, { title: title.slice(0, 50) }));
       }
 
-      const items = await parseFeed(content, friend);
+      const items = await parseFeed(content, friend, t.feed.untitled);
 
       // If parsing succeeded but no items found, check if content looks valid
       if (items.length === 0 && content.trim()) {
@@ -1184,7 +1196,7 @@ export default function FeedPage() {
         const hasJsonItems = content.includes('"items"') || content.includes('"entries"');
 
         if (!hasXmlDecl && !hasRssTag && !hasFeedTag && !hasJsonItems) {
-          throw new Error('RSS格式无效: 无法解析订阅内容');
+          throw new Error(t.feed.errors.invalidRSS);
         }
       }
 
@@ -1196,7 +1208,7 @@ export default function FeedPage() {
           url: feedUrl,
           status: items.length > 0 ? 'success' : 'error',
           itemCount: items.length,
-          error: items.length === 0 ? '订阅源无文章内容' : undefined,
+          error: items.length === 0 ? t.feed.errors.noArticles : undefined,
         }
       };
     } catch (err) {
@@ -1224,7 +1236,7 @@ export default function FeedPage() {
         }
       };
     }
-  }, [getFeedUrl]);
+  }, [getFeedUrl, t, tReplace]);
 
   const fetchBatchFeeds = useCallback(async (
     feeds: { url: string; name: string }[],
@@ -1336,7 +1348,7 @@ export default function FeedPage() {
             if (!friend) continue;
 
             try {
-              const items = await parseFeed(batchItem.content, friend);
+              const items = await parseFeed(batchItem.content, friend, t.feed.untitled);
               allFeeds.push(...items);
 
               const status: FeedSourceStatus = {
@@ -1344,7 +1356,7 @@ export default function FeedPage() {
                 url: batchItem.url,
                 status: items.length > 0 ? 'success' : 'error',
                 itemCount: items.length,
-                error: items.length === 0 ? '订阅源无文章内容' : undefined,
+                error: items.length === 0 ? t.feed.errors.noArticles : undefined,
               };
               statusList.push(status);
 
@@ -1475,7 +1487,7 @@ export default function FeedPage() {
         setLoading(false);
       }
     }
-  }, [fetchFriendFeed, fetchBatchFeeds, getFeedUrl]);
+  }, [fetchFriendFeed, fetchBatchFeeds, getFeedUrl, t]);
 
   const updateDisplayItems = useCallback((items: FeedItem[], page: number) => {
     const start = (page - 1) * POSTS_PER_PAGE;
@@ -1499,7 +1511,7 @@ export default function FeedPage() {
 
     if (elapsed < REFRESH_COOLDOWN_MS) {
       const remaining = Math.ceil((REFRESH_COOLDOWN_MS - elapsed) / 1000);
-      console.log(`请等待 ${remaining} 秒后再次刷新`);
+      console.log(tReplace(t.feed.waitToRefresh, { seconds: remaining }));
       return;
     }
 
@@ -1530,7 +1542,7 @@ export default function FeedPage() {
 
     await loadData(true);
     setRefreshing(false);
-  }, [loadData]);
+  }, [loadData, t, tReplace]);
 
   // Cleanup cooldown timer on unmount
   useEffect(() => {
@@ -1632,10 +1644,10 @@ export default function FeedPage() {
                   borderColor: showDebug ? 'var(--accent-primary)' : 'var(--border-subtle)',
                   color: showDebug ? 'white' : 'var(--text-primary)',
                 }}
-                title="调试面板"
+                title={t.feed.debugPanel}
               >
                 <Bug className="w-4 h-4" />
-                <span className="hidden sm:block">调试</span>
+                <span className="hidden sm:block">{t.feed.debug}</span>
               </button>
 
               {/* Stats button */}
@@ -1655,7 +1667,7 @@ export default function FeedPage() {
                 }}
               >
                 <BarChart3 className="w-4 h-4" />
-                <span className="hidden sm:block">统计</span>
+                <span className="hidden sm:block">{t.feed.stats}</span>
               </button>
 
               {/* Refresh button */}
@@ -1674,11 +1686,11 @@ export default function FeedPage() {
                   borderColor: 'var(--border-subtle)',
                   color: refreshCooldown > 0 ? 'var(--text-muted)' : 'var(--text-primary)',
                 }}
-                title={refreshCooldown > 0 ? `${refreshCooldown}秒后可刷新` : '强制刷新（60秒冷却）'}
+                title={refreshCooldown > 0 ? tReplace(t.feed.cooldown, { seconds: refreshCooldown }) : t.feed.forceRefresh}
               >
                 <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:block">
-                  {refreshCooldown > 0 ? `${refreshCooldown}s` : '刷新'}
+                  {refreshCooldown > 0 ? `${refreshCooldown}s` : t.feed.refresh}
                 </span>
               </motion.button>
 
@@ -1697,10 +1709,10 @@ export default function FeedPage() {
                   borderColor: 'var(--accent-secondary)',
                   color: 'white',
                 }}
-                title="随机阅读一篇文章"
+                title={t.feed.randomReadTooltip}
               >
                 <Shuffle className="w-4 h-4" />
-                <span className="hidden sm:block">随机阅读</span>
+                <span className="hidden sm:block">{t.feed.randomRead}</span>
               </motion.button>
 
               {/* Subscribe button */}
@@ -1718,7 +1730,7 @@ export default function FeedPage() {
                 }}
               >
                 <Rss className="w-4 h-4" />
-                <span className="hidden sm:block">订阅</span>
+                <span className="hidden sm:block">{t.feed.subscribe}</span>
               </motion.button>
             </div>
           </div>
@@ -1745,14 +1757,14 @@ export default function FeedPage() {
                 }}
               >
                 <Rss className="w-4 h-4" />
-                <span>朋友圈</span>
+                <span>{t.feed.circleTitle}</span>
               </motion.div>
 
               <h1
                 className="font-mono font-bold text-4xl md:text-5xl lg:text-6xl mb-6 uppercase tracking-tight"
                 style={{ color: 'var(--text-primary)' }}
               >
-                朋友圈
+                {t.feed.circleTitle}
               </h1>
 
               <motion.p
@@ -1762,7 +1774,7 @@ export default function FeedPage() {
                 className="text-lg md:text-xl leading-relaxed max-w-xl"
                 style={{ color: 'var(--text-muted)' }}
               >
-                聚合友链网站的最新文章，实时同步更新，一站式阅读体验
+                {t.feed.heroDescription}
               </motion.p>
             </motion.div>
 
@@ -1776,21 +1788,21 @@ export default function FeedPage() {
               <StatCard
                 icon={Users}
                 value={stats.totalSources}
-                label="订阅源"
+                label={t.feed.totalSources}
                 color="var(--accent-primary)"
                 delay={0}
               />
               <StatCard
                 icon={Newspaper}
                 value={stats.totalArticles}
-                label="文章总数"
+                label={t.feed.totalArticles}
                 color="var(--accent-secondary)"
                 delay={1}
               />
               <StatCard
                 icon={Clock}
-                value={stats.latestUpdate ? getRelativeTime(stats.latestUpdate.toISOString()) : '-'}
-                label="最近更新"
+                value={stats.latestUpdate ? getRelativeTime(stats.latestUpdate.toISOString(), tReplace, t.feed.relativeTime) : '-'}
+                label={t.feed.latestUpdate}
                 color="#22c55e"
                 delay={2}
               />
@@ -1821,7 +1833,7 @@ export default function FeedPage() {
             className="mb-8"
           >
             <div className="flex items-center justify-between text-sm mb-2" style={{ color: 'var(--text-muted)' }}>
-              <span>正在刷新...</span>
+              <span>{t.feed.refreshing}</span>
               <span>{loadingProgress.loaded}/{loadingProgress.total}</span>
             </div>
             <div
@@ -1856,10 +1868,10 @@ export default function FeedPage() {
               <Rss className="w-10 h-10" style={{ color: 'var(--text-muted)' }} />
             </div>
             <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-              暂无内容
+              {t.feed.emptyTitle}
             </h2>
             <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-              暂无符合条件的友链或暂无可读取的 Feed 内容
+              {t.feed.emptyDescription}
             </p>
             <button
               onClick={() => setShowSubscribe(true)}
@@ -1870,7 +1882,7 @@ export default function FeedPage() {
                 color: 'white',
               }}
             >
-              订阅本站
+              {t.feed.subscribeTitle}
             </button>
           </motion.div>
         ) : (
@@ -1879,7 +1891,7 @@ export default function FeedPage() {
             <section className="mb-12">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {displayItems.map((item, index) => (
-                  <FeedCard key={`${item.link}-${index}`} item={item} index={index} />
+                  <FeedCard key={`${item.link}-${index}`} item={item} index={index} locale={locale} />
                 ))}
               </div>
             </section>

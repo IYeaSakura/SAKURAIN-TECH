@@ -3,10 +3,12 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { securityConfig } from '@/config/security-config';
+import { useTranslation } from '@/hooks';
 
 export function DebugProtection() {
   const config = securityConfig.debugProtection;
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!config.enabled) return;
@@ -145,9 +147,9 @@ export function DebugProtection() {
             z-index: 999999;
           ">
             <div style="text-align: center;">
-              <h2 style="margin-bottom: 16px;">⚠️ 调试工具检测</h2>
-              <p>检测到开发者工具已打开</p>
-              <p style="margin-top: 8px; color: #ff6b6b;">请关闭调试工具后刷新页面</p>
+              <h2 style="margin-bottom: 16px;">⚠️ ${t.debugProtection.title}</h2>
+              <p>${t.debugProtection.devToolsOpen}</p>
+              <p style="margin-top: 8px; color: #ff6b6b;">${t.debugProtection.closeAndRefresh}</p>
             </div>
           </div>
         `;
