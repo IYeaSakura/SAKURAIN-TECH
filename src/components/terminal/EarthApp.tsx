@@ -150,7 +150,7 @@ export function EarthApp({ onExit }: EarthAppProps) {
       <div className="flex flex-1 min-h-0 gap-4">
         {/* Pixel Globe */}
         <div className="flex-1 min-w-0 h-full overflow-hidden">
-          <PixelGlobe danmakus={danmakus} />
+          <PixelGlobe danmakus={danmakus} selectedId={selected?.id} />
         </div>
 
         {/* Danmaku list */}

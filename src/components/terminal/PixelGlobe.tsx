@@ -13,6 +13,7 @@ import type { TerminalDanmaku } from './types';
 
 interface PixelGlobeProps {
   danmakus: TerminalDanmaku[];
+  selectedId?: string;
 }
 
 interface Ring {
@@ -136,7 +137,8 @@ function drawPixelGlobe(
   size: GlobeSize,
   rotation: number,
   danmakus: TerminalDanmaku[],
-  landMap: boolean[]
+  landMap: boolean[],
+  selectedId?: string
 ) {
   const { w, h, r, cx, cy } = size;
   const image = ctx.createImageData(w, h);
@@ -195,6 +197,9 @@ function drawPixelGlobe(
   // Project orbiting satellites onto the near side of the globe.
   // Each satellite travels in its own inclined orbital plane (RAAN + inclination)
   // at a radius scaled from its altitude so the paths wrap around the planet.
+  // The RAAN is adjusted by the current Earth rotation so the orbital plane
+  // appears fixed relative to the spinning globe, making satellites follow the
+  // planet's rotation.
   const now = Date.now() / 1000;
   const satellites = danmakus.slice(0, 20);
 
@@ -202,7 +207,7 @@ function drawPixelGlobe(
     const orbitR = r + 1.5 + ((dm.altitude ?? 400000) / 60000000) * 3;
     const angle = (dm.angle ?? 0) + (dm.speed ?? 0.5) * now;
     const inc = dm.inclination ?? 0;
-    const raan = dm.raan ?? 0;
+    const raan = (dm.raan ?? 0) - rotation;
 
     // Orbital plane coordinates: x right, y down, z toward viewer.
     const ox = orbitR * Math.cos(angle);
@@ -223,18 +228,38 @@ function drawPixelGlobe(
     const sy = Math.floor(cy + iy);
 
     if (sx >= 0 && sx < w && sy >= 0 && sy < h) {
-      const sIdx = (sy * w + sx) * 4;
-      data[sIdx] = 255;
-      data[sIdx + 1] = 255;
-      data[sIdx + 2] = 255;
-      data[sIdx + 3] = 255;
+      const isSelected = selectedId && dm.id === selectedId;
+      const color = isSelected ? { r: 255, g: 42, b: 109 } : { r: 255, g: 255, b: 255 };
+
+      if (isSelected) {
+        // Draw a 3x3 marker for the selected satellite so it stands out.
+        for (let dy = -1; dy <= 1; dy += 1) {
+          for (let dx = -1; dx <= 1; dx += 1) {
+            const mx = sx + dx;
+            const my = sy + dy;
+            if (mx >= 0 && mx < w && my >= 0 && my < h) {
+              const sIdx = (my * w + mx) * 4;
+              data[sIdx] = color.r;
+              data[sIdx + 1] = color.g;
+              data[sIdx + 2] = color.b;
+              data[sIdx + 3] = 255;
+            }
+          }
+        }
+      } else {
+        const sIdx = (sy * w + sx) * 4;
+        data[sIdx] = color.r;
+        data[sIdx + 1] = color.g;
+        data[sIdx + 2] = color.b;
+        data[sIdx + 3] = 255;
+      }
     }
   }
 
   ctx.putImageData(image, 0, 0);
 }
 
-export function PixelGlobe({ danmakus }: PixelGlobeProps) {
+export function PixelGlobe({ danmakus, selectedId }: PixelGlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sizeRef = useRef<GlobeSize>({ w: 0, h: 0, r: 0, cx: 0, cy: 0 });
@@ -295,7 +320,7 @@ export function PixelGlobe({ danmakus }: PixelGlobeProps) {
 
     const tick = (now: number) => {
       const rotation = (now / 2000) % (Math.PI * 2);
-      drawPixelGlobe(ctx, sizeRef.current, rotation, danmakus, landMap);
+      drawPixelGlobe(ctx, sizeRef.current, rotation, danmakus, landMap, selectedId);
       frameIdRef.current = requestAnimationFrame(tick);
     };
     frameIdRef.current = requestAnimationFrame(tick);
@@ -305,7 +330,7 @@ export function PixelGlobe({ danmakus }: PixelGlobeProps) {
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(frameIdRef.current);
     };
-  }, [danmakus, landMap]);
+  }, [danmakus, landMap, selectedId]);
 
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden">

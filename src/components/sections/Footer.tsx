@@ -44,42 +44,40 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto pb-12 px-4 sm:px-6 lg:px-8">
-        {/* Three-column layout: logo on the left, nav links in the middle, copyright/filing on the right */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
-          {/* Left: Logo & Slogan */}
-          <div className="flex items-center gap-3">
+        {/* Centered stacked layout for footer content */}
+        <div className="flex flex-col items-center gap-6">
+          {/* Logo & Slogan */}
+          <div className="flex flex-col items-center gap-2">
             <img
               src="/image/logo.webp"
               alt="SAKURAIN"
-              className="w-8 h-8 object-contain"
+              className="w-10 h-10 object-contain"
               loading="lazy"
               decoding="async"
             />
-            <div className="flex flex-col">
-              <span
-                className="font-semibold"
-                style={{
-                  fontSize: 'var(--text-xl)',
-                  color: 'var(--text-primary)',
-                  letterSpacing: '-0.02em',
-                  fontFamily: 'var(--apple-font-stack)',
-                }}
-              >
-                SAKURAIN
-              </span>
-              <span
-                className="font-primary text-xs"
-                style={{
-                  color: 'var(--text-muted)',
-                  letterSpacing: '0.02em',
-                }}
-              >
-                {data.slogan || t.footer.builtWith}
-              </span>
-            </div>
+            <span
+              className="font-semibold"
+              style={{
+                fontSize: 'var(--text-xl)',
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.02em',
+                fontFamily: 'var(--apple-font-stack)',
+              }}
+            >
+              SAKURAIN
+            </span>
+            <span
+              className="font-primary text-xs"
+              style={{
+                color: 'var(--text-muted)',
+                letterSpacing: '0.02em',
+              }}
+            >
+              {data.slogan || t.footer.builtWith}
+            </span>
           </div>
 
-          {/* Middle: Navigation links */}
+          {/* Navigation links */}
           <div className="flex items-center gap-6">
             <button
               onClick={() => navigateTo('/docs')}
@@ -110,8 +108,17 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
             </button>
           </div>
 
-          {/* Right: Copyright and filing info */}
-          <div className="flex flex-col items-end gap-1">
+          {/* Divider */}
+          <div
+            className="w-16 h-px"
+            style={{
+              background: 'var(--border-subtle)',
+              opacity: 0.4,
+            }}
+          />
+
+          {/* Copyright and filing info */}
+          <div className="flex flex-col items-center gap-2">
             {/* Copyright */}
             <p
               className="flex items-center gap-2 font-primary"
@@ -147,7 +154,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
                   e.currentTarget.style.color = 'var(--text-muted)';
                 }}
               >
-                {t.footer.icp}
+                皖ICP备2025073165号-1
               </a>
               <span>|</span>
               <a
@@ -165,10 +172,10 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
               >
                 <img
                   src="/image/ghs.png"
-                  alt={t.footer.beian}
+                  alt="备案图标"
                   className="w-3 h-3"
                 />
-                {t.footer.beian}
+                皖公网安备34130202000598号
               </a>
             </div>
           </div>

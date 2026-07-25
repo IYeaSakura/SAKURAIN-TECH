@@ -61,9 +61,9 @@ const NAV_LINKS: NavItem[] = [
   { labelKey: 'friends', href: '/friends', icon: Users },
   { labelKey: 'friendsCircle', href: '/friends-circle', icon: Heart },
   { labelKey: 'earth', href: '/earth-online', icon: Globe },
-  { labelKey: 'about', href: '/about', icon: User },
   { labelKey: 'photos', href: '/photos', icon: Camera },
   { labelKey: 'music', href: '/music', icon: Music },
+  { labelKey: 'about', href: '/about', icon: User },
 ];
 
 function formatTime(time: number) {
@@ -270,13 +270,13 @@ export function DynamicIsland() {
                 </div>
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={handleScrollTop}
-                    className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
+                    onClick={() => setExpanded(false)}
+                    className="w-7 h-7 flex items-center justify-center border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
                     style={{
                       borderColor: 'var(--border-subtle)',
                       color: 'var(--text-secondary)',
                     }}
-                    title={t.common.scrollToTop}
+                    title={t.common.close}
                   >
                     <ChevronUp className="w-4 h-4" />
                   </button>
@@ -295,7 +295,7 @@ export function DynamicIsland() {
                   </button>
                   <button
                     onClick={() => handleNav('/settings')}
-                    className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
+                    className="w-7 h-7 flex items-center justify-center border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
                     style={{
                       borderColor: 'var(--border-subtle)',
                       color: 'var(--text-secondary)',
@@ -303,16 +303,6 @@ export function DynamicIsland() {
                     title={t.common.settingsTitle}
                   >
                     <Settings className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setExpanded(false)}
-                    className="p-1.5 border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
-                    style={{
-                      borderColor: 'var(--border-subtle)',
-                      color: 'var(--text-secondary)',
-                    }}
-                  >
-                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>

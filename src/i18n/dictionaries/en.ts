@@ -6,7 +6,7 @@ import type { Dictionary } from '../types';
 
 export const en: Dictionary = {
   meta: {
-    title: 'SAKURAIN',
+    title: 'SAKURAIN | 2026',
     description:
       'SAKURAIN personal brand site — a practical, insightful and fun portal for tech creators.',
   },
@@ -62,8 +62,7 @@ export const en: Dictionary = {
     loadingSection: 'Loading...',
   },
   home: {
-    intro:
-      'Personal blog recording thoughts and practices in game algorithms, quantitative systems, data analysis and Web engineering. More like a digital garden than a product showroom.',
+    intro: 'Code builds the future.',
     tagline: 'Useful, solid and fun tech creations.',
     readBlog: 'Read Blog',
     viewShuoshuo: 'View Notes',
