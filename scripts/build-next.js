@@ -87,6 +87,34 @@ try {
 
     console.log('[build-next] Mirrored EdgeOne metadata into dist and removed .next/BUILD_ID');
   }
+
+  /**
+   * Patch the opennext plugin so that copyStaticExport logs the underlying
+   * error message. The plugin's failBuild() helper only prints the static
+   * message and swallows the original Error object, which makes it impossible
+   * to tell whether cp() failed because of permissions, disk space, or a
+   * missing directory. This is a temporary debug patch applied at build time.
+   */
+  const staticJsPath = path.join(
+    rootDir,
+    'node_modules',
+    '@edgeone',
+    'opennextjs-pages',
+    'dist',
+    'build',
+    'content',
+    'static.js'
+  );
+  if (fs.existsSync(staticJsPath)) {
+    let staticJs = fs.readFileSync(staticJsPath, 'utf-8');
+    const originalHandler = `} catch (error) {\n      ctx.failBuild("Failed copying static export", error);\n    }`;
+    const patchedHandler = `} catch (error) {\n      const errorDetail = error && error.message ? error.message : String(error);\n      console.error("[opennext debug] copyStaticExport error:", errorDetail, error && error.stack ? error.stack : "");\n      ctx.failBuild("Failed copying static export: " + errorDetail, error);\n    }`;
+    if (staticJs.includes(originalHandler)) {
+      staticJs = staticJs.replace(originalHandler, patchedHandler);
+      fs.writeFileSync(staticJsPath, staticJs, 'utf-8');
+      console.log('[build-next] Patched opennext copyStaticExport error logging');
+    }
+  }
 } catch (error) {
   console.error('[build-next] Failed to prepare EdgeOne publish metadata:', error);
   process.exit(1);
