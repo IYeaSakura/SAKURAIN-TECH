@@ -30,7 +30,8 @@ import {
 } from 'lucide-react';
 import { useAnimationEnabled, useMusicPlayer, useStylePreset, useTranslation } from '@/hooks';
 import { AudioVisualizer } from './AudioVisualizer';
-import type { Song, LyricLine } from '@/contexts/MusicPlayerContext';
+import type { Song } from '@/contexts/MusicPlayerContext';
+import type { LyricLine } from '@/lib/lyrics';
 
 const PIXEL_BORDER = '2px solid var(--border-subtle)';
 const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
@@ -151,6 +152,7 @@ export function MusicPlayer() {
     currentNumber,
     totalSongs,
     currentSong,
+    currentLyrics,
     visualizerMode,
     playlistLoading,
     playlist,
@@ -185,8 +187,8 @@ export function MusicPlayer() {
   const progressPercent = duration ? (currentTime / duration) * 100 : 0;
   const bufferedPercent = duration ? (buffered / duration) * 100 : 0;
   const activeLyric = useMemo(
-    () => getActiveLyric(currentSong.lyrics, currentTime),
-    [currentSong.lyrics, currentTime]
+    () => getActiveLyric(currentLyrics, currentTime),
+    [currentLyrics, currentTime]
   );
 
   // Skip rendering on mobile, while loading playlist, on the music page,
