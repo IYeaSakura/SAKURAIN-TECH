@@ -292,7 +292,7 @@ export function FloatingToolbar({ onExit, content, title, className = '' }: Floa
         {content && (
           <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkMath]}
-            rehypePlugins={[rehypeKatex]}
+            rehypePlugins={[[rehypeKatex, { strict: false }]]}
             components={markdownComponents}
           >
             {content}

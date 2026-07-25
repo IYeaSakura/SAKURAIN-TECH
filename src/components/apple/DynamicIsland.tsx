@@ -19,7 +19,6 @@ import {
   SkipBack,
   SkipForward,
   Music,
-  X,
   Terminal,
   Layout,
   Sun,
@@ -136,11 +135,6 @@ export function DynamicIsland() {
     setExpanded(false);
     cyclePreset();
   }, [cyclePreset]);
-
-  const handleScrollTop = useCallback(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setExpanded(false);
-  }, []);
 
   const handleThemeToggle = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {

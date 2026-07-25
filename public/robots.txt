@@ -1,0 +1,12 @@
+# https://sakurain.net/robots.txt
+# Gentleman's agreement between this site and crawlers.
+# Public content is welcome to be indexed; non-public endpoints are off-limits.
+
+User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /edge-functions/
+Disallow: /settings/
+
+Sitemap: https://sakurain.net/sitemap.xml

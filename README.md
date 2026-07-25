@@ -28,7 +28,7 @@ A personal brand portal built with Next.js 15 App Router, deployed on Tencent Cl
 - **Notes**: Short-form timestamped notes with mood tags and automatic archive indexes.
 - **Docs**: Multi-level documentation courses and rules served through a catch-all SSG route.
 - **Feeds**: Built-in RSS 2.0, Atom, and JSON Feed routes at `/feed.xml`, `/atom.xml`, and `/feed.json`.
-- **Sitemap & Robots**: Auto-generated `sitemap.xml` and `robots.txt` via Next.js Metadata Route API.
+- **Sitemap & Robots**: Auto-generated `sitemap.xml` and a static `public/robots.txt` gentleman's-agreement file. The build can push URLs to Bing (primary), Baidu, and Google Search Console via `scripts/submit-sitemap.js`.
 
 ### Interactive Experiences
 
@@ -40,7 +40,7 @@ A personal brand portal built with Next.js 15 App Router, deployed on Tencent Cl
 ### Architecture & DX
 
 - **Next.js 15 App Router**: Server Components by default, with client islands for heavy interactivity.
-- **SSG-First**: 46 pages prerendered at build time; dynamic edge APIs for write operations.
+- **SSG-First**: ~57 pages prerendered at build time; dynamic edge APIs for write operations.
 - **EdgeOne Edge Functions**: Write APIs (`/api/comments`, `/api/danmaku/*`, `/api/feed/*`) live in `edge-functions/` and are deployed as EdgeOne Pages Functions, keeping the Next.js bundle free of Node.js runtime dependencies.
 - **Static Export**: `next.config.ts` uses `output: "export"` with `distDir: "dist"`; EdgeOne Pages deploys the `dist/` directory directly, eliminating the SSR Node function package entirely.
 - **Turbopack Dev**: Fast cold-start dev server with on-demand route compilation.
@@ -69,6 +69,19 @@ A personal brand portal built with Next.js 15 App Router, deployed on Tencent Cl
 - **UI Utilities**: lucide-react, clsx, tailwind-merge, sonner
 - **Edge Runtime**: crypto Web API, KVNamespace via global bindings
 
+### Skills Stack
+
+The site showcases the following engineering skill groups (see `content/data/site-data.json`):
+
+| Category | Key Skills |
+|----------|------------|
+| High-Performance Computing | C/C++, AVX512 SIMD, CUDA, OpenMP |
+| Backend Development | Python, Go, FastAPI, Gin |
+| Data Storage | ClickHouse, PostgreSQL, Redis, Kafka |
+| Frontend Development | Vue3, React, TypeScript, TailwindCSS |
+| Machine Learning | PyTorch, NumPy, Pandas, Scikit-learn |
+| DevOps & Deployment | Docker, Kubernetes, Nginx, Linux |
+
 ---
 
 ## Project Structure
@@ -80,8 +93,8 @@ SAKURAIN-TECH/
 │   ├── page.tsx                      # Home page
 │   ├── not-found.tsx                 # 404 page
 │   ├── globals.css                   # Global styles
-│   ├── robots.ts                     # robots.txt route
 │   ├── sitemap.ts                    # sitemap.xml route
+│   ├── robots.txt                    # static robots.txt (copied from public/)
 │   ├── feed.xml/route.ts             # RSS feed route
 │   ├── atom.xml/route.ts             # Atom feed route
 │   ├── feed.json/route.ts            # JSON feed route
@@ -140,9 +153,11 @@ SAKURAIN-TECH/
 │   ├── resume/                       # Resume data (generated from content/)
 │   └── cesium/                       # Generated Cesium runtime assets (gitignored)
 ├── scripts/                          # Build and auxiliary scripts
+│   ├── generate-playlist.js          # Scan music files and build playlist.json
 │   ├── sync-content-to-public.js     # Copy managed content from content/ to public/
-│   ├── check-friends-connectivity.js # Friend link health checker
-│   └── submit-sitemap.js             # Search engine sitemap submission
+│   ├── check-friends-connectivity.js # Multi-threaded friend-link health checker
+│   ├── build-next.js                 # Wrapped next build for EdgeOne Pages
+│   └── submit-sitemap.js             # Multi-engine sitemap submission
 ├── edgeone.json                      # EdgeOne Pages deployment config
 ├── next.config.ts                    # Next.js configuration
 ├── postcss.config.mjs                # PostCSS configuration
@@ -199,9 +214,19 @@ NEXT_PUBLIC_CESIUM_ION_TOKEN=
 # Dev API proxy target (default: https://sakurain.net)
 # Set to http://localhost:8788 to use the local mock server.
 DEV_API_TARGET=
+
+# Search engine sitemap submission tokens (optional).
+# BING_API_KEY: Bing Webmaster URL Submission API key (primary engine).
+# BAIDU_PUSH_TOKEN: Baidu ordinary push token.
+# GOOGLE_SERVICE_ACCOUNT_JSON: Google service-account JSON for Search Console API.
+# SEARCH_ENGINE_SUBMIT: Comma-separated engine list (default: bing,baidu).
+BING_API_KEY=
+BAIDU_PUSH_TOKEN=
+GOOGLE_SERVICE_ACCOUNT_JSON=
+SEARCH_ENGINE_SUBMIT=bing,baidu
 ```
 
-**Security Note**: Never commit `.env` or `.env.local`. Both are listed in `.gitignore`.
+**Security Note**: Never commit `.env`, `.env.local`, or service-account JSON. They are listed in `.gitignore`.
 
 ---
 
@@ -222,7 +247,8 @@ The Next.js dev server starts at `http://localhost:3000` with Turbopack enabled.
 | `npm run dev` | Start Next.js dev server with Turbopack |
 | `npm run build` | Run all build scripts, then `next build` |
 | `npm run build:fast` | Run `next build` only, skipping all build scripts |
-| `npm run submit-sitemap` | Submit the generated sitemap to search engines |
+| `npm run submit-sitemap` | Submit the generated sitemap to configured search engines |
+| `npm run generate-playlist` | Scan `public/music/` and generate `content/data/playlist.json` |
 | `npm run start` | Start production preview server |
 | `npm run lint` | Run ESLint |
 
@@ -253,11 +279,11 @@ npm run build
 
 The build workflow runs the following steps in order. Each step must succeed before the next one starts:
 
-1. **`copy-cesium.mjs`**: Copies Cesium runtime assets from `node_modules/cesium/Build/Cesium` to `public/cesium/`.
+1. **`generate-playlist.js`**: Scans `public/music/` and generates `content/data/playlist.json`.
 2. **`sync-content-to-public.js`**: Copies managed content (`content/data/*`, `content/docs/*`, `content/config/*`, `content/resume/*`) into `public/`, and generates `public/data/docs.json` from `content/docs-index.json`.
-3. **`check-friends-connectivity.js`**: Updates the online/offline status of friend links in `public/data/friends.json`.
-4. **`next build`**: Exports 54 static pages and the RSS/Atom/JSON feed files to `dist/`.
-5. **`submit-sitemap.js`**: Submits the generated sitemap to search engines.
+3. **`check-friends-connectivity.js`**: Multi-threaded friend-link health checker that updates `public/data/friends.json` with online/offline/maintenance status while deduplicating URLs.
+4. **`build-next.js`**: Wraps `next build` with extra heap memory, exports static pages and feeds to `dist/`, and copies required metadata files for EdgeOne Pages.
+5. **`submit-sitemap.js`**: Pushes the generated sitemap to Bing (primary), Baidu, and/or Google Search Console based on `SEARCH_ENGINE_SUBMIT`.
 
 Because the project uses `output: "export"`, there is no SSR Node function package. EdgeOne Pages Functions in `edge-functions/` are deployed separately and are not part of the Next.js build output.
 
@@ -271,12 +297,13 @@ npm run build:fast
 
 | Stage | Description |
 |-------|-------------|
-| 1. Content Sync | Copy `content/` to `public/` |
-| 2. Friends Check | Check friend link connectivity |
-| 3. Compile | TypeScript compilation and bundle optimization |
-| 4. Static Generation | 46 pages exported as static HTML to `dist/` |
-| 5. Sitemap Submit | Submit sitemap to search engines |
-| 6. Trace & Optimize | Collect build traces and finalize output |
+| 1. Playlist Generation | Scan `public/music/` and write `content/data/playlist.json` |
+| 2. Content Sync | Copy `content/` to `public/` |
+| 3. Friends Check | Multi-threaded friend-link connectivity check with URL deduplication |
+| 4. Compile | TypeScript compilation and bundle optimization |
+| 5. Static Generation | ~57 pages exported as static HTML to `dist/` |
+| 6. Sitemap Submit | Push URLs to Bing/Baidu or sitemap to Google Search Console |
+| 7. Trace & Optimize | Collect build traces and finalize output |
 
 ### EdgeOne Pages Deployment
 
@@ -303,7 +330,7 @@ In edge functions, these bindings are accessed directly as global variables, for
 
 ## API Reference
 
-All API endpoints are implemented as Next.js Edge Route Handlers under `app/api/*`. They share HMAC authentication via `X-Timestamp`, `X-Nonce`, and `X-Signature` headers.
+All write-capable API endpoints are implemented as EdgeOne Pages Functions under `edge-functions/api/`. They share HMAC authentication via `X-Timestamp`, `X-Nonce`, and `X-Signature` headers.
 
 ### Authentication
 
@@ -365,7 +392,7 @@ Error:
 
 ### Optimization Strategies
 
-- **SSG-First Rendering**: 46 pages are prerendered at build time, eliminating runtime server load for content pages.
+- **SSG-First Rendering**: ~57 pages are prerendered at build time, eliminating runtime server load for content pages.
 - **Turbopack Development**: Fast cold-start and on-demand compilation during development.
 - **Optimize Package Imports**: `next.config.ts` configures `optimizePackageImports` for `lucide-react`, `framer-motion`, and `@react-three/drei` to reduce bundle size.
 - **Self-Hosted Fonts**: JetBrains Mono, VT323, and Press Start 2P fonts are self-hosted to eliminate external network blocking.
@@ -380,12 +407,12 @@ Error:
 | Largest Contentful Paint (LCP) | < 2.5s |
 | Time to Interactive (TTI) | < 3.5s |
 | Build Time | < 90s |
-| Static Pages | 46 |
+| Static Pages | ~57 |
 | Edge Route Handlers | 8 |
 
 ### Bundle Considerations
 
-- Cesium runtime assets live under `public/cesium/` and are served as static files, not bundled into JavaScript. The directory is gitignored; if it is missing, copy it from `node_modules/cesium/Build/Cesium` before building.
+- Cesium runtime assets live under `public/cesium/` and are served as static files, not bundled into JavaScript. The directory is gitignored and generated automatically during the build; if it is missing locally, copy it from `node_modules/cesium/Build/Cesium`.
 - Three.js and Cesium are loaded only on pages that need them via dynamic imports with `ssr: false`.
 - Heavy interactive pages such as `/earth-online` and `/algo-viz` are marked dynamic to avoid blocking static generation.
 
@@ -492,7 +519,7 @@ allowedDevOrigins: ["localhost", "127.0.0.1"]
 
 **Cause**: `check-friends-connectivity.js` makes outbound HTTPS requests to every friend link.
 
-**Solution**: On slow networks, increase timeouts or use `npm run build:fast` for local iteration. For CI/CD, ensure outbound HTTPS is allowed.
+**Solution**: The script now uses multi-threaded workers and URL deduplication to speed up checks. On slow networks, use `npm run build:fast` for local iteration, or set `SKIP_FRIEND_CHECK=true` / `CI=true` to skip the check. For CI/CD, ensure outbound HTTPS is allowed.
 
 ### Write API Returns `Invalid signature`
 

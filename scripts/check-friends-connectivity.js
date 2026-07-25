@@ -6,6 +6,8 @@ import http from 'http';
 import dns from 'dns';
 import crypto from 'crypto';
 import { execSync } from 'child_process';
+import { isMainThread, parentPort, Worker } from 'worker_threads';
+import os from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -585,82 +587,127 @@ async function checkFriendsConnectivity() {
     }
 
     const friendsToCheck = data.friends.filter(friend => friend.url);
-    console.log(`Checking connectivity for ${friendsToCheck.length} friends (concurrency: ${CONCURRENCY_LIMIT})...`);
+
+    // Deduplicate by normalized URL so the same endpoint is only checked once.
+    const urlToFriends = new Map();
+    for (const friend of friendsToCheck) {
+      const normalized = normalizeUrl(friend.url);
+      if (!urlToFriends.has(normalized)) {
+        urlToFriends.set(normalized, []);
+      }
+      urlToFriends.get(normalized).push(friend);
+    }
+    const uniqueUrls = Array.from(urlToFriends.keys());
+
+    console.log(`Checking connectivity for ${friendsToCheck.length} friends (${uniqueUrls.length} unique URLs, workers: ${Math.min(os.cpus().length, 8)})...`);
     console.log('');
 
     const startTime = Date.now();
-    const completedCount = { value: 0 };
+    const resultByUrl = new Map();
+
+    if (uniqueUrls.length === 0) {
+      console.log('No URLs to check.');
+    } else {
+      const workerCount = Math.min(os.cpus().length, 8, uniqueUrls.length);
+      const batches = Array.from({ length: workerCount }, () => []);
+      uniqueUrls.forEach((url, index) => batches[index % workerCount].push(url));
+
+      const workerPromises = batches.map((batch, index) => {
+        return new Promise((resolve, reject) => {
+          const worker = new Worker(__filename, { type: 'module' });
+          const results = [];
+          worker.on('message', (message) => {
+            if (message.type === 'batch-complete') {
+              results.push(...message.results);
+            }
+          });
+          worker.on('error', reject);
+          worker.on('exit', (code) => {
+            if (code !== 0) {
+              reject(new Error(`Worker ${index} exited with code ${code}`));
+            } else {
+              resolve(results);
+            }
+          });
+          worker.postMessage({ type: 'check-batch', urls: batch });
+        });
+      });
+
+      const allResults = (await Promise.all(workerPromises)).flat();
+      for (const { url, result } of allResults) {
+        resultByUrl.set(url, result);
+      }
+    }
+
+    // Apply each unique URL result to every friend sharing that URL.
+    let completedCount = 0;
     const total = friendsToCheck.length;
-
-    const tasks = friendsToCheck.map((friend) => async () => {
-      const result = await checkUrlWithRetry(friend.url);
-
-      completedCount.value++;
-      const progress = Math.round((completedCount.value / total) * 100);
-      const maintenanceLabel = result.isMaintenance ? ' [维护]' : '';
-      const protectionLabel = result.hasProtection ? ' [防护]' : '';
-      const httpFallbackLabel = result.usedHttpFallback ? ' [HTTP]' : '';
-      const curlLabel = result.usedCurl ? ' [curl]' : '';
-
-      let status;
-      if (result.isMaintenance) {
-        status = `⚠ Maintenance (${result.statusCode})${maintenanceLabel}`;
-      } else if (result.success) {
-        status = `✓ Online (${result.statusCode})${httpFallbackLabel}${curlLabel}${protectionLabel}`;
-      } else {
-        status = `✗ Offline (${result.error || result.statusCode || 'unknown'})`;
-      }
-
-      console.log(`[${completedCount.value}/${total}] ${progress}% - ${friend.name}: ${status}`);
-
-      const checkInfo = {
-        lastChecked: getBuildTimestamp(),
-        statusCode: result.statusCode || null,
-        error: result.error || null,
-        attempts: result.attempts,
-        usedHttpFallback: result.usedHttpFallback || false,
-        usedCurl: result.usedCurl || false,
-        responseTime: result.responseTime || null,
-        hasProtection: result.hasProtection || false,
-        isMaintenance: result.isMaintenance || false,
-        maintenanceReason: result.maintenanceReason || null,
-        hasContent: result.hasContent || false,
+    for (const [normalizedUrl, friends] of urlToFriends.entries()) {
+      const result = resultByUrl.get(normalizedUrl) || {
+        success: false,
+        status: 'offline',
+        error: 'No result from worker',
+        attempts: 0,
+        responseTime: null,
       };
 
-      if (result.isMaintenance) {
-        friend.status = 'maintenance';
-        friend.checkInfo = checkInfo;
-        if (friend.offlineSince) {
-          delete friend.offlineSince;
+      for (const friend of friends) {
+        completedCount++;
+        const progress = Math.round((completedCount / total) * 100);
+        const maintenanceLabel = result.isMaintenance ? ' [维护]' : '';
+        const protectionLabel = result.hasProtection ? ' [防护]' : '';
+        const httpFallbackLabel = result.usedHttpFallback ? ' [HTTP]' : '';
+        const curlLabel = result.usedCurl ? ' [curl]' : '';
+
+        let status;
+        if (result.isMaintenance) {
+          status = `⚠ Maintenance (${result.statusCode})${maintenanceLabel}`;
+        } else if (result.success) {
+          status = `✓ Online (${result.statusCode})${httpFallbackLabel}${curlLabel}${protectionLabel}`;
+        } else {
+          status = `✗ Offline (${result.error || result.statusCode || 'unknown'})`;
         }
-      } else if (result.success) {
-        friend.status = 'online';
-        friend.checkInfo = checkInfo;
-        if (friend.offlineSince) {
-          delete friend.offlineSince;
-        }
-      } else {
-        friend.status = 'offline';
-        friend.checkInfo = checkInfo;
-        const today = getTodayDate();
-        if (!friend.offlineSince) {
-          friend.offlineSince = today;
-        } else if (isDateBefore(today, friend.offlineSince)) {
-          friend.offlineSince = today;
+
+        console.log(`[${completedCount}/${total}] ${progress}% - ${friend.name}: ${status}`);
+
+        const checkInfo = {
+          lastChecked: getBuildTimestamp(),
+          statusCode: result.statusCode || null,
+          error: result.error || null,
+          attempts: result.attempts,
+          usedHttpFallback: result.usedHttpFallback || false,
+          usedCurl: result.usedCurl || false,
+          responseTime: result.responseTime || null,
+          hasProtection: result.hasProtection || false,
+          isMaintenance: result.isMaintenance || false,
+          maintenanceReason: result.maintenanceReason || null,
+          hasContent: result.hasContent || false,
+        };
+
+        if (result.isMaintenance) {
+          friend.status = 'maintenance';
+          friend.checkInfo = checkInfo;
+          if (friend.offlineSince) {
+            delete friend.offlineSince;
+          }
+        } else if (result.success) {
+          friend.status = 'online';
+          friend.checkInfo = checkInfo;
+          if (friend.offlineSince) {
+            delete friend.offlineSince;
+          }
+        } else {
+          friend.status = 'offline';
+          friend.checkInfo = checkInfo;
+          const today = getTodayDate();
+          if (!friend.offlineSince) {
+            friend.offlineSince = today;
+          } else if (isDateBefore(today, friend.offlineSince)) {
+            friend.offlineSince = today;
+          }
         }
       }
-
-      return {
-        id: friend.id,
-        name: friend.name,
-        url: friend.url,
-        status: result.isMaintenance ? 'maintenance' : (result.success ? 'online' : 'offline'),
-        attempts: result.attempts,
-        checkInfo,
-      };
-    });
-
-    const results = await runWithConcurrency(tasks, CONCURRENCY_LIMIT);
+    }
 
     const unidirectionalFriends = data.friends.filter(friend => friend.unidirectional === true);
     const bidirectionalFriends = data.friends.filter(friend => friend.unidirectional !== true);
@@ -670,9 +717,9 @@ async function checkFriendsConnectivity() {
     fs.writeFileSync(FRIENDS_FILE, JSON.stringify(data, null, 2));
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    const onlineCount = results.filter(r => r.status === 'online').length;
-    const offlineCount = results.filter(r => r.status === 'offline').length;
-    const maintenanceCount = results.filter(r => r.status === 'maintenance').length;
+    const onlineCount = friendsToCheck.filter(f => f.status === 'online').length;
+    const offlineCount = friendsToCheck.filter(f => f.status === 'offline').length;
+    const maintenanceCount = friendsToCheck.filter(f => f.status === 'maintenance').length;
 
     console.log('');
     console.log('Connectivity check completed!');
@@ -683,7 +730,7 @@ async function checkFriendsConnectivity() {
     console.log(`  Online:      ${onlineCount}`);
     console.log(`  Maintenance: ${maintenanceCount}`);
     console.log(`  Offline:     ${offlineCount}`);
-    console.log(`  Total:       ${results.length}`);
+    console.log(`  Total:       ${friendsToCheck.length}`);
 
   } catch (error) {
     console.error('Failed to check friends connectivity:', error);
@@ -691,7 +738,20 @@ async function checkFriendsConnectivity() {
   }
 }
 
-checkFriendsConnectivity().catch((error) => {
-  console.error('✘ Unexpected error during friends connectivity check:', error.message);
-  process.exit(1);
-});
+if (isMainThread) {
+  checkFriendsConnectivity().catch((error) => {
+    console.error('✘ Unexpected error during friends connectivity check:', error.message);
+    process.exit(1);
+  });
+} else {
+  parentPort.on('message', async (message) => {
+    if (message.type === 'check-batch') {
+      const results = [];
+      for (const url of message.urls) {
+        const result = await checkUrlWithRetry(url);
+        results.push({ url, result });
+      }
+      parentPort.postMessage({ type: 'batch-complete', results });
+    }
+  });
+}
