@@ -43,6 +43,7 @@ const HELP_TABLE = [
   { cmd: 'cat <file>', desc: 'Read a blog post, note or doc' },
   { cmd: 'read [-r] <file>', desc: 'Open file in fullscreen reader' },
   { cmd: 'view <image>', desc: 'Open an image as pixel art' },
+  { cmd: 'sh <script>', desc: 'Run a game or app shell script' },
   { cmd: 'open <path>', desc: 'Open a page in visual browser mode' },
   { cmd: 'exit', desc: 'Leave terminal mode and return to visual mode' },
   { cmd: 'posts [n]', desc: 'List recent blog posts' },
@@ -141,6 +142,8 @@ function getDirectoryEntries(ctx: CommandContext, p: string): string[] {
     'shuoshuo/',
     'docs/',
     'photo/',
+    'game/',
+    'app/',
     'about.md',
   ];
 
@@ -198,6 +201,20 @@ function getDirectoryEntries(ctx: CommandContext, p: string): string[] {
         return item.chapters.map((ch) => `${ch.id}.md`);
       }
       return [];
+    }
+    return [];
+  }
+
+  if (first === 'game') {
+    if (parts.length === 1) {
+      return ['snake.sh', 'pong.sh', 'breakout.sh'];
+    }
+    return [];
+  }
+
+  if (first === 'app') {
+    if (parts.length === 1) {
+      return ['earth.sh', 'clock.sh', 'stopwatch.sh'];
     }
     return [];
   }
@@ -260,7 +277,46 @@ async function readFileContent(ctx: CommandContext, p: string): Promise<string |
     }
   }
 
+  if (parts[0] === 'game' || parts[0] === 'app') {
+    const script = SCRIPT_REGISTRY[normalized];
+    if (script) {
+      const meta = script.payload as { game?: string; app?: string };
+      const name = meta.game ?? meta.app ?? 'app';
+      return [
+        `#!/bin/sh`,
+        `# Launcher for the ${name} terminal ${parts[0]}.`,
+        `# Run with: ./${basename(normalized)}  or  sh ${basename(normalized)}`,
+        `exec sakurain-${parts[0]}-${name}`,
+      ].join('\n');
+    }
+  }
+
   return null;
+}
+
+// ------------------------------------------------------------------
+// Game / App launchers: virtual shell scripts under /game and /app.
+// ------------------------------------------------------------------
+
+const SCRIPT_REGISTRY: Record<string, { mode: import('./types').AppMode; payload: unknown }> = {
+  '/game/snake.sh': { mode: 'game', payload: { game: 'snake' } },
+  '/game/pong.sh': { mode: 'game', payload: { game: 'pong' } },
+  '/game/breakout.sh': { mode: 'game', payload: { game: 'breakout' } },
+  '/app/earth.sh': { mode: 'app', payload: { app: 'earth' } },
+  '/app/clock.sh': { mode: 'app', payload: { app: 'clock' } },
+  '/app/stopwatch.sh': { mode: 'app', payload: { app: 'stopwatch' } },
+};
+
+function runScript(resolvedPath: string, ctx: CommandContext): void {
+  const normalized = normalizePath(resolvedPath);
+  const script = SCRIPT_REGISTRY[normalized];
+  if (!script) {
+    ctx.addOutput([
+      { type: 'error', content: `${basename(normalized)}: no such script`, id: nextId() },
+    ]);
+    return;
+  }
+  ctx.enterApp(script.mode, script.payload);
 }
 
 function formatList(entries: string[]): string {
@@ -617,6 +673,20 @@ const commands: TerminalCommand[] = [
           { type: 'error', content: `view: ${target}: failed to load image`, id: nextId() },
         ]);
       }
+    },
+  },
+  {
+    name: 'sh',
+    description: 'Execute a shell script from /game or /app',
+    usage: 'sh <script>',
+    execute(args, ctx) {
+      const target = args[0];
+      if (!target) {
+        ctx.addOutput([{ type: 'error', content: 'sh: missing script operand', id: nextId() }]);
+        return;
+      }
+      const resolved = resolvePath(ctx.cwd, target);
+      runScript(resolved, ctx);
     },
   },
   {
@@ -1636,6 +1706,14 @@ export function executeCommand(input: string, ctx: CommandContext): void {
   const cmd = commandMap.get(command);
 
   if (!cmd) {
+    // Support running scripts directly: ./snake.sh or /game/snake.sh
+    if (command.endsWith('.sh')) {
+      const resolved = command.startsWith('/')
+        ? command
+        : resolvePath(ctx.cwd, command);
+      runScript(resolved, ctx);
+      return;
+    }
     ctx.addOutput([{ type: 'error', content: `${command}: command not found`, id: nextId() }]);
     return;
   }

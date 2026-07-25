@@ -245,16 +245,15 @@ export function DynamicIsland() {
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <span
-                    className="w-7 h-7 flex items-center justify-center text-xs font-bold border-2"
+                  <img
+                    src="/photo/logo.webp"
+                    alt="SAKURAIN"
+                    className="w-7 h-7 object-cover border-2"
                     style={{
                       borderColor: 'var(--accent-primary)',
-                      color: 'var(--accent-primary)',
-                      fontFamily: 'var(--font-pixel)',
+                      imageRendering: 'pixelated',
                     }}
-                  >
-                    SK
-                  </span>
+                  />
                   <span
                   className="text-sm font-bold tracking-wider uppercase"
                   style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
