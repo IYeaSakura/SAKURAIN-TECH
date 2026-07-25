@@ -194,16 +194,12 @@ export function DynamicIsland() {
               className="flex items-center justify-between w-full h-full px-3 gap-4"
             >
               <div className="flex items-center gap-2">
-                <span
-                  className="w-6 h-6 flex items-center justify-center text-[10px] font-bold border-2 shrink-0"
-                  style={{
-                    borderColor: 'var(--accent-primary)',
-                    color: 'var(--accent-primary)',
-                    fontFamily: 'var(--font-pixel)',
-                  }}
-                >
-                  SK
-                </span>
+                <img
+                  src="/photo/logo.webp"
+                  alt="SAKURAIN"
+                  className="w-6 h-6 object-cover shrink-0"
+                  style={{ imageRendering: 'pixelated' }}
+                />
                 <span
                   className="text-xs font-bold tracking-wider uppercase"
                   style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
@@ -248,11 +244,8 @@ export function DynamicIsland() {
                   <img
                     src="/photo/logo.webp"
                     alt="SAKURAIN"
-                    className="w-7 h-7 object-cover border-2"
-                    style={{
-                      borderColor: 'var(--accent-primary)',
-                      imageRendering: 'pixelated',
-                    }}
+                    className="w-7 h-7 object-cover"
+                    style={{ imageRendering: 'pixelated' }}
                   />
                   <span
                   className="text-sm font-bold tracking-wider uppercase"

@@ -33,6 +33,8 @@ const MAX_FREQ = 16000;
 const FFT_SIZE = 8192;
 const BAR_COUNT = 96;
 const SMOOTHING = 0.75;
+/** Curve power > 1 expands the low-frequency (left) bands visually. */
+const FREQ_CURVE_POWER = 1.5;
 
 function getLogBars(
   dataArray: Uint8Array,
@@ -46,8 +48,10 @@ function getLogBars(
   const bars: number[] = [];
 
   for (let i = 0; i < barCount; i++) {
-    const startFreq = MIN_FREQ * Math.exp((i / barCount) * ratio);
-    const endFreq = MIN_FREQ * Math.exp(((i + 1) / barCount) * ratio);
+    const startT = Math.pow(i / barCount, FREQ_CURVE_POWER);
+    const endT = Math.pow((i + 1) / barCount, FREQ_CURVE_POWER);
+    const startFreq = MIN_FREQ * Math.exp(startT * ratio);
+    const endFreq = MIN_FREQ * Math.exp(endT * ratio);
     const startBin = Math.max(0, Math.floor(startFreq / binSize));
     const endBin = Math.min(binCount, Math.max(startBin + 1, Math.floor(endFreq / binSize)));
 
@@ -177,7 +181,7 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
         : t.music.audioMetrics.paused;
 
   return (
-    <div className="flex items-center gap-3 h-10 flex-1 min-w-0">
+    <div className="flex items-center gap-3 h-10 w-72">
       {/* State badge */}
       <div
         className="hidden md:flex flex-col justify-center h-full px-2 text-[9px] font-bold uppercase tracking-wider border"
