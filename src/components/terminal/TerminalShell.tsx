@@ -16,7 +16,10 @@ import { useTheme, useStylePreset, useMusicPlayer } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { useTerminalData } from './useTerminalData';
 import { executeCommand, getCompletions } from './commands';
-import type { TerminalLine } from './types';
+import { EarthApp } from './EarthApp';
+import { ReaderApp } from './ReaderApp';
+import { ImageApp } from './ImageApp';
+import type { AppMode, TerminalLine } from './types';
 
 const WELCOME: TerminalLine[] = [
   {
@@ -45,6 +48,12 @@ export function TerminalShell() {
   const [cwd, setCwd] = useState('/');
   const [inputHistory, setInputHistory] = useState<string[]>([]);
   const [_historyIndex, setHistoryIndex] = useState(-1);
+  const [appMode, setAppMode] = useState<AppMode | null>(null);
+  const [readerPayload, setReaderPayload] = useState<{ content: string; plain: boolean } | null>(
+    null
+  );
+  const [imagePayload, setImagePayload] = useState<{ src: string } | null>(null);
+  const [sessionStart] = useState(() => Date.now());
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -79,6 +88,24 @@ export function TerminalShell() {
     setHistory([]);
   }, []);
 
+  const enterApp = useCallback((mode: AppMode, payload?: unknown) => {
+    setAppMode(mode);
+    if (mode === 'reader' && payload && typeof payload === 'object') {
+      const p = payload as { content: string; plain: boolean };
+      setReaderPayload({ content: p.content, plain: p.plain });
+    }
+    if (mode === 'image' && payload && typeof payload === 'object') {
+      const p = payload as { src: string };
+      setImagePayload({ src: p.src });
+    }
+  }, []);
+
+  const exitApp = useCallback(() => {
+    setAppMode(null);
+    setReaderPayload(null);
+    setImagePayload(null);
+  }, []);
+
   const submitInput = useCallback(
     (raw: string) => {
       const trimmed = raw.trim();
@@ -107,15 +134,25 @@ export function TerminalShell() {
         player: {
           isPlaying: player.isPlaying,
           currentSong: player.currentSong,
+          playlist: player.playlist,
+          currentNumber: player.currentNumber,
+          totalSongs: player.totalSongs,
+          playMode: player.playMode,
           togglePlay: player.togglePlay,
           next: player.next,
           prev: player.prev,
+          playSong: player.playSong,
+          cyclePlayMode: player.cyclePlayMode,
         },
         addOutput,
         clearOutput,
+        enterApp,
+        exitApp,
+        history: inputHistory,
+        sessionStart,
       });
     },
-    [cwd, data, router, setPreset, theme, toggleTheme, player, addOutput, clearOutput]
+    [cwd, data, router, setPreset, theme, toggleTheme, player, addOutput, clearOutput, enterApp, exitApp, inputHistory, sessionStart]
   );
 
   const handleKeyDown = useCallback(
@@ -137,12 +174,22 @@ export function TerminalShell() {
           player: {
             isPlaying: player.isPlaying,
             currentSong: player.currentSong,
+            playlist: player.playlist,
+            currentNumber: player.currentNumber,
+            totalSongs: player.totalSongs,
+            playMode: player.playMode,
             togglePlay: player.togglePlay,
             next: player.next,
             prev: player.prev,
+            playSong: player.playSong,
+            cyclePlayMode: player.cyclePlayMode,
           },
           addOutput,
           clearOutput,
+          enterApp,
+          exitApp,
+          history: inputHistory,
+          sessionStart,
         });
         if (completions.length === 1) {
           const tokens = input.trimStart().split(/\s+/);
@@ -257,6 +304,7 @@ export function TerminalShell() {
               'leading-relaxed',
               line.type === 'input' && 'text-[var(--text-primary)]',
               line.type === 'output' && 'text-[var(--text-secondary)]',
+              line.type === 'listing' && 'text-[var(--text-secondary)]',
               line.type === 'error' && 'text-red-400',
               line.type === 'info' && 'text-[var(--accent-primary)]'
             )}
@@ -267,6 +315,26 @@ export function TerminalShell() {
                   {line.prompt ?? getPrompt(cwd)}
                 </span>{' '}
                 {line.content}
+              </span>
+            ) : line.type === 'listing' && line.entries ? (
+              <span className="font-mono">
+                {line.entries.map((entry, index) => (
+                  <span key={index}>
+                    <span
+                      style={{
+                        color: entry.isDirectory
+                          ? 'var(--accent-primary)'
+                          : 'var(--text-secondary)',
+                        fontWeight: entry.isDirectory ? 'bold' : 'normal',
+                      }}
+                    >
+                      {entry.name}
+                    </span>
+                    {index < line.entries!.length - 1 && (
+                      <span style={{ color: 'var(--text-muted)' }}>{'  '}</span>
+                    )}
+                  </span>
+                ))}
               </span>
             ) : (
               line.content
@@ -313,6 +381,13 @@ export function TerminalShell() {
           <span>{history.length} lines</span>
         </div>
       </footer>
+
+      {/* Full-screen app overlays */}
+      {appMode === 'earth' && <EarthApp onExit={exitApp} />}
+      {appMode === 'reader' && readerPayload && (
+        <ReaderApp content={readerPayload.content} plain={readerPayload.plain} onExit={exitApp} />
+      )}
+      {appMode === 'image' && imagePayload && <ImageApp src={imagePayload.src} onExit={exitApp} />}
     </div>
   );
 }

@@ -138,6 +138,8 @@ export function MusicPlayerProvider({
   const prevPlayModeRef = useRef<PlayMode>('shuffle');
   // Distinguish user-initiated pause from system-initiated pause.
   const userPausedRef = useRef(false);
+  // Tracks whether the next loaded track should start playing automatically.
+  const autoPlayRef = useRef(false);
 
   // Build shuffle order once the playlist is known
   useEffect(() => {
@@ -212,8 +214,11 @@ export function MusicPlayerProvider({
       }
     };
     const handlePause = () => {
-      // If the pause was not triggered by the user, treat it as a system pause.
-      if (!userPausedRef.current && isPlaying) {
+      if (userPausedRef.current) {
+        // User explicitly paused: stop auto-play for the next track.
+        autoPlayRef.current = false;
+      } else if (isPlaying) {
+        // Pause was not triggered by the user (e.g. system suspend).
         setSystemPaused(true);
       }
       setIsPlaying(false);
@@ -280,7 +285,9 @@ export function MusicPlayerProvider({
     audio.src = currentSong.src;
     audio.load();
 
-    if (isPlaying) {
+    // Auto-play the new track when playback was active or when advancing
+    // automatically after the previous song finished.
+    if (isPlaying || autoPlayRef.current) {
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
@@ -289,7 +296,7 @@ export function MusicPlayerProvider({
         });
       }
     }
-  }, [currentIndex, isDesktopClient, hasUserInteracted, currentSong.src]);
+  }, [currentIndex, currentPosition, isDesktopClient, hasUserInteracted, currentSong.src]);
 
   // Play / pause whenever the playing flag changes
   useEffect(() => {
@@ -355,11 +362,16 @@ export function MusicPlayerProvider({
           audioRef.current.src = currentSong.src;
           audioRef.current.load();
         }
+        autoPlayRef.current = true;
         return true;
       }
-      // Mark the next pause as user-initiated when switching to paused state.
       if (prev) {
+        // Mark the next pause as user-initiated when switching to paused state.
         userPausedRef.current = true;
+        autoPlayRef.current = false;
+      } else {
+        // Resuming playback should auto-play the current track.
+        autoPlayRef.current = true;
       }
       return !prev;
     });
@@ -370,6 +382,7 @@ export function MusicPlayerProvider({
 
     if (playMode === 'repeat') {
       // Replay the current track from the beginning
+      autoPlayRef.current = true;
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
         const promise = audioRef.current.play();
@@ -387,10 +400,19 @@ export function MusicPlayerProvider({
       if (nextPosition >= shuffledOrder.length) {
         if (playMode === 'sequential') {
           // Stop at the end of the playlist
+          autoPlayRef.current = false;
           setIsPlaying(false);
           return prev;
         }
+        const currentIdx = shuffledOrder[prev];
         const newOrder = shuffleArray(playlist.length);
+        // Ensure the next loop starts with a different track when possible,
+        // otherwise the current index would not change and the audio effect
+        // would not reload, leaving playback paused.
+        if (playlist.length > 1 && newOrder[0] === currentIdx) {
+          const swapIndex = Math.floor(Math.random() * (newOrder.length - 1)) + 1;
+          [newOrder[0], newOrder[swapIndex]] = [newOrder[swapIndex], newOrder[0]];
+        }
         setShuffledOrder(newOrder);
         shouldPlay = true;
         return 0;
@@ -400,6 +422,7 @@ export function MusicPlayerProvider({
     });
 
     if (shouldPlay) {
+      autoPlayRef.current = true;
       setIsPlaying(true);
     }
   }, [shuffledOrder.length, playlist.length, playMode]);
@@ -425,6 +448,7 @@ export function MusicPlayerProvider({
         setShuffledOrder(newOrder);
         setCurrentPosition(pos >= 0 ? pos : 0);
       }
+      autoPlayRef.current = true;
       setIsPlaying(true);
       setIsOpen(true);
       setHasUserInteracted(true);

@@ -98,7 +98,7 @@ const LYRIC_FONT_SIZES = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl
 function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined; currentTime: number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [scaleIndex, setScaleIndex] = useState(2);
+  const [scaleIndex, setScaleIndex] = useState(3);
   const [centered, setCentered] = useState(false);
 
   useEffect(() => {

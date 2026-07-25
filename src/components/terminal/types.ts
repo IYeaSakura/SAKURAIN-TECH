@@ -5,11 +5,13 @@
  */
 
 export interface TerminalLine {
-  type: 'input' | 'output' | 'error' | 'info';
+  type: 'input' | 'output' | 'error' | 'info' | 'listing';
   content: string;
   id: string;
   /** Prompt shown before the command (only meaningful for type 'input'). */
   prompt?: string;
+  /** Color-coded directory entries (only meaningful for type 'listing'). */
+  entries?: { name: string; isDirectory: boolean }[];
 }
 
 export interface TerminalBlogPost {
@@ -116,6 +118,37 @@ export interface TerminalData {
   loading: boolean;
 }
 
+export interface TerminalDanmaku {
+  id: string;
+  text: string;
+  userId: string;
+  timestamp: number;
+  color: string;
+  orbitType: string;
+  angle: number;
+  inclination: number;
+  altitude: number;
+  speed: number;
+  raan: number;
+  markdown?: string;
+}
+
+export interface TerminalComment {
+  id: string;
+  nickname: string;
+  avatarColor: string;
+  content: string;
+  isMarkdown: boolean;
+  createdAt: string;
+  parentId: string | null;
+  replyTo: string | null;
+  browser: string;
+  os: string;
+  replies?: TerminalComment[];
+}
+
+export type AppMode = 'earth' | 'reader' | 'image';
+
 export interface CommandContext {
   cwd: string;
   setCwd: (cwd: string) => void;
@@ -126,13 +159,25 @@ export interface CommandContext {
   toggleTheme: () => void;
   player: {
     isPlaying: boolean;
-    currentSong: { title: string; artist: string };
+    currentSong: { id: string; title: string; artist: string };
+    playlist: { id: string; title: string; artist: string }[];
+    currentNumber: number;
+    totalSongs: number;
+    playMode: string;
     togglePlay: () => void;
     next: () => void;
     prev: () => void;
+    playSong: (id: string) => void;
+    cyclePlayMode: () => void;
   } | null;
   addOutput: (lines: TerminalLine[] | ((prev: TerminalLine[]) => TerminalLine[])) => void;
   clearOutput: () => void;
+  enterApp: (mode: AppMode, payload?: unknown) => void;
+  exitApp: () => void;
+  /** Previously submitted commands, oldest first. */
+  history: string[];
+  /** Timestamp (ms) when the terminal session started. */
+  sessionStart: number;
 }
 
 export interface TerminalCommand {
