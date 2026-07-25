@@ -239,6 +239,7 @@ export function MusicPlayerProvider({
     if (!isDesktopClient) return;
 
     const audio = new Audio();
+    audio.crossOrigin = 'anonymous';
     audio.preload = 'metadata';
     audio.volume = volume;
     audioRef.current = audio;
@@ -536,6 +537,7 @@ export function MusicPlayerProvider({
 
     if (!preloadRef.current) {
       preloadRef.current = new Audio();
+      preloadRef.current.crossOrigin = 'anonymous';
       preloadRef.current.preload = 'auto';
     }
     if (preloadRef.current.src !== nextSong.src) {
