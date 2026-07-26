@@ -142,6 +142,11 @@ export const en: Dictionary = {
     collapse: 'Collapse',
     trackNumber: 'Track',
     backToHome: 'Back to Home',
+    focusMode: 'Focus',
+    focusBlob: 'Aurora',
+    focusParticles: 'Nebula',
+    focusWave: 'Terrain',
+    focusHint: 'Click to switch visual',
     audioMetrics: {
       playing: 'PLAYING',
       paused: 'PAUSED',

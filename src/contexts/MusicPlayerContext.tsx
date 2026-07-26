@@ -63,7 +63,7 @@ const resolveAudioSrc = (src: string): string => {
 const isSameAudioSource = (audioSrc: string, songSrc: string): boolean =>
   resolveAudioSrc(audioSrc) === resolveAudioSrc(songSrc);
 
-export type VisualizerMode = 'bars' | 'wave' | 'heatmap';
+export type VisualizerMode = 'bars' | 'wave' | 'heatmap' | 'focus';
 
 interface MusicPlayerState {
   isOpen: boolean;
@@ -658,9 +658,12 @@ export function MusicPlayerProvider({
   }, [next]);
 
   const changeVisualizer = useCallback(() => {
-    setVisualizerMode((prev) =>
-      prev === 'bars' ? 'wave' : prev === 'wave' ? 'heatmap' : 'bars'
-    );
+    setVisualizerMode((prev) => {
+      if (prev === 'bars') return 'wave';
+      if (prev === 'wave') return 'heatmap';
+      if (prev === 'heatmap') return 'focus';
+      return 'bars';
+    });
   }, []);
 
   const cyclePlayMode = useCallback(() => {
