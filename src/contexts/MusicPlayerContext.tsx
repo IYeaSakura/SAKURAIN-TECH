@@ -627,7 +627,7 @@ export function MusicPlayerProvider({
     setCurrentPosition((prevPos) =>
       prevPos <= 0 ? shuffledOrderRef.current.length - 1 : prevPos - 1
     );
-  }, []);
+  }, [playlist.length]);
 
   const playSong = useCallback(
     (id: string) => {

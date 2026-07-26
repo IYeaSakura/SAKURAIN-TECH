@@ -36,6 +36,8 @@ import {
   Search,
   ChevronUp,
   Camera,
+  Pin,
+  PinOff,
 } from 'lucide-react';
 import {
   useMusicPlayer,
@@ -74,6 +76,7 @@ function formatTime(time: number) {
 
 export function DynamicIsland() {
   const [expanded, setExpanded] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
   const [mounted, setMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,6 +87,7 @@ export function DynamicIsland() {
   const { navigateTo } = useNavigation();
   const { t, locale, toggleLocale } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
+  const collapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -103,6 +107,40 @@ export function DynamicIsland() {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [expanded]);
+
+  // Clear pending collapse timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (collapseTimerRef.current) {
+        clearTimeout(collapseTimerRef.current);
+      }
+    };
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    if (collapseTimerRef.current) {
+      clearTimeout(collapseTimerRef.current);
+      collapseTimerRef.current = null;
+    }
+    setExpanded(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    if (isPinned) return;
+    collapseTimerRef.current = setTimeout(() => {
+      setExpanded(false);
+    }, 200);
+  }, [isPinned]);
+
+  const handleCollapse = useCallback(() => {
+    setIsPinned(false);
+    setExpanded(false);
+  }, []);
+
+  const handleTogglePin = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    setIsPinned((prev) => !prev);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -165,7 +203,12 @@ export function DynamicIsland() {
   if (!mounted) return null;
 
   return (
-    <div ref={containerRef} className="fixed top-3 left-1/2 -translate-x-1/2 z-[100]">
+    <div
+      ref={containerRef}
+      className="fixed top-3 left-1/2 -translate-x-1/2 z-[100]"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <motion.div
         layout
         initial={animationEnabled ? { opacity: 0, y: -20 } : undefined}
@@ -256,7 +299,7 @@ export function DynamicIsland() {
                 </div>
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() => setExpanded(false)}
+                    onClick={handleCollapse}
                     className="w-7 h-7 flex items-center justify-center border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
                     style={{
                       borderColor: 'var(--border-subtle)',
@@ -265,6 +308,17 @@ export function DynamicIsland() {
                     title={t.common.close}
                   >
                     <ChevronUp className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleTogglePin}
+                    className="w-7 h-7 flex items-center justify-center border-2 transition-colors hover:bg-[var(--accent-primary)] hover:text-[var(--bg-primary)]"
+                    style={{
+                      borderColor: 'var(--border-subtle)',
+                      color: isPinned ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                    }}
+                    title={isPinned ? 'Unpin' : 'Pin'}
+                  >
+                    {isPinned ? <Pin className="w-4 h-4" /> : <PinOff className="w-4 h-4" />}
                   </button>
                   <button
                     onClick={toggleLocale}
