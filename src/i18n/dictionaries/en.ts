@@ -75,6 +75,7 @@ export const en: Dictionary = {
     travelMapVisited: '{count} cities visited',
     travelMapCurrent: 'Current: {city}',
     travelMapVisitedLabel: 'Visited',
+    travelMapClient: 'You: {city}',
     travelMapHint: 'Wheel to zoom · drag to pan',
     shortcuts: 'Shortcuts',
   },

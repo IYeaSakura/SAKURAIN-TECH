@@ -74,6 +74,7 @@ export const zh: Dictionary = {
     travelMapVisited: '去过 {count} 座城市',
     travelMapCurrent: '当前所在地：{city}',
     travelMapVisitedLabel: '去过',
+    travelMapClient: '你：{city}',
     travelMapHint: '滚轮缩放 · 拖拽平移',
     shortcuts: '快捷入口',
   },

@@ -35,9 +35,12 @@ export function AMapWidget() {
   const modalRef = useRef<HTMLDivElement>(null);
   const previewMapRef = useRef<unknown | null>(null);
   const modalMapRef = useRef<unknown | null>(null);
+  const amapRef = useRef<unknown | null>(null);
+  const clientLocationRef = useRef<{ city: string; coordinates: [number, number] } | null>(null);
   const [data, setData] = useState<CityData | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [isOpen, setIsOpen] = useState(false);
+  const [clientLocation, setClientLocation] = useState<{ city: string; coordinates: [number, number] } | null>(null);
 
   // Load city configuration.
   useEffect(() => {
@@ -55,34 +58,105 @@ export function AMapWidget() {
   const createMarkerContent = useCallback(
     (city: City, isCurrent: boolean) => {
       const wrapper = document.createElement('div');
-      wrapper.className = 'relative flex flex-col items-center';
-      wrapper.style.cssText = 'pointer-events: auto; transform: translate(-50%, -100%);';
+      wrapper.className = 'relative flex items-center justify-center';
+      wrapper.style.cssText = 'pointer-events: auto; transform: translate(-50%, -50%);';
 
-      const pin = document.createElement('div');
-      pin.className = `flex items-center justify-center border-2 shadow-md ${isCurrent ? 'w-6 h-6' : 'w-4 h-4'}`;
-      pin.style.cssText = `
-        background: ${isCurrent ? 'var(--accent-secondary)' : 'var(--accent-primary)'};
+      const color = isCurrent ? 'var(--accent-secondary)' : 'var(--accent-primary)';
+
+      if (isCurrent) {
+        const ring = document.createElement('div');
+        ring.className = 'absolute rounded-full';
+        ring.style.cssText = `
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 28px;
+          height: 28px;
+          border: 2px solid ${color};
+          opacity: 0.5;
+          animation: amap-pulse 2s ease-out infinite;
+        `;
+        wrapper.appendChild(ring);
+      }
+
+      const core = document.createElement('div');
+      core.className = `rounded-full border-2 ${isCurrent ? 'w-3 h-3' : 'w-2 h-2'}`;
+      core.style.cssText = `
+        background: ${color};
         border-color: var(--bg-primary);
-        box-shadow: 2px 2px 0 var(--border-subtle);
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
+        box-shadow: 0 0 ${isCurrent ? '12px' : '6px'} ${color};
       `;
 
-      const label = document.createElement('div');
-      label.className = 'absolute -top-5 px-1.5 py-0.5 text-[10px] font-mono font-bold uppercase whitespace-nowrap border-2';
-      label.style.cssText = `
-        background: var(--bg-secondary);
-        color: var(--text-primary);
-        border-color: var(--border-subtle);
-        box-shadow: 2px 2px 0 var(--border-subtle);
-      `;
-      label.textContent = city.name;
-
-      wrapper.appendChild(pin);
-      wrapper.appendChild(label);
+      wrapper.appendChild(core);
       return wrapper;
     },
     []
+  );
+
+  const createClientMarkerContent = useCallback(() => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'relative flex items-center justify-center';
+    wrapper.style.cssText = 'pointer-events: auto; transform: translate(-50%, -50%);';
+
+    const color = 'var(--accent-tertiary)';
+
+    const ring = document.createElement('div');
+    ring.className = 'absolute rounded-full';
+    ring.style.cssText = `
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 24px;
+      height: 24px;
+      border: 2px solid ${color};
+      opacity: 0.5;
+      animation: amap-pulse 2s ease-out infinite;
+    `;
+
+    const core = document.createElement('div');
+    core.className = 'w-2.5 h-2.5 rounded-full border-2';
+    core.style.cssText = `
+      background: ${color};
+      border-color: var(--bg-primary);
+      box-shadow: 0 0 10px ${color};
+    `;
+
+    wrapper.appendChild(ring);
+    wrapper.appendChild(core);
+    return wrapper;
+  }, []);
+
+  const addClientMarker = useCallback(
+    (map: unknown, location: { coordinates: [number, number] }) => {
+      if (!map || !amapRef.current) return;
+
+      const AMap = amapRef.current as {
+        Marker: new (opts: Record<string, unknown>) => unknown;
+        Pixel: new (x: number, y: number) => unknown;
+      };
+
+      const mapInstance = map as {
+        add: (marker: unknown) => void;
+        remove: (marker: unknown) => void;
+        __clientMarker?: unknown;
+      };
+
+      if (mapInstance.__clientMarker) {
+        mapInstance.remove(mapInstance.__clientMarker);
+      }
+
+      const marker = new AMap.Marker({
+        position: location.coordinates,
+        content: createClientMarkerContent(),
+        offset: new AMap.Pixel(0, 0),
+        zIndex: 40,
+        title: `You: ${clientLocation?.city || ''}`,
+      });
+
+      mapInstance.add(marker);
+      mapInstance.__clientMarker = marker;
+    },
+    [createClientMarkerContent, clientLocation]
   );
 
   const buildMap = useCallback(
@@ -92,6 +166,7 @@ export function AMapWidget() {
       }
 
       const AMap = await AMapLoader.load({ key: AMAP_KEY, version: '2.0' });
+      amapRef.current = AMap;
 
       const map = new AMap.Map(container, {
         zoom,
@@ -134,27 +209,11 @@ export function AMapWidget() {
           title: city.name,
         });
         map.add(marker);
-
-        if (isCurrent) {
-          const pulse = document.createElement('div');
-          pulse.className = 'absolute rounded-full';
-          pulse.style.cssText = `
-            width: 48px;
-            height: 48px;
-            background: var(--accent-secondary);
-            opacity: 0.25;
-            animation: amap-pulse 2s ease-out infinite;
-            transform: translate(-50%, -50%);
-          `;
-          const pulseMarker = new AMap.Marker({
-            position: city.coordinates,
-            content: pulse,
-            offset: new AMap.Pixel(0, 0),
-            zIndex: 10,
-          });
-          map.add(pulseMarker);
-        }
       });
+
+      if (clientLocationRef.current) {
+        addClientMarker(map, clientLocationRef.current);
+      }
 
       return map;
     },
@@ -200,6 +259,69 @@ export function AMapWidget() {
       cancelled = true;
     };
   }, [isOpen, data, buildMap]);
+
+  // Detect client location and reverse geocode to city name.
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+
+    let cancelled = false;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { longitude, latitude } = position.coords;
+
+        AMapLoader.load({ key: AMAP_KEY, version: '2.0' })
+          .then((AMap) => {
+            if (cancelled) return;
+            amapRef.current = AMap;
+
+            (AMap as { convertFrom: (path: unknown, type: string, cb: (status: string, result: { locations?: Array<{ lng: number; lat: number }> }) => void) => void }).convertFrom(
+              [longitude, latitude],
+              'gps',
+              (status, result) => {
+                if (status !== 'complete' || !result.locations?.[0]) return;
+                const lnglat = result.locations[0];
+
+                (AMap as { plugin: (name: string, cb: () => void) => void }).plugin('AMap.Geocoder', () => {
+                  const geocoder = new (AMap as { Geocoder: new () => { getAddress: (lnglat: unknown, cb: (status: string, result?: { regeocode?: { addressComponent?: { city?: string; district?: string; province?: string } } }) => void) => void } }).Geocoder();
+
+                  geocoder.getAddress(lnglat, (geoStatus, geoResult) => {
+                    if (geoStatus !== 'complete' || !geoResult?.regeocode?.addressComponent) return;
+                    const component = geoResult.regeocode.addressComponent;
+                    const city = component.city || component.district || component.province || 'Unknown';
+                    setClientLocation({ city, coordinates: [lnglat.lng, lnglat.lat] });
+                  });
+                });
+              }
+            );
+          })
+          .catch((error) => {
+            console.error('Failed to load AMap for geolocation:', error);
+          });
+      },
+      (error) => {
+        console.warn('Client geolocation unavailable:', error.message);
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+    );
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Sync client location marker to both maps when location is resolved.
+  useEffect(() => {
+    if (!clientLocation) return;
+
+    clientLocationRef.current = clientLocation;
+
+    if (previewMapRef.current) {
+      addClientMarker(previewMapRef.current, clientLocation);
+    }
+    if (modalMapRef.current) {
+      addClientMarker(modalMapRef.current, clientLocation);
+    }
+  }, [clientLocation, addClientMarker]);
 
   const handleOpen = useCallback(() => setIsOpen(true), []);
   const handleClose = useCallback(() => {
@@ -290,7 +412,7 @@ export function AMapWidget() {
 
           {status === 'ready' && (
             <div
-              className="absolute bottom-3 left-3 px-3 py-2 border-2 text-[10px] font-mono uppercase z-[1] pointer-events-none"
+              className="absolute bottom-3 right-3 px-3 py-2 border-2 text-[10px] font-mono uppercase z-[1] pointer-events-none"
               style={{
                 background: 'var(--bg-secondary)',
                 borderColor: 'var(--border-subtle)',
@@ -301,16 +423,22 @@ export function AMapWidget() {
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--accent-secondary)' }} />
                 {t.home.travelMapCurrent.replace('{city}', data.current.name)}
               </div>
-              <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-2 ${clientLocation ? 'mb-1' : ''}`}>
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--accent-primary)' }} />
                 {t.home.travelMapVisitedLabel}
               </div>
+              {clientLocation && (
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--accent-tertiary)' }} />
+                  {t.home.travelMapClient.replace('{city}', clientLocation.city)}
+                </div>
+              )}
             </div>
           )}
 
           {status === 'ready' && (
             <div
-              className="absolute bottom-3 right-3 px-3 py-1.5 border-2 text-[10px] font-mono uppercase opacity-0 group-hover:opacity-100 transition-opacity z-[1]"
+              className="absolute bottom-3 left-3 px-3 py-1.5 border-2 text-[10px] font-mono uppercase opacity-0 group-hover:opacity-100 transition-opacity z-[1]"
               style={{
                 background: 'var(--accent-primary)',
                 borderColor: 'var(--border-subtle)',
