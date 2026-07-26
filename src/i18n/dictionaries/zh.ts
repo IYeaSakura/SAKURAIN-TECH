@@ -141,6 +141,11 @@ export const zh: Dictionary = {
     collapse: '收起',
     trackNumber: '序号',
     backToHome: '返回首页',
+    focusMode: '专注空间',
+    focusBlob: '极光',
+    focusParticles: '星云',
+    focusWave: '地形',
+    focusHint: '点击切换效果',
     audioMetrics: {
       playing: 'PLAYING',
       paused: 'PAUSED',
