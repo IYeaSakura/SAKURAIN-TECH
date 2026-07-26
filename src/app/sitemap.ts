@@ -19,7 +19,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/friends`, lastModified: today, changeFrequency: "monthly", priority: 0.5 },
     { url: `${SITE_URL}/friends-circle`, lastModified: today, changeFrequency: "daily", priority: 0.6 },
     { url: `${SITE_URL}/about`, lastModified: today, changeFrequency: "monthly", priority: 0.7 },
-    { url: `${SITE_URL}/studio`, lastModified: today, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/resume`, lastModified: today, changeFrequency: "monthly", priority: 0.6 },
     { url: `${SITE_URL}/projects`, lastModified: today, changeFrequency: "weekly", priority: 0.7 },
     { url: `${SITE_URL}/earth-online`, lastModified: today, changeFrequency: "weekly", priority: 0.5 },
