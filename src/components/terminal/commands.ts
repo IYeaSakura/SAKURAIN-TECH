@@ -113,7 +113,6 @@ function pathToRoute(p: string): string {
     'earth-online.tsx': '/earth-online',
     'about.md': '/about',
     'shuoshuo.md': '/shuoshuo',
-    'studio.tsx': '/studio',
     'algo-viz.tsx': '/algo-viz',
   };
 

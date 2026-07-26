@@ -444,10 +444,6 @@ export interface SiteData {
     social: SocialLink[];
     note: string;
   };
-  studio?: {
-    timeline: TimelineData;
-    statsCharts: StatsChartsData;
-  };
   footer: {
     copyright: string;
     slogan: string;

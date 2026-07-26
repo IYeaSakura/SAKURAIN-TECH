@@ -33,7 +33,6 @@ export interface Dictionary {
     docs: string;
     algoViz: string;
     resume: string;
-    studio: string;
     settings: string;
     terminal: string;
   };
@@ -548,17 +547,6 @@ export interface Dictionary {
     };
     applyEmailSubject: string;
     applyEmailBody: string;
-  };
-  studio: {
-    welcome: string;
-    aboutMe: string;
-    latestUpdates: string;
-    visitBlog: string;
-    docs: string;
-    openEarthOnline: string;
-    features: string;
-    enterFriends: string;
-    builtWith: string;
   };
   resume: {
     preview: string;

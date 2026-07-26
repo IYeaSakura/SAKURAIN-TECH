@@ -360,10 +360,10 @@ const FriendCard = memo(function FriendCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onClick(friend)}
-      className="group cursor-pointer h-full"
+      className="group cursor-pointer"
     >
       <div
-        className="relative h-full transition-all duration-200"
+        className="relative h-[172px] overflow-hidden transition-all duration-200"
         style={{
           background: isHovered ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
           border: '2px solid var(--border-subtle)',
@@ -372,7 +372,7 @@ const FriendCard = memo(function FriendCard({
         }}
       >
         <div className="p-4 sm:p-5 h-full flex flex-col">
-          <div className="flex items-start gap-3 sm:gap-4 flex-1">
+          <div className="flex items-start gap-3 sm:gap-4 flex-1 min-h-0">
             {/* Icon */}
             <div
               className="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center border-2 transition-colors"
@@ -394,8 +394,8 @@ const FriendCard = memo(function FriendCard({
             </div>
 
             {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start gap-2 mb-1.5 flex-wrap">
+            <div className="flex-1 min-w-0 flex flex-col min-h-0">
+              <div className="flex items-center gap-2 mb-1.5 overflow-hidden">
                 <h3
                   className="font-bold text-base sm:text-lg truncate flex-1"
                   style={{ color: 'var(--text-primary)' }}
@@ -406,7 +406,7 @@ const FriendCard = memo(function FriendCard({
 
                 {friend.status && (
                   <span
-                    className="flex-shrink-0 flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold uppercase border-2 font-mono"
+                    className="flex-shrink-0 flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold uppercase border-2 font-mono truncate"
                     style={{
                       background: 'var(--bg-primary)',
                       borderColor: `${statusColor[friend.status]}60`,
@@ -430,7 +430,7 @@ const FriendCard = memo(function FriendCard({
 
                 {friend.unidirectional && (
                   <span
-                    className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-bold uppercase border-2 font-mono"
+                    className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-bold uppercase border-2 font-mono truncate"
                     style={{
                       background: 'var(--bg-primary)',
                       borderColor: 'var(--border-subtle)',
@@ -442,7 +442,7 @@ const FriendCard = memo(function FriendCard({
                 )}
               </div>
 
-              <p className="text-xs sm:text-sm line-clamp-2 mb-3" style={{ color: 'var(--text-secondary)' }}>
+              <p className="text-xs sm:text-sm leading-5 h-10 line-clamp-2 shrink-0 mb-3" style={{ color: 'var(--text-secondary)' }}>
                 {friend.description}
               </p>
 
@@ -518,7 +518,7 @@ const CategorySection = memo(function CategorySection({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
         {friends.map((friend, friendIndex) => (
           <FriendCard key={friend.id} friend={friend} index={friendIndex} onClick={onClick} />
         ))}
@@ -1413,7 +1413,7 @@ export default function FriendsPage() {
                   {t.friends.randomVisit}
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
                 {data.friends
                   .filter((f) => f.featured)
                   .map((friend, index) => (
