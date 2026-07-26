@@ -70,6 +70,12 @@ export const zh: Dictionary = {
     allPosts: '全部文章',
     noPosts: '还没有文章',
     recentShuoshuo: '近期说说',
+    travelMap: '足迹地图',
+    travelMapVisited: '去过 {count} 座城市',
+    travelMapCurrent: '当前所在地：{city}',
+    travelMapVisitedLabel: '去过',
+    travelMapHint: '滚轮缩放 · 拖拽平移',
+    shortcuts: '快捷入口',
   },
   footer: {
     docs: '技术文档',
@@ -155,6 +161,15 @@ export const zh: Dictionary = {
     music: {
       title: '正在播放',
     },
+    worldClock: '世界时钟',
+    search: '站内搜索',
+    searchPlaceholder: '搜索文章和说说...',
+    searchEmpty: '未找到匹配内容',
+    dailyQuote: '每日一句',
+    friends: '友情链接',
+    friendsTotal: '站点',
+    friendsCategories: '分组',
+    skills: '技术栈',
   },
   blog: {
     title: '博客',

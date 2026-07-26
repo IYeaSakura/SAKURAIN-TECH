@@ -29,7 +29,7 @@ export function RecentShuoshuo({ notes, maxItems = 5 }: RecentShuoshuoProps) {
       initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="h-full flex flex-col border-2 p-5"
+      className="flex flex-col border-2 p-5"
       style={{
         background: 'var(--bg-secondary)',
         borderColor: 'var(--border-subtle)',
@@ -56,7 +56,7 @@ export function RecentShuoshuo({ notes, maxItems = 5 }: RecentShuoshuoProps) {
         </button>
       </div>
 
-      <div className="flex-1 flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         {recentNotes.length === 0 ? (
           <div
             className="flex-1 flex items-center justify-center text-xs"
@@ -72,7 +72,7 @@ export function RecentShuoshuo({ notes, maxItems = 5 }: RecentShuoshuoProps) {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.2 + index * 0.05 }}
               onClick={() => navigateTo('/shuoshuo')}
-              className="group cursor-pointer p-3 border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+              className="group cursor-pointer p-2.5 border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
               style={{
                 background: 'var(--bg-primary)',
                 borderColor: 'var(--border-subtle)',
@@ -87,7 +87,7 @@ export function RecentShuoshuo({ notes, maxItems = 5 }: RecentShuoshuoProps) {
                     {note.title}
                   </p>
                   <p
-                    className="text-xs line-clamp-2 mt-0.5"
+                    className="text-xs line-clamp-1 mt-0.5"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     {note.content.replace(/\n/g, ' ')}

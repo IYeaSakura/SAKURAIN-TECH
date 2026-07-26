@@ -1,11 +1,12 @@
 'use client';
 
 /**
- * HomePage —— personal blog landing page.
+ * HomePage —— asymmetric bento-style personal dashboard.
  *
- * Keeps the layout simple and content-first: a short intro, recent posts,
- * and recent shuoshuo. The flashy product-page hero is intentionally removed
- * so the site feels like a personal blog rather than a brand showcase.
+ * The layout keeps the site's neo-brutalist + pixel character while
+ * feeling like a dense, functional home screen. A wide main column holds
+ * the map and long-form content widgets; a narrower sidebar stacks
+ * utility widgets of varying heights for an intentionally uneven rhythm.
  */
 
 import { useState, useEffect } from 'react';
@@ -17,26 +18,121 @@ import { BlogListItem } from '@/components/blog/components/BlogListItem';
 import { RecentShuoshuo } from '@/components/home/RecentShuoshuo';
 import { MusicWidget } from '@/components/home/MusicWidget';
 import { CalendarWidget } from '@/components/home/CalendarWidget';
-import { StatsWidget } from '@/components/home/StatsWidget';
-import { useTheme, useStylePreset, useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
+import { AMapWidget } from '@/components/home/AMapWidget';
+import { SearchWidget } from '@/components/home/SearchWidget';
+import { DailyQuoteWidget } from '@/components/home/DailyQuoteWidget';
+import { FriendsStatusWidget } from '@/components/home/FriendsStatusWidget';
+import { SkillsWidget } from '@/components/home/SkillsWidget';
+import {
+  useTheme,
+  useStylePreset,
+  useAnimationEnabled,
+  useNavigation,
+  useTranslation,
+} from '@/hooks';
 import type { SiteData } from '@/types';
 import type { Note } from '@/lib/content/notes';
 import type { BlogPost } from '@/components/blog/types';
 
 interface HomePageProps {
-  /** 近期文章（由服务端内容管线在构建期注入） */
   posts: BlogPost[];
-  /** 近期说说数据（由服务端内容管线在构建期注入） */
   notes: Note[];
 }
 
-const RECENT_POSTS_COUNT = 5;
+const RECENT_POSTS_COUNT = 3;
+
+function QuickLinksStrip() {
+  const { t } = useTranslation();
+  const animationEnabled = useAnimationEnabled();
+  const { navigateTo } = useNavigation();
+  const { setPreset } = useStylePreset();
+
+  const links = [
+    { icon: BookOpen, label: t.home.readBlog, href: '/blog', color: 'var(--accent-primary)' },
+    { icon: MessageSquare, label: t.home.viewShuoshuo, href: '/shuoshuo', color: 'var(--accent-secondary)' },
+    { icon: Terminal, label: t.home.terminalMode, action: () => setPreset('terminal'), color: 'var(--accent-tertiary)' },
+  ];
+
+  return (
+    <motion.div
+      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
+      className="flex flex-wrap gap-2"
+    >
+      {links.map((item) => (
+        <button
+          key={item.label}
+          onClick={() => (item.action ? item.action() : navigateTo(item.href))}
+          className="flex items-center gap-2 px-4 py-2 border-2 text-xs font-mono uppercase tracking-wider transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+          style={{
+            background: 'var(--bg-secondary)',
+            borderColor: 'var(--border-subtle)',
+            color: 'var(--text-primary)',
+            boxShadow: '3px 3px 0 var(--border-subtle)',
+          }}
+        >
+          <item.icon className="w-3.5 h-3.5" style={{ color: item.color }} />
+          {item.label}
+        </button>
+      ))}
+    </motion.div>
+  );
+}
+
+function RecentPostsWidget({ posts }: { posts: BlogPost[] }) {
+  const { t } = useTranslation();
+  const animationEnabled = useAnimationEnabled();
+  const { navigateTo } = useNavigation();
+  const recentPosts = posts.slice(0, RECENT_POSTS_COUNT);
+
+  return (
+    <motion.div
+      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.3 }}
+      className="min-h-[320px] p-5 border-2 flex flex-col"
+      style={{
+        background: 'var(--bg-secondary)',
+        borderColor: 'var(--border-subtle)',
+        boxShadow: '4px 4px 0 var(--border-subtle)',
+      }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <BookOpen className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+          <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+            {t.home.recentPosts}
+          </span>
+        </div>
+        <button
+          onClick={() => navigateTo('/blog')}
+          className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider transition-opacity hover:opacity-70"
+          style={{ color: 'var(--accent-primary)' }}
+        >
+          {t.home.allPosts}
+          <ArrowRight className="w-3 h-3" />
+        </button>
+      </div>
+
+      <div className="flex-1 space-y-3">
+        {recentPosts.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center text-xs" style={{ color: 'var(--text-muted)' }}>
+            {t.home.noPosts}
+          </div>
+        ) : (
+          recentPosts.map((post, index) => (
+            <BlogListItem key={post.slug} post={post} index={index} />
+          ))
+        )}
+      </div>
+    </motion.div>
+  );
+}
 
 export default function HomePage({ posts, notes }: HomePageProps) {
   const [siteData, setSiteData] = useState<SiteData | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
-  const { setPreset } = useStylePreset();
-  const { navigateTo } = useNavigation();
   const { t } = useTranslation();
   const animationEnabled = useAnimationEnabled();
   useTheme();
@@ -54,14 +150,9 @@ export default function HomePage({ posts, notes }: HomePageProps) {
       });
   }, []);
 
-  const recentPosts = posts.slice(0, RECENT_POSTS_COUNT);
-
   if (!dataLoaded) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: 'var(--bg-primary)' }}
-      >
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
         <div className="text-center font-mono">
           <div
             className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-4"
@@ -77,143 +168,69 @@ export default function HomePage({ posts, notes }: HomePageProps) {
   }
 
   return (
-    <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      <main className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-32 lg:pt-40 pb-12">
-        {/* Personal intro */}
+    <div className="relative min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)' }}>
+      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Hero / welcome */}
         <motion.section
-          initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+          initial={animationEnabled ? { opacity: 0, y: 12 } : undefined}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-16"
+          transition={{ duration: 0.5 }}
+          className="mb-6 sm:mb-8"
         >
-          <div className="flex flex-col sm:flex-row items-start gap-6">
-            <img
-              src="/image/logo.webp"
-              alt="SAKURAIN"
-              className="w-20 h-20 object-contain border-2 bg-[var(--bg-secondary)]"
-              style={{ borderColor: 'var(--border-subtle)' }}
-            />
-            <div className="flex-1">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+            <div>
               <h1
-                className="text-3xl sm:text-5xl font-bold mb-3 uppercase tracking-tight"
+                className="text-2xl sm:text-4xl font-bold uppercase tracking-tight mb-1"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
               >
                 SAKURAIN
               </h1>
-              <p
-                className="text-base sm:text-lg leading-relaxed mb-4"
-                style={{ color: 'var(--text-secondary)' }}
-              >
+              <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
                 {t.home.intro}
               </p>
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => navigateTo('/blog')}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
-                  style={{
-                    background: 'var(--accent-primary)',
-                    color: 'var(--bg-primary)',
-                    borderColor: 'var(--border-subtle)',
-                    boxShadow: '3px 3px 0 var(--border-subtle)',
-                    fontFamily: 'var(--font-mono)',
-                  }}
-                >
-                  <BookOpen className="w-4 h-4" />
-                  {t.home.readBlog}
-                </button>
-                <button
-                  onClick={() => navigateTo('/shuoshuo')}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    color: 'var(--text-primary)',
-                    borderColor: 'var(--border-subtle)',
-                    boxShadow: '3px 3px 0 var(--border-subtle)',
-                    fontFamily: 'var(--font-mono)',
-                  }}
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  {t.home.viewShuoshuo}
-                </button>
-                <button
-                  onClick={() => setPreset('terminal')}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    color: 'var(--text-primary)',
-                    borderColor: 'var(--border-subtle)',
-                    boxShadow: '3px 3px 0 var(--border-subtle)',
-                    fontFamily: 'var(--font-mono)',
-                  }}
-                >
-                  <Terminal className="w-4 h-4" />
-                  {t.home.terminalMode}
-                </button>
-              </div>
             </div>
+            <QuickLinksStrip />
           </div>
         </motion.section>
 
-        {/* Functional widgets */}
-        <motion.section
-          initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mb-16"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <MusicWidget />
-            <CalendarWidget />
-            <StatsWidget posts={posts} notes={notes} />
-          </div>
-        </motion.section>
-
-        {/* Recent posts */}
-        <motion.section
-          initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.25 }}
-          className="mb-16"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2
-              className="text-xl sm:text-2xl font-bold uppercase tracking-tight"
-              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
-            >
-              {t.home.recentPosts}
-            </h2>
-            <button
-              onClick={() => navigateTo('/blog')}
-              className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider border-b-2 transition-colors hover:opacity-80"
-              style={{ color: 'var(--accent-primary)', borderColor: 'var(--accent-primary)' }}
-            >
-              {t.home.allPosts}
-              <ArrowRight className="w-4 h-4" />
-            </button>
+        {/* Asymmetric dashboard */}
+        <section className="flex flex-col lg:flex-row gap-4 lg:gap-5">
+          {/* Main column — wide, content-heavy */}
+          <div className="flex-1 flex flex-col gap-4 lg:gap-5 min-w-0">
+            <div className="min-h-[380px] sm:min-h-[460px]">
+              <AMapWidget />
+            </div>
+            <RecentPostsWidget posts={posts} />
+            <RecentShuoshuo notes={notes} maxItems={3} />
           </div>
 
-          {recentPosts.length === 0 ? (
-            <div className="py-12 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
-              {t.home.noPosts}
+          {/* Sidebar — narrow, utility widgets */}
+          <div className="w-full lg:w-[360px] flex flex-col gap-4 lg:gap-5 shrink-0">
+            <div className="min-h-[180px]">
+              <MusicWidget />
             </div>
-          ) : (
-            <div className="space-y-4">
-              {recentPosts.map((post, index) => (
-                <BlogListItem key={post.slug} post={post} index={index} />
-              ))}
-            </div>
-          )}
-        </motion.section>
 
-        {/* Recent shuoshuo */}
-        <motion.section
-          initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mb-16"
-        >
-          <RecentShuoshuo notes={notes} maxItems={4} />
-        </motion.section>
+            <div className="min-h-[160px]">
+              <CalendarWidget />
+            </div>
+
+            <div className="min-h-[120px]">
+              <SearchWidget posts={posts} notes={notes} />
+            </div>
+
+            <div className="min-h-[140px]">
+              <DailyQuoteWidget />
+            </div>
+
+            <div className="min-h-[120px]">
+              <FriendsStatusWidget />
+            </div>
+
+            <div className="min-h-[160px]">
+              <SkillsWidget />
+            </div>
+          </div>
+        </section>
       </main>
 
       {siteData && <Footer data={siteData.footer} />}

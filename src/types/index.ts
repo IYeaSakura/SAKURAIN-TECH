@@ -393,6 +393,10 @@ export interface SiteData {
       }[];
     }[];
   };
+  siteStack?: {
+    name: string;
+    level: number;
+  }[];
   pricing: {
     title: string;
     subtitle: string;

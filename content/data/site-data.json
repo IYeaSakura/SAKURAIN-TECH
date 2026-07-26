@@ -996,6 +996,21 @@
       }
     ]
   },
+  "siteStack": [
+    { "name": "Next.js", "level": 99 },
+    { "name": "React", "level": 98 },
+    { "name": "TypeScript", "level": 97 },
+    { "name": "Tailwind CSS", "level": 96 },
+    { "name": "Framer Motion", "level": 95 },
+    { "name": "CesiumJS", "level": 94 },
+    { "name": "AMap JS API", "level": 93 },
+    { "name": "EdgeOne", "level": 92 },
+    { "name": "Cloudflare", "level": 91 },
+    { "name": "GitHub Actions", "level": 90 },
+    { "name": "gray-matter", "level": 89 },
+    { "name": "remark", "level": 88 },
+    { "name": "Lucide", "level": 87 }
+  ],
   "contact": {
     "title": "准备好开始您的项目了吗？",
     "subtitle": "告诉我们您的需求，我们将在24小时内回复",
