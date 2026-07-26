@@ -84,6 +84,7 @@ export interface Dictionary {
     travelMapVisited: string;
     travelMapCurrent: string;
     travelMapVisitedLabel: string;
+    travelMapClient: string;
     travelMapHint: string;
     shortcuts: string;
   };
