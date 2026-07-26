@@ -71,6 +71,12 @@ export const en: Dictionary = {
     allPosts: 'All Posts',
     noPosts: 'No posts yet',
     recentShuoshuo: 'Recent Notes',
+    travelMap: 'Travel Map',
+    travelMapVisited: '{count} cities visited',
+    travelMapCurrent: 'Current: {city}',
+    travelMapVisitedLabel: 'Visited',
+    travelMapHint: 'Wheel to zoom · drag to pan',
+    shortcuts: 'Shortcuts',
   },
   footer: {
     docs: 'Docs',
@@ -156,6 +162,15 @@ export const en: Dictionary = {
     music: {
       title: 'Now Playing',
     },
+    worldClock: 'World Clock',
+    search: 'Search',
+    searchPlaceholder: 'Search posts and notes...',
+    searchEmpty: 'No matches found',
+    dailyQuote: 'Daily Quote',
+    friends: 'Friends',
+    friendsTotal: 'Sites',
+    friendsCategories: 'Groups',
+    skills: 'Tech Stack',
   },
   blog: {
     title: 'Blog',

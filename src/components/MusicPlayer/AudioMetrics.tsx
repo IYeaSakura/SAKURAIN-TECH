@@ -28,13 +28,13 @@ interface Metrics {
   bitrate: number;
 }
 
-const MIN_FREQ = 30;
+const MIN_FREQ = 60;
 const MAX_FREQ = 16000;
 const FFT_SIZE = 8192;
 const BAR_COUNT = 96;
 const SMOOTHING = 0.75;
 /** Curve power > 1 expands the low-frequency (left) bands visually. */
-const FREQ_CURVE_POWER = 1.5;
+const FREQ_CURVE_POWER = 1.3;
 
 function getLogBars(
   dataArray: Uint8Array,

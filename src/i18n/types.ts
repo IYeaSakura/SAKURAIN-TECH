@@ -80,6 +80,12 @@ export interface Dictionary {
     allPosts: string;
     noPosts: string;
     recentShuoshuo: string;
+    travelMap: string;
+    travelMapVisited: string;
+    travelMapCurrent: string;
+    travelMapVisitedLabel: string;
+    travelMapHint: string;
+    shortcuts: string;
   };
   footer: {
     docs: string;
@@ -164,6 +170,15 @@ export interface Dictionary {
     music: {
       title: string;
     };
+    worldClock: string;
+    search: string;
+    searchPlaceholder: string;
+    searchEmpty: string;
+    dailyQuote: string;
+    friends: string;
+    friendsTotal: string;
+    friendsCategories: string;
+    skills: string;
   };
   blog: {
     title: string;
