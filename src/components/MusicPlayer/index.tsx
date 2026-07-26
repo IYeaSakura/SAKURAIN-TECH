@@ -205,26 +205,6 @@ export function MusicPlayer() {
 
   return (
     <>
-      {/* Bottom lyrics bar */}
-      <AnimatePresence>
-        {showLyrics && activeLyric && (
-          <motion.div
-            initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.25 }}
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[99] max-w-xl w-[calc(100%-2rem)] px-4 py-2 text-center pointer-events-none"
-            style={{
-              background: 'transparent',
-              color: 'var(--accent-primary)',
-              fontFamily: 'var(--font-mono)',
-            }}
-          >
-            <p className="text-base font-bold truncate">{activeLyric}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {!isOpen ? (
         /* Collapsed mini player */
         <motion.div
@@ -367,6 +347,31 @@ export function MusicPlayer() {
                   </p>
                 </div>
               </div>
+
+              {/* Inline lyrics line */}
+              <AnimatePresence>
+                {showLyrics && activeLyric && (
+                  <motion.div
+                    initial={animationEnabled ? { opacity: 0, height: 0 } : undefined}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div
+                      className="mt-3 px-2 py-1.5 text-center border-2 text-xs font-bold truncate"
+                      style={{
+                        background: 'var(--bg-primary)',
+                        borderColor: 'var(--border-subtle)',
+                        color: 'var(--accent-primary)',
+                        fontFamily: 'var(--font-mono)',
+                      }}
+                    >
+                      {activeLyric}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Error message */}
               {error && (
