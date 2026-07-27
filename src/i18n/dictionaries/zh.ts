@@ -142,9 +142,9 @@ export const zh: Dictionary = {
     trackNumber: '序号',
     backToHome: '返回首页',
     focusMode: '专注空间',
-    focusBlob: '极光',
-    focusParticles: '星云',
-    focusWave: '地形',
+    focusBlob: '频谱',
+    focusParticles: '示波器',
+    focusWave: '梯度',
     focusHint: '点击切换效果',
     audioMetrics: {
       playing: 'PLAYING',
