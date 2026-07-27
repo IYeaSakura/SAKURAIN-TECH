@@ -24,6 +24,7 @@ import {
   resolveOriginalSrc,
   revokeBlobUrl,
 } from '@/lib/asset-cache';
+import { initAudioConnection } from '@/components/MusicPlayer/AudioVisualizer';
 
 // Playlist type definitions
 export interface Song {
@@ -246,6 +247,10 @@ export function MusicPlayerProvider({
     audio.preload = 'metadata';
     audio.volume = volume;
     audioRef.current = audio;
+
+    // Set up the shared Web Audio analyser connection immediately so
+    // visualizers always find a ready-made connection in globalAudioMap.
+    initAudioConnection(audio);
 
     const handleTimeUpdate = () => {
       const src = audio.currentSrc || audio.src;

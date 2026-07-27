@@ -80,38 +80,65 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
   });
 
   // Ensure a Web Audio analyser is attached to the shared audio element.
+  // The connection is normally created by MusicPlayerContext, but retry a few
+  // times in case the visualizer mounts before the audio element is ready.
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || isInitializedRef.current) return;
+    if (isInitializedRef.current) return;
 
-    const existing = globalAudioMap.get(audio);
-    if (existing) {
-      isInitializedRef.current = true;
-      return;
-    }
+    let attempts = 0;
+    let intervalId: number | null = null;
 
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return;
+    const tryInit = () => {
+      const audio = audioRef.current;
+      if (!audio) return;
 
-    try {
-      const audioContext = new AudioContextClass();
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = FFT_SIZE;
-      analyser.smoothingTimeConstant = 0.82;
-
-      const source = audioContext.createMediaElementSource(audio);
-      source.connect(analyser);
-      analyser.connect(audioContext.destination);
-
-      globalAudioMap.set(audio, { context: audioContext, analyser, source });
-      isInitializedRef.current = true;
-    } catch (err) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[AudioMetrics] Audio context init failed:', err);
+      const existing = globalAudioMap.get(audio);
+      if (existing) {
+        isInitializedRef.current = true;
+        if (intervalId) clearInterval(intervalId);
+        return;
       }
+
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextClass) {
+        if (intervalId) clearInterval(intervalId);
+        return;
+      }
+
+      try {
+        const audioContext = new AudioContextClass();
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = FFT_SIZE;
+        analyser.smoothingTimeConstant = 0.82;
+
+        const source = audioContext.createMediaElementSource(audio);
+        source.connect(analyser);
+        analyser.connect(audioContext.destination);
+
+        globalAudioMap.set(audio, { context: audioContext, analyser, source });
+        isInitializedRef.current = true;
+        if (intervalId) clearInterval(intervalId);
+      } catch (err) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('[AudioMetrics] Audio context init failed:', err);
+        }
+      }
+    };
+
+    tryInit();
+    if (!isInitializedRef.current) {
+      intervalId = window.setInterval(() => {
+        attempts += 1;
+        tryInit();
+        if (attempts >= 15 && intervalId) clearInterval(intervalId);
+      }, 200);
     }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [audioRef]);
 
   const readMetrics = useCallback(() => {
