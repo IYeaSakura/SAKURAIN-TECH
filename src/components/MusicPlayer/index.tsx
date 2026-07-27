@@ -153,7 +153,6 @@ export function MusicPlayer() {
     totalSongs,
     currentSong,
     currentLyrics,
-    visualizerMode,
     playlistLoading,
     playlist,
     playMode,
@@ -485,7 +484,7 @@ export function MusicPlayer() {
               >
                 <Shuffle className="w-3 h-3" style={{ color: 'var(--accent-primary)' }} />
                 <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
-                  {tReplace(t.music.trackInfo, { current: currentNumber, total: totalSongs, mode: visualizerMode })}
+                  {tReplace(t.music.trackInfo, { current: currentNumber, total: totalSongs, mode: playMode })}
                 </span>
               </div>
 

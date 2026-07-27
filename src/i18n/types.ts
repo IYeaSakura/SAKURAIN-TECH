@@ -150,11 +150,6 @@ export interface Dictionary {
     collapse: string;
     trackNumber: string;
     backToHome: string;
-    focusMode: string;
-    focusBlob: string;
-    focusParticles: string;
-    focusWave: string;
-    focusHint: string;
     audioMetrics: {
       playing: string;
       paused: string;
