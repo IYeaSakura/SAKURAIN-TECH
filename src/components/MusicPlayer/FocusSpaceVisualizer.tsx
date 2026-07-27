@@ -44,6 +44,7 @@ interface SceneProps {
   isPlaying: boolean;
   colors: ThemeColors;
   reducedMotion: boolean;
+  sharedRef: React.MutableRefObject<AudioDataRef['current'] | null>;
 }
 
 interface PresetSceneProps {
@@ -454,8 +455,9 @@ function GradientTerrainScene({ audioData, colors: _colors, reducedMotion }: Pre
 /* Scene dispatcher                                                   */
 /* ------------------------------------------------------------------ */
 
-function FocusScene({ preset, audioRef, isPlaying, colors, reducedMotion }: SceneProps) {
+function FocusScene({ preset, audioRef, isPlaying, colors, reducedMotion, sharedRef }: SceneProps) {
   const audioData = useAudioData(audioRef, isPlaying);
+  sharedRef.current = audioData.current;
 
   return (
     <>
@@ -485,13 +487,14 @@ const PRESETS: { key: FocusPreset; icon: React.ComponentType<{ className?: strin
 /**
  * HUD energy meters that mirror the analytical feel of the 3D scenes.
  */
-function EnergyHud({ audioData }: { audioData: AudioDataRef }) {
+function EnergyHud({ audioData }: { audioData: React.MutableRefObject<AudioDataRef['current'] | null> }) {
   const [values, setValues] = useState({ low: 0, mid: 0, high: 0 });
 
   useEffect(() => {
     let raf = 0;
     const tick = () => {
-      setValues({ ...audioData.current.energy });
+      const data = audioData.current;
+      setValues(data ? { ...data.energy } : { low: 0, mid: 0, high: 0 });
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -534,6 +537,7 @@ export default function FocusSpaceVisualizer({ audioRef, isPlaying }: FocusSpace
   const reducedMotion = usePrefersReducedMotion();
   const colors = useThemeColors();
   const [preset, setPreset] = useState<FocusPreset>('blob');
+  const sharedAudioDataRef = useRef<AudioDataRef['current'] | null>(null);
 
   return (
     <div
@@ -553,6 +557,7 @@ export default function FocusSpaceVisualizer({ audioRef, isPlaying }: FocusSpace
             isPlaying={isPlaying}
             colors={colors}
             reducedMotion={reducedMotion}
+            sharedRef={sharedAudioDataRef}
           />
         </Canvas>
       </div>
@@ -591,7 +596,7 @@ export default function FocusSpaceVisualizer({ audioRef, isPlaying }: FocusSpace
         </div>
       </div>
 
-      <EnergyHud audioData={useAudioData(audioRef, isPlaying)} />
+      <EnergyHud audioData={sharedAudioDataRef} />
 
       <div
         className="absolute bottom-4 right-4 text-[10px] font-mono uppercase tracking-wider z-10"
