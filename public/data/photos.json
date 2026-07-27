@@ -1,14 +1,21 @@
 {
   "title": "Photo Log",
   "description": "一些值得定格的瞬间，按时间倒序排列。",
-  "photos": [
+  "entries": [
     {
       "id": "demo-1",
-      "src": "/image/about/head.jpg",
-      "caption": "示例照片：请替换为 public/image/photos/ 下的真实图片",
+      "caption": "Demo Photo.",
       "date": "2026-07-24",
       "location": "沈阳",
-      "tags": ["demo"]
+      "tags": [
+        "demo"
+      ],
+      "photos": [
+        {
+          "src": "/image/about/head.jpg",
+          "id": "demo-1-photo-0"
+        }
+      ]
     }
   ]
 }

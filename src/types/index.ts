@@ -467,17 +467,22 @@ export interface UsesData {
 }
 
 // Photos gallery data (content/data/photos.json)
-export interface PhotoLogPhoto {
+export interface PhotoLogImage {
   id: string;
   src: string;
+}
+
+export interface PhotoLogEntry {
+  id: string;
   caption: string;
   date: string;
   location: string;
   tags: string[];
+  photos: PhotoLogImage[];
 }
 
 export interface PhotoLogData {
   title: string;
   description: string;
-  photos: PhotoLogPhoto[];
+  entries: PhotoLogEntry[];
 }
