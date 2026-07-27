@@ -39,8 +39,17 @@ import { Footer } from '@/components/sections/Footer';
 import { useAnimationEnabled, useTranslation } from '@/hooks';
 import { RouteLoader } from '@/components/RouteLoader';
 import type { SiteData } from '@/types';
+import type { Locale } from '@/i18n/types';
 
 // Types
+type LocalizedText = string | { zh: string; en: string };
+
+function getLocalizedText(value: LocalizedText | undefined, locale: Locale): string {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  return value[locale] ?? value.en ?? value.zh ?? '';
+}
+
 interface CheckInfo {
   lastChecked: string;
   statusCode: number | null;
@@ -61,7 +70,7 @@ interface Friend {
   name: string;
   url: string;
   icon: string;
-  description: string;
+  description: LocalizedText;
   category: string;
   featured: boolean;
   status?: 'online' | 'offline' | 'maintenance';
@@ -71,21 +80,22 @@ interface Friend {
 
 interface FriendCategory {
   id: string;
-  name: string;
-  description: string;
+  name: LocalizedText;
+  description: LocalizedText;
   icon: string;
 }
 
 interface ApplyInfo {
-  title: string;
-  description: string;
-  requirements: string[];
+  title: LocalizedText;
+  description: LocalizedText;
+  requirements: LocalizedText[];
   contact: string;
 }
 
 interface FriendsData {
-  title: string;
-  description: string;
+  title: LocalizedText;
+  subtitle?: LocalizedText;
+  description: LocalizedText;
   friends: Friend[];
   categories: FriendCategory[];
   applyInfo: ApplyInfo;
@@ -350,7 +360,8 @@ const FriendCard = memo(function FriendCard({
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
   const animationEnabled = useAnimationEnabled();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const description = getLocalizedText(friend.description, locale);
 
   return (
     <motion.div
@@ -443,7 +454,7 @@ const FriendCard = memo(function FriendCard({
               </div>
 
               <p className="text-xs sm:text-sm leading-5 h-10 line-clamp-2 shrink-0 mb-3" style={{ color: 'var(--text-secondary)' }}>
-                {friend.description}
+                {description}
               </p>
 
               {friend.featured && (
@@ -489,7 +500,10 @@ const CategorySection = memo(function CategorySection({
   onClick: (friend: Friend) => void;
 }) {
   const animationEnabled = useAnimationEnabled();
+  const { locale } = useTranslation();
   const IconComponent = iconMap[category.icon] || Globe;
+  const categoryName = getLocalizedText(category.name, locale);
+  const categoryDescription = getLocalizedText(category.description, locale);
 
   return (
     <motion.section
@@ -510,10 +524,10 @@ const CategorySection = memo(function CategorySection({
             className="text-xl sm:text-2xl font-bold uppercase"
             style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
           >
-            {category.name}
+            {categoryName}
           </h2>
           <p className="text-sm font-mono" style={{ color: 'var(--text-muted)' }}>
-            {category.description}
+            {categoryDescription}
           </p>
         </div>
       </div>
@@ -953,7 +967,10 @@ const ApplySection = memo(function ApplySection({
   onApplyClick: () => void;
 }) {
   const animationEnabled = useAnimationEnabled();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
+  const applyTitle = getLocalizedText(applyInfo.title, locale);
+  const applyDescription = getLocalizedText(applyInfo.description, locale);
+  const applyRequirements = applyInfo.requirements.map((req) => getLocalizedText(req, locale));
 
   return (
     <motion.section
@@ -981,14 +998,14 @@ const ApplySection = memo(function ApplySection({
                 className="text-xl sm:text-2xl font-bold uppercase"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
               >
-                {applyInfo.title}
+                {applyTitle}
               </h2>
             </div>
             <p className="mb-5 text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
-              {applyInfo.description}
+              {applyDescription}
             </p>
             <ul className="space-y-2">
-              {applyInfo.requirements.map((req, index) => (
+              {applyRequirements.map((req, index) => (
                 <li
                   key={index}
                   className="flex items-center gap-3 text-sm font-mono"
@@ -1211,7 +1228,7 @@ export default function FriendsPage() {
   const [mailtoModalOpen, setMailtoModalOpen] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
   const animationEnabled = useAnimationEnabled();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const handleFriendClick = useCallback((friend: Friend) => {
     setSelectedFriend(friend);
@@ -1343,14 +1360,23 @@ export default function FriendsPage() {
     );
   }
 
+  const localizedTitle = getLocalizedText(data.title, locale);
+  const localizedDescription = getLocalizedText(data.description, locale);
+  const localizedApplyInfo: ApplyInfo = {
+    ...data.applyInfo,
+    title: getLocalizedText(data.applyInfo.title, locale),
+    description: getLocalizedText(data.applyInfo.description, locale),
+    requirements: data.applyInfo.requirements.map((req) => getLocalizedText(req, locale)),
+  };
+
   return (
     <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       {/* Main Content */}
       <main className="relative z-10">
         {/* Hero Section */}
         <HeroSection
-          title={data.title}
-          description={data.description}
+          title={localizedTitle}
+          description={localizedDescription}
           stats={stats}
           lastUpdated={data.lastUpdated}
           onApplyClick={handleApplyClick}
@@ -1429,7 +1455,7 @@ export default function FriendsPage() {
           )}
 
           {/* Apply Section */}
-          <ApplySection applyInfo={data.applyInfo} onApplyClick={handleApplyClick} />
+          <ApplySection applyInfo={localizedApplyInfo} onApplyClick={handleApplyClick} />
         </div>
       </main>
 

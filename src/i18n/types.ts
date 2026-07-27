@@ -23,12 +23,12 @@ export interface Dictionary {
     home: string;
     blog: string;
     projects: string;
-    shuoshuo: string;
+    devLog: string;
     friends: string;
     friendsCircle: string;
     earth: string;
     about: string;
-    photos: string;
+    moments: string;
     music: string;
     docs: string;
     algoViz: string;
@@ -73,12 +73,12 @@ export interface Dictionary {
     intro: string;
     tagline: string;
     readBlog: string;
-    viewShuoshuo: string;
+    viewMoments: string;
     terminalMode: string;
     recentPosts: string;
     allPosts: string;
     noPosts: string;
-    recentShuoshuo: string;
+    recentDevLog: string;
     travelMap: string;
     travelMapVisited: string;
     travelMapCurrent: string;
@@ -89,9 +89,10 @@ export interface Dictionary {
   };
   footer: {
     docs: string;
-    shuoshuo: string;
+    devLog: string;
     algoViz: string;
     builtWith: string;
+    slogan: string;
     icp: string;
     beian: string;
   };
@@ -179,6 +180,7 @@ export interface Dictionary {
     friendsTotal: string;
     friendsCategories: string;
     skills: string;
+    languageStats: string;
   };
   blog: {
     title: string;
@@ -780,14 +782,13 @@ export interface Dictionary {
     chaptersTitle: string;
     currentToc: string;
   };
-  photos: {
+  moments: {
     title: string;
     description: string;
-    noPhotos: string;
+    noMoments: string;
     backToHome: string;
-    previousPhoto: string;
-    nextPhoto: string;
-    like: string;
+    previousMoment: string;
+    nextMoment: string;
   };
   notes: {
     title: string;
@@ -795,16 +796,16 @@ export interface Dictionary {
     noNotes: string;
     readingTime: string;
     monthFilter: string;
-    moodFilter: string;
-    moods: {
-      happy: string;
-      neutral: string;
-      sad: string;
+    difficultyFilter: string;
+    difficulties: {
+      easy: string;
+      normal: string;
+      difficult: string;
     };
     stats: {
       duration: string;
       count: string;
-      moodDistribution: string;
+      difficultyDistribution: string;
     };
     count: string;
     loadMore: string;

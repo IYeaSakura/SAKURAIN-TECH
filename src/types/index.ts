@@ -466,23 +466,27 @@ export interface UsesData {
   services: UsesItem[];
 }
 
-// Photos gallery data (content/data/photos.json)
-export interface PhotoLogImage {
+// Moments gallery data (content/data/moments.json)
+export interface MomentImage {
   id: string;
   src: string;
 }
 
-export interface PhotoLogEntry {
-  id: string;
-  caption: string;
-  date: string;
-  location: string;
-  tags: string[];
-  photos: PhotoLogImage[];
+export interface LocalizedString {
+  zh: string;
+  en: string;
 }
 
-export interface PhotoLogData {
+export interface MomentEntry {
+  id: string;
+  caption: LocalizedString;
+  date: string;
+  location: LocalizedString;
+  photos: MomentImage[];
+}
+
+export interface MomentData {
   title: string;
   description: string;
-  entries: PhotoLogEntry[];
+  entries: MomentEntry[];
 }

@@ -58,11 +58,11 @@ const NAV_LINKS: NavItem[] = [
   { labelKey: 'home', href: '/', icon: Home },
   { labelKey: 'blog', href: '/blog', icon: BookOpen },
   { labelKey: 'projects', href: '/projects', icon: FolderKanban },
-  { labelKey: 'shuoshuo', href: '/shuoshuo', icon: MessageSquare },
+  { labelKey: 'devLog', href: '/dev-log', icon: MessageSquare },
   { labelKey: 'friends', href: '/friends', icon: Users },
   { labelKey: 'friendsCircle', href: '/friends-circle', icon: Heart },
   { labelKey: 'earth', href: '/earth-online', icon: Globe },
-  { labelKey: 'photos', href: '/photos', icon: Camera },
+  { labelKey: 'moments', href: '/moments', icon: Camera },
   { labelKey: 'music', href: '/music', icon: Music },
   { labelKey: 'about', href: '/about', icon: User },
 ];
@@ -238,7 +238,7 @@ export function DynamicIsland() {
             >
               <div className="flex items-center gap-2">
                 <img
-                  src="/photo/logo.webp"
+                  src="/image/logo.webp"
                   alt="SAKURAIN"
                   className="w-6 h-6 object-cover shrink-0"
                   style={{ imageRendering: 'pixelated' }}
@@ -285,7 +285,7 @@ export function DynamicIsland() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <img
-                    src="/photo/logo.webp"
+                    src="/image/logo.webp"
                     alt="SAKURAIN"
                     className="w-7 h-7 object-cover"
                     style={{ imageRendering: 'pixelated' }}

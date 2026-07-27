@@ -5,9 +5,7 @@ import https from 'https';
 import http from 'http';
 import dns from 'dns';
 import crypto from 'crypto';
-import { execSync } from 'child_process';
-import { isMainThread, parentPort, Worker } from 'worker_threads';
-import os from 'os';
+import { exec } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +15,22 @@ const FRIENDS_FILE = path.join(__dirname, '../public/data/friends.json');
 const TIMEOUT = 15000;
 const MAX_RETRIES = 2;
 const CONCURRENCY_LIMIT = 10;
+const PER_URL_HARD_TIMEOUT = 45000;
+const SCRIPT_HARD_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+// Global safety net: force exit if the connectivity probe hangs for any reason.
+// unref() lets the process exit naturally after the async work completes.
+const scriptTimeout = setTimeout(() => {
+  console.error('✘ Connectivity check aborted: script-level hard timeout exceeded.');
+  process.exit(1);
+}, SCRIPT_HARD_TIMEOUT);
+scriptTimeout.unref();
+
+const MANUAL_STATUSES = new Set(['online', 'offline', 'maintenance']);
+
+function hasManualStatus(status) {
+  return MANUAL_STATUSES.has(status);
+}
 
 const ALLOW_UNSAFE_HTTPS = process.env.ALLOW_UNSAFE_HTTPS === 'true';
 
@@ -304,7 +318,19 @@ function checkUrlWithGet(url, timeout = TIMEOUT, isFallback = false, redirectDep
     }
 
     const req = protocol.request(proxy ? options : new URL(url), options, (res) => {
+      // Guard against response-level stalls.
+      res.setTimeout(timeout, () => {
+        res.destroy();
+        req.destroy();
+        resolve({
+          success: false,
+          error: 'Response timeout',
+          usedHttpFallback: isFallback,
+        });
+      });
+
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        res.destroy();
         req.destroy();
         const redirectUrl = new URL(res.headers.location, url).toString();
         if (redirectUrl !== url && redirectDepth < 5) {
@@ -322,6 +348,15 @@ function checkUrlWithGet(url, timeout = TIMEOUT, isFallback = false, redirectDep
       let body = '';
       let bodyLength = 0;
       const maxBodyLength = 8192;
+      let finished = false;
+
+      const finish = (value) => {
+        if (finished) return;
+        finished = true;
+        req.destroy();
+        res.destroy();
+        resolve(value);
+      };
 
       res.on('data', (chunk) => {
         bodyLength += chunk.length;
@@ -331,11 +366,10 @@ function checkUrlWithGet(url, timeout = TIMEOUT, isFallback = false, redirectDep
       });
 
       res.on('end', () => {
-        req.destroy();
         const contentInfo = analyzePageContent(body);
 
         if (contentInfo.isMaintenance) {
-          resolve({
+          finish({
             success: true,
             statusCode: res.statusCode,
             statusMessage: res.statusMessage,
@@ -351,7 +385,7 @@ function checkUrlWithGet(url, timeout = TIMEOUT, isFallback = false, redirectDep
         // A site is considered alive if it returns a valid HTML structure,
         // regardless of the HTTP status code (403/404/503 are all acceptable).
         if (contentInfo.hasHtmlStructure) {
-          resolve({
+          finish({
             success: true,
             statusCode: res.statusCode,
             statusMessage: res.statusMessage,
@@ -362,13 +396,38 @@ function checkUrlWithGet(url, timeout = TIMEOUT, isFallback = false, redirectDep
           return;
         }
 
-        resolve({
+        finish({
           success: false,
           statusCode: res.statusCode,
           statusMessage: res.statusMessage,
           error: 'Empty response',
           usedHttpFallback: isFallback,
         });
+      });
+
+      res.on('error', (error) => {
+        finish({
+          success: false,
+          error: error.message,
+          usedHttpFallback: isFallback,
+        });
+      });
+
+      res.on('aborted', () => {
+        finish({
+          success: false,
+          error: 'Response aborted',
+          usedHttpFallback: isFallback,
+        });
+      });
+    });
+
+    req.setTimeout(timeout, () => {
+      req.destroy();
+      resolve({
+        success: false,
+        error: 'Request timeout',
+        usedHttpFallback: isFallback,
       });
     });
 
@@ -396,38 +455,63 @@ function checkUrlWithGet(url, timeout = TIMEOUT, isFallback = false, redirectDep
 
 function curlRequest(url) {
   return new Promise((resolve) => {
-    try {
-      const output = execSync(
-        `curl -sL --max-time ${Math.floor(TIMEOUT / 1000)} ` +
-        `-H "User-Agent: ${getRandomUserAgent()}" ` +
-        `-H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" ` +
-        `-H "Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-US;q=0.7" ` +
-        `-H "Range: bytes=0-8191" ` +
-        `-H "Referer: https://sakurain.net/friends" ` +
-        `--compressed "${url}"`,
-        {
-          encoding: 'utf-8',
-          timeout: TIMEOUT + 2000,
-          stdio: ['pipe', 'pipe', 'pipe'],
-        }
-      );
+    const command =
+      `curl -sL --max-time ${Math.floor(TIMEOUT / 1000)} ` +
+      `-H "User-Agent: ${getRandomUserAgent()}" ` +
+      `-H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8" ` +
+      `-H "Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-US;q=0.7" ` +
+      `-H "Range: bytes=0-8191" ` +
+      `-H "Referer: https://sakurain.net/friends" ` +
+      `--compressed "${url}"`;
 
-      const contentInfo = analyzePageContent(output);
-      resolve({
-        success: contentInfo.hasHtmlStructure,
-        statusCode: contentInfo.hasHtmlStructure ? 200 : null,
-        usedCurl: true,
-        isMaintenance: contentInfo.isMaintenance,
-        maintenanceReason: contentInfo.reason,
-        hasContent: output.length > 0,
-      });
-    } catch (error) {
-      resolve({
-        success: false,
-        error: `curl failed: ${error.message}`,
-        usedCurl: true,
-      });
-    }
+    const child = exec(
+      command,
+      {
+        encoding: 'utf-8',
+        timeout: TIMEOUT + 2000,
+        maxBuffer: 1024 * 1024,
+      },
+      (error, stdout) => {
+        if (error) {
+          resolve({
+            success: false,
+            error: `curl failed: ${error.message}`,
+            usedCurl: true,
+          });
+          return;
+        }
+        const contentInfo = analyzePageContent(stdout);
+        resolve({
+          success: contentInfo.hasHtmlStructure,
+          statusCode: contentInfo.hasHtmlStructure ? 200 : null,
+          usedCurl: true,
+          isMaintenance: contentInfo.isMaintenance,
+          maintenanceReason: contentInfo.reason,
+          hasContent: stdout.length > 0,
+        });
+      }
+    );
+
+    // Defensive: ensure curl child is killed if the surrounding timeout fires first.
+    child.on('error', () => {});
+  });
+}
+
+function withTimeout(promise, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('Hard timeout exceeded'));
+    }, ms);
+    promise.then(
+      (result) => {
+        clearTimeout(timer);
+        resolve(result);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
   });
 }
 
@@ -586,7 +670,18 @@ async function checkFriendsConnectivity() {
       return;
     }
 
-    const friendsToCheck = data.friends.filter(friend => friend.url);
+    // Respect manually-configured statuses: skip HTTP probing and clear stale checkInfo.
+    const manualFriends = data.friends.filter(friend => hasManualStatus(friend.status));
+    for (const friend of manualFriends) {
+      delete friend.checkInfo;
+    }
+
+    const friendsToCheck = data.friends.filter(friend => friend.url && !hasManualStatus(friend.status));
+
+    if (manualFriends.length > 0) {
+      console.log(`Skipping ${manualFriends.length} friend(s) with manual status.`);
+      console.log('');
+    }
 
     // Deduplicate by normalized URL so the same endpoint is only checked once.
     const urlToFriends = new Map();
@@ -599,7 +694,7 @@ async function checkFriendsConnectivity() {
     }
     const uniqueUrls = Array.from(urlToFriends.keys());
 
-    console.log(`Checking connectivity for ${friendsToCheck.length} friends (${uniqueUrls.length} unique URLs, workers: ${Math.min(os.cpus().length, 8)})...`);
+    console.log(`Checking connectivity for ${friendsToCheck.length} friends (${uniqueUrls.length} unique URLs, concurrency: ${CONCURRENCY_LIMIT})...`);
     console.log('');
 
     const startTime = Date.now();
@@ -608,32 +703,38 @@ async function checkFriendsConnectivity() {
     if (uniqueUrls.length === 0) {
       console.log('No URLs to check.');
     } else {
-      const workerCount = Math.min(os.cpus().length, 8, uniqueUrls.length);
-      const batches = Array.from({ length: workerCount }, () => []);
-      uniqueUrls.forEach((url, index) => batches[index % workerCount].push(url));
-
-      const workerPromises = batches.map((batch, index) => {
-        return new Promise((resolve, reject) => {
-          const worker = new Worker(__filename, { type: 'module' });
-          const results = [];
-          worker.on('message', (message) => {
-            if (message.type === 'batch-complete') {
-              results.push(...message.results);
-            }
-          });
-          worker.on('error', reject);
-          worker.on('exit', (code) => {
-            if (code !== 0) {
-              reject(new Error(`Worker ${index} exited with code ${code}`));
-            } else {
-              resolve(results);
-            }
-          });
-          worker.postMessage({ type: 'check-batch', urls: batch });
-        });
+      let checkedCount = 0;
+      const tasks = uniqueUrls.map((url) => async () => {
+        let hostname;
+        try {
+          hostname = new URL(url).hostname;
+        } catch {
+          hostname = url;
+        }
+        console.log(`  → Checking ${hostname}...`);
+        try {
+          const result = await withTimeout(checkUrlWithRetry(url), PER_URL_HARD_TIMEOUT);
+          const statusLabel = result.success ? (result.isMaintenance ? 'maintenance' : 'online') : 'offline';
+          console.log(`    ${statusLabel}${result.error ? `: ${result.error}` : ''}`);
+          checkedCount += 1;
+          return { url, result };
+        } catch {
+          console.log(`    offline: hard timeout exceeded`);
+          checkedCount += 1;
+          return {
+            url,
+            result: {
+              success: false,
+              status: 'offline',
+              error: 'Hard timeout exceeded',
+              attempts: 0,
+              responseTime: null,
+            },
+          };
+        }
       });
 
-      const allResults = (await Promise.all(workerPromises)).flat();
+      const allResults = await runWithConcurrency(tasks, CONCURRENCY_LIMIT);
       for (const { url, result } of allResults) {
         resultByUrl.set(url, result);
       }
@@ -646,7 +747,7 @@ async function checkFriendsConnectivity() {
       const result = resultByUrl.get(normalizedUrl) || {
         success: false,
         status: 'offline',
-        error: 'No result from worker',
+        error: 'No connectivity result',
         attempts: 0,
         responseTime: null,
       };
@@ -717,9 +818,9 @@ async function checkFriendsConnectivity() {
     fs.writeFileSync(FRIENDS_FILE, JSON.stringify(data, null, 2));
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    const onlineCount = friendsToCheck.filter(f => f.status === 'online').length;
-    const offlineCount = friendsToCheck.filter(f => f.status === 'offline').length;
-    const maintenanceCount = friendsToCheck.filter(f => f.status === 'maintenance').length;
+    const onlineCount = data.friends.filter(f => f.status === 'online').length;
+    const offlineCount = data.friends.filter(f => f.status === 'offline').length;
+    const maintenanceCount = data.friends.filter(f => f.status === 'maintenance').length;
 
     console.log('');
     console.log('Connectivity check completed!');
@@ -730,7 +831,7 @@ async function checkFriendsConnectivity() {
     console.log(`  Online:      ${onlineCount}`);
     console.log(`  Maintenance: ${maintenanceCount}`);
     console.log(`  Offline:     ${offlineCount}`);
-    console.log(`  Total:       ${friendsToCheck.length}`);
+    console.log(`  Total:       ${data.friends.length}`);
 
   } catch (error) {
     console.error('Failed to check friends connectivity:', error);
@@ -738,20 +839,7 @@ async function checkFriendsConnectivity() {
   }
 }
 
-if (isMainThread) {
-  checkFriendsConnectivity().catch((error) => {
-    console.error('✘ Unexpected error during friends connectivity check:', error.message);
-    process.exit(1);
-  });
-} else {
-  parentPort.on('message', async (message) => {
-    if (message.type === 'check-batch') {
-      const results = [];
-      for (const url of message.urls) {
-        const result = await checkUrlWithRetry(url);
-        results.push({ url, result });
-      }
-      parentPort.postMessage({ type: 'batch-complete', results });
-    }
-  });
-}
+checkFriendsConnectivity().catch((error) => {
+  console.error('✘ Unexpected error during friends connectivity check:', error.message);
+  process.exit(1);
+});

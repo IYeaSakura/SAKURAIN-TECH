@@ -112,7 +112,7 @@ function pathToRoute(p: string): string {
     'friends-circle.tsx': '/friends-circle',
     'earth-online.tsx': '/earth-online',
     'about.md': '/about',
-    'shuoshuo.md': '/shuoshuo',
+    'dev-log.md': '/dev-log',
     'algo-viz.tsx': '/algo-viz',
   };
 
@@ -122,8 +122,8 @@ function pathToRoute(p: string): string {
   if (parts[0] === 'blog' && parts.length === 2) {
     return `/blog/${base.replace(/\.md$/, '')}`;
   }
-  if (parts[0] === 'shuoshuo' && parts.length === 2) {
-    return `/shuoshuo/${base.replace(/\.md$/, '')}`;
+  if (parts[0] === 'dev-log' && parts.length === 2) {
+    return `/dev-log/${base.replace(/\.md$/, '')}`;
   }
   if (parts[0] === 'docs') {
     return `/docs/${parts.slice(1).join('/')}`;
@@ -138,7 +138,8 @@ function getDirectoryEntries(ctx: CommandContext, p: string): string[] {
   const rootEntries = [
     'home.md',
     'blog/',
-    'shuoshuo/',
+    'dev-log/',
+    'moments.md',
     'docs/',
     'photo/',
     'game/',
@@ -162,7 +163,7 @@ function getDirectoryEntries(ctx: CommandContext, p: string): string[] {
     return [];
   }
 
-  if (first === 'shuoshuo') {
+  if (first === 'dev-log') {
     if (parts.length === 1) {
       return (
         ctx.data.notes?.notes.slice(0, 50).map((note) => `${note.slug}.md`) ?? [
@@ -259,7 +260,7 @@ async function readFileContent(ctx: CommandContext, p: string): Promise<string |
     return post?.content ?? null;
   }
 
-  if (parts[0] === 'shuoshuo' && parts.length === 2) {
+  if (parts[0] === 'dev-log' && parts.length === 2) {
     const slug = base.replace(/\.md$/, '');
     const note = ctx.data.notes?.notes.find((n) => n.slug === slug);
     return note?.content ?? null;
@@ -1206,7 +1207,7 @@ const commands: TerminalCommand[] = [
         { type: 'output', content: lines.join('\n'), id: nextId() },
         {
           type: 'info',
-          content: `\nUse \`cat shuoshuo/<slug>.md\` to read a note.`,
+          content: `\nUse \`cat dev-log/<slug>.md\` to read a note.`,
           id: nextId(),
         },
       ]);

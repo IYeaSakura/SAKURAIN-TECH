@@ -18,6 +18,7 @@ public/data/docs.json
 public/data/blog.json
 public/data/notes.json
 public/data/beidou-satellites.json
+public/data/language-stats.json
 public/config/security-config.json
 public/config/welcome-modal.json
 public/docs/

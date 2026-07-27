@@ -73,7 +73,7 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
                 letterSpacing: '0.02em',
               }}
             >
-              {data.slogan || t.footer.builtWith}
+              {t.footer.slogan || data.slogan || t.footer.builtWith}
             </span>
           </div>
 
@@ -88,12 +88,12 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
               <span>{t.footer.docs}</span>
             </button>
             <button
-              onClick={() => navigateTo('/shuoshuo')}
+              onClick={() => navigateTo('/dev-log')}
               className="flex items-center gap-2 text-sm transition-colors hover:text-[var(--accent-primary)] cursor-pointer"
               style={{ color: 'var(--text-muted)' }}
             >
               <MessageCircle className="w-4 h-4" />
-              <span>{t.footer.shuoshuo}</span>
+              <span>{t.footer.devLog}</span>
             </button>
             <button
               onClick={() => {

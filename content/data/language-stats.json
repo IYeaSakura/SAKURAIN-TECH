@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-07-27T17:08:24.653Z",
+  "totalLines": 60637,
+  "languages": [
+    {
+      "name": "TypeScript",
+      "color": "#3178c6",
+      "lines": 52172,
+      "percentage": 86
+    },
+    {
+      "name": "CSS",
+      "color": "#563d7c",
+      "lines": 4410,
+      "percentage": 7.3
+    },
+    {
+      "name": "JavaScript",
+      "color": "#f1e05a",
+      "lines": 3941,
+      "percentage": 6.5
+    },
+    {
+      "name": "Markdown",
+      "color": "#083fa1",
+      "lines": 114,
+      "percentage": 0.2
+    }
+  ]
+}

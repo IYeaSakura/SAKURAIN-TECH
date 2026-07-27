@@ -7,7 +7,7 @@ import type { BlogPost } from '@/components/blog/types';
 /**
  * Phase 1：首页为重度客户端页面（特效/Context/浏览器 API 深度耦合），
  * 按迁移原则用 ssr:false 动态加载，避免 SSR 阶段的 window/document 访问。
- * 近期文章与说说数据由服务端组件在构建期注入。
+ * Recent posts and dev-log data are injected by the server component at build time.
  */
 const HomePage = dynamic(() => import('./HomePage'), {
   ssr: false,

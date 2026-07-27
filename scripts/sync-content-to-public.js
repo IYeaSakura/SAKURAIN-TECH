@@ -39,6 +39,7 @@ const SYNCED_PUBLIC_PATHS = [
   'data/blog.json',
   'data/notes.json',
   'data/beidou-satellites.json',
+  'data/language-stats.json',
   'config/security-config.json',
   'config/welcome-modal.json',
   'docs',
@@ -122,15 +123,15 @@ function mergeFriendsCheckInfo(contentPath, publicPath) {
 }
 
 /**
- * Process public/data/photos.json after the raw content copy.
+ * Process public/data/moments.json after the raw content copy.
  * - Auto-generates missing entry.id and photo.id fields.
  * - Truncates each entry to a maximum of 9 photos.
  */
-function processPhotosJson() {
-  const photosPath = path.join(PUBLIC_DIR, 'data', 'photos.json');
-  if (!fs.existsSync(photosPath)) return;
+function processMomentsJson() {
+  const momentsPath = path.join(PUBLIC_DIR, 'data', 'moments.json');
+  if (!fs.existsSync(momentsPath)) return;
 
-  const data = JSON.parse(fs.readFileSync(photosPath, 'utf-8'));
+  const data = JSON.parse(fs.readFileSync(momentsPath, 'utf-8'));
   if (!Array.isArray(data.entries)) return;
 
   let modified = false;
@@ -147,7 +148,7 @@ function processPhotosJson() {
     }
 
     if (entry.photos.length > 9) {
-      console.log(`  ⚠ photos.json entry "${entry.id}" has ${entry.photos.length} photos, truncating to 9`);
+      console.log(`  ⚠ moments.json entry "${entry.id}" has ${entry.photos.length} photos, truncating to 9`);
       entry.photos = entry.photos.slice(0, 9);
       modified = true;
     }
@@ -161,8 +162,8 @@ function processPhotosJson() {
   });
 
   if (modified) {
-    fs.writeFileSync(photosPath, JSON.stringify(data, null, 2), 'utf-8');
-    console.log('  ✓ Processed photos.json (auto-filled IDs, enforced 9-photo limit)');
+    fs.writeFileSync(momentsPath, JSON.stringify(data, null, 2), 'utf-8');
+    console.log('  ✓ Processed moments.json (auto-filled IDs, enforced 9-photo limit)');
   }
 }
 
@@ -349,7 +350,9 @@ function parseNoteFile(fileName) {
       : typeof data.date === 'string'
         ? data.date.trim()
         : '';
-    const mood = typeof data.mood === 'string' ? data.mood : 'neutral';
+    const difficulty = ['easy', 'normal', 'difficult'].includes(data.difficulty)
+      ? data.difficulty
+      : 'normal';
     const body = content.trim();
     const wordCount = body.replace(/\s/g, '').length;
 
@@ -386,7 +389,7 @@ function parseNoteFile(fileName) {
       title,
       content: body,
       date: dateStr,
-      mood,
+      difficulty,
       wordCount,
       readingTime: `${Math.max(1, Math.ceil(wordCount / 200))} 分钟阅读`,
       year: parsed.year,
@@ -422,8 +425,8 @@ function generateNotesJson() {
     .sort((a, b) => b.timestamp - a.timestamp);
 
   const index = {
-    title: 'SAKURAIN 说说',
-    description: '随笔、想法与生活片段',
+    title: 'SAKURAIN 开发日志',
+    description: '开发迭代记录与技术日志',
     notes,
   };
 
@@ -472,8 +475,8 @@ function syncContent() {
     console.log('  ✓ Preserved friends.json checkInfo');
   }
 
-  // Process photos.json: auto-fill IDs and enforce per-entry photo limit.
-  processPhotosJson();
+  // Process moments.json: auto-fill IDs and enforce per-entry photo limit.
+  processMomentsJson();
 
   // Generate the docs catalog from the trimmed index.
   generateDocsJson();

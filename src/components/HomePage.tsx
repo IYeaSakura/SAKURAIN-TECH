@@ -11,18 +11,18 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Terminal, BookOpen, MessageSquare } from 'lucide-react';
+import { ArrowRight, Terminal, BookOpen, Camera } from 'lucide-react';
 
 import { Footer } from '@/components/sections/Footer';
 import { BlogListItem } from '@/components/blog/components/BlogListItem';
-import { RecentShuoshuo } from '@/components/home/RecentShuoshuo';
+import { RecentDevLog } from '@/components/home/RecentDevLog';
 import { MusicWidget } from '@/components/home/MusicWidget';
 import { CalendarWidget } from '@/components/home/CalendarWidget';
 import { AMapWidget } from '@/components/home/AMapWidget';
 import { SearchWidget } from '@/components/home/SearchWidget';
 import { DailyQuoteWidget } from '@/components/home/DailyQuoteWidget';
 import { FriendsStatusWidget } from '@/components/home/FriendsStatusWidget';
-import { SkillsWidget } from '@/components/home/SkillsWidget';
+import { LanguageStatsWidget } from '@/components/home/LanguageStatsWidget';
 import {
   useTheme,
   useStylePreset,
@@ -49,7 +49,7 @@ function QuickLinksStrip() {
 
   const links = [
     { icon: BookOpen, label: t.home.readBlog, href: '/blog', color: 'var(--accent-primary)' },
-    { icon: MessageSquare, label: t.home.viewShuoshuo, href: '/shuoshuo', color: 'var(--accent-secondary)' },
+    { icon: Camera, label: t.home.viewMoments, href: '/moments', color: 'var(--accent-secondary)' },
     { icon: Terminal, label: t.home.terminalMode, action: () => setPreset('terminal'), color: 'var(--accent-tertiary)' },
   ];
 
@@ -201,7 +201,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
               <AMapWidget />
             </div>
             <RecentPostsWidget posts={posts} />
-            <RecentShuoshuo notes={notes} maxItems={3} />
+            <RecentDevLog notes={notes} maxItems={3} />
           </div>
 
           {/* Sidebar — narrow, utility widgets */}
@@ -226,8 +226,8 @@ export default function HomePage({ posts, notes }: HomePageProps) {
               <FriendsStatusWidget />
             </div>
 
-            <div className="min-h-[160px]">
-              <SkillsWidget />
+            <div className="min-h-[240px]">
+              <LanguageStatsWidget />
             </div>
           </div>
         </section>
