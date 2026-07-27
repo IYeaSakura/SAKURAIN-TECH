@@ -5,6 +5,8 @@
  * sides agree on the lyric format.
  */
 
+import { getCachedLyrics } from './asset-cache';
+
 export interface LyricLine {
   time?: number;
   text: string;
@@ -36,7 +38,7 @@ export function parseLrc(content: string): LyricLine[] {
     }
   }
 
-  return entries.sort((a, b) => (a.time ?? 0) - (b.time ?? 0));
+  return entries.sort((a, b) => (a.time ?? 0) - (b.time ?? 0))
 }
 
 /**
@@ -47,9 +49,8 @@ export async function fetchLyrics(url: string | undefined | null): Promise<Lyric
   if (!url) return [];
 
   try {
-    const response = await fetch(url, { credentials: 'omit' });
-    if (!response.ok) return [];
-    const text = await response.text();
+    const text = await getCachedLyrics(url);
+    if (text === null) return [];
     return parseLrc(text);
   } catch {
     return [];

@@ -39,6 +39,7 @@ import {
 import dynamic from 'next/dynamic';
 import { useMusicPlayer, useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
 import { AudioMetrics } from '@/components/MusicPlayer/AudioMetrics';
+import { getCachedCoverUrl, revokeBlobUrl } from '@/lib/asset-cache';
 import type { Song } from '@/contexts/MusicPlayerContext';
 import type { LyricLine } from '@/lib/lyrics';
 
@@ -83,7 +84,24 @@ function generateCoverSvg(title: string) {
 }
 
 function CoverArt({ song }: { song: Song }) {
-  const src = song.cover || generateCoverSvg(song.title);
+  const [src, setSrc] = useState(song.cover || generateCoverSvg(song.title));
+
+  useEffect(() => {
+    let blobUrl: string | null = null;
+    const cover = song.cover;
+    if (!cover) return;
+
+    getCachedCoverUrl(cover).then((cached) => {
+      if (cached !== cover) {
+        blobUrl = cached;
+        setSrc(cached);
+      }
+    });
+
+    return () => {
+      if (blobUrl) revokeBlobUrl(blobUrl);
+    };
+  }, [song.cover]);
 
   return (
     <div className="relative aspect-square w-full h-full overflow-hidden" style={{ border: PIXEL_BORDER, boxShadow: PIXEL_SHADOW }}>

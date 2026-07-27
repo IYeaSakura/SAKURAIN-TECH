@@ -19,6 +19,11 @@ import {
 } from 'react';
 import { useConfig, useIsDesktopClient } from '@/hooks';
 import { fetchLyrics, type LyricLine } from '@/lib/lyrics';
+import {
+  getCachedAudioUrl,
+  resolveOriginalSrc,
+  revokeBlobUrl,
+} from '@/lib/asset-cache';
 
 // Playlist type definitions
 export interface Song {
@@ -50,13 +55,15 @@ const sequentialOrder = (length: number): number[] =>
   Array.from({ length }, (_, i) => i);
 
 // Normalise audio src values so absolute element URLs can be compared with
-// the relative paths stored in the playlist.
+// the relative paths stored in the playlist. Blob URLs created by the asset
+// cache are mapped back to their original COS URL first.
 const resolveAudioSrc = (src: string): string => {
   if (typeof window === 'undefined' || !src) return src;
+  const originalSrc = resolveOriginalSrc(src);
   try {
-    return new URL(src, window.location.href).pathname;
+    return new URL(originalSrc, window.location.href).pathname;
   } catch {
-    return src;
+    return originalSrc;
   }
 };
 
@@ -163,6 +170,8 @@ export function MusicPlayerProvider({
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const preloadRef = useRef<HTMLAudioElement | null>(null);
+  const audioBlobUrlRef = useRef<string | null>(null);
+  const preloadBlobUrlRef = useRef<string | null>(null);
   const failedSrcsRef = useRef<Set<string>>(new Set());
   const prevPlayModeRef = useRef<PlayMode>('shuffle');
   // Tracks whether playback is intended to be active. Distinguishes user pause
@@ -401,35 +410,102 @@ export function MusicPlayerProvider({
       audio.removeEventListener('stalled', handleStalled);
       audio.pause();
       audio.src = '';
+      if (audioBlobUrlRef.current) {
+        revokeBlobUrl(audioBlobUrlRef.current);
+        audioBlobUrlRef.current = null;
+      }
       if (preloadRef.current) {
         preloadRef.current.pause();
         preloadRef.current.src = '';
       }
+      if (preloadBlobUrlRef.current) {
+        revokeBlobUrl(preloadBlobUrlRef.current);
+        preloadBlobUrlRef.current = null;
+      }
     };
   }, [isDesktopClient]);
 
-  // Load current track after user interaction
+  // Load current track after user interaction, using the persistent asset
+  // cache for COS-hosted audio files.
   useEffect(() => {
     if (!audioRef.current || !isDesktopClient || !hasUserInteracted) return;
     if (!currentSong.src) return;
 
+    let cancelled = false;
     const audio = audioRef.current;
 
-    // Avoid redundant reloads when the same source is already bound. This
-    // prevents a race where rapid state updates abort an in-flight play()
-    // promise and incorrectly flip isPlaying back to false.
-    if (
-      isSameAudioSource(audio.src, currentSong.src) &&
-      !failedSrcsRef.current.has(resolveAudioSrc(currentSong.src))
-    ) {
-      if (intendedPlayingRef.current && audio.paused) {
-        // Re-using the current resource can still emit pause/abort events
-        // from the previous playback state. Hold the transition lock until
-        // playback actually resumes so those stale events are ignored.
-        trackChangeRef.current = true;
+    (async () => {
+      // Avoid redundant reloads when the same source is already bound. This
+      // prevents a race where rapid state updates abort an in-flight play()
+      // promise and incorrectly flip isPlaying back to false.
+      if (
+        isSameAudioSource(audio.src, currentSong.src) &&
+        !failedSrcsRef.current.has(resolveAudioSrc(currentSong.src))
+      ) {
+        if (intendedPlayingRef.current && audio.paused) {
+          // Re-using the current resource can still emit pause/abort events
+          // from the previous playback state. Hold the transition lock until
+          // playback actually resumes so those stale events are ignored.
+          trackChangeRef.current = true;
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((err: unknown) => {
+              if ((err as Error | undefined)?.name === 'AbortError') return;
+              trackChangeRef.current = false;
+              intendedPlayingRef.current = false;
+              setIsPlaying(false);
+              setIsLoading(false);
+            });
+          }
+        } else {
+          // No transition is happening; release the lock so subsequent pause
+          // events are handled normally.
+          trackChangeRef.current = false;
+        }
+        return;
+      }
+
+      if (failedSrcsRef.current.has(resolveAudioSrc(currentSong.src))) {
+        trackChangeRef.current = false;
+        intendedPlayingRef.current = false;
+        setError('Audio resource unavailable');
+        setIsLoading(false);
+        setIsPlaying(false);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      setCurrentTime(0);
+      setBuffered(0);
+
+      const cachedSrc = await getCachedAudioUrl(currentSong.src);
+      if (cancelled) return;
+
+      // Mark that we are about to swap src so the implicit pause/abort events
+      // from the previous resource are ignored.
+      trackChangeRef.current = true;
+
+      // Revoke the previous blob URL only after the new src is ready.
+      if (audioBlobUrlRef.current && audioBlobUrlRef.current !== cachedSrc) {
+        revokeBlobUrl(audioBlobUrlRef.current);
+        audioBlobUrlRef.current = null;
+      }
+
+      audio.src = cachedSrc;
+      if (cachedSrc !== currentSong.src) {
+        audioBlobUrlRef.current = cachedSrc;
+      }
+      audio.load();
+
+      // Auto-play the new track when playback is intended. Keep the transition
+      // lock active until the 'playing' event confirms the new resource is
+      // actually producing audio.
+      if (intendedPlayingRef.current) {
         const playPromise = audio.play();
         if (playPromise !== undefined) {
           playPromise.catch((err: unknown) => {
+            // A newer load() can abort this play attempt; ignore those errors.
             if ((err as Error | undefined)?.name === 'AbortError') return;
             trackChangeRef.current = false;
             intendedPlayingRef.current = false;
@@ -438,52 +514,14 @@ export function MusicPlayerProvider({
           });
         }
       } else {
-        // No transition is happening; release the lock so subsequent pause
-        // events are handled normally.
         trackChangeRef.current = false;
+        setIsLoading(false);
       }
-      return;
-    }
+    })();
 
-    setIsLoading(true);
-    setError(null);
-    setCurrentTime(0);
-    setBuffered(0);
-
-    if (failedSrcsRef.current.has(resolveAudioSrc(currentSong.src))) {
-      trackChangeRef.current = false;
-      intendedPlayingRef.current = false;
-      setError('Audio resource unavailable');
-      setIsLoading(false);
-      setIsPlaying(false);
-      return;
-    }
-
-    // Mark that we are about to swap src so the implicit pause/abort events
-    // from the previous resource are ignored.
-    trackChangeRef.current = true;
-    audio.src = currentSong.src;
-    audio.load();
-
-    // Auto-play the new track when playback is intended. Keep the transition
-    // lock active until the 'playing' event confirms the new resource is
-    // actually producing audio.
-    if (intendedPlayingRef.current) {
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err: unknown) => {
-          // A newer load() can abort this play attempt; ignore those errors.
-          if ((err as Error | undefined)?.name === 'AbortError') return;
-          trackChangeRef.current = false;
-          intendedPlayingRef.current = false;
-          setIsPlaying(false);
-          setIsLoading(false);
-        });
-      }
-    } else {
-      trackChangeRef.current = false;
-      setIsLoading(false);
-    }
+    return () => {
+      cancelled = true;
+    };
   }, [currentIndex, currentPosition, isDesktopClient, hasUserInteracted, currentSong.src]);
 
   // Play / pause whenever the playing flag changes. The load-track effect
@@ -519,7 +557,7 @@ export function MusicPlayerProvider({
     }
   }, [volume, isMuted]);
 
-  // Preload next track
+  // Preload next track through the persistent cache.
   useEffect(() => {
     if (
       !isDesktopClient ||
@@ -533,17 +571,36 @@ export function MusicPlayerProvider({
     const nextIndex =
       nextPosition >= shuffledOrder.length ? shuffledOrder[0] : shuffledOrder[nextPosition];
     const nextSong = playlist[nextIndex];
-    if (!nextSong?.src || failedSrcsRef.current.has(nextSong.src)) return;
+    if (!nextSong?.src || failedSrcsRef.current.has(resolveAudioSrc(nextSong.src))) return;
 
-    if (!preloadRef.current) {
-      preloadRef.current = new Audio();
-      preloadRef.current.crossOrigin = 'anonymous';
-      preloadRef.current.preload = 'auto';
-    }
-    if (preloadRef.current.src !== nextSong.src) {
-      preloadRef.current.src = nextSong.src;
-      preloadRef.current.load();
-    }
+    let cancelled = false;
+
+    (async () => {
+      const cachedSrc = await getCachedAudioUrl(nextSong.src);
+      if (cancelled) return;
+
+      if (!preloadRef.current) {
+        preloadRef.current = new Audio();
+        preloadRef.current.crossOrigin = 'anonymous';
+        preloadRef.current.preload = 'auto';
+      }
+      if (preloadRef.current.src !== cachedSrc) {
+        // Revoke the previous preload blob URL before replacing it.
+        if (preloadBlobUrlRef.current && preloadBlobUrlRef.current !== cachedSrc) {
+          revokeBlobUrl(preloadBlobUrlRef.current);
+          preloadBlobUrlRef.current = null;
+        }
+        preloadRef.current.src = cachedSrc;
+        if (cachedSrc !== nextSong.src) {
+          preloadBlobUrlRef.current = cachedSrc;
+        }
+        preloadRef.current.load();
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [currentPosition, shuffledOrder, playlist, isDesktopClient, hasUserInteracted]);
 
   const togglePlay = useCallback(() => {
