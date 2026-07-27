@@ -27,6 +27,37 @@ interface AudioConnection {
 
 export const globalAudioMap = new WeakMap<HTMLAudioElement, AudioConnection>();
 
+/**
+ * Create and cache a Web Audio analyser connection for an HTMLAudioElement.
+ * Idempotent: returns the existing connection if one has already been created.
+ */
+export function initAudioConnection(audio: HTMLAudioElement): AudioConnection | undefined {
+  const existing = globalAudioMap.get(audio);
+  if (existing) return existing;
+
+  const AudioContextClass =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  if (!AudioContextClass) return undefined;
+
+  const audioContext = new AudioContextClass();
+  const analyser = audioContext.createAnalyser();
+  analyser.fftSize = DEFAULT_FFT_SIZE;
+  analyser.smoothingTimeConstant = 0.82;
+
+  try {
+    const source = audioContext.createMediaElementSource(audio);
+    source.connect(analyser);
+    analyser.connect(audioContext.destination);
+
+    const connection: AudioConnection = { context: audioContext, analyser, source };
+    globalAudioMap.set(audio, connection);
+    return connection;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Audible range used for visualization; 16 kHz+ carries little musical energy. */
 const MIN_FREQ = 60;
 const MAX_FREQ = 16000;
@@ -127,17 +158,31 @@ export function AudioVisualizer({
   }, [barCount]);
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || isInitializedRef.current) return;
+    if (isInitializedRef.current) return;
 
-    const existing = globalAudioMap.get(audio);
-    if (existing) {
-      analyserRef.current = existing.analyser;
-      isInitializedRef.current = true;
-    } else {
+    let attempts = 0;
+    let intervalId: number | null = null;
+
+    const tryInit = () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      const existing = globalAudioMap.get(audio);
+      if (existing) {
+        analyserRef.current = existing.analyser;
+        isInitializedRef.current = true;
+        if (intervalId) clearInterval(intervalId);
+        return;
+      }
+
       const AudioContextClass =
         window.AudioContext ||
         (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextClass) {
+        if (intervalId) clearInterval(intervalId);
+        return;
+      }
+
       const audioContext = new AudioContextClass();
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = DEFAULT_FFT_SIZE;
@@ -151,11 +196,21 @@ export function AudioVisualizer({
         analyserRef.current = analyser;
         isInitializedRef.current = true;
         globalAudioMap.set(audio, { context: audioContext, analyser, source });
+        if (intervalId) clearInterval(intervalId);
       } catch (err) {
         if (process.env.NODE_ENV === 'development') {
           console.warn('[AudioVisualizer] Audio context init failed:', err);
         }
       }
+    };
+
+    tryInit();
+    if (!isInitializedRef.current) {
+      intervalId = window.setInterval(() => {
+        attempts += 1;
+        tryInit();
+        if (attempts >= 15 && intervalId) clearInterval(intervalId);
+      }, 200);
     }
 
     isActiveRef.current = true;
@@ -176,6 +231,7 @@ export function AudioVisualizer({
       isActiveRef.current = false;
       cancelAnimationFrame(animationRef.current);
       observer.disconnect();
+      if (intervalId) clearInterval(intervalId);
     };
   }, [audioRef]);
 
