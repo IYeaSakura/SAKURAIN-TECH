@@ -143,9 +143,9 @@ export const en: Dictionary = {
     trackNumber: 'Track',
     backToHome: 'Back to Home',
     focusMode: 'Focus',
-    focusBlob: 'Aurora',
-    focusParticles: 'Nebula',
-    focusWave: 'Terrain',
+    focusBlob: 'Spectrum',
+    focusParticles: 'Oscilloscope',
+    focusWave: 'Gradient',
     focusHint: 'Click to switch visual',
     audioMetrics: {
       playing: 'PLAYING',
