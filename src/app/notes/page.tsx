@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 /**
- * Dev notes have been refactored into "Shuoshuo"; the legacy /notes path
- * redirects (301) to /shuoshuo to preserve external links and search index compatibility.
+ * Legacy /notes redirects (301) to /dev-log to preserve external links
+ * and search index compatibility.
  */
 export const metadata: Metadata = {
-  title: "Shuoshuo — SAKURAIN",
-  description: "Daily inspirations, moods, and casual thoughts.",
+  title: "Dev Log — SAKURAIN",
+  description: "Development iterations and technical logs.",
 };
 
 export default function Page() {
-  redirect("/shuoshuo");
+  redirect("/dev-log");
 }

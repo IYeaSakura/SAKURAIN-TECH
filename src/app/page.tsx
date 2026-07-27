@@ -10,7 +10,7 @@ import { getAllPosts } from "@/lib/content/blog";
  * Recent posts and notes are injected at build time by the server content pipeline.
  */
 export const metadata: Metadata = {
-  title: "SAKURAIN — Personal Blog",
+  title: "SAKURAIN | 2026",
   description:
     "SAKURAIN's personal blog: game algorithms, quantitative systems, data analysis, and Web engineering.",
 };

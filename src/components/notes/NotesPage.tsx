@@ -1,9 +1,9 @@
 'use client';
 
 /**
- * NotesPage —— brutalist shuoshuo timeline.
+ * NotesPage —— brutalist dev-log timeline.
  *
- * Month/mood filters plus a simple chronological feed. Cards use thick borders
+ * Month/difficulty filters plus a simple chronological feed. Cards use thick borders
  * and pixel offset shadows so the page stays consistent with the rest of the
  * site.
  */
@@ -11,23 +11,22 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Heart, MessageCircle, Smile, Meh, Frown, Calendar, BarChart3, Clock, Sparkles } from 'lucide-react';
+import type { NoteDifficulty } from '@/lib/content/notes';
 import { Footer } from '@/components/sections/Footer';
 import { useAnimationEnabled, useTranslation } from '@/hooks';
 import type { Note } from '@/lib/content/notes';
 import type { SiteData } from '@/types';
 
-type Mood = 'happy' | 'neutral' | 'sad';
-
-const MOOD_ICONS: Record<Mood, typeof Heart> = {
-  happy: Smile,
-  neutral: Meh,
-  sad: Frown,
+const DIFFICULTY_ICONS: Record<NoteDifficulty, typeof Heart> = {
+  easy: Smile,
+  normal: Meh,
+  difficult: Frown,
 };
 
-const MOOD_COLORS: Record<Mood, string> = {
-  happy: '#22c55e',
-  neutral: '#f59e0b',
-  sad: '#ef4444',
+const DIFFICULTY_COLORS: Record<NoteDifficulty, string> = {
+  easy: '#22c55e',
+  normal: '#f59e0b',
+  difficult: '#ef4444',
 };
 
 const NOTES_PER_LOAD = 12;
@@ -43,7 +42,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
   const animationEnabled = useAnimationEnabled();
   const { t, tReplace } = useTranslation();
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
-  const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<NoteDifficulty | null>(null);
   const [loadedCount, setLoadedCount] = useState(NOTES_PER_LOAD);
   const [footerData, setFooterData] = useState<SiteData['footer'] | null>(null);
 
@@ -57,14 +56,14 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
   const filteredNotes = useMemo(() => {
     let result = notes;
     if (selectedMonth) result = result.filter((note) => note.yearMonth === selectedMonth);
-    if (selectedMood) result = result.filter((note) => note.mood === selectedMood);
+    if (selectedDifficulty) result = result.filter((note) => note.difficulty === selectedDifficulty);
     return result.slice(0, loadedCount);
-  }, [notes, selectedMonth, selectedMood, loadedCount]);
+  }, [notes, selectedMonth, selectedDifficulty, loadedCount]);
 
-  const moodCounts = useMemo(() => {
-    const counts = { happy: 0, neutral: 0, sad: 0 };
+  const difficultyCounts = useMemo(() => {
+    const counts = { easy: 0, normal: 0, difficult: 0 };
     notes.forEach((note) => {
-      if (note.mood in counts) counts[note.mood as Mood]++;
+      if (note.difficulty in counts) counts[note.difficulty]++;
     });
     return counts;
   }, [notes]);
@@ -115,9 +114,9 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
         icon: MessageCircle,
       },
       { label: t.notes.stats.count, value: notes.length.toString(), icon: Calendar },
-      { label: t.notes.stats.moodDistribution, value: `${moodCounts.happy}/${moodCounts.neutral}/${moodCounts.sad}`, icon: BarChart3 },
+      { label: t.notes.stats.difficultyDistribution, value: `${difficultyCounts.easy}/${difficultyCounts.normal}/${difficultyCounts.difficult}`, icon: BarChart3 },
     ],
-    [developmentTime, notes.length, moodCounts, t]
+    [developmentTime, notes.length, difficultyCounts, t]
   );
 
   const loadMoreNotes = () => setLoadedCount((prev) => prev + NOTES_PER_LOAD);
@@ -143,7 +142,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                   className="text-[10px] font-bold uppercase tracking-wider"
                   style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
                 >
-                  {t.nav.shuoshuo}
+                  {t.nav.devLog}
                 </span>
               </div>
 
@@ -240,18 +239,18 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
               className="text-[10px] font-bold uppercase tracking-wider mb-3"
               style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
             >
-              {t.notes.moodFilter}
+              {t.notes.difficultyFilter}
             </h3>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(moodCounts).map(([mood, count]) => {
-                const Icon = MOOD_ICONS[mood as Mood];
-                const color = MOOD_COLORS[mood as Mood];
-                const label = t.notes.moods[mood as Mood];
-                const isSelected = selectedMood === mood;
+              {Object.entries(difficultyCounts).map(([difficulty, count]) => {
+                const Icon = DIFFICULTY_ICONS[difficulty as NoteDifficulty];
+                const color = DIFFICULTY_COLORS[difficulty as NoteDifficulty];
+                const label = t.notes.difficulties[difficulty as NoteDifficulty];
+                const isSelected = selectedDifficulty === difficulty;
                 return (
                   <button
-                    key={mood}
-                    onClick={() => setSelectedMood(isSelected ? null : (mood as Mood))}
+                    key={difficulty}
+                    onClick={() => setSelectedDifficulty(isSelected ? null : (difficulty as NoteDifficulty))}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase border-2 transition-all"
                     style={{
                       background: isSelected ? color : 'var(--bg-secondary)',
@@ -304,10 +303,12 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
 
                   <div className="space-y-3">
                     {groupedNotes[date].map((note, index) => {
-                      const mood = (note.mood as Mood) in MOOD_ICONS ? (note.mood as Mood) : 'neutral';
-                      const MoodIcon = MOOD_ICONS[mood];
-                      const moodColor = MOOD_COLORS[mood];
-                      const moodLabel = t.notes.moods[mood];
+                      const difficulty = (note.difficulty as NoteDifficulty) in DIFFICULTY_ICONS
+                        ? (note.difficulty as NoteDifficulty)
+                        : 'normal';
+                      const DifficultyIcon = DIFFICULTY_ICONS[difficulty];
+                      const difficultyColor = DIFFICULTY_COLORS[difficulty];
+                      const difficultyLabel = t.notes.difficulties[difficulty];
 
                       return (
                         <motion.div
@@ -327,12 +328,12 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
                               className="flex items-center gap-1.5 px-2 py-0.5 border-2 text-[10px] font-bold uppercase"
                               style={{
                                 background: 'var(--bg-primary)',
-                                borderColor: `${moodColor}40`,
-                                color: moodColor,
+                                borderColor: `${difficultyColor}40`,
+                                color: difficultyColor,
                               }}
                             >
-                              <MoodIcon className="w-3 h-3" />
-                              {moodLabel}
+                              <DifficultyIcon className="w-3 h-3" />
+                              {difficultyLabel}
                             </div>
                             <div className="flex items-center gap-1 text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
                               <Clock className="w-3 h-3" />

@@ -1,0 +1,22 @@
+{
+  "title": "Moments",
+  "description": "Life moments and snapshots.",
+  "entries": [
+    {
+      "caption": {
+        "zh": "新增终端模式，终端内输入help查看命令说明。",
+        "en": "Add terminal mode, input help in terminal to view command instructions."
+      },
+      "date": "2026-07-27 19:10:17",
+      "location": {
+        "zh": "滁州",
+        "en": "Chuzhou"
+      },
+      "photos": [
+        {
+          "src": "/image/photo/Snipaste_2026-07-27_19-10-17.png"
+        }
+      ]
+    }
+  ]
+}

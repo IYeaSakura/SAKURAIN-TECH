@@ -58,11 +58,11 @@
       "cacheTtl": 60
     },
     {
-      "source": "/shuoshuo/*",
+      "source": "/dev-log/*",
       "cacheTtl": 60
     },
     {
-      "source": "/photos",
+      "source": "/moments",
       "cacheTtl": 60
     },
     {
@@ -160,7 +160,7 @@
       ]
     },
     {
-      "source": "/shuoshuo/*",
+      "source": "/dev-log/*",
       "headers": [
         {
           "key": "Cache-Control",
@@ -173,7 +173,7 @@
       ]
     },
     {
-      "source": "/photos",
+      "source": "/moments",
       "headers": [
         {
           "key": "Cache-Control",

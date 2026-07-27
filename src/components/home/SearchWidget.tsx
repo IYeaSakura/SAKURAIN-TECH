@@ -54,7 +54,7 @@ export function SearchWidget({ posts, notes }: SearchWidgetProps) {
       .map((note) => ({
         type: 'note' as const,
         title: note.content.slice(0, 40) + (note.content.length > 40 ? '...' : ''),
-        href: `/shuoshuo#note-${note.id}`,
+        href: `/dev-log#note-${note.id}`,
         date: note.date,
       }));
 

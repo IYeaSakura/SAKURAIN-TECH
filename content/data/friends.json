@@ -1,72 +1,89 @@
 {
-  "title": "友情链接",
-  "subtitle": "与优秀的网站建立连接，共同探索技术的无限可能",
-  "description": "欢迎申请友链！我们很高兴与志同道合的朋友建立联系。",
+  "title": {
+    "zh": "友情链接",
+    "en": "Friends"
+  },
+  "subtitle": {
+    "zh": "与优秀的网站建立连接，共同探索技术的无限可能",
+    "en": "Connect with great sites and explore the infinite possibilities of technology."
+  },
+  "description": {
+    "zh": "欢迎申请友链！我们很高兴与志同道合的朋友建立联系。",
+    "en": "Apply for a friend link! We'd love to connect with like-minded creators."
+  },
   "applyInfo": {
-    "title": "申请友链",
-    "description": "如果您希望与我们交换友情链接，请承诺以下内容",
+    "title": {
+      "zh": "申请友链",
+      "en": "Apply for Link Exchange"
+    },
+    "description": {
+      "zh": "如果您希望与我们交换友情链接，请承诺以下内容",
+      "en": "If you'd like to exchange friend links, please agree to the following."
+    },
     "requirements": [
-      "网站对国内用户有良好的访问体验",
-      "网站不存在任何形式的广告或推广内容",
-      "网站内容健康合法，稳定运行，无恶意代码"
+      {
+        "zh": "网站对国内用户有良好的访问体验",
+        "en": "Your site should load well for visitors in China."
+      },
+      {
+        "zh": "网站不存在任何形式的广告或推广内容",
+        "en": "Your site contains no ads or promotional content."
+      },
+      {
+        "zh": "网站内容健康合法，稳定运行，无恶意代码",
+        "en": "Your site is legal, stable, and free of malicious code."
+      }
     ],
     "contact": "Yae_SakuRain@outlook.com"
   },
   "categories": [
     {
       "id": "demo",
-      "name": "演示网站",
+      "name": { "zh": "演示网站", "en": "Demo Sites" },
       "icon": "Monitor",
-      "description": "我们的演示项目和示例网站"
+      "description": { "zh": "我们的演示项目和示例网站", "en": "Our demo projects and example sites" }
     },
     {
       "id": "personal",
-      "name": "与我相关",
+      "name": { "zh": "与我相关", "en": "Related to Me" },
       "icon": "User",
-      "description": "与我相关的网站"
+      "description": { "zh": "与我相关的网站", "en": "Sites related to me" }
     },
     {
       "id": "tech",
-      "name": "技术社区",
+      "name": { "zh": "技术社区", "en": "Tech Communities" },
       "icon": "Code",
-      "description": "优秀的技术社区和开发者平台"
+      "description": { "zh": "优秀的技术社区和开发者平台", "en": "Great tech communities and developer platforms" }
     },
     {
       "id": "design",
-      "name": "设计资源",
+      "name": { "zh": "设计资源", "en": "Design Resources" },
       "icon": "Palette",
-      "description": "设计灵感与资源网站"
+      "description": { "zh": "设计灵感与资源网站", "en": "Design inspiration and resource sites" }
     },
     {
       "id": "tools",
-      "name": "开发工具",
+      "name": { "zh": "开发工具", "en": "Dev Tools" },
       "icon": "Wrench",
-      "description": "实用的开发工具和服务"
+      "description": { "zh": "实用的开发工具和服务", "en": "Practical development tools and services" }
     },
     {
       "id": "blogs",
-      "name": "技术博客",
+      "name": { "zh": "技术博客", "en": "Tech Blogs" },
       "icon": "BookOpen",
-      "description": "个人技术博客和知识分享"
+      "description": { "zh": "个人技术博客和知识分享", "en": "Personal tech blogs and knowledge sharing" }
     }
   ],
   "friends": [
-    {
-      "id": "7e29d6a6",
-      "name": "Mc服务器演示站",
-      "url": "https://mclans.sakurain.net",
-      "icon": "https://sakurain.net/image/logo.webp",
-      "description": "Minecraft 服务器网站演示项目，展示服务器信息和玩家社区功能",
-      "category": "demo",
-      "featured": false,
-      "status": "online"
-    },
     {
       "id": "187a99bb",
       "name": "中国人工智能学会",
       "url": "https://www.caai.cn/",
       "icon": "https://www.caai.cn/favicon.ico",
-      "description": "我国智能科学技术领域唯一的国家级学会",
+      "description": {
+        "zh": "我国智能科学技术领域唯一的国家级学会",
+        "en": "我国智能科学技术领域唯一的国家级学会"
+      },
       "category": "personal",
       "featured": false,
       "status": "online"
@@ -76,7 +93,10 @@
       "name": "共产党员网",
       "url": "https://www.12371.cn/",
       "icon": "https://p4.img.cctvpic.com/photoAlbum/templet/common/DEPA1356314678315297/sy_dyw377_0504.png",
-      "description": "中央组织部主管、中组部党员教育中心主办、央视网承办的党员教育平台。",
+      "description": {
+        "zh": "中央组织部主管、中组部党员教育中心主办、央视网承办的党员教育平台。",
+        "en": "中央组织部主管、中组部党员教育中心主办、央视网承办的党员教育平台。"
+      },
       "category": "personal",
       "featured": false,
       "status": "online"
@@ -86,20 +106,24 @@
       "name": "熵",
       "url": "https://www.nekt.qzz.io/",
       "icon": "https://www.nekt.qzz.io/head.png",
-      "description": "世界本就浑浊，罪与爱同歌",
+      "description": {
+        "zh": "世界本就浑浊，罪与爱同歌",
+        "en": "世界本就浑浊，罪与爱同歌"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "89efd92d",
       "name": "孟轩网",
       "url": "https://www.mxw2024.top/",
       "icon": "https://www.mxw2024.top/favicon.ico",
-      "description": "一个简洁、美观、纯净、无广告的小站",
+      "description": {
+        "zh": "一个简洁、美观、纯净、无广告的小站",
+        "en": "一个简洁、美观、纯净、无广告的小站"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "a48af9ed",
@@ -107,10 +131,12 @@
       "url": "https://blog.mxw2024.top/",
       "icon": "https://blog.mxw2024.top/assets/images/favicon.ico",
       "feed": "https://blog.mxw2024.top/rss.xml",
-      "description": "一个简洁、美观、纯净、无广告的小站",
+      "description": {
+        "zh": "一个简洁、美观、纯净、无广告的小站",
+        "en": "一个简洁、美观、纯净、无广告的小站"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "2b5632db",
@@ -118,20 +144,36 @@
       "url": "https://blog.iletter.top/",
       "icon": "https://www.ittoolman.top/images/avatar.png",
       "feed": "https://blog.iletter.top/feed/",
-      "description": "没有什么可以留住，除了死亡。",
+      "description": {
+        "zh": "没有什么可以留住，除了死亡。",
+        "en": "没有什么可以留住，除了死亡。"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
+    },
+    {
+      "name": "石猫博客",
+      "url": "https://blog.imshimao.com/",
+      "icon": "https://img.cdn1.vip/i/6a1ad021e2d4c_1780142113.jpeg",
+      "feed": "https://blog.imshimao.com/feed",
+      "description": {
+        "zh": "就叫石猫好啦",
+        "en": "就叫石猫好啦"
+      },
+      "category": "blogs",
+      "featured": true
     },
     {
       "id": "9ed4e1ee",
       "name": "阿叶Ayeez的小站",
       "url": "https://blog.Ayeez.cn/",
       "icon": "https://qiniu.ayeez.cn/avatar.jpg",
-      "description": "记录学习历程，记录美好生活",
+      "description": {
+        "zh": "记录学习历程，记录美好生活",
+        "en": "记录学习历程，记录美好生活"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "44e3b2ff",
@@ -139,20 +181,24 @@
       "url": "https://blog.ybyq.wang/",
       "icon": "https://blog.ybyq.wang/usr/themes/handsome/assets/img/avatar.png",
       "feed": "https://blog.ybyq.wang/feed/",
-      "description": "分享技术教程和学习笔记",
+      "description": {
+        "zh": "分享技术教程和学习笔记",
+        "en": "分享技术教程和学习笔记"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "73cdea5d",
       "name": "RefactX Project",
       "url": "https://www.refact.cc",
       "icon": "https://refact.cc/avatar.png",
-      "description": "形体是简单而纯粹的，它不是完整的群体，每个形体都指向其复杂性，并最终被复杂性联系在一起。",
+      "description": {
+        "zh": "形体是简单而纯粹的，它不是完整的群体，每个形体都指向其复杂性，并最终被复杂性联系在一起。",
+        "en": "形体是简单而纯粹的，它不是完整的群体，每个形体都指向其复杂性，并最终被复杂性联系在一起。"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "2e0a4950",
@@ -160,10 +206,12 @@
       "url": "https://blog.ziyibbs.com",
       "icon": "https://blog.ziyibbs.com/favicon/logo.png",
       "feed": "https://blog.ziyibbs.com/feed/",
-      "description": "人山人海人来人往，自尊自爱自由自在",
+      "description": {
+        "zh": "人山人海人来人往，自尊自爱自由自在",
+        "en": "人山人海人来人往，自尊自爱自由自在"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "40a82b54",
@@ -171,30 +219,36 @@
       "url": "https://9sb.net",
       "icon": "https://9sb.net/logo.svg",
       "feed": "https://9sb.net/feed/",
-      "description": "资源 共享 生活 学习",
+      "description": {
+        "zh": "资源 共享 生活 学习",
+        "en": "资源 共享 生活 学习"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "82774d57",
       "name": "酥米的小站",
       "url": "https://www.sumi233.top/",
       "icon": "https://cdn.sumi233.top/gh/huang233893/blog-image-bed@main/top/huang233893/imgs/blog/usersumi.png",
-      "description": "终有一日，寻梦中人",
+      "description": {
+        "zh": "终有一日，寻梦中人",
+        "en": "终有一日，寻梦中人"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "13112bf8",
       "name": "辰渊尘の个人博客",
       "url": "https://blog.mcxiaochen.top/",
       "icon": "https://blog.mcxiaochen.top/favicon.ico",
-      "description": "05后，高中生，内容偏技术向，希望能对你有用QwQ",
+      "description": {
+        "zh": "05后，高中生，内容偏技术向，希望能对你有用QwQ",
+        "en": "05后，高中生，内容偏技术向，希望能对你有用QwQ"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "7e47987f",
@@ -202,10 +256,12 @@
       "url": "https://inaline.net",
       "icon": "https://inaline.net/usr/themes/inaline/assets/images/logo/cover.png",
       "feed": "https://inaline.net/feed/",
-      "description": "此情可待成追忆，只是当时已惘然",
+      "description": {
+        "zh": "此情可待成追忆，只是当时已惘然",
+        "en": "此情可待成追忆，只是当时已惘然"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "9188c57f",
@@ -213,30 +269,36 @@
       "url": "https://amvc.top",
       "icon": "https://amvc.top/touxiang.webp",
       "feed": "https://amvc.top/feed",
-      "description": "天气晴朗，万物可爱~",
+      "description": {
+        "zh": "天气晴朗，万物可爱~",
+        "en": "天气晴朗，万物可爱~"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "056b84fc",
       "name": "Weiwei's blog",
       "url": "https://www.lov3u.top",
       "icon": "https://www.lov3u.top/wp-content/uploads/2026/02/TT.jpg",
-      "description": "耐心是生活的关键",
+      "description": {
+        "zh": "耐心是生活的关键",
+        "en": "耐心是生活的关键"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "baebcad5",
       "name": "Modern Blog",
       "url": "https://blog.andyjin.website",
       "icon": "https://filestorage0.oss-cn-hongkong.aliyuncs.com/avatar.png",
-      "description": "分享技术，记录生活",
+      "description": {
+        "zh": "分享技术，记录生活",
+        "en": "分享技术，记录生活"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "dbc2c8d0",
@@ -244,10 +306,12 @@
       "url": "https://www.qingfengnb.cn",
       "icon": "https://img.qingfengnb.cn/LightPicture/2025/07/bec6eb9625656d60.jpg",
       "feed": "https://www.qingfengnb.cn/feed/",
-      "description": "茫茫人海，多么幸运才能遇见你！",
+      "description": {
+        "zh": "茫茫人海，多么幸运才能遇见你！",
+        "en": "茫茫人海，多么幸运才能遇见你！"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "57f82378",
@@ -255,10 +319,12 @@
       "url": "https://starssr.com",
       "icon": "https://q1.qlogo.cn/g?b=qq&nk=521001121&s=640",
       "feed": "https://starssr.com/rss.xml",
-      "description": "陌让流年盼繁华，颜容依旧似繁花",
+      "description": {
+        "zh": "陌让流年盼繁华，颜容依旧似繁花",
+        "en": "陌让流年盼繁华，颜容依旧似繁花"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "f5e8f661",
@@ -266,10 +332,12 @@
       "url": "https://blog.longdahuasheng.top",
       "icon": "https://blog.longdahuasheng.top/logo.png",
       "feed": "https://blog.longdahuasheng.top/feed",
-      "description": "零基础入门到进阶实战，记录每一步成长的思考",
+      "description": {
+        "zh": "零基础入门到进阶实战，记录每一步成长的思考",
+        "en": "零基础入门到进阶实战，记录每一步成长的思考"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "9704d1a4",
@@ -277,20 +345,24 @@
       "url": "https://www.aobp.cn",
       "icon": "https://www.aobp.cn/upload/%E5%A4%B4%E5%83%8F.png",
       "feed": "https://www.aobp.cn/rss.xml",
-      "description": "热爱可抵岁月漫长",
+      "description": {
+        "zh": "热爱可抵岁月漫长",
+        "en": "热爱可抵岁月漫长"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "0cca9c5f",
       "name": "manyJ'sBlog",
       "url": "https://blog.jsoftstudio.top",
       "icon": "https://blog.jsoftstudio.top/css/all/favicon.ico",
-      "description": "manyJ'sBlog - 个人博客",
+      "description": {
+        "zh": "manyJ'sBlog - 个人博客",
+        "en": "manyJ'sBlog - 个人博客"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "0ca78685",
@@ -298,10 +370,12 @@
       "url": "https://karlbaey.top",
       "icon": "https://avatars.githubusercontent.com/u/191684279",
       "feed": "https://re.karlbaey.top/rss.xml",
-      "description": "这里存着卡尔白的过去、现在和未来",
+      "description": {
+        "zh": "这里存着卡尔白的过去、现在和未来",
+        "en": "这里存着卡尔白的过去、现在和未来"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "c211091a",
@@ -309,10 +383,12 @@
       "url": "https://www.moeyao.cn",
       "icon": "https://dn-qiniu-avatar.qbox.me/avatar/d00de9fbffe50946b950a3fd0cd1bfdb",
       "feed": "https://www.moeyao.cn/feed",
-      "description": "白头并非雪可替,相遇已是上上签",
+      "description": {
+        "zh": "白头并非雪可替,相遇已是上上签",
+        "en": "白头并非雪可替,相遇已是上上签"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "10ee71f4",
@@ -320,10 +396,12 @@
       "url": "https://www.5ee.net",
       "icon": "https://lsky.5ee.net/lsky/2024/12/10/675799c108db1.gif",
       "feed": "https://www.5ee.net/rss.xml",
-      "description": "一个乐于分享技术的博客",
+      "description": {
+        "zh": "一个乐于分享技术的博客",
+        "en": "一个乐于分享技术的博客"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "73ce5853",
@@ -331,10 +409,12 @@
       "url": "https://blog.chengshuo.top",
       "icon": "https://blog.chengshuo.top/usr/uploads/2025/08/1293883047.webp",
       "feed": "https://blog.chengshuo.top/rss.php",
-      "description": "致一锦程 探索不停",
+      "description": {
+        "zh": "致一锦程 探索不停",
+        "en": "致一锦程 探索不停"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "ca9a1f56",
@@ -342,20 +422,24 @@
       "url": "https://blog.atao.cyou",
       "icon": "https://cdn.atao.cyou/Web/Avatar.png",
       "feed": "https://blog.atao.cyou/rss.xml",
-      "description": "做自己喜欢的事",
+      "description": {
+        "zh": "做自己喜欢的事",
+        "en": "做自己喜欢的事"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "42fe17a0",
       "name": "YororoIce Town",
       "url": "https://www.yororoice.top",
       "icon": "https://www.yororoice.top/favicon.ico",
-      "description": "你的头上为什么要套一个裤头?",
+      "description": {
+        "zh": "你的头上为什么要套一个裤头?",
+        "en": "你的头上为什么要套一个裤头?"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "d880e1ba",
@@ -363,10 +447,12 @@
       "url": "https://blog.fohok.xin",
       "icon": "https://blog.fohok.xin/wp-content/uploads/2025/08/a91fabf8a49526b0ab7941fb2659297e1755339178171.jpg",
       "feed": "https://blog.fohok.xin/feed/",
-      "description": "生活会越来越好的",
+      "description": {
+        "zh": "生活会越来越好的",
+        "en": "生活会越来越好的"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "ff2bea7d",
@@ -374,10 +460,12 @@
       "url": "https://saneko.me",
       "icon": "https://cdn.blog.saneko.me/Web/Avatar.png",
       "feed": "https://saneko.me/rss.xml",
-      "description": "Do the things that I like.",
+      "description": {
+        "zh": "Do the things that I like.",
+        "en": "Do the things that I like."
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "6ff7e307",
@@ -385,10 +473,12 @@
       "url": "https://ftz.is-a.dev",
       "icon": "https://ftz.is-a.dev/assets/intro/avatar.png",
       "feed": "https://ftz.is-a.dev/rss.xml",
-      "description": "想要成为一个有趣的、厉害的、快乐的、善良的、……能被你记住的人",
+      "description": {
+        "zh": "想要成为一个有趣的、厉害的、快乐的、善良的、……能被你记住的人",
+        "en": "想要成为一个有趣的、厉害的、快乐的、善良的、……能被你记住的人"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "52d35178",
@@ -396,10 +486,12 @@
       "url": "https://www.itxiaohui.top",
       "icon": "https://blogoss.itxiaohui.top/logo%20-uhlgnmrf.png",
       "feed": "https://www.itxiaohui.top/rss.xml",
-      "description": "小慧的技术博客",
+      "description": {
+        "zh": "小慧的技术博客",
+        "en": "小慧的技术博客"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     },
     {
       "id": "a82715e2",
@@ -407,10 +499,12 @@
       "url": "https://blog.liseezn.top",
       "icon": "https://blog.liseezn.top/logo.webp",
       "feed": "https://blog.liseezn.top/feed/",
-      "description": "分享学习，项目，及一些教程",
+      "description": {
+        "zh": "分享学习，项目，及一些教程",
+        "en": "分享学习，项目，及一些教程"
+      },
       "category": "blogs",
-      "featured": true,
-      "status": "online"
+      "featured": true
     }
   ],
   "lastUpdated": "2026-07-22T20:10:02.121Z"

@@ -30,9 +30,9 @@
         "icon": "Briefcase"
       },
       {
-        "label": "说说",
-        "href": "/shuoshuo",
-        "icon": "MessageCircle"
+        "label": "开发日志",
+        "href": "/dev-log",
+        "icon": "MessageSquare"
       },
       {
         "label": "友链",

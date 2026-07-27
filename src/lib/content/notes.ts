@@ -3,9 +3,9 @@ import path from 'node:path';
 import matter from 'gray-matter';
 
 /**
- * 随记（Notes）服务端内容管线。
- * 数据源：content/notes/posts/*.md（frontmatter: title/date/mood + 正文）
- * 仅在 Server Component / 构建期调用，禁止在客户端组件中引用其实现。
+ * Dev log server-side content pipeline.
+ * Data source: content/notes/posts/*.md (frontmatter: title/date/difficulty + body)
+ * Only call inside Server Components / build time; do not reference its implementation in client components.
  */
 
 export interface Note {
@@ -14,7 +14,7 @@ export interface Note {
   title: string;
   content: string;
   date: string;
-  mood: string;
+  difficulty: NoteDifficulty;
   wordCount: number;
   readingTime: string;
   year: number;
@@ -29,6 +29,8 @@ export interface Note {
   /** 排序用时间戳（内部计算，不外泄给序列化场景时可忽略） */
   timestamp: number;
 }
+
+export type NoteDifficulty = 'easy' | 'normal' | 'difficult';
 
 export interface NotesArchive {
   /** 按月分组（键为 YYYY-MM，月份倒序，组内按时间倒序） */
@@ -87,7 +89,9 @@ function parseNoteFile(fileName: string): Note | null {
 
   const title = typeof data.title === 'string' ? data.title : slug;
   const dateStr = typeof data.date === 'string' ? data.date : String(data.date ?? '');
-  const mood = typeof data.mood === 'string' ? data.mood : 'neutral';
+  const difficulty: NoteDifficulty = ['easy', 'normal', 'difficult'].includes(data.difficulty)
+    ? (data.difficulty as NoteDifficulty)
+    : 'normal';
   const body = content.trim();
 
   const parsed = parseNoteDate(dateStr);
@@ -99,7 +103,7 @@ function parseNoteFile(fileName: string): Note | null {
     title,
     content: body,
     date: dateStr,
-    mood,
+    difficulty,
     wordCount,
     readingTime: `${Math.max(1, Math.ceil(wordCount / 200))} 分钟阅读`,
     year: parsed.year,

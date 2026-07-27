@@ -1,14 +1,15 @@
-import type { Metadata } from 'next';
-import { PhotosPage } from '@/components/photos/PhotosPage';
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 /**
- * /photos —— Server Component shell for the photos gallery page.
+ * Legacy /photos redirects (301) to /moments to preserve external links
+ * and search index compatibility after the rename to Moments.
  */
 export const metadata: Metadata = {
-  title: 'Photos | SAKURAIN',
-  description: "SAKURAIN's photo wall capturing moments worth freezing in time.",
+  title: "Moments | SAKURAIN",
+  description: "Life moments and snapshots.",
 };
 
 export default function Page() {
-  return <PhotosPage />;
+  redirect("/moments");
 }
