@@ -23,6 +23,8 @@ interface CacheEntry {
   type: 'audio' | 'cover' | 'lyrics';
   blob?: Blob;
   text?: string;
+  etag?: string;
+  lastModified?: string;
   size: number;
   cachedAt: number;
 }
@@ -141,17 +143,41 @@ async function ensureSpace(type: CacheEntry['type'], needed: number): Promise<vo
 /**
  * Fetch an external asset and store it in IndexedDB.
  */
-async function fetchAndCache(url: string, type: 'audio' | 'cover'): Promise<void> {
+async function fetchAndCache(url: string, type: 'audio' | 'cover'): Promise<CacheEntry | undefined> {
   const response = await fetch(url, { credentials: 'omit' });
-  if (!response.ok) return;
+  if (!response.ok) return undefined;
   const blob = await response.blob();
-  await putEntry({
+  const entry: CacheEntry = {
     url,
     type,
     blob,
+    etag: response.headers.get('etag') || undefined,
+    lastModified: response.headers.get('last-modified') || undefined,
     size: blob.size,
     cachedAt: Date.now(),
-  });
+  };
+  await putEntry(entry);
+  return entry;
+}
+
+/**
+ * Check whether a cached entry is stale by comparing ETag or Last-Modified
+ * headers with a lightweight HEAD request. Failures are treated as "not stale"
+ * so the cache remains usable when COS is unreachable.
+ */
+async function isCacheStale(entry: CacheEntry): Promise<boolean> {
+  try {
+    const response = await fetch(entry.url, { method: 'HEAD', credentials: 'omit' });
+    if (!response.ok) return false;
+    const etag = response.headers.get('etag');
+    if (etag && entry.etag) return etag !== entry.etag;
+    const lastModified = response.headers.get('last-modified');
+    if (lastModified && entry.lastModified) return lastModified !== entry.lastModified;
+    // Without validator headers, keep the cached version to avoid re-downloads.
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -179,18 +205,27 @@ export function resolveOriginalSrc(src: string): string {
 
 /**
  * Return a cached blob URL for an audio file, or the original URL if the file
- * is not cached yet. Uncached files are fetched in the background.
+ * is not cached yet. Cached files are validated with a HEAD request before
+ * reuse, and stale entries are refreshed automatically.
  */
 export async function getCachedAudioUrl(src: string): Promise<string> {
   if (!src || typeof window === 'undefined' || !isCacheable(src)) return src;
   try {
     const entry = await getEntry(src);
     if (entry?.blob) {
-      const blobUrl = URL.createObjectURL(entry.blob);
+      const stale = await isCacheStale(entry);
+      if (!stale) {
+        const blobUrl = URL.createObjectURL(entry.blob);
+        registerBlobUrl(blobUrl, src);
+        return blobUrl;
+      }
+    }
+    const newEntry = await fetchAndCache(src, 'audio');
+    if (newEntry?.blob) {
+      const blobUrl = URL.createObjectURL(newEntry.blob);
       registerBlobUrl(blobUrl, src);
       return blobUrl;
     }
-    fetchAndCache(src, 'audio').catch(() => {});
     return src;
   } catch {
     return src;
@@ -199,6 +234,7 @@ export async function getCachedAudioUrl(src: string): Promise<string> {
 
 /**
  * Return the raw lyric text for a URL, fetching and caching it if needed.
+ * Cached lyrics are validated with HEAD before reuse.
  */
 export async function getCachedLyrics(url: string | undefined | null): Promise<string | null> {
   if (!url || typeof window === 'undefined' || !isCacheable(url)) {
@@ -213,7 +249,10 @@ export async function getCachedLyrics(url: string | undefined | null): Promise<s
 
   try {
     const entry = await getEntry(url);
-    if (entry?.text !== undefined) return entry.text;
+    if (entry?.text !== undefined) {
+      const stale = await isCacheStale(entry);
+      if (!stale) return entry.text;
+    }
 
     const response = await fetch(url, { credentials: 'omit' });
     if (!response.ok) return null;
@@ -222,6 +261,8 @@ export async function getCachedLyrics(url: string | undefined | null): Promise<s
       url,
       type: 'lyrics',
       text,
+      etag: response.headers.get('etag') || undefined,
+      lastModified: response.headers.get('last-modified') || undefined,
       size: new Blob([text]).size,
       cachedAt: Date.now(),
     });
@@ -233,18 +274,27 @@ export async function getCachedLyrics(url: string | undefined | null): Promise<s
 
 /**
  * Return a cached blob URL for a cover image, or the original URL if the image
- * is not cached yet. Uncached images are fetched in the background.
+ * is not cached yet. Cached covers are validated with HEAD before reuse, and
+ * stale entries are refreshed automatically.
  */
 export async function getCachedCoverUrl(url: string | undefined | null): Promise<string> {
   if (!url || typeof window === 'undefined' || !isCacheable(url)) return url || '';
   try {
     const entry = await getEntry(url);
     if (entry?.blob) {
-      const blobUrl = URL.createObjectURL(entry.blob);
+      const stale = await isCacheStale(entry);
+      if (!stale) {
+        const blobUrl = URL.createObjectURL(entry.blob);
+        registerBlobUrl(blobUrl, url);
+        return blobUrl;
+      }
+    }
+    const newEntry = await fetchAndCache(url, 'cover');
+    if (newEntry?.blob) {
+      const blobUrl = URL.createObjectURL(newEntry.blob);
       registerBlobUrl(blobUrl, url);
       return blobUrl;
     }
-    fetchAndCache(url, 'cover').catch(() => {});
     return url;
   } catch {
     return url;

@@ -70,8 +70,6 @@ const resolveAudioSrc = (src: string): string => {
 const isSameAudioSource = (audioSrc: string, songSrc: string): boolean =>
   resolveAudioSrc(audioSrc) === resolveAudioSrc(songSrc);
 
-export type VisualizerMode = 'bars' | 'wave' | 'heatmap' | 'focus';
-
 interface MusicPlayerState {
   isOpen: boolean;
   isPlaying: boolean;
@@ -87,7 +85,6 @@ interface MusicPlayerState {
   currentSong: Song;
   currentLyrics: LyricLine[];
   lyricsLoading: boolean;
-  visualizerMode: VisualizerMode;
   playlistLoading: boolean;
   playlist: Song[];
   playMode: PlayMode;
@@ -105,7 +102,6 @@ interface MusicPlayerActions {
   setVolume: (volume: number) => void;
   setMuted: (muted: boolean) => void;
   toggleMuted: () => void;
-  changeVisualizer: () => void;
   seek: (time: number) => void;
   playSong: (id: string) => void;
   cyclePlayMode: () => void;
@@ -142,8 +138,6 @@ export function MusicPlayerProvider({
   const [buffered, setBuffered] = useState(0);
   const [shuffledOrder, setShuffledOrder] = useState<number[]>([]);
   const [currentPosition, setCurrentPosition] = useState(0);
-  const [visualizerMode, setVisualizerMode] =
-    useState<VisualizerMode>('bars');
   const [playMode, setPlayMode] = useState<PlayMode>('shuffle');
   const [showLyrics, setShowLyrics] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
@@ -714,15 +708,6 @@ export function MusicPlayerProvider({
     handleNextRef.current = next;
   }, [next]);
 
-  const changeVisualizer = useCallback(() => {
-    setVisualizerMode((prev) => {
-      if (prev === 'bars') return 'wave';
-      if (prev === 'wave') return 'heatmap';
-      if (prev === 'heatmap') return 'focus';
-      return 'bars';
-    });
-  }, []);
-
   const cyclePlayMode = useCallback(() => {
     setPlayMode((prev) =>
       prev === 'shuffle' ? 'repeat' : prev === 'repeat' ? 'sequential' : 'shuffle'
@@ -760,7 +745,6 @@ export function MusicPlayerProvider({
       currentSong,
       currentLyrics,
       lyricsLoading,
-      visualizerMode,
       playlistLoading,
       playlist,
       playMode,
@@ -775,7 +759,6 @@ export function MusicPlayerProvider({
       setVolume: setVolumeState,
       setMuted: setIsMuted,
       toggleMuted: () => setIsMuted((m) => !m),
-      changeVisualizer,
       seek,
       playSong,
       cyclePlayMode,
@@ -798,7 +781,6 @@ export function MusicPlayerProvider({
       currentSong,
       currentLyrics,
       lyricsLoading,
-      visualizerMode,
       playlistLoading,
       playlist,
       playMode,
@@ -808,7 +790,6 @@ export function MusicPlayerProvider({
       togglePlay,
       next,
       prev,
-      changeVisualizer,
       seek,
       playSong,
       cyclePlayMode,

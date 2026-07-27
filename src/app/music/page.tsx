@@ -34,19 +34,12 @@ import {
   Minus,
   AlignCenter,
   AlignLeft,
-  BarChart2,
 } from 'lucide-react';
-import dynamic from 'next/dynamic';
 import { useMusicPlayer, useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
 import { AudioMetrics } from '@/components/MusicPlayer/AudioMetrics';
 import { getCachedCoverUrl, revokeBlobUrl } from '@/lib/asset-cache';
 import type { Song } from '@/contexts/MusicPlayerContext';
 import type { LyricLine } from '@/lib/lyrics';
-
-const FocusSpaceVisualizer = dynamic(
-  () => import('@/components/MusicPlayer/FocusSpaceVisualizer'),
-  { ssr: false }
-);
 
 const PIXEL_BORDER = '2px solid var(--border-subtle)';
 const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
@@ -88,10 +81,12 @@ function CoverArt({ song }: { song: Song }) {
 
   useEffect(() => {
     let blobUrl: string | null = null;
+    let cancelled = false;
     const cover = song.cover;
     if (!cover) return;
 
     getCachedCoverUrl(cover).then((cached) => {
+      if (cancelled) return;
       if (cached !== cover) {
         blobUrl = cached;
         setSrc(cached);
@@ -99,6 +94,7 @@ function CoverArt({ song }: { song: Song }) {
     });
 
     return () => {
+      cancelled = true;
       if (blobUrl) revokeBlobUrl(blobUrl);
     };
   }, [song.cover]);
@@ -399,7 +395,6 @@ export default function MusicPage() {
     playMode,
     showPlaylist,
     systemPaused,
-    visualizerMode,
     togglePlay,
     next,
     prev,
@@ -409,7 +404,6 @@ export default function MusicPage() {
     seek,
     cyclePlayMode,
     togglePlaylist,
-    changeVisualizer,
   } = player;
 
   const handleSeek = (percent: number) => {
@@ -463,55 +457,50 @@ export default function MusicPage() {
             <ArrowLeft className="w-4 h-4" />
             {t.music.backToHome}
           </button>
-          <div className="flex items-center gap-2">
-            <Music className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-            <h1
-              className="text-xl sm:text-2xl font-bold uppercase"
-              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+          <div className="flex flex-col items-end">
+            <div className="flex items-center gap-2">
+              <Music className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
+              <h1
+                className="text-xl sm:text-2xl font-bold uppercase"
+                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+              >
+                {t.nav.music}
+              </h1>
+            </div>
+            <div
+              className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-right truncate max-w-[50vw] sm:max-w-md"
+              style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
             >
-              {t.nav.music}
-            </h1>
+              {currentSong.artist} - {currentSong.title}
+            </div>
           </div>
         </motion.div>
       </header>
 
-      {/* Main stage: cover + lyrics or focus visualizer */}
+      {/* Main stage: cover + lyrics */}
       <main className="flex-1 min-h-0 relative">
         <div className="h-full flex flex-col lg:flex-row gap-4 px-4 sm:px-6 pb-4">
-          {visualizerMode === 'focus' ? (
-            <motion.section
-              initial={animationEnabled ? { opacity: 0 } : undefined}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4 }}
-              className="flex-1 min-h-0"
-            >
-              <FocusSpaceVisualizer audioRef={audioRef} isPlaying={isPlaying} />
-            </motion.section>
-          ) : (
-            <>
-              {/* Cover art */}
-              <motion.section
-                initial={animationEnabled ? { opacity: 0, scale: 0.96 } : undefined}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: 0.05 }}
-                className="flex-none lg:flex-1 h-[38%] sm:h-[42%] lg:h-auto flex items-center justify-center"
-              >
-                <div className="h-full aspect-square max-h-full">
-                  <CoverArt song={currentSong} />
-                </div>
-              </motion.section>
+          {/* Cover art */}
+          <motion.section
+            initial={animationEnabled ? { opacity: 0, scale: 0.96 } : undefined}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.05 }}
+            className="flex-none lg:flex-1 h-[38%] sm:h-[42%] lg:h-auto flex items-center justify-center"
+          >
+            <div className="h-full aspect-square max-h-full">
+              <CoverArt song={currentSong} />
+            </div>
+          </motion.section>
 
-              {/* Lyrics panel */}
-              <motion.section
-                initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-                className="flex-1 min-h-0 lg:flex-1"
-              >
-                <LyricsPanel lyrics={currentLyrics} currentTime={currentTime} />
-              </motion.section>
-            </>
-          )}
+          {/* Lyrics panel */}
+          <motion.section
+            initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="flex-1 min-h-0 lg:flex-1"
+          >
+            <LyricsPanel lyrics={currentLyrics} currentTime={currentTime} />
+          </motion.section>
         </div>
 
         {/* Collapsible playlist sidebar */}
@@ -671,17 +660,6 @@ export default function MusicPage() {
               title={t.music.playlist}
             >
               <ListMusic className="w-4 h-4" />
-            </button>
-            <button
-              onClick={changeVisualizer}
-              className="p-1.5 sm:p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
-              style={{
-                border: PIXEL_BORDER,
-                color: visualizerMode === 'focus' ? 'var(--accent-primary)' : 'var(--text-muted)',
-              }}
-              title={visualizerMode}
-            >
-              <BarChart2 className="w-4 h-4" />
             </button>
             <button
               onClick={toggleFullscreen}
