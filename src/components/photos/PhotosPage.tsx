@@ -10,9 +10,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Camera, MapPin, Calendar, Tag, X, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
+import { ArrowLeft, Camera, MapPin, Tag, X, ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 import { useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
-import type { PhotoLogData, PhotoLogPhoto } from '@/types';
+import type { PhotoLogData, PhotoLogEntry, PhotoLogImage } from '@/types';
 
 const PIXEL_BORDER = '2px solid var(--border-subtle)';
 const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
@@ -33,19 +33,26 @@ export function PhotosPage() {
       .catch(console.error);
   }, []);
 
-  const photos = data?.photos ?? [];
+  const entries = useMemo(() => {
+    const list = data?.entries ?? [];
+    return [...list].sort((a, b) => b.date.localeCompare(a.date));
+  }, [data]);
+
+  const allPhotos = useMemo(() => {
+    return entries.flatMap((entry) => entry.photos);
+  }, [entries]);
 
   const openLightbox = (index: number) => setLightboxIndex(index);
   const closeLightbox = () => setLightboxIndex(null);
 
   const prevPhoto = () => {
     if (lightboxIndex === null) return;
-    setLightboxIndex((lightboxIndex - 1 + photos.length) % photos.length);
+    setLightboxIndex((lightboxIndex - 1 + allPhotos.length) % allPhotos.length);
   };
 
   const nextPhoto = () => {
     if (lightboxIndex === null) return;
-    setLightboxIndex((lightboxIndex + 1) % photos.length);
+    setLightboxIndex((lightboxIndex + 1) % allPhotos.length);
   };
 
   useEffect(() => {
@@ -57,19 +64,7 @@ export function PhotosPage() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxIndex, photos.length]);
-
-  const entries = useMemo(() => {
-    const grouped: Record<string, PhotoLogPhoto[]> = {};
-    for (const photo of photos) {
-      const day = photo.date;
-      if (!grouped[day]) grouped[day] = [];
-      grouped[day].push(photo);
-    }
-    return Object.entries(grouped)
-      .sort(([a], [b]) => b.localeCompare(a))
-      .map(([date, items]) => ({ date, items }));
-  }, [photos]);
+  }, [lightboxIndex, allPhotos.length]);
 
   if (!data) {
     return (
@@ -135,11 +130,11 @@ export function PhotosPage() {
           <div className="space-y-8">
             {entries.map((entry, entryIndex) => (
               <MomentEntry
-                key={entry.date}
+                key={entry.id}
                 entry={entry}
                 entryIndex={entryIndex}
                 animationEnabled={animationEnabled}
-                photos={photos}
+                allPhotos={allPhotos}
                 onOpen={openLightbox}
               />
             ))}
@@ -171,7 +166,7 @@ export function PhotosPage() {
               <X className="w-5 h-5" />
             </button>
 
-            {photos.length > 1 && (
+            {allPhotos.length > 1 && (
               <>
                 <button
                   onClick={(e) => {
@@ -216,22 +211,11 @@ export function PhotosPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={photos[lightboxIndex].src}
-                alt={photos[lightboxIndex].caption}
+                src={allPhotos[lightboxIndex].src}
+                alt=""
                 className="w-full max-h-[80vh] object-contain border-2"
                 style={{ borderColor: 'var(--border-subtle)' }}
               />
-              <div className="mt-4 flex flex-wrap items-center gap-4 text-xs" style={{ fontFamily: 'var(--font-mono)' }}>
-                <span style={{ color: 'var(--text-secondary)' }}>{photos[lightboxIndex].caption}</span>
-                <span className="inline-flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-                  <Calendar className="w-3 h-3" />
-                  {photos[lightboxIndex].date}
-                </span>
-                <span className="inline-flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-                  <MapPin className="w-3 h-3" />
-                  {photos[lightboxIndex].location}
-                </span>
-              </div>
             </motion.div>
           </motion.div>
         )}
@@ -244,19 +228,17 @@ function MomentEntry({
   entry,
   entryIndex,
   animationEnabled,
-  photos,
+  allPhotos,
   onOpen,
 }: {
-  entry: { date: string; items: PhotoLogPhoto[] };
+  entry: PhotoLogEntry;
   entryIndex: number;
   animationEnabled: boolean;
-  photos: PhotoLogPhoto[];
+  allPhotos: PhotoLogImage[];
   onOpen: (globalIndex: number) => void;
 }) {
   const { t } = useTranslation();
-  const caption = entry.items[0]?.caption || '';
-  const location = entry.items[0]?.location || '';
-  const tags = entry.items[0]?.tags ?? [];
+  const { caption, date, location, tags, photos } = entry;
 
   return (
     <motion.article
@@ -284,7 +266,7 @@ function MomentEntry({
           {NICKNAME}
         </h2>
         <p className="text-xs mb-3" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-          {entry.date}
+          {date}
         </p>
 
         {caption && (
@@ -293,7 +275,7 @@ function MomentEntry({
           </p>
         )}
 
-        <PhotoGrid photos={entry.items} allPhotos={photos} onOpen={onOpen} />
+        <PhotoGrid photos={photos} allPhotos={allPhotos} onOpen={onOpen} />
 
         <div className="flex flex-wrap items-center gap-3 mt-3 text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
           {location && (
@@ -330,13 +312,13 @@ function PhotoGrid({
   allPhotos,
   onOpen,
 }: {
-  photos: PhotoLogPhoto[];
-  allPhotos: PhotoLogPhoto[];
+  photos: PhotoLogImage[];
+  allPhotos: PhotoLogImage[];
   onOpen: (globalIndex: number) => void;
 }) {
   const count = photos.length;
 
-  const getGlobalIndex = (photo: PhotoLogPhoto) => allPhotos.findIndex((p) => p.id === photo.id);
+  const getGlobalIndex = (photo: PhotoLogImage) => allPhotos.findIndex((p) => p.id === photo.id);
 
   if (count === 1) {
     return (
@@ -347,7 +329,7 @@ function PhotoGrid({
       >
         <img
           src={photos[0].src}
-          alt={photos[0].caption}
+          alt=""
           className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
         />
       </div>
@@ -366,7 +348,7 @@ function PhotoGrid({
           >
             <img
               src={photo.src}
-              alt={photo.caption}
+              alt=""
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             />
           </div>
@@ -387,7 +369,7 @@ function PhotoGrid({
           >
             <img
               src={photo.src}
-              alt={photo.caption}
+              alt=""
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             />
           </div>
@@ -408,7 +390,7 @@ function PhotoGrid({
         >
           <img
             src={photo.src}
-            alt={photo.caption}
+            alt=""
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           />
         </div>

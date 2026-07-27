@@ -122,6 +122,51 @@ function mergeFriendsCheckInfo(contentPath, publicPath) {
 }
 
 /**
+ * Process public/data/photos.json after the raw content copy.
+ * - Auto-generates missing entry.id and photo.id fields.
+ * - Truncates each entry to a maximum of 9 photos.
+ */
+function processPhotosJson() {
+  const photosPath = path.join(PUBLIC_DIR, 'data', 'photos.json');
+  if (!fs.existsSync(photosPath)) return;
+
+  const data = JSON.parse(fs.readFileSync(photosPath, 'utf-8'));
+  if (!Array.isArray(data.entries)) return;
+
+  let modified = false;
+
+  data.entries.forEach((entry, entryIndex) => {
+    if (!entry.id) {
+      entry.id = `entry-${entry.date}-${entryIndex}`;
+      modified = true;
+    }
+
+    if (!Array.isArray(entry.photos)) {
+      entry.photos = [];
+      modified = true;
+    }
+
+    if (entry.photos.length > 9) {
+      console.log(`  ⚠ photos.json entry "${entry.id}" has ${entry.photos.length} photos, truncating to 9`);
+      entry.photos = entry.photos.slice(0, 9);
+      modified = true;
+    }
+
+    entry.photos.forEach((photo, photoIndex) => {
+      if (!photo.id) {
+        photo.id = `${entry.id}-photo-${photoIndex}`;
+        modified = true;
+      }
+    });
+  });
+
+  if (modified) {
+    fs.writeFileSync(photosPath, JSON.stringify(data, null, 2), 'utf-8');
+    console.log('  ✓ Processed photos.json (auto-filled IDs, enforced 9-photo limit)');
+  }
+}
+
+/**
  * Build the public/data/docs.json catalog from content/docs-index.json.
  * The index only stores metadata and file names; this script fills in the
  * public paths so the docs page and generateStaticParams stay in sync with
@@ -426,6 +471,9 @@ function syncContent() {
     mergeFriendsCheckInfo(friendsSource, friendsPublic);
     console.log('  ✓ Preserved friends.json checkInfo');
   }
+
+  // Process photos.json: auto-fill IDs and enforce per-entry photo limit.
+  processPhotosJson();
 
   // Generate the docs catalog from the trimmed index.
   generateDocsJson();
