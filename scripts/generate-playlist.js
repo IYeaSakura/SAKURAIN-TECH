@@ -12,10 +12,10 @@ const LYRIC_DIR = path.join(PROJECT_ROOT, 'public', 'music', 'lyric');
 const COVER_DIR = path.join(PROJECT_ROOT, 'public', 'music', 'music-covers');
 const PLAYLIST_PATH = path.join(PROJECT_ROOT, 'content', 'data', 'playlist.json');
 
-const COS_BASE_URL = 'https://cos.sakurain.net';
-const COS_MP3_PATH = '/mp3/';
-const COS_LYRIC_PATH = '/lyric/';
-const COS_COVERS_PATH = '/music-covers/';
+const CDN_BASE_URL = 'https://file.sakurain.net/music';
+const CDN_MP3_PATH = '/mp3/';
+const CDN_LYRIC_PATH = '/lyric/';
+const CDN_COVERS_PATH = '/music-covers/';
 
 /**
  * Ensure a directory exists, creating it recursively if necessary.
@@ -83,10 +83,10 @@ function getCoverExtension(format) {
 }
 
 /**
- * Build the external COS URL for a cover file name.
+ * Build the external CDN URL for a cover file name.
  */
 function buildCoverUrl(coverName) {
-  return `${COS_BASE_URL}${COS_COVERS_PATH}${encodeURIComponent(coverName)}`;
+  return `${CDN_BASE_URL}${CDN_COVERS_PATH}${encodeURIComponent(coverName)}`;
 }
 
 /**
@@ -107,7 +107,7 @@ function findExistingCoverExtension(basename) {
 /**
  * Extract the first embedded picture from an MP3 and write it to the cover directory.
  * Falls back to a pre-existing local cover file when no embedded picture is found.
- * Returns the external COS URL, or null when no cover is available.
+ * Returns the external CDN URL, or null when no cover is available.
  */
 async function extractCover(metadata, basename) {
   const pictures = metadata.common.picture;
@@ -133,7 +133,7 @@ async function extractCover(metadata, basename) {
 
 /**
  * Generate content/data/playlist.json by scanning public/music/mp3 for MP3 files.
- * Audio, lyric and cover URLs point to the external COS bucket. Local media is
+ * Audio, lyric and cover URLs point to the external CDN. Local media is
  * organised as public/music/{mp3,lyric,music-covers} and used as build material.
  */
 async function generatePlaylist() {
@@ -172,14 +172,14 @@ async function generatePlaylist() {
     const lrcPath = path.join(LYRIC_DIR, `${basename}.lrc`);
     const hasLyrics = fs.existsSync(lrcPath);
     const lyricUrl = hasLyrics
-      ? `${COS_BASE_URL}${COS_LYRIC_PATH}${encodeURIComponent(`${basename}.lrc`)}`
+      ? `${CDN_BASE_URL}${CDN_LYRIC_PATH}${encodeURIComponent(`${basename}.lrc`)}`
       : null;
 
     songs.push({
       id: basename,
       title,
       artist,
-      src: `${COS_BASE_URL}${COS_MP3_PATH}${encodeURIComponent(file)}`,
+      src: `${CDN_BASE_URL}${CDN_MP3_PATH}${encodeURIComponent(file)}`,
       cover,
       lyricUrl,
     });
