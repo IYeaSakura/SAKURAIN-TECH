@@ -11,6 +11,7 @@
 const DB_NAME = 'sakurain-asset-cache';
 const DB_VERSION = 1;
 const STORE_NAME = 'assets';
+const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 const LIMITS = {
   audio: 200 * 1024 * 1024,
@@ -161,28 +162,16 @@ async function fetchAndCache(url: string, type: 'audio' | 'cover'): Promise<Cach
 }
 
 /**
- * Check whether a cached entry is stale by comparing ETag or Last-Modified
- * headers with a lightweight HEAD request. Failures are treated as "not stale"
- * so the cache remains usable when COS is unreachable.
+ * Check whether a cached entry has exceeded the 30-day TTL.
+ * Failures are treated as "not expired" so the cache remains usable.
  */
-async function isCacheStale(entry: CacheEntry): Promise<boolean> {
-  try {
-    const response = await fetch(entry.url, { method: 'HEAD', credentials: 'omit' });
-    if (!response.ok) return false;
-    const etag = response.headers.get('etag');
-    if (etag && entry.etag) return etag !== entry.etag;
-    const lastModified = response.headers.get('last-modified');
-    if (lastModified && entry.lastModified) return lastModified !== entry.lastModified;
-    // Without validator headers, keep the cached version to avoid re-downloads.
-    return false;
-  } catch {
-    return false;
-  }
+function isCacheExpired(entry: CacheEntry): boolean {
+  return Date.now() - entry.cachedAt > CACHE_TTL_MS;
 }
 
 /**
  * Register a blob URL so audio source comparisons can map it back to the
- * original COS URL.
+ * original CDN URL.
  */
 export function registerBlobUrl(blobUrl: string, originalUrl: string): void {
   blobUrlToOriginalSrc.set(blobUrl, originalUrl);
@@ -205,16 +194,16 @@ export function resolveOriginalSrc(src: string): string {
 
 /**
  * Return a cached blob URL for an audio file, or the original URL if the file
- * is not cached yet. Cached files are validated with a HEAD request before
- * reuse, and stale entries are refreshed automatically.
+ * is not cached yet. Cached files are reused for 30 days and refreshed after
+ * the TTL expires.
  */
 export async function getCachedAudioUrl(src: string): Promise<string> {
   if (!src || typeof window === 'undefined' || !isCacheable(src)) return src;
   try {
     const entry = await getEntry(src);
     if (entry?.blob) {
-      const stale = await isCacheStale(entry);
-      if (!stale) {
+      const expired = isCacheExpired(entry);
+      if (!expired) {
         const blobUrl = URL.createObjectURL(entry.blob);
         registerBlobUrl(blobUrl, src);
         return blobUrl;
@@ -234,7 +223,7 @@ export async function getCachedAudioUrl(src: string): Promise<string> {
 
 /**
  * Return the raw lyric text for a URL, fetching and caching it if needed.
- * Cached lyrics are validated with HEAD before reuse.
+ * Cached lyrics are reused for 30 days and refreshed after the TTL expires.
  */
 export async function getCachedLyrics(url: string | undefined | null): Promise<string | null> {
   if (!url || typeof window === 'undefined' || !isCacheable(url)) {
@@ -250,8 +239,8 @@ export async function getCachedLyrics(url: string | undefined | null): Promise<s
   try {
     const entry = await getEntry(url);
     if (entry?.text !== undefined) {
-      const stale = await isCacheStale(entry);
-      if (!stale) return entry.text;
+      const expired = isCacheExpired(entry);
+      if (!expired) return entry.text;
     }
 
     const response = await fetch(url, { credentials: 'omit' });
@@ -274,16 +263,16 @@ export async function getCachedLyrics(url: string | undefined | null): Promise<s
 
 /**
  * Return a cached blob URL for a cover image, or the original URL if the image
- * is not cached yet. Cached covers are validated with HEAD before reuse, and
- * stale entries are refreshed automatically.
+ * is not cached yet. Cached covers are reused for 30 days and refreshed after
+ * the TTL expires.
  */
 export async function getCachedCoverUrl(url: string | undefined | null): Promise<string> {
   if (!url || typeof window === 'undefined' || !isCacheable(url)) return url || '';
   try {
     const entry = await getEntry(url);
     if (entry?.blob) {
-      const stale = await isCacheStale(entry);
-      if (!stale) {
+      const expired = isCacheExpired(entry);
+      if (!expired) {
         const blobUrl = URL.createObjectURL(entry.blob);
         registerBlobUrl(blobUrl, url);
         return blobUrl;
