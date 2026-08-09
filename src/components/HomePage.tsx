@@ -1,17 +1,30 @@
 'use client';
 
 /**
- * HomePage —— asymmetric bento-style personal dashboard.
+ * HomePage — modular desktop-style personal dashboard.
  *
- * The layout keeps the site's neo-brutalist + pixel character while
- * feeling like a dense, functional home screen. A wide main column holds
- * the map and long-form content widgets; a narrower sidebar stacks
- * utility widgets of varying heights for an intentionally uneven rhythm.
+ * Widgets are wrapped in draggable window chrome so the landing page feels
+ * like a bento desktop. Order, pin and collapse states are persisted in
+ * localStorage and restored on the client after hydration.
  */
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Terminal, BookOpen, Camera } from 'lucide-react';
+import {
+  ArrowRight,
+  Terminal,
+  BookOpen,
+  Camera,
+  Navigation,
+  MessageSquare,
+  Music,
+  CalendarDays,
+  Search,
+  Quote,
+  Heart,
+  Code2,
+  RotateCcw,
+} from 'lucide-react';
 
 import { Footer } from '@/components/sections/Footer';
 import { BlogListItem } from '@/components/blog/components/BlogListItem';
@@ -23,6 +36,9 @@ import { SearchWidget } from '@/components/home/SearchWidget';
 import { DailyQuoteWidget } from '@/components/home/DailyQuoteWidget';
 import { FriendsStatusWidget } from '@/components/home/FriendsStatusWidget';
 import { LanguageStatsWidget } from '@/components/home/LanguageStatsWidget';
+import { WidgetFrame } from '@/components/home/WidgetFrame';
+import { DesktopStatusBar } from '@/components/home/DesktopStatusBar';
+import { useWidgetLayout, type WidgetId } from '@/components/home/useWidgetLayout';
 import {
   useTheme,
   useStylePreset,
@@ -80,35 +96,22 @@ function QuickLinksStrip() {
   );
 }
 
-function RecentPostsWidget({ posts }: { posts: BlogPost[] }) {
+function RecentPostsBody({ posts }: { posts: BlogPost[] }) {
   const { t } = useTranslation();
-  const animationEnabled = useAnimationEnabled();
   const { navigateTo } = useNavigation();
   const recentPosts = posts.slice(0, RECENT_POSTS_COUNT);
 
   return (
-    <motion.div
-      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.3 }}
-      className="min-h-[320px] p-5 border-2 flex flex-col"
-      style={{
-        background: 'var(--bg-secondary)',
-        borderColor: 'var(--border-subtle)',
-        boxShadow: '4px 4px 0 var(--border-subtle)',
-      }}
-    >
+    <div className="p-5 h-full flex flex-col" style={{ background: 'var(--bg-secondary)' }}>
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <BookOpen className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-          <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-            {t.home.recentPosts}
-          </span>
-        </div>
+        <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+          {t.home.recentPosts}
+        </span>
         <button
           onClick={() => navigateTo('/blog')}
           className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider transition-opacity hover:opacity-70"
           style={{ color: 'var(--accent-primary)' }}
+          type="button"
         >
           {t.home.allPosts}
           <ArrowRight className="w-3 h-3" />
@@ -126,15 +129,39 @@ function RecentPostsWidget({ posts }: { posts: BlogPost[] }) {
           ))
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
+
+const MAIN_WIDGETS: WidgetId[] = ['map', 'recent-posts', 'recent-devlog'];
+const SIDEBAR_WIDGETS: WidgetId[] = ['music', 'calendar', 'search', 'daily-quote', 'friends-status', 'language-stats'];
+
+const WIDGET_CONFIG: Record<
+  WidgetId,
+  {
+    title: string;
+    icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+    minHeight?: string;
+    render: (props: { posts: BlogPost[]; notes: Note[] }) => React.ReactNode;
+  }
+> = {
+  map: { title: 'Travel Map', icon: Navigation, minHeight: 'min-h-[340px] sm:min-h-[400px]', render: () => <AMapWidget /> },
+  'recent-posts': { title: 'Recent Posts', icon: BookOpen, minHeight: 'min-h-[320px]', render: ({ posts }) => <RecentPostsBody posts={posts} /> },
+  'recent-devlog': { title: 'Dev Log', icon: MessageSquare, render: ({ notes }) => <RecentDevLog notes={notes} maxItems={3} /> },
+  music: { title: 'Music', icon: Music, minHeight: 'min-h-[160px]', render: () => <MusicWidget /> },
+  calendar: { title: 'Clock', icon: CalendarDays, minHeight: 'min-h-[160px]', render: () => <CalendarWidget /> },
+  search: { title: 'Search', icon: Search, minHeight: 'min-h-[120px]', render: () => <SearchWidget /> },
+  'daily-quote': { title: 'Daily Quote', icon: Quote, minHeight: 'min-h-[120px]', render: () => <DailyQuoteWidget /> },
+  'friends-status': { title: 'Friends', icon: Heart, minHeight: 'min-h-[100px]', render: () => <FriendsStatusWidget /> },
+  'language-stats': { title: 'Languages', icon: Code2, minHeight: 'min-h-[200px]', render: () => <LanguageStatsWidget /> },
+};
 
 export default function HomePage({ posts, notes }: HomePageProps) {
   const [siteData, setSiteData] = useState<SiteData | null>(null);
   const [dataLoaded, setDataLoaded] = useState(false);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const animationEnabled = useAnimationEnabled();
+  const { order, pinned, collapsed, hydrated, moveWidget, togglePin, toggleCollapse, resetLayout } = useWidgetLayout();
   useTheme();
 
   useEffect(() => {
@@ -150,7 +177,10 @@ export default function HomePage({ posts, notes }: HomePageProps) {
       });
   }, []);
 
-  if (!dataLoaded) {
+  const sortedMain = MAIN_WIDGETS.slice().sort((a, b) => order.indexOf(a) - order.indexOf(b));
+  const sortedSidebar = SIDEBAR_WIDGETS.slice().sort((a, b) => order.indexOf(a) - order.indexOf(b));
+
+  if (!dataLoaded || !hydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
         <div className="text-center font-mono">
@@ -193,44 +223,74 @@ export default function HomePage({ posts, notes }: HomePageProps) {
           </div>
         </motion.section>
 
+        <DesktopStatusBar />
+
         {/* Asymmetric dashboard */}
         <section className="flex flex-col lg:flex-row gap-4 lg:gap-5">
-          {/* Main column — wide, content-heavy */}
+          {/* Main column */}
           <div className="flex-1 flex flex-col gap-4 lg:gap-5 min-w-0">
-            <div className="min-h-[380px] sm:min-h-[460px]">
-              <AMapWidget />
-            </div>
-            <RecentPostsWidget posts={posts} />
-            <RecentDevLog notes={notes} maxItems={3} />
+            {sortedMain.map((id) => {
+              const config = WIDGET_CONFIG[id];
+              return (
+                <div key={id} className={config.minHeight || ''}>
+                  <WidgetFrame
+                    id={id}
+                    title={config.title}
+                    icon={config.icon}
+                    isPinned={pinned.has(id)}
+                    isCollapsed={collapsed.has(id)}
+                    onTogglePin={togglePin}
+                    onToggleCollapse={toggleCollapse}
+                    onDrop={(targetId) => moveWidget(id, targetId)}
+                  >
+                    {config.render({ posts, notes })}
+                  </WidgetFrame>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Sidebar — narrow, utility widgets */}
+          {/* Sidebar */}
           <div className="w-full lg:w-[360px] flex flex-col gap-4 lg:gap-5 shrink-0">
-            <div className="min-h-[180px]">
-              <MusicWidget />
-            </div>
-
-            <div className="min-h-[160px]">
-              <CalendarWidget />
-            </div>
-
-            <div className="min-h-[120px]">
-              <SearchWidget />
-            </div>
-
-            <div className="min-h-[140px]">
-              <DailyQuoteWidget />
-            </div>
-
-            <div className="min-h-[120px]">
-              <FriendsStatusWidget />
-            </div>
-
-            <div className="min-h-[240px]">
-              <LanguageStatsWidget />
-            </div>
+            {sortedSidebar.map((id) => {
+              const config = WIDGET_CONFIG[id];
+              return (
+                <div key={id} className={config.minHeight || ''}>
+                  <WidgetFrame
+                    id={id}
+                    title={config.title}
+                    icon={config.icon}
+                    isPinned={pinned.has(id)}
+                    isCollapsed={collapsed.has(id)}
+                    onTogglePin={togglePin}
+                    onToggleCollapse={toggleCollapse}
+                    onDrop={(targetId) => moveWidget(id, targetId)}
+                  >
+                    {config.render({ posts, notes })}
+                  </WidgetFrame>
+                </div>
+              );
+            })}
           </div>
         </section>
+
+        {/* Layout controls */}
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={resetLayout}
+            className="flex items-center gap-2 px-3 py-2 border-2 text-[10px] font-mono uppercase tracking-wider transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+            style={{
+              background: 'var(--bg-secondary)',
+              borderColor: 'var(--border-subtle)',
+              color: 'var(--text-muted)',
+              boxShadow: '3px 3px 0 var(--border-subtle)',
+            }}
+            type="button"
+          >
+            <RotateCcw className="w-3 h-3" />
+            {locale === 'zh' ? '重置布局' : 'Reset layout'}
+          </button>
+        </div>
       </main>
 
       {siteData && <Footer data={siteData.footer} />}
