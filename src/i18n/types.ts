@@ -175,6 +175,8 @@ export interface Dictionary {
     search: string;
     searchPlaceholder: string;
     searchEmpty: string;
+    searchFuzzy: string;
+    searchExact: string;
     dailyQuote: string;
     friends: string;
     friendsTotal: string;
