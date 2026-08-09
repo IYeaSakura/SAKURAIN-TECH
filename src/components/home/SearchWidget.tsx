@@ -1,44 +1,23 @@
 'use client';
 
 /**
- * SearchWidget — homepage entry point for the global Command Palette search.
+ * SearchWidget — homepage body for the global Command Palette search.
  *
- * Clicking the input opens the unified site search so the homepage widget
- * stays compact while offering the same full-text capabilities as the
- * Dynamic Island shortcut.
+ * The outer chrome is provided by WidgetFrame on the homepage.
  */
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Search, Command } from 'lucide-react';
-import { useTranslation, useAnimationEnabled } from '@/hooks';
+import { useTranslation } from '@/hooks';
 import { useGlobalSearch } from '@/components/search';
 
 export function SearchWidget() {
   const { t, locale } = useTranslation();
-  const animationEnabled = useAnimationEnabled();
   const { open: openSearch } = useGlobalSearch();
   const [focused, setFocused] = useState(false);
 
   return (
-    <motion.div
-      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-      className="relative h-full min-h-[120px] p-5 border-2 flex flex-col"
-      style={{
-        background: 'var(--bg-secondary)',
-        borderColor: 'var(--border-subtle)',
-        boxShadow: '4px 4px 0 var(--border-subtle)',
-      }}
-    >
-      <div className="flex items-center gap-2 mb-3">
-        <Search className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-        <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-          {t.widgets.search}
-        </span>
-      </div>
-
+    <div className="p-5 h-full min-h-[120px] flex flex-col" style={{ background: 'var(--bg-secondary)' }}>
       <button
         onClick={openSearch}
         onFocus={() => setFocused(true)}
@@ -70,6 +49,6 @@ export function SearchWidget() {
           ? '搜索文章、日志、文档、友链与页面'
           : 'Search posts, notes, docs, friends and pages'}
       </p>
-    </motion.div>
+    </div>
   );
 }

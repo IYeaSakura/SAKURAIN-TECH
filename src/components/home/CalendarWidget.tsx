@@ -1,23 +1,21 @@
 'use client';
 
 /**
- * CalendarWidget —— homepage date & time card.
+ * CalendarWidget — homepage date & time card body.
  *
- * A simple live clock and calendar display for the personal blog dashboard.
+ * The outer chrome is provided by WidgetFrame on the homepage.
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Clock, CalendarDays } from 'lucide-react';
-import { useAnimationEnabled, useTranslation } from '@/hooks';
+import { Clock } from 'lucide-react';
+import { useTranslation } from '@/hooks';
 
 function pad(n: number) {
   return n.toString().padStart(2, '0');
 }
 
 export function CalendarWidget() {
-  const animationEnabled = useAnimationEnabled();
-  const { t, locale } = useTranslation();
+  const { locale } = useTranslation();
   const [now, setNow] = useState<Date | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -44,33 +42,11 @@ export function CalendarWidget() {
   }, [now, locale]);
 
   if (!mounted) {
-    return (
-      <div
-        className="p-5 h-full min-h-[180px] border-2"
-        style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}
-      />
-    );
+    return <div className="p-5 h-full min-h-[160px]" style={{ background: 'var(--bg-secondary)' }} />;
   }
 
   return (
-    <motion.div
-      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.15 }}
-      className="p-5 h-full flex flex-col border-2"
-      style={{
-        background: 'var(--bg-secondary)',
-        borderColor: 'var(--border-subtle)',
-        boxShadow: '4px 4px 0 var(--border-subtle)',
-      }}
-    >
-      <div className="flex items-center gap-2 mb-4">
-        <CalendarDays className="w-4 h-4" style={{ color: 'var(--accent-tertiary)' }} />
-        <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-          {t.widgets.calendar.title}
-        </span>
-      </div>
-
+    <div className="p-5 h-full flex flex-col" style={{ background: 'var(--bg-secondary)' }}>
       <div className="flex-1 flex flex-col justify-center">
         <div className="flex items-center gap-2 mb-2">
           <Clock className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
@@ -85,6 +61,6 @@ export function CalendarWidget() {
           {dateStr}
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 }
