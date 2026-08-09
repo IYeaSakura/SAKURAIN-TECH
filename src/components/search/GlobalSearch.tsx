@@ -91,10 +91,40 @@ export function GlobalSearch() {
     return searchIndex(index, query, { limit: 20 });
   }, [index, query]);
 
+  const groupedResults = useMemo(() => {
+    const groups: Partial<Record<SearchDocumentType, SearchResult[]>> = {};
+    for (const result of results) {
+      const type = result.document.type;
+      if (!groups[type]) groups[type] = [];
+      groups[type]!.push(result);
+    }
+    return groups;
+  }, [results]);
+
+  const groupOrder: SearchDocumentType[] = ['post', 'doc', 'note', 'service', 'friend', 'page'];
+
+  const groupedItems = useMemo(() => {
+    const groups: Partial<
+      Record<SearchDocumentType, { result: SearchResult; globalIndex: number }[]>
+    > = {};
+    const flat: SearchResult[] = [];
+    let globalIndex = 0;
+    for (const type of groupOrder) {
+      const group = groupedResults[type];
+      if (group?.length) {
+        groups[type] = group.map((result) => {
+          flat.push(result);
+          return { result, globalIndex: globalIndex++ };
+        });
+      }
+    }
+    return { groups, flat, total: globalIndex };
+  }, [groupedResults]);
+
   // Reset selection when results change
   useEffect(() => {
     setSelectedIndex(0);
-  }, [results.length, query]);
+  }, [groupedItems.total, query]);
 
   // Focus input when opened
   useEffect(() => {
@@ -116,21 +146,21 @@ export function GlobalSearch() {
         return;
       }
 
-      if (results.length === 0) return;
+      if (groupedItems.total === 0) return;
 
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          setSelectedIndex((prev) => (prev + 1) % results.length);
+          setSelectedIndex((prev) => (prev + 1) % groupedItems.total);
           break;
         case 'ArrowUp':
           e.preventDefault();
-          setSelectedIndex((prev) => (prev - 1 + results.length) % results.length);
+          setSelectedIndex((prev) => (prev - 1 + groupedItems.total) % groupedItems.total);
           break;
         case 'Enter':
           e.preventDefault();
-          if (results[selectedIndex]) {
-            navigateTo(results[selectedIndex].document.href);
+          if (groupedItems.flat[selectedIndex]) {
+            navigateTo(groupedItems.flat[selectedIndex].document.href);
             close();
           }
           break;
@@ -139,7 +169,7 @@ export function GlobalSearch() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, results, selectedIndex, close, navigateTo]);
+  }, [isOpen, groupedItems, selectedIndex, close, navigateTo]);
 
   // Scroll selected item into view
   useEffect(() => {
@@ -158,27 +188,6 @@ export function GlobalSearch() {
     },
     [navigateTo, close]
   );
-
-  const groupedResults = useMemo(() => {
-    const groups: Partial<Record<SearchDocumentType, SearchResult[]>> = {};
-    for (const result of results) {
-      const type = result.document.type;
-      if (!groups[type]) groups[type] = [];
-      groups[type]!.push(result);
-    }
-    return groups;
-  }, [results]);
-
-  const groupOrder: SearchDocumentType[] = ['post', 'doc', 'note', 'service', 'friend', 'page'];
-  const flattenedItems: { type: SearchDocumentType; result: SearchResult }[] = [];
-  for (const type of groupOrder) {
-    const group = groupedResults[type];
-    if (group) {
-      for (const result of group) {
-        flattenedItems.push({ type, result });
-      }
-    }
-  }
 
   if (!isOpen) return null;
 
@@ -275,68 +284,69 @@ export function GlobalSearch() {
                 ))}
               </div>
             </div>
-          ) : results.length === 0 ? (
+          ) : groupedItems.total === 0 ? (
             <div className="px-4 py-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
               {t.widgets.searchEmpty}
             </div>
           ) : (
             <div className="py-2">
-              {flattenedItems.map(({ type, result }, index) => {
-                const isSelected = index === selectedIndex;
+              {groupOrder.map((type) => {
+                const group = groupedItems.groups[type];
+                if (!group?.length) return null;
                 const TypeIcon = TYPE_ICONS[type];
                 return (
-                  <button
-                    key={result.document.id}
-                    data-index={index}
-                    onClick={() => handleSelect(result)}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                    className="w-full flex items-start gap-3 px-4 py-2.5 text-left transition-colors"
-                    style={{
-                      background: isSelected ? 'var(--bg-tertiary)' : 'transparent',
-                    }}
-                  >
+                  <section key={type} className="mb-2 last:mb-0">
                     <div
-                      className="w-8 h-8 shrink-0 flex items-center justify-center border-2 mt-0.5"
+                      className="sticky top-0 z-10 flex items-center gap-2 px-4 py-1.5 border-b-2 text-[10px] font-mono uppercase tracking-wider"
                       style={{
                         borderColor: 'var(--border-subtle)',
-                        background: 'var(--bg-secondary)',
+                        background: 'var(--bg-primary)',
+                        color: 'var(--text-muted)',
                       }}
                     >
-                      <TypeIcon className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+                      <TypeIcon className="w-3 h-3" style={{ color: 'var(--accent-primary)' }} />
+                      <span>{typeLabels[type]}</span>
+                      <span className="ml-auto">{group.length}</span>
                     </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span
-                          className="text-xs font-bold truncate"
-                          style={{ color: isSelected ? 'var(--accent-primary)' : 'var(--text-primary)' }}
-                        >
-                          {result.document.title}
-                        </span>
-                        <span
-                          className="text-[10px] px-1.5 py-0.5 border shrink-0"
+                    {group.map(({ result, globalIndex }) => {
+                      const isSelected = globalIndex === selectedIndex;
+                      return (
+                        <button
+                          key={result.document.id}
+                          data-index={globalIndex}
+                          onClick={() => handleSelect(result)}
+                          onMouseEnter={() => setSelectedIndex(globalIndex)}
+                          className="w-full flex items-start gap-3 px-4 py-2.5 text-left transition-colors"
                           style={{
-                            borderColor: 'var(--border-subtle)',
-                            color: 'var(--text-muted)',
+                            background: isSelected ? 'var(--bg-tertiary)' : 'transparent',
                           }}
                         >
-                          {typeLabels[type]}
-                        </span>
-                      </div>
-                      <p className="text-xs line-clamp-2" style={{ color: 'var(--text-muted)' }}>
-                        {renderExcerpt(result.excerpt)}
-                      </p>
-                      {result.document.date && (
-                        <p className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                          {result.document.date}
-                        </p>
-                      )}
-                    </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span
+                                className="text-xs font-bold truncate"
+                                style={{ color: isSelected ? 'var(--accent-primary)' : 'var(--text-primary)' }}
+                              >
+                                {result.document.title}
+                              </span>
+                            </div>
+                            <p className="text-xs line-clamp-2" style={{ color: 'var(--text-muted)' }}>
+                              {renderExcerpt(result.excerpt)}
+                            </p>
+                            {result.document.date && (
+                              <p className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                                {result.document.date}
+                              </p>
+                            )}
+                          </div>
 
-                    {isSelected && (
-                      <CornerDownLeft className="w-4 h-4 shrink-0 mt-1" style={{ color: 'var(--accent-primary)' }} />
-                    )}
-                  </button>
+                          {isSelected && (
+                            <CornerDownLeft className="w-4 h-4 shrink-0 mt-1" style={{ color: 'var(--accent-primary)' }} />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </section>
                 );
               })}
             </div>
@@ -349,7 +359,7 @@ export function GlobalSearch() {
           style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}
         >
           <span>
-            {results.length > 0 ? `${results.length} ${locale === 'zh' ? '个结果' : 'results'}` : ''}
+            {groupedItems.total > 0 ? `${groupedItems.total} ${locale === 'zh' ? '个结果' : 'results'}` : ''}
           </span>
           <div className="flex items-center gap-3">
             <span>↑↓ {locale === 'zh' ? '选择' : 'Select'}</span>
