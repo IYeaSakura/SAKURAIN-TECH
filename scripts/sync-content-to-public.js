@@ -13,8 +13,11 @@ const DOCS_INDEX_PATH = path.join(CONTENT_DIR, 'docs-index.json');
 const DOCS_JSON_TARGET = path.join(PUBLIC_DIR, 'data', 'docs.json');
 const BLOG_JSON_TARGET = path.join(PUBLIC_DIR, 'data', 'blog.json');
 const NOTES_JSON_TARGET = path.join(PUBLIC_DIR, 'data', 'notes.json');
+const SEARCH_INDEX_TARGET = path.join(PUBLIC_DIR, 'data', 'search-index.json');
 const BLOG_POSTS_DIR = path.join(CONTENT_DIR, 'blog');
 const NOTES_POSTS_DIR = path.join(CONTENT_DIR, 'notes', 'posts');
+const FRIENDS_SOURCE = path.join(CONTENT_DIR, 'data', 'friends.json');
+const SITE_DATA_SOURCE = path.join(CONTENT_DIR, 'data', 'site-data.json');
 
 /**
  * Managed content mappings from content/ to public/.
@@ -38,6 +41,7 @@ const SYNCED_PUBLIC_PATHS = [
   'data/docs.json',
   'data/blog.json',
   'data/notes.json',
+  'data/search-index.json',
   'data/beidou-satellites.json',
   'data/language-stats.json',
   'config/security-config.json',
@@ -435,6 +439,225 @@ function generateNotesJson() {
   console.log(`  ✓ Generated public/data/notes.json with ${notes.length} notes`);
 }
 
+/* ---------------------------------------------------------------------------
+ * Unified site-wide search index
+ * --------------------------------------------------------------------------- */
+
+const MAX_CONTENT_LENGTH = 1200;
+
+/**
+ * Strip common Markdown/JSX noise so the search index stores plain text.
+ */
+function cleanMarkdown(raw) {
+  if (!raw || typeof raw !== 'string') return '';
+  return raw
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/^#{1,6}\s+/gm, ' ')
+    .replace(/(\*\*|__|\*|_|~~|`)/g, '')
+    .replace(/\|/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function truncateText(text, maxLength = MAX_CONTENT_LENGTH) {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength).trimEnd() + '…';
+}
+
+function safeReadJson(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return null;
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
+function resolveDocsFile(publicPath) {
+  const rel = publicPath.replace(/^\/+/, '');
+  const abs = path.resolve(PUBLIC_DIR, rel);
+  if (!abs.startsWith(PUBLIC_DIR + path.sep) && abs !== PUBLIC_DIR) return null;
+  return abs;
+}
+
+function readDocContent(publicPath) {
+  const abs = resolveDocsFile(publicPath);
+  if (!abs || !fs.existsSync(abs)) return '';
+  try {
+    const { content } = matter(fs.readFileSync(abs, 'utf-8'));
+    return cleanMarkdown(content);
+  } catch {
+    return '';
+  }
+}
+
+function buildSearchIndex() {
+  const documents = [];
+
+  // Blog posts
+  const blog = safeReadJson(BLOG_JSON_TARGET);
+  if (blog?.posts) {
+    for (const post of blog.posts) {
+      documents.push({
+        id: `post:${post.slug}`,
+        type: 'post',
+        title: String(post.title || post.slug),
+        description: String(post.description || ''),
+        content: truncateText(cleanMarkdown(post.content || '')),
+        href: `/blog/${post.slug}`,
+        date: post.date || '',
+        tags: Array.isArray(post.tags) ? post.tags.map(String) : [],
+        category: 'blog',
+      });
+    }
+  }
+
+  // Dev notes
+  const notes = safeReadJson(NOTES_JSON_TARGET);
+  if (notes?.notes) {
+    for (const note of notes.notes) {
+      documents.push({
+        id: `note:${note.slug}`,
+        type: 'note',
+        title: String(note.title || note.slug),
+        description: '',
+        content: truncateText(cleanMarkdown(note.content || '')),
+        href: `/dev-log#note-${note.id}`,
+        date: note.date || '',
+        tags: [],
+        category: 'dev-log',
+      });
+    }
+  }
+
+  // Docs (categories, series, chapters and single docs)
+  const docs = safeReadJson(DOCS_JSON_TARGET);
+  if (docs?.categories) {
+    for (const category of docs.categories) {
+      for (const item of category.items) {
+        if (item.type === 'series') {
+          for (const chapter of item.chapters || []) {
+            const content = readDocContent(chapter.path);
+            documents.push({
+              id: `doc:${category.id}:${item.id}:${chapter.id}`,
+              type: 'doc',
+              title: String(chapter.title || ''),
+              description: String(chapter.description || ''),
+              content: truncateText(content),
+              href: `/docs/${category.id}/${item.id}/${chapter.id}`,
+              date: '',
+              tags: [category.name, item.title],
+              category: `docs:${category.name}`,
+            });
+          }
+        } else {
+          const content = readDocContent(item.path);
+          documents.push({
+            id: `doc:${category.id}:${item.id}`,
+            type: 'doc',
+            title: String(item.title || ''),
+            description: String(item.description || ''),
+            content: truncateText(content),
+            href: `/docs/${category.id}/${item.id}`,
+            date: '',
+            tags: [category.name],
+            category: `docs:${category.name}`,
+          });
+        }
+      }
+    }
+  }
+
+  // Friends
+  const friends = safeReadJson(FRIENDS_SOURCE);
+  if (friends?.friends) {
+    for (const friend of friends.friends) {
+      const desc = typeof friend.description === 'object'
+        ? friend.description?.zh || friend.description?.en || ''
+        : String(friend.description || '');
+      documents.push({
+        id: `friend:${friend.id || friend.name}`,
+        type: 'friend',
+        title: String(friend.name || ''),
+        description: desc,
+        content: '',
+        href: `/friends`,
+        date: friends.lastUpdated || '',
+        tags: [friend.category || ''],
+        category: 'friends',
+      });
+    }
+  }
+
+  // Services from site-data.json
+  const siteData = safeReadJson(SITE_DATA_SOURCE);
+  if (siteData?.services) {
+    for (const service of siteData.services) {
+      const details = service.details?.sections || [];
+      const detailText = details
+        .map((s) => [s.title, ...(s.items || []).map((i) => `${i.name} ${i.desc}`)].join(' '))
+        .join(' ');
+      documents.push({
+        id: `service:${service.id}`,
+        type: 'service',
+        title: String(service.title || ''),
+        description: String(service.description || ''),
+        content: truncateText(cleanMarkdown(`${service.subtitle || ''} ${service.features?.join(' ') || ''} ${detailText}`)),
+        href: '/projects',
+        date: '',
+        tags: service.tech || [],
+        category: 'services',
+      });
+    }
+  }
+
+  // Static pages
+  const staticPages = [
+    { id: 'page:home', title: '首页', titleEn: 'Home', description: 'SAKURAIN 个人品牌站首页', href: '/' },
+    { id: 'page:blog', title: '博客', titleEn: 'Blog', description: '技术博客与文章归档', href: '/blog' },
+    { id: 'page:projects', title: '项目', titleEn: 'Projects', description: '技术服务与项目展示', href: '/projects' },
+    { id: 'page:dev-log', title: '开发日志', titleEn: 'Dev Log', description: '开发迭代记录与技术日志', href: '/dev-log' },
+    { id: 'page:friends', title: '友链', titleEn: 'Friends', description: '友情链接与技术社区', href: '/friends' },
+    { id: 'page:friends-circle', title: '朋友圈', titleEn: 'Friends Circle', description: '订阅好友博客更新', href: '/friends-circle' },
+    { id: 'page:earth-online', title: '地球 Online', titleEn: 'Earth Online', description: '3D 地球与弹幕互动', href: '/earth-online' },
+    { id: 'page:moments', title: '动态', titleEn: 'Moments', description: '生活动态与摄影作品', href: '/moments' },
+    { id: 'page:music', title: '音乐', titleEn: 'Music', description: '音乐播放器与歌单', href: '/music' },
+    { id: 'page:about', title: '关于', titleEn: 'About', description: '关于 SAKURAIN 与联系方式', href: '/about' },
+    { id: 'page:docs', title: '文档', titleEn: 'Docs', description: '技术文档与系列教程', href: '/docs' },
+    { id: 'page:algo-viz', title: '算法可视化', titleEn: 'Algorithm Visualization', description: '算法可视化演示', href: '/algo-viz' },
+    { id: 'page:resume', title: '简历', titleEn: 'Resume', description: '个人简历与经历', href: '/resume' },
+    { id: 'page:settings', title: '设置', titleEn: 'Settings', description: '主题与偏好设置', href: '/settings' },
+  ];
+  for (const page of staticPages) {
+    documents.push({
+      id: page.id,
+      type: 'page',
+      title: page.title,
+      description: page.description,
+      content: `${page.title} ${page.titleEn} ${page.description}`,
+      href: page.href,
+      date: '',
+      tags: [page.titleEn],
+      category: 'pages',
+    });
+  }
+
+  const index = {
+    generatedAt: new Date().toISOString(),
+    count: documents.length,
+    documents,
+  };
+
+  ensureDir(path.dirname(SEARCH_INDEX_TARGET));
+  fs.writeFileSync(SEARCH_INDEX_TARGET, JSON.stringify(index, null, 2), 'utf-8');
+  console.log(`  ✓ Generated public/data/search-index.json with ${documents.length} documents`);
+}
+
 function syncContent() {
   if (!fs.existsSync(CONTENT_DIR)) {
     console.error('✘ Content directory not found:', CONTENT_DIR);
@@ -484,6 +707,9 @@ function syncContent() {
   // Generate terminal-readable JSON indexes for blog and notes.
   generateBlogJson();
   generateNotesJson();
+
+  // Build the unified site-wide search index after all content JSONs exist.
+  buildSearchIndex();
 
   // Validate that the trimmed index does not reference missing markdown files.
   validateDocsIndex();

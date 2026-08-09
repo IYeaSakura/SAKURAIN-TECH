@@ -215,7 +215,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
             </div>
 
             <div className="min-h-[120px]">
-              <SearchWidget posts={posts} notes={notes} />
+              <SearchWidget />
             </div>
 
             <div className="min-h-[140px]">

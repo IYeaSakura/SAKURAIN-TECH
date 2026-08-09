@@ -47,6 +47,7 @@ import {
   useNavigation,
   useTranslation,
 } from '@/hooks';
+import { useGlobalSearch } from '@/components/search';
 
 interface NavItem {
   labelKey: keyof import('@/i18n/types').Dictionary['nav'];
@@ -79,9 +80,9 @@ export function DynamicIsland() {
   const [isPinned, setIsPinned] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const animationEnabled = useAnimationEnabled();
   const player = useMusicPlayer();
+  const { open: openSearch } = useGlobalSearch();
   const { preset, cyclePreset } = useStylePreset();
   const { theme, toggleTheme } = useTheme();
   const { navigateTo } = useNavigation();
@@ -189,16 +190,6 @@ export function DynamicIsland() {
       })),
     [t.nav]
   );
-
-  const filteredNav = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return navLinks;
-    return navLinks.filter(
-      (link) =>
-        link.label.toLowerCase().includes(q) ||
-        link.href.toLowerCase().includes(q)
-    );
-  }, [searchQuery, navLinks]);
 
   if (!mounted) return null;
 
@@ -348,33 +339,32 @@ export function DynamicIsland() {
               </div>
 
               {/* Search */}
-              <div
-                className="flex items-center gap-2 px-2 py-1.5 border-2 mb-4"
+              <button
+                onClick={() => {
+                  setExpanded(false);
+                  openSearch();
+                }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 border-2 mb-4 text-left transition-colors hover:bg-[var(--bg-tertiary)]"
                 style={{ borderColor: 'var(--border-subtle)' }}
               >
                 <Search className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t.common.search + '...'}
-                  className="flex-1 bg-transparent outline-none text-xs min-w-0"
-                  style={{ color: 'var(--text-primary)', caretColor: 'var(--accent-primary)' }}
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="text-[10px] font-bold uppercase"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
-                    {t.common.clear}
-                  </button>
-                )}
-              </div>
+                <span
+                  className="flex-1 text-xs min-w-0"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {t.common.search}…
+                </span>
+                <kbd
+                  className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono border"
+                  style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}
+                >
+                  {locale === 'zh' ? 'Ctrl' : '⌘'} K
+                </kbd>
+              </button>
 
               {/* Navigation grid */}
               <div className="grid grid-cols-5 gap-2 mb-4">
-                {filteredNav.map((link) => (
+                {navLinks.map((link) => (
                   <button
                     key={link.href}
                     onClick={() => handleNav(link.href)}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ClientEffects from "@/components/ClientEffects";
+import { SearchProvider, GlobalSearch } from "@/components/search";
 import { StylePresetProvider } from "@/contexts/StylePresetContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -108,7 +109,10 @@ export default function RootLayout({
         <LanguageProvider>
           <SettingsProvider>
             <StylePresetProvider>
-              <ClientEffects>{children}</ClientEffects>
+              <SearchProvider>
+                <ClientEffects>{children}</ClientEffects>
+                <GlobalSearch />
+              </SearchProvider>
             </StylePresetProvider>
           </SettingsProvider>
         </LanguageProvider>
