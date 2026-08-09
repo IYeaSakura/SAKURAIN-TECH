@@ -58,6 +58,21 @@ export function initAudioConnection(audio: HTMLAudioElement): AudioConnection | 
   }
 }
 
+/**
+ * Resume the Web Audio context associated with an HTMLAudioElement.
+ * Must be called synchronously inside a user gesture to satisfy browser
+ * autoplay policies.
+ */
+export function resumeAudioContext(audio: HTMLAudioElement | null | undefined): void {
+  if (!audio) return;
+  const connection = globalAudioMap.get(audio);
+  if (connection && connection.context.state === 'suspended') {
+    connection.context.resume().catch(() => {
+      // Ignore resume failures; playback will simply not use Web Audio.
+    });
+  }
+}
+
 /** Audible range used for visualization; 16 kHz+ carries little musical energy. */
 const MIN_FREQ = 60;
 const MAX_FREQ = 16000;

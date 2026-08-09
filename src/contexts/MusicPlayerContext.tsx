@@ -24,7 +24,10 @@ import {
   resolveOriginalSrc,
   revokeBlobUrl,
 } from '@/lib/asset-cache';
-import { initAudioConnection } from '@/components/MusicPlayer/AudioVisualizer';
+import {
+  initAudioConnection,
+  resumeAudioContext,
+} from '@/components/MusicPlayer/AudioVisualizer';
 
 // Playlist type definitions
 export interface Song {
@@ -274,14 +277,17 @@ export function MusicPlayerProvider({
       // moved on to another track.
       if (!isSameAudioSource(failedSrc, currentSongRef.current.src)) return;
 
+      const mediaError = audio.error;
+      const errorDetails = mediaError
+        ? `code ${mediaError.code}${mediaError.message ? `: ${mediaError.message}` : ''}`
+        : 'unknown';
+
       if (
         failedSrc &&
         !failedSrcsRef.current.has(resolveAudioSrc(failedSrc))
       ) {
         failedSrcsRef.current.add(resolveAudioSrc(failedSrc));
-        if (process.env.NODE_ENV === 'development') {
-          console.warn(`[MusicPlayer] audio load failed: ${failedSrc}`);
-        }
+        console.warn(`[MusicPlayer] audio load failed: ${failedSrc} (${errorDetails})`);
       }
       setError('Audio resource unavailable');
       setIsLoading(false);
@@ -501,11 +507,13 @@ export function MusicPlayerProvider({
       // lock active until the 'playing' event confirms the new resource is
       // actually producing audio.
       if (intendedPlayingRef.current) {
+        resumeAudioContext(audio);
         const playPromise = audio.play();
         if (playPromise !== undefined) {
           playPromise.catch((err: unknown) => {
             // A newer load() can abort this play attempt; ignore those errors.
             if ((err as Error | undefined)?.name === 'AbortError') return;
+            console.warn('[MusicPlayer] play() after load failed:', err);
             trackChangeRef.current = false;
             intendedPlayingRef.current = false;
             setIsPlaying(false);
@@ -533,11 +541,13 @@ export function MusicPlayerProvider({
     if (isPlaying) {
       if (trackChangeRef.current) return;
       if (!audio.paused) return;
+      resumeAudioContext(audio);
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch((err: unknown) => {
           // Ignore aborts caused by a concurrent track change.
           if ((err as Error | undefined)?.name === 'AbortError') return;
+          console.warn('[MusicPlayer] play() failed:', err);
           intendedPlayingRef.current = false;
           setIsPlaying(false);
         });
@@ -606,6 +616,9 @@ export function MusicPlayerProvider({
     setHasUserInteracted(true);
     setIsOpen(true);
     setSystemPaused(false);
+    // Resume Web Audio synchronously inside the user gesture so browsers do
+    // not keep the AudioContext suspended after the first interaction.
+    resumeAudioContext(audioRef.current);
     setIsPlaying((prev) => {
       const next = !prev;
       intendedPlayingRef.current = next;
@@ -623,6 +636,7 @@ export function MusicPlayerProvider({
     setSystemPaused(false);
     // A manual track change expresses intent to keep playback active.
     intendedPlayingRef.current = true;
+    resumeAudioContext(audioRef.current);
 
     if (playMode === 'repeat') {
       // Replay the current track from the beginning. No src change happens
@@ -678,6 +692,7 @@ export function MusicPlayerProvider({
     setHasUserInteracted(true);
     setSystemPaused(false);
     intendedPlayingRef.current = true;
+    resumeAudioContext(audioRef.current);
     trackChangeRef.current = true;
     setIsPlaying(true);
     setCurrentPosition((prevPos) =>
@@ -690,6 +705,7 @@ export function MusicPlayerProvider({
       const targetIndex = playlist.findIndex((s) => s.id === id);
       if (targetIndex === -1) return;
       intendedPlayingRef.current = true;
+      resumeAudioContext(audioRef.current);
       trackChangeRef.current = true;
       setIsPlaying(true);
       const targetPosition = shuffledOrder.findIndex((idx) => idx === targetIndex);
