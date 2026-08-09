@@ -1,13 +1,16 @@
 'use client';
 
 /**
- * FriendsStatusWidget — shows the size and diversity of the friends list.
+ * FriendsStatusWidget —— shows the size and diversity of the friends list.
  *
- * The outer chrome is provided by WidgetFrame on the homepage.
+ * Reads /data/friends.json at runtime so the numbers stay in sync with
+ * the content source.
  */
 
 import { useEffect, useState, useMemo } from 'react';
-import { useTranslation, useNavigation } from '@/hooks';
+import { motion } from 'framer-motion';
+import { Heart } from 'lucide-react';
+import { useTranslation, useAnimationEnabled, useNavigation } from '@/hooks';
 
 interface FriendData {
   categories: { id: string; name: string }[];
@@ -16,6 +19,7 @@ interface FriendData {
 
 export function FriendsStatusWidget() {
   const { t } = useTranslation();
+  const animationEnabled = useAnimationEnabled();
   const { navigateTo } = useNavigation();
   const [data, setData] = useState<FriendData | null>(null);
 
@@ -35,15 +39,25 @@ export function FriendsStatusWidget() {
   }, [data]);
 
   return (
-    <button
+    <motion.button
+      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.35 }}
       onClick={() => navigateTo('/friends')}
-      className="w-full h-full min-h-[100px] p-5 flex flex-col text-left transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+      className="w-full h-full min-h-[120px] p-5 border-2 flex flex-col text-left transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
       style={{
         background: 'var(--bg-secondary)',
-        color: 'var(--text-primary)',
+        borderColor: 'var(--border-subtle)',
+        boxShadow: '4px 4px 0 var(--border-subtle)',
       }}
-      type="button"
     >
+      <div className="flex items-center gap-2 mb-4">
+        <Heart className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
+        <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+          {t.widgets.friends}
+        </span>
+      </div>
+
       <div className="flex-1 flex items-center justify-around">
         <div className="text-center">
           <div className="text-2xl font-bold font-mono" style={{ color: 'var(--text-primary)' }}>
@@ -66,6 +80,6 @@ export function FriendsStatusWidget() {
           </div>
         </div>
       </div>
-    </button>
+    </motion.button>
   );
 }
