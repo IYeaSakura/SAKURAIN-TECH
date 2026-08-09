@@ -166,6 +166,8 @@ export const zh: Dictionary = {
     search: '站内搜索',
     searchPlaceholder: '搜索全站内容...',
     searchEmpty: '未找到匹配内容',
+    searchFuzzy: '模糊',
+    searchExact: '精确',
     dailyQuote: '每日一句',
     friends: '友情链接',
     friendsTotal: '站点',

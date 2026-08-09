@@ -167,6 +167,8 @@ export const en: Dictionary = {
     search: 'Search',
     searchPlaceholder: 'Search across the site...',
     searchEmpty: 'No matches found',
+    searchFuzzy: 'Fuzzy',
+    searchExact: 'Exact',
     dailyQuote: 'Daily Quote',
     friends: 'Friends',
     friendsTotal: 'Sites',

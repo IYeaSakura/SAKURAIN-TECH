@@ -129,9 +129,48 @@ function scoreField(text: string, queryTokens: string[]): number {
   return score;
 }
 
-function buildExcerpt(text: string, queryTokens: string[]): string {
+/**
+ * Exact-match scoring: the full query phrase must appear as a substring.
+ * Scores are weighted higher than token matches to surface exact hits first.
+ */
+function scoreFieldExact(text: string, query: string): number {
+  if (!text || !query) return 0;
+  const normalizedText = normalize(text);
+  const normalizedQuery = normalize(query);
+  if (!normalizedQuery) return 0;
+
+  let score = 0;
+  let index = normalizedText.indexOf(normalizedQuery);
+  while (index !== -1) {
+    // Extra weight for matches at the beginning of the text.
+    score += index === 0 ? 3 : 2;
+    index = normalizedText.indexOf(normalizedQuery, index + normalizedQuery.length);
+  }
+  return score;
+}
+
+function buildExcerpt(text: string, queryTokens: string[], exactQuery?: string): string {
   if (!text) return '';
   const normalized = normalize(text);
+
+  // In exact mode, locate the full query phrase.
+  if (exactQuery && normalize(exactQuery)) {
+    const normalizedQuery = normalize(exactQuery);
+    const idx = normalized.indexOf(normalizedQuery);
+    if (idx !== -1) {
+      const start = Math.max(0, idx - 30);
+      const end = Math.min(text.length, start + EXCERPT_MAX_LENGTH);
+      let excerpt = text.slice(start, end).trim();
+      if (start > 0) excerpt = '…' + excerpt;
+      if (end < text.length) excerpt = excerpt + '…';
+      const regex = new RegExp(
+        `(${normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`,
+        'gi'
+      );
+      return excerpt.replace(regex, '**$1**');
+    }
+  }
+
   if (queryTokens.length === 0) {
     return text.slice(0, EXCERPT_MAX_LENGTH).trimEnd() +
       (text.length > EXCERPT_MAX_LENGTH ? '…' : '');
@@ -178,10 +217,11 @@ function buildExcerpt(text: string, queryTokens: string[]): string {
 export function searchIndex(
   index: SearchIndex,
   query: string,
-  options?: { limit?: number; types?: SearchDocumentType[] }
+  options?: { limit?: number; types?: SearchDocumentType[]; matchMode?: 'fuzzy' | 'exact' }
 ): SearchResult[] {
   if (!query.trim() || !index?.documents?.length) return [];
 
+  const matchMode = options?.matchMode ?? 'fuzzy';
   const queryTokens = tokenize(query);
   if (queryTokens.length === 0) return [];
 
@@ -194,19 +234,34 @@ export function searchIndex(
     if (allowedTypes.size > 0 && !allowedTypes.has(doc.type)) continue;
 
     let score = 0;
-    score += scoreField(doc.title, queryTokens) * FIELD_WEIGHTS.title;
-    score += scoreField(doc.description, queryTokens) * FIELD_WEIGHTS.description;
-    score += scoreField(doc.content, queryTokens) * FIELD_WEIGHTS.content;
-    score += scoreField(doc.tags.join(' '), queryTokens) * FIELD_WEIGHTS.tags;
-    score += scoreField(doc.category, queryTokens) * FIELD_WEIGHTS.category;
+    if (matchMode === 'exact') {
+      score += scoreFieldExact(doc.title, query) * FIELD_WEIGHTS.title;
+      score += scoreFieldExact(doc.description, query) * FIELD_WEIGHTS.description;
+      score += scoreFieldExact(doc.content, query) * FIELD_WEIGHTS.content;
+      score += scoreFieldExact(doc.tags.join(' '), query) * FIELD_WEIGHTS.tags;
+      score += scoreFieldExact(doc.category, query) * FIELD_WEIGHTS.category;
+    } else {
+      score += scoreField(doc.title, queryTokens) * FIELD_WEIGHTS.title;
+      score += scoreField(doc.description, queryTokens) * FIELD_WEIGHTS.description;
+      score += scoreField(doc.content, queryTokens) * FIELD_WEIGHTS.content;
+      score += scoreField(doc.tags.join(' '), queryTokens) * FIELD_WEIGHTS.tags;
+      score += scoreField(doc.category, queryTokens) * FIELD_WEIGHTS.category;
+    }
 
     if (score <= 0) continue;
 
-    const matchedFields = [
-      normalize(doc.title).includes(queryTokens[0]) ? 'title' : '',
-      normalize(doc.description).includes(queryTokens[0]) ? 'description' : '',
-      normalize(doc.content).includes(queryTokens[0]) ? 'content' : '',
-    ].filter(Boolean);
+    const normalizedQuery = normalize(query);
+    const matchedFields = matchMode === 'exact'
+      ? [
+          normalize(doc.title).includes(normalizedQuery) ? 'title' : '',
+          normalize(doc.description).includes(normalizedQuery) ? 'description' : '',
+          normalize(doc.content).includes(normalizedQuery) ? 'content' : '',
+        ].filter(Boolean)
+      : [
+          normalize(doc.title).includes(queryTokens[0]) ? 'title' : '',
+          normalize(doc.description).includes(queryTokens[0]) ? 'description' : '',
+          normalize(doc.content).includes(queryTokens[0]) ? 'content' : '',
+        ].filter(Boolean);
 
     const excerptSource =
       matchedFields.includes('description') && doc.description
@@ -219,7 +274,7 @@ export function searchIndex(
       document: doc,
       score,
       matches: queryTokens,
-      excerpt: buildExcerpt(excerptSource, queryTokens),
+      excerpt: buildExcerpt(excerptSource, queryTokens, matchMode === 'exact' ? query : undefined),
     });
   }
 

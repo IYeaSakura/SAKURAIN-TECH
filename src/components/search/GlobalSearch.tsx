@@ -83,13 +83,14 @@ export function GlobalSearch() {
 
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [matchMode, setMatchMode] = useState<'fuzzy' | 'exact'>('fuzzy');
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   const results = useMemo<SearchResult[]>(() => {
     if (!index || !query.trim()) return [];
-    return searchIndex(index, query, { limit: 20 });
-  }, [index, query]);
+    return searchIndex(index, query, { limit: 20, matchMode });
+  }, [index, query, matchMode]);
 
   const groupedResults = useMemo(() => {
     const groups: Partial<Record<SearchDocumentType, SearchResult[]>> = {};
@@ -229,6 +230,18 @@ export function GlobalSearch() {
             className="flex-1 bg-transparent outline-none text-sm min-w-0"
             style={{ color: 'var(--text-primary)', caretColor: 'var(--accent-primary)' }}
           />
+          <button
+            onClick={() => setMatchMode((prev) => (prev === 'fuzzy' ? 'exact' : 'fuzzy'))}
+            className="shrink-0 px-2 py-1 text-[10px] font-mono font-bold uppercase border-2 transition-colors"
+            style={{
+              borderColor: matchMode === 'exact' ? 'var(--accent-primary)' : 'var(--border-subtle)',
+              color: matchMode === 'exact' ? 'var(--accent-primary)' : 'var(--text-muted)',
+              background: 'var(--bg-secondary)',
+            }}
+            title={locale === 'zh' ? '切换匹配模式' : 'Toggle match mode'}
+          >
+            {matchMode === 'fuzzy' ? t.widgets.searchFuzzy : t.widgets.searchExact}
+          </button>
           {indexLoading ? (
             <Loader2 className="w-4 h-4 animate-spin shrink-0" style={{ color: 'var(--text-muted)' }} />
           ) : query ? (
