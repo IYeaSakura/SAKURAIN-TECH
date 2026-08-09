@@ -1,17 +1,21 @@
 'use client';
 
 /**
- * RecentDevLog — recent dev-log list body.
+ * RecentDevLog —— brutalist recent dev-log card for the homepage.
  *
- * The outer chrome is provided by WidgetFrame on the homepage.
+ * Matches the other homepage widgets: thick borders, pixel shadows,
+ * monospace labels and no glass effects.
  */
 
 import { motion } from 'framer-motion';
+import { MessageSquare, ArrowRight } from 'lucide-react';
 import { useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
 import type { Note } from '@/lib/content/notes';
 
 interface RecentDevLogProps {
+  /** All notes injected at build time */
   notes: Note[];
+  /** Maximum items to display */
   maxItems?: number;
 }
 
@@ -22,7 +26,37 @@ export function RecentDevLog({ notes, maxItems = 5 }: RecentDevLogProps) {
   const recentNotes = notes.slice(0, maxItems);
 
   return (
-    <div className="p-5 h-full flex flex-col" style={{ background: 'var(--bg-secondary)' }}>
+    <motion.div
+      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+      className="flex flex-col border-2 p-5"
+      style={{
+        background: 'var(--bg-secondary)',
+        borderColor: 'var(--border-subtle)',
+        boxShadow: '4px 4px 0 var(--border-subtle)',
+      }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
+          <span
+            className="text-xs font-mono uppercase tracking-wider"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            {t.home.recentDevLog}
+          </span>
+        </div>
+        <button
+          onClick={() => navigateTo('/dev-log')}
+          className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider transition-opacity hover:opacity-70"
+          style={{ color: 'var(--accent-primary)' }}
+        >
+          {t.common.all}
+          <ArrowRight className="w-3 h-3" />
+        </button>
+      </div>
+
       <div className="flex flex-col gap-1.5">
         {recentNotes.length === 0 ? (
           <div
@@ -37,7 +71,7 @@ export function RecentDevLog({ notes, maxItems = 5 }: RecentDevLogProps) {
               key={note.id}
               initial={animationEnabled ? { opacity: 0, x: -8 } : undefined}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
+              transition={{ duration: 0.3, delay: 0.2 + index * 0.05 }}
               onClick={() => navigateTo('/dev-log')}
               className="group cursor-pointer p-2.5 border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
               style={{
@@ -73,6 +107,6 @@ export function RecentDevLog({ notes, maxItems = 5 }: RecentDevLogProps) {
           ))
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }

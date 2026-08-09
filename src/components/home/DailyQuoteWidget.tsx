@@ -1,13 +1,16 @@
 'use client';
 
 /**
- * DailyQuoteWidget — rotates a short quote based on the day of year.
+ * DailyQuoteWidget —— rotates a short quote based on the day of year.
  *
- * The outer chrome is provided by WidgetFrame on the homepage.
+ * The same quote is shown all day, giving the dashboard a personal
+ * touch without being distracting.
  */
 
 import { useMemo } from 'react';
-import { useTranslation } from '@/hooks';
+import { motion } from 'framer-motion';
+import { Quote } from 'lucide-react';
+import { useTranslation, useAnimationEnabled } from '@/hooks';
 
 const QUOTES = {
   en: [
@@ -32,6 +35,7 @@ const QUOTES = {
 
 export function DailyQuoteWidget() {
   const { locale } = useTranslation();
+  const animationEnabled = useAnimationEnabled();
 
   const quote = useMemo(() => {
     const now = new Date();
@@ -42,7 +46,24 @@ export function DailyQuoteWidget() {
   }, [locale]);
 
   return (
-    <div className="p-5 h-full min-h-[120px] flex flex-col justify-between" style={{ background: 'var(--bg-secondary)' }}>
+    <motion.div
+      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.3 }}
+      className="h-full min-h-[140px] p-5 border-2 flex flex-col justify-between"
+      style={{
+        background: 'var(--bg-secondary)',
+        borderColor: 'var(--border-subtle)',
+        boxShadow: '4px 4px 0 var(--border-subtle)',
+      }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <Quote className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
+        <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+          Daily Quote
+        </span>
+      </div>
+
       <div>
         <p className="text-sm leading-relaxed mb-2" style={{ color: 'var(--text-primary)' }}>
           “{quote.text}”
@@ -51,6 +72,6 @@ export function DailyQuoteWidget() {
           — {quote.author}
         </p>
       </div>
-    </div>
+    </motion.div>
   );
 }

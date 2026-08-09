@@ -10,9 +10,9 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, X } from 'lucide-react';
+import { MapPin, Navigation, X, Maximize2 } from 'lucide-react';
 import AMapLoader from '@amap/amap-jsapi-loader';
-import { useTranslation, useTheme } from '@/hooks';
+import { useTranslation, useAnimationEnabled, useTheme } from '@/hooks';
 
 const AMAP_KEY = '39ac49fa38093f93930cffeb5d489242';
 const AMAP_SECURITY_CODE = 'a84a319cb62ac0a1dc9813d756fcd7ec';
@@ -29,6 +29,7 @@ interface CityData {
 
 export function AMapWidget() {
   const { t, locale } = useTranslation();
+  const animationEnabled = useAnimationEnabled();
   const { theme } = useTheme();
   const previewRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -343,13 +344,33 @@ export function AMapWidget() {
 
   return (
     <>
-      <div
-        className="h-full min-h-[340px] sm:min-h-[400px] flex flex-col overflow-hidden group cursor-pointer"
+      <motion.div
+        initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="h-full min-h-[360px] sm:min-h-[420px] border-2 flex flex-col overflow-hidden group cursor-pointer"
         onClick={handleOpen}
         style={{
           background: 'var(--bg-secondary)',
+          borderColor: 'var(--border-subtle)',
+          boxShadow: '4px 4px 0 var(--border-subtle)',
         }}
       >
+        <div className="flex items-center justify-between px-4 py-3 border-b-2" style={{ borderColor: 'var(--border-subtle)' }}>
+          <div className="flex items-center gap-2">
+            <Navigation className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
+            <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+              {t.home.travelMap}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
+              {t.home.travelMapVisited.replace('{count}', String(data.visited.length))}
+            </span>
+            <Maximize2 className="w-3 h-3" style={{ color: 'var(--text-muted)' }} />
+          </div>
+        </div>
+
         <div className="relative flex-1 min-h-0">
           <div ref={previewRef} className="absolute inset-0" />
 
@@ -381,7 +402,6 @@ export function AMapWidget() {
                     }}
                     className="px-3 py-1 text-[10px] font-mono uppercase border-2"
                     style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-                    type="button"
                   >
                     {t.common.retry}
                   </button>
@@ -429,7 +449,7 @@ export function AMapWidget() {
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Modal */}
       <AnimatePresence>
@@ -459,7 +479,7 @@ export function AMapWidget() {
                 style={{ borderColor: 'var(--border-subtle)' }}
               >
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
+                  <Navigation className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
                   <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                     {t.home.travelMap}
                   </span>

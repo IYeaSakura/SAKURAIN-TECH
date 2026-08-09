@@ -1,17 +1,16 @@
 'use client';
 
 /**
- * MusicWidget — homepage music player card body.
+ * MusicWidget —— homepage music player card.
  *
- * The outer chrome (title bar, drag handle, controls) is provided by the
- * WidgetFrame wrapper on the homepage. This component only renders the
- * player internals.
+ * Mirrors the global music player state so visitors can see and control
+ * playback directly from the landing page.
  */
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Pause, SkipBack, SkipForward, Music } from 'lucide-react';
-import { useMusicPlayer, useTranslation } from '@/hooks';
+import { useMusicPlayer, useAnimationEnabled, useTranslation } from '@/hooks';
 
 function formatTime(time: number) {
   if (!time || Number.isNaN(time)) return '0:00';
@@ -22,6 +21,7 @@ function formatTime(time: number) {
 
 export function MusicWidget() {
   const player = useMusicPlayer();
+  const animationEnabled = useAnimationEnabled();
   const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
 
@@ -34,11 +34,33 @@ export function MusicWidget() {
   }, [player.currentTime, player.duration]);
 
   if (!mounted) {
-    return <div className="p-5 h-full min-h-[140px]" style={{ background: 'var(--bg-secondary)' }} />;
+    return (
+      <div
+        className="p-5 h-full min-h-[180px] border-2"
+        style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}
+      />
+    );
   }
 
   return (
-    <div className="p-5 h-full flex flex-col" style={{ background: 'var(--bg-secondary)' }}>
+    <motion.div
+      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
+      className="p-5 h-full border-2"
+      style={{
+        background: 'var(--bg-secondary)',
+        borderColor: 'var(--border-subtle)',
+        boxShadow: '4px 4px 0 var(--border-subtle)',
+      }}
+    >
+      <div className="flex items-center gap-2 mb-4">
+        <Music className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
+        <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+          {t.widgets.music.title}
+        </span>
+      </div>
+
       <div className="flex items-center gap-4 mb-4">
         <div
           className="w-12 h-12 flex items-center justify-center flex-shrink-0 border-2"
@@ -70,12 +92,11 @@ export function MusicWidget() {
         <span>{formatTime(player.duration)}</span>
       </div>
 
-      <div className="flex items-center justify-center gap-3 mt-auto">
+      <div className="flex items-center justify-center gap-3">
         <button
           onClick={player.prev}
           className="p-2 border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
           style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
-          type="button"
         >
           <SkipBack className="w-4 h-4" />
         </button>
@@ -87,7 +108,6 @@ export function MusicWidget() {
             borderColor: 'var(--border-subtle)',
             color: 'var(--bg-primary)',
           }}
-          type="button"
         >
           {player.isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
         </button>
@@ -95,11 +115,10 @@ export function MusicWidget() {
           onClick={player.next}
           className="p-2 border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
           style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
-          type="button"
         >
           <SkipForward className="w-4 h-4" />
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
