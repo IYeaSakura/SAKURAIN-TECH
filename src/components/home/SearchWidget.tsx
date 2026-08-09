@@ -1,67 +1,24 @@
 'use client';
 
 /**
- * SearchWidget —— client-side search across posts and notes.
+ * SearchWidget — homepage entry point for the global Command Palette search.
  *
- * Filters the injected content as the user types and navigates to the
- * selected result with the internal router.
+ * Clicking the input opens the unified site search so the homepage widget
+ * stays compact while offering the same full-text capabilities as the
+ * Dynamic Island shortcut.
  */
 
-import { useState, useMemo, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, FileText, MessageSquare } from 'lucide-react';
-import { useTranslation, useAnimationEnabled, useNavigation } from '@/hooks';
-import type { BlogPost } from '@/components/blog/types';
-import type { Note } from '@/lib/content/notes';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Search, Command } from 'lucide-react';
+import { useTranslation, useAnimationEnabled } from '@/hooks';
+import { useGlobalSearch } from '@/components/search';
 
-interface SearchWidgetProps {
-  posts: BlogPost[];
-  notes: Note[];
-}
-
-interface SearchResult {
-  type: 'post' | 'note';
-  title: string;
-  href: string;
-  date?: string;
-}
-
-export function SearchWidget({ posts, notes }: SearchWidgetProps) {
-  const { t } = useTranslation();
+export function SearchWidget() {
+  const { t, locale } = useTranslation();
   const animationEnabled = useAnimationEnabled();
-  const { navigateTo } = useNavigation();
-  const [query, setQuery] = useState('');
+  const { open: openSearch } = useGlobalSearch();
   const [focused, setFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const results = useMemo<SearchResult[]>(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-
-    const matchedPosts = posts
-      .filter((post) => post.title?.toLowerCase().includes(q) || post.description?.toLowerCase().includes(q))
-      .slice(0, 3)
-      .map((post) => ({
-        type: 'post' as const,
-        title: post.title,
-        href: `/blog/${post.slug}`,
-        date: post.date,
-      }));
-
-    const matchedNotes = notes
-      .filter((note) => note.content?.toLowerCase().includes(q))
-      .slice(0, 2)
-      .map((note) => ({
-        type: 'note' as const,
-        title: note.content.slice(0, 40) + (note.content.length > 40 ? '...' : ''),
-        href: `/dev-log#note-${note.id}`,
-        date: note.date,
-      }));
-
-    return [...matchedPosts, ...matchedNotes];
-  }, [query, posts, notes]);
-
-  const showResults = focused && query.trim().length > 0;
 
   return (
     <motion.div
@@ -82,78 +39,37 @@ export function SearchWidget({ posts, notes }: SearchWidgetProps) {
         </span>
       </div>
 
-      <div
-        className="relative flex items-center border-2"
-        style={{ borderColor: focused ? 'var(--accent-primary)' : 'var(--border-subtle)', background: 'var(--bg-primary)' }}
+      <button
+        onClick={openSearch}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        className="relative flex items-center gap-2 border-2 w-full text-left transition-colors hover:bg-[var(--bg-tertiary)]"
+        style={{
+          borderColor: focused ? 'var(--accent-primary)' : 'var(--border-subtle)',
+          background: 'var(--bg-primary)',
+        }}
       >
         <Search className="w-4 h-4 ml-3" style={{ color: 'var(--text-muted)' }} />
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 150)}
-          placeholder={t.widgets.searchPlaceholder}
-          className="w-full px-3 py-2.5 bg-transparent text-sm outline-none font-mono"
-          style={{ color: 'var(--text-primary)' }}
-        />
-        {query && (
-          <button
-            onClick={() => {
-              setQuery('');
-              inputRef.current?.focus();
-            }}
-            className="mr-2 p-1"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            <X className="w-3 h-3" />
-          </button>
-        )}
-      </div>
+        <span
+          className="flex-1 px-2 py-2.5 text-sm font-mono outline-none"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          {t.widgets.searchPlaceholder}
+        </span>
+        <kbd
+          className="hidden sm:inline-flex items-center gap-0.5 mr-3 px-1.5 py-0.5 text-[10px] font-mono border"
+          style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}
+        >
+          {locale === 'zh' ? 'Ctrl' : '⌘'} K
+        </kbd>
+        <Command className="w-3 h-3 mr-3 sm:hidden" style={{ color: 'var(--text-muted)' }} />
+      </button>
 
-      <AnimatePresence>
-        {showResults && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="absolute left-0 right-0 top-full mt-2 mx-5 z-20 border-2 overflow-hidden"
-            style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}
-          >
-            {results.length === 0 ? (
-              <div className="px-4 py-3 text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
-                {t.widgets.searchEmpty}
-              </div>
-            ) : (
-              results.map((result) => (
-                <button
-                  key={result.href}
-                  onClick={() => navigateTo(result.href)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-left border-b last:border-b-0 transition-colors hover:opacity-80"
-                  style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-secondary)' }}
-                >
-                  {result.type === 'post' ? (
-                    <FileText className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-primary)' }} />
-                  ) : (
-                    <MessageSquare className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-secondary)' }} />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs truncate" style={{ color: 'var(--text-primary)' }}>
-                      {result.title}
-                    </p>
-                    {result.date && (
-                      <p className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
-                        {result.date}
-                      </p>
-                    )}
-                  </div>
-                </button>
-              ))
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <p className="mt-3 text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
+        {locale === 'zh'
+          ? '搜索文章、日志、文档、友链与页面'
+          : 'Search posts, notes, docs, friends and pages'}
+      </p>
     </motion.div>
   );
 }

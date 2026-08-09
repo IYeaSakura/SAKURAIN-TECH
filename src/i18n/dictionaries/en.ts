@@ -165,7 +165,7 @@ export const en: Dictionary = {
     },
     worldClock: 'World Clock',
     search: 'Search',
-    searchPlaceholder: 'Search posts and dev logs...',
+    searchPlaceholder: 'Search across the site...',
     searchEmpty: 'No matches found',
     dailyQuote: 'Daily Quote',
     friends: 'Friends',

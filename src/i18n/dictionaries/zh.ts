@@ -164,7 +164,7 @@ export const zh: Dictionary = {
     },
     worldClock: '世界时钟',
     search: '站内搜索',
-    searchPlaceholder: '搜索文章和开发日志...',
+    searchPlaceholder: '搜索全站内容...',
     searchEmpty: '未找到匹配内容',
     dailyQuote: '每日一句',
     friends: '友情链接',
