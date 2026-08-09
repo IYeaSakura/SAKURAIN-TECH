@@ -323,6 +323,19 @@ export function AMapWidget() {
     }
   }, [clientLocation, addClientMarker]);
 
+  // Sync AMap style with the site light/dark theme.
+  useEffect(() => {
+    const applyStyle = (map: unknown) => {
+      const mapInstance = map as { setMapStyle?: (style: string) => void } | undefined;
+      if (mapInstance && typeof mapInstance.setMapStyle === 'function') {
+        mapInstance.setMapStyle(mapStyle);
+      }
+    };
+
+    if (previewMapRef.current) applyStyle(previewMapRef.current);
+    if (modalMapRef.current) applyStyle(modalMapRef.current);
+  }, [mapStyle]);
+
   const handleOpen = useCallback(() => setIsOpen(true), []);
   const handleClose = useCallback(() => {
     setIsOpen(false);
