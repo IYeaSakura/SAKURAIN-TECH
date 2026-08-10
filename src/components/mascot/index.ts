@@ -1,0 +1,1 @@
+export { PixelMascot } from './PixelMascot';
