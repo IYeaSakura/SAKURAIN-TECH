@@ -48,7 +48,6 @@ import {
   useTranslation,
 } from '@/hooks';
 import { useGlobalSearch } from '@/components/search';
-import { PixelMascot } from '@/components/mascot';
 
 interface NavItem {
   labelKey: keyof import('@/i18n/types').Dictionary['nav'];
@@ -276,13 +275,6 @@ export function DynamicIsland() {
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <PixelMascot
-                    onClick={() => {
-                      setExpanded(false);
-                      openSearch();
-                    }}
-                    title={t.common.search}
-                  />
                   <img
                     src="/image/logo.webp"
                     alt="SAKURAIN"
