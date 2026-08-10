@@ -9,6 +9,7 @@
 
 import { useMemo } from 'react';
 import { usePathname } from 'next/navigation';
+import type { Mood } from './types';
 
 interface LineSet {
   default: string[];
@@ -20,7 +21,10 @@ interface LineSet {
   music: string[];
   earth: string[];
   sleep: string[];
+  mood: Record<Mood, string[]>;
 }
+
+type ContextKey = Exclude<keyof LineSet, 'mood'>;
 
 const LINES: Record<'en' | 'zh', LineSet> = {
   en: {
@@ -72,6 +76,14 @@ const LINES: Record<'en' | 'zh', LineSet> = {
       'Just five more minutes...',
       'I will be here when you wake me.',
     ],
+    mood: {
+      neutral: ['Hello!', 'What is up?'],
+      happy: ['Yay!', 'You make me smile!', 'This is fun!'],
+      curious: ['What is this?', 'Interesting...', 'Tell me more!'],
+      sleepy: ['So sleepy...', 'Nap time?', 'Zzz...'],
+      surprised: ['Wow!', 'Oh!', 'Did you see that?'],
+      love: ['Love it!', 'You are the best!', '❤️'],
+    },
   },
   zh: {
     default: [
@@ -122,6 +134,14 @@ const LINES: Record<'en' | 'zh', LineSet> = {
       '再睡五分钟就好…',
       '叫醒我的时候轻一点哦',
     ],
+    mood: {
+      neutral: ['你好呀！', '怎么啦？'],
+      happy: ['好开心！', '你真好~', '太有趣了！'],
+      curious: ['这是什么？', '好奇怪呀', '告诉我更多~'],
+      sleepy: ['好困…', '该睡觉了吗？', 'Zzz…'],
+      surprised: ['哇！', '哎呀！', '吓我一跳~'],
+      love: ['喜欢你！', '你最棒了！', '❤️'],
+    },
   },
 };
 
@@ -140,7 +160,7 @@ function getGreeting(hour: number, locale: 'en' | 'zh'): string {
   return 'Good evening, you worked hard today.';
 }
 
-function resolveContext(pathname: string): keyof LineSet {
+function resolveContext(pathname: string): ContextKey {
   if (pathname === '/') return 'home';
   if (pathname.startsWith('/blog')) return 'blog';
   if (pathname.startsWith('/projects')) return 'projects';
@@ -165,6 +185,8 @@ export function useMascotLines(locale: 'en' | 'zh') {
       pool: set,
       random: () => set[Math.floor(Math.random() * set.length)],
       sleep: () => LINES[locale].sleep[Math.floor(Math.random() * LINES[locale].sleep.length)],
+      forMood: (mood: Mood) =>
+        LINES[locale].mood[mood][Math.floor(Math.random() * LINES[locale].mood[mood].length)],
     };
   }, [pathname, locale]);
 }
