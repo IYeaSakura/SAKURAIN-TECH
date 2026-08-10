@@ -169,13 +169,17 @@ export default function HomePage({ posts, notes }: HomePageProps) {
 
   return (
     <div className="relative min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)' }}>
-      <main className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main
+        className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8"
+        data-mascot-zone="cover obstacle"
+      >
         {/* Hero / welcome */}
         <motion.section
           initial={animationEnabled ? { opacity: 0, y: 12 } : undefined}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="mb-6 sm:mb-8"
+          data-mascot-zone="ledge"
         >
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div>
