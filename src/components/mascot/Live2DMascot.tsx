@@ -10,10 +10,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const CUBISM_CORE_URL =
-  'https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js';
-const HARU_MODEL_URL =
-  'https://cdn.jsdelivr.net/gh/guansss/pixi-live2d-display/test/assets/haru/haru_greeter_t03.model3.json';
+const CUBISM_CORE_URL = '/live2d/live2dcubismcore.min.js';
+const HARU_MODEL_URL = '/live2d/haru/haru_greeter_t03.model3.json';
 
 const VIEW_WIDTH = 320;
 const VIEW_HEIGHT = 400;
@@ -138,7 +136,7 @@ export function Live2DMascot() {
 
   return (
     <div
-      className="fixed bottom-2 right-2 z-[95] pointer-events-auto"
+      className="fixed bottom-2 left-2 z-[95] pointer-events-auto"
       style={{ width: VIEW_WIDTH, height: VIEW_HEIGHT }}
       title="SAKU-CHAN (Live2D POC)"
     >
