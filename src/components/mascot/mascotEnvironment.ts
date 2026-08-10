@@ -74,10 +74,118 @@ export function getMascotZones(): MascotZone[] {
   return zones;
 }
 
+function pickLedgeTarget(ledges: MascotZone[]): RoamTarget | null {
+  const ledge = ledges[Math.floor(Math.random() * ledges.length)];
+  return {
+    x: ledge.rect.left + ledge.rect.width / 2 - SIZE / 2,
+    y: ledge.rect.top - SIZE / 2,
+    behind: false,
+    ledge: true,
+  };
+}
+
+function pickCoverEdgeTarget(
+  covers: MascotZone[],
+  obstacles: MascotZone[],
+  width: number,
+  height: number
+): RoamTarget | null {
+  const cover = covers[Math.floor(Math.random() * covers.length)];
+  const side = Math.random() < 0.5 ? 'left' : 'right';
+
+  const x =
+    side === 'left'
+      ? cover.rect.left - SIZE + 14
+      : cover.rect.right - 14;
+
+  const y = randomBetween(
+    cover.rect.top,
+    Math.max(cover.rect.top, cover.rect.bottom - SIZE)
+  );
+
+  if (
+    x < MARGIN ||
+    x > width - SIZE - MARGIN ||
+    y < MARGIN ||
+    y > height - SIZE - MARGIN
+  ) {
+    return null;
+  }
+
+  if (obstacles.some((z) => isInsideRect(z.rect, x, y, -8))) return null;
+
+  return { x, y, behind: true, ledge: false };
+}
+
+function pickEdgeTarget(
+  currentX: number,
+  currentY: number,
+  width: number,
+  height: number,
+  restricted: MascotZone[]
+): RoamTarget | null {
+  const edges = ['top', 'bottom', 'left', 'right'] as const;
+  const edge = edges[Math.floor(Math.random() * edges.length)];
+
+  let tx = 0;
+  let ty = 0;
+
+  switch (edge) {
+    case 'top':
+      tx = randomBetween(MARGIN, width - SIZE - MARGIN);
+      ty = MARGIN;
+      break;
+    case 'bottom':
+      tx = randomBetween(MARGIN, width - SIZE - MARGIN);
+      ty = height - SIZE - MARGIN;
+      break;
+    case 'left':
+      tx = MARGIN;
+      ty = randomBetween(MARGIN, height - SIZE - MARGIN);
+      break;
+    case 'right':
+      tx = width - SIZE - MARGIN;
+      ty = randomBetween(MARGIN, height - SIZE - MARGIN);
+      break;
+  }
+
+  if (restricted.some((z) => isInsideRect(z.rect, tx, ty, -8))) return null;
+
+  const tooClose = Math.hypot(tx - currentX, ty - currentY) < 80;
+  if (tooClose) return null;
+
+  return { x: tx, y: ty, behind: false, ledge: false };
+}
+
+function pickFreeTarget(
+  currentX: number,
+  currentY: number,
+  width: number,
+  height: number,
+  restricted: MascotZone[]
+): RoamTarget | null {
+  let attempts = 0;
+  while (attempts < 40) {
+    attempts += 1;
+
+    const tx = randomBetween(MARGIN, width - SIZE - MARGIN);
+    const ty = randomBetween(MARGIN, height - SIZE - MARGIN);
+
+    if (restricted.some((z) => isInsideRect(z.rect, tx, ty, -8))) continue;
+
+    const tooClose = Math.hypot(tx - currentX, ty - currentY) < 80;
+    if (tooClose) continue;
+
+    return { x: tx, y: ty, behind: false, ledge: false };
+  }
+  return null;
+}
+
 /**
- * Pick a random target point for autonomous roaming.
- * Targets respect obstacle zones and can optionally snap to ledges or hide
- * behind cover zones.
+ * Pick a target point for autonomous roaming.
+ *
+ * The pet prefers to patrol viewport edges, but occasionally snaps to a
+ * ledge, peeks from behind a cover zone, or explores a random free area.
  */
 export function pickRoamTarget(
   currentX: number,
@@ -90,36 +198,41 @@ export function pickRoamTarget(
   const covers = zones.filter((z) => z.type === 'cover');
   const ledges = zones.filter((z) => z.type === 'ledge');
 
-  // 15% chance to lie on a ledge.
-  if (ledges.length > 0 && Math.random() < 0.15) {
-    const ledge = ledges[Math.floor(Math.random() * ledges.length)];
-    return {
-      x: ledge.rect.left + ledge.rect.width / 2 - SIZE / 2,
-      y: ledge.rect.top - SIZE / 2,
-      behind: false,
-      ledge: true,
-    };
+  const hasLedge = ledges.length > 0;
+  const hasCover = covers.length > 0;
+
+  // Weighted strategy: patrol > cover peek > ledge > free explore.
+  const patrolWeight = 1;
+  const coverWeight = hasCover ? 0.35 : 0;
+  const ledgeWeight = hasLedge ? 0.25 : 0;
+  const totalWeight = patrolWeight + coverWeight + ledgeWeight;
+  const roll = Math.random() * totalWeight;
+
+  let cursor = 0;
+
+  if (hasLedge) {
+    cursor += ledgeWeight;
+    if (roll < cursor) {
+      const target = pickLedgeTarget(ledges);
+      if (target) return target;
+    }
   }
 
-  // 20% chance to hide behind a cover zone.
-  const wantsBehind = covers.length > 0 && Math.random() < 0.2;
-  const restricted = wantsBehind ? obstacles : [...obstacles, ...covers];
-
-  let attempts = 0;
-  while (attempts < 40) {
-    attempts += 1;
-
-    const tx = randomBetween(MARGIN, width - SIZE - MARGIN);
-    const ty = randomBetween(MARGIN, height - SIZE - MARGIN);
-
-    const insideRestricted = restricted.some((z) => isInsideRect(z.rect, tx, ty, -8));
-    if (insideRestricted) continue;
-
-    const tooClose = Math.hypot(tx - currentX, ty - currentY) < 80;
-    if (tooClose) continue;
-
-    return { x: tx, y: ty, behind: wantsBehind, ledge: false };
+  if (hasCover) {
+    cursor += coverWeight;
+    if (roll < cursor) {
+      const target = pickCoverEdgeTarget(covers, obstacles, width, height);
+      if (target) return target;
+    }
   }
+
+  const restricted = [...obstacles, ...covers];
+
+  const edgeTarget = pickEdgeTarget(currentX, currentY, width, height, restricted);
+  if (edgeTarget) return edgeTarget;
+
+  const freeTarget = pickFreeTarget(currentX, currentY, width, height, restricted);
+  if (freeTarget) return freeTarget;
 
   // Fallback: stay close to the current position.
   return {

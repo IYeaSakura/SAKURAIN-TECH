@@ -11,8 +11,7 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { animate, type MotionValue } from 'framer-motion';
 import { pickRoamTarget, type RoamTarget } from './mascotEnvironment';
-
-export type MascotMode = 'idle' | 'roaming' | 'dragging' | 'sleeping';
+import type { MascotMode } from './types';
 
 interface UseMascotRoamingOptions {
   enabled: boolean;
