@@ -32,6 +32,7 @@ import { GlobalContextMenu } from '@/components/CustomContextMenu';
 import { DebugProtection } from '@/components/DebugProtection';
 import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
 import { DynamicIsland } from '@/components/apple/DynamicIsland';
+import { MascotPet } from '@/components/mascot';
 // 轻量光标特效全站保留；直接从具体模块导入，
 // 避免经 barrel（@/components/effects）把全部特效打入共享 chunk
 import {
@@ -217,6 +218,9 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
 
       {/* 全局音乐播放器 - 挂在 layout 内，切换页面不会中断 */}
       <MusicPlayer />
+
+      {/* 全局桌面宠物 SAKU-CHAN */}
+      <MascotPet />
 
       {/* 首屏 Loading 覆盖层：children 保持挂载，加载完成后移除 */}
       {isLoading && (
