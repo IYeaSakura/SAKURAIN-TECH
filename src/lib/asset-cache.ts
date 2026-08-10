@@ -33,10 +33,97 @@ interface CacheEntry {
 const blobUrlToOriginalSrc = new Map<string, string>();
 
 /**
+ * Cached CORS compatibility results per page origin. Used as a temporary
+ * workaround when the CDN returns a fixed Access-Control-Allow-Origin that
+ * does not match the current development or preview domain.
+ */
+const corsSupportedByOrigin = new Map<string, boolean>();
+
+/**
+ * Reference-counted set of original URLs that are currently in use by the
+ * player. Protected assets are skipped during LRU eviction so the track being
+ * played (and the one being preloaded) are never deleted from IndexedDB.
+ */
+const protectedUrlRefs = new Map<string, number>();
+
+/**
+ * Mark an asset URL as currently in use. Calls are reference-counted so the
+ * same URL can be protected by both the current track and the preload track.
+ */
+export function protectAsset(url: string): void {
+  if (!url) return;
+  protectedUrlRefs.set(url, (protectedUrlRefs.get(url) || 0) + 1);
+}
+
+/**
+ * Remove one protection reference for an asset URL. Once the count reaches
+ * zero the URL becomes eligible for LRU eviction again.
+ */
+export function unprotectAsset(url: string): void {
+  if (!url) return;
+  const count = protectedUrlRefs.get(url) || 0;
+  if (count <= 1) {
+    protectedUrlRefs.delete(url);
+  } else {
+    protectedUrlRefs.set(url, count - 1);
+  }
+}
+
+/**
  * True for external HTTP(S) URLs that should be cached.
  */
 function isCacheable(url: string): boolean {
-  return /^https?:\/\//.test(url);
+  return /^https:\/\//.test(url);
+}
+
+/**
+ * Clear the cached CORS compatibility results. Called when the browser detects
+ * a network change so the next track can re-probe the CDN headers.
+ */
+export function clearCorsProbeCache(): void {
+  corsSupportedByOrigin.clear();
+}
+
+/**
+ * Probe whether the CDN serves CORS headers compatible with the current page
+ * origin. This is a temporary workaround for CDNs that return a fixed
+ * Access-Control-Allow-Origin value. Results are cached per origin for the
+ * lifetime of the page session.
+ */
+export async function isCorsSupported(url: string): Promise<boolean> {
+  if (typeof window === 'undefined' || !isCacheable(url)) return true;
+
+  const origin = window.location.origin;
+  const cached = corsSupportedByOrigin.get(origin);
+  if (cached !== undefined) return cached;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 5000);
+    const response = await fetch(url, {
+      method: 'HEAD',
+      credentials: 'omit',
+      mode: 'cors',
+      signal: controller.signal,
+    });
+    window.clearTimeout(timeoutId);
+
+    const acao = response.headers.get('Access-Control-Allow-Origin');
+    const supported = acao === '*' || acao === origin;
+    corsSupportedByOrigin.set(origin, supported);
+    return supported;
+  } catch {
+    // A CORS error or network failure means we cannot rely on cross-origin
+    // headers for this origin. Fall back to no-cors media playback.
+    corsSupportedByOrigin.set(origin, false);
+    return false;
+  }
+}
+
+// Re-probe CORS compatibility after the browser reconnects so a different
+// network path or CDN edge node is re-evaluated before the next track loads.
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', clearCorsProbeCache);
 }
 
 /**
@@ -136,24 +223,68 @@ async function ensureSpace(type: CacheEntry['type'], needed: number): Promise<vo
   entries.sort((a, b) => a.cachedAt - b.cachedAt);
   for (const entry of entries) {
     if (total + needed <= limit) break;
+    // Skip assets that are currently loaded or being preloaded by the player.
+    if (protectedUrlRefs.has(entry.url)) continue;
     await deleteEntry(entry.url);
     total -= entry.size || 0;
   }
+
+  if (total + needed > limit) {
+    throw new Error(`Unable to make enough room in ${type} cache`);
+  }
+}
+
+type ValidationResult =
+  | { kind: 'refreshed'; entry: CacheEntry }
+  | { kind: 'response'; response: Response }
+  | undefined;
+
+/**
+ * Fetch an external asset with conditional validation. Returns the existing
+ * entry refreshed when the server responds 304 Not Modified, otherwise the
+ * full 200 response so the caller can store the new body.
+ */
+async function fetchWithValidation(url: string, existing?: CacheEntry): Promise<ValidationResult> {
+  const headers: HeadersInit = {};
+  if (existing?.etag) {
+    headers['If-None-Match'] = existing.etag;
+  } else if (existing?.lastModified) {
+    headers['If-Modified-Since'] = existing.lastModified;
+  }
+
+  const response = await fetch(url, { credentials: 'omit', headers });
+  if (response.status === 304 && existing) {
+    return { kind: 'refreshed', entry: { ...existing, cachedAt: Date.now() } };
+  }
+  if (!response.ok) return undefined;
+  return { kind: 'response', response };
 }
 
 /**
- * Fetch an external asset and store it in IndexedDB.
+ * Fetch an external asset and store it in IndexedDB. Uses the existing entry
+ * for a 304 Not Modified response to avoid re-downloading unchanged assets.
  */
-async function fetchAndCache(url: string, type: 'audio' | 'cover'): Promise<CacheEntry | undefined> {
-  const response = await fetch(url, { credentials: 'omit' });
-  if (!response.ok) return undefined;
-  const blob = await response.blob();
+async function fetchAndCache(
+  url: string,
+  type: 'audio' | 'cover',
+  existing?: CacheEntry
+): Promise<CacheEntry | undefined> {
+  const hasUsableContent = existing?.blob && existing.blob.size > 0;
+  const fetched = await fetchWithValidation(url, hasUsableContent ? existing : undefined);
+  if (!fetched) return undefined;
+
+  if (fetched.kind === 'refreshed') {
+    await putEntry(fetched.entry);
+    return fetched.entry;
+  }
+
+  const blob = await fetched.response.blob();
   const entry: CacheEntry = {
     url,
     type,
     blob,
-    etag: response.headers.get('etag') || undefined,
-    lastModified: response.headers.get('last-modified') || undefined,
+    etag: fetched.response.headers.get('etag') || undefined,
+    lastModified: fetched.response.headers.get('last-modified') || undefined,
     size: blob.size,
     cachedAt: Date.now(),
   };
@@ -209,7 +340,7 @@ export async function getCachedAudioUrl(src: string): Promise<string> {
         return blobUrl;
       }
     }
-    const newEntry = await fetchAndCache(src, 'audio');
+    const newEntry = await fetchAndCache(src, 'audio', entry);
     if (newEntry?.blob) {
       const blobUrl = URL.createObjectURL(newEntry.blob);
       registerBlobUrl(blobUrl, src);
@@ -243,15 +374,22 @@ export async function getCachedLyrics(url: string | undefined | null): Promise<s
       if (!expired) return entry.text;
     }
 
-    const response = await fetch(url, { credentials: 'omit' });
-    if (!response.ok) return null;
-    const text = await response.text();
+    const hasUsableContent = entry?.text !== undefined;
+    const fetched = await fetchWithValidation(url, hasUsableContent ? entry : undefined);
+    if (!fetched) return null;
+
+    if (fetched.kind === 'refreshed') {
+      await putEntry(fetched.entry);
+      return fetched.entry.text ?? null;
+    }
+
+    const text = await fetched.response.text();
     await putEntry({
       url,
       type: 'lyrics',
       text,
-      etag: response.headers.get('etag') || undefined,
-      lastModified: response.headers.get('last-modified') || undefined,
+      etag: fetched.response.headers.get('etag') || undefined,
+      lastModified: fetched.response.headers.get('last-modified') || undefined,
       size: new Blob([text]).size,
       cachedAt: Date.now(),
     });
@@ -278,7 +416,7 @@ export async function getCachedCoverUrl(url: string | undefined | null): Promise
         return blobUrl;
       }
     }
-    const newEntry = await fetchAndCache(url, 'cover');
+    const newEntry = await fetchAndCache(url, 'cover', entry);
     if (newEntry?.blob) {
       const blobUrl = URL.createObjectURL(newEntry.blob);
       registerBlobUrl(blobUrl, url);
