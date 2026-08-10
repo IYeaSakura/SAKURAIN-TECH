@@ -19,6 +19,7 @@ interface LineSet {
   friends: string[];
   music: string[];
   earth: string[];
+  sleep: string[];
 }
 
 const LINES: Record<'en' | 'zh', LineSet> = {
@@ -66,6 +67,11 @@ const LINES: Record<'en' | 'zh', LineSet> = {
       'Where to next?',
       'I want to travel too!',
     ],
+    sleep: [
+      'Zzz... dreaming of pixels.',
+      'Just five more minutes...',
+      'I will be here when you wake me.',
+    ],
   },
   zh: {
     default: [
@@ -111,6 +117,11 @@ const LINES: Record<'en' | 'zh', LineSet> = {
       '下一站去哪里？',
       '我也想去旅行！',
     ],
+    sleep: [
+      'Zzz… 梦见像素了',
+      '再睡五分钟就好…',
+      '叫醒我的时候轻一点哦',
+    ],
   },
 };
 
@@ -153,6 +164,7 @@ export function useMascotLines(locale: 'en' | 'zh') {
       greeting,
       pool: set,
       random: () => set[Math.floor(Math.random() * set.length)],
+      sleep: () => LINES[locale].sleep[Math.floor(Math.random() * LINES[locale].sleep.length)],
     };
   }, [pathname, locale]);
 }

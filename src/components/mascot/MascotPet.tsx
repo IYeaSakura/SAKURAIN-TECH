@@ -3,189 +3,389 @@
 /**
  * MascotPet — a free-roaming desktop pet version of SAKU-CHAN.
  *
- * Phase 1 MVP:
- * - Sits in the bottom-right corner by default.
- * - Draggable to any screen position; position persists across pages.
- * - Click shows a comic speech bubble with context-aware lines.
- * - Gentle idle bobbing and walking tilt animation.
- * - Face subtly leans toward the mouse cursor.
- *
- * Future phases will add environment awareness, pathfinding, and
- * multi-frame sprite animations.
+ * Phase 2 adds autonomous roaming, a right-click menu, sleep behaviour,
+ * ledge snapping and the ability to hide behind marked page zones.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, useMotionValue, useSpring } from 'framer-motion';
+import { motion, useMotionValue, useSpring, animate } from 'framer-motion';
 import { useTranslation, useAnimationEnabled, useIsMobile } from '@/hooks';
+import { useMascotPosition, MASCOT_SIZE } from './useMascotPosition';
+import { useMascotRoaming, type MascotMode } from './useMascotRoaming';
 import { useMascotLines } from './useMascotLines';
 import { MascotBubble } from './MascotBubble';
+import { MascotMenu, type MascotMenuItem } from './MascotMenu';
+import type { RoamTarget } from './mascotEnvironment';
 
-const STORAGE_KEY = 'sakurain-mascot-position';
+const SLEEP_DELAY = 30_000;
+const Z_INDEX_FRONT = 95;
+const Z_INDEX_BEHIND = 85;
 
-interface MascotPosition {
-  x: number;
-  y: number;
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value));
-}
+type Direction = 'left' | 'right';
 
 export function MascotPet() {
   const { locale } = useTranslation();
   const animationEnabled = useAnimationEnabled();
   const isMobile = useIsMobile();
+
+  const { x, y, ready, persist, reset, windowSize } = useMascotPosition();
   const lines = useMascotLines(locale);
 
   const [mounted, setMounted] = useState(false);
+  const [mode, setMode] = useState<MascotMode>('idle');
+  const [roamingEnabled, setRoamingEnabled] = useState(true);
+  const [direction, setDirection] = useState<Direction>('right');
+  const [behind, setBehind] = useState(false);
+  const [ledge, setLedge] = useState(false);
   const [bubbleText, setBubbleText] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastInteractionRef = useRef<number>(Date.now());
+  const sleepTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const zzzTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const justDraggedRef = useRef(false);
 
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
+  const walkY = useMotionValue(0);
+  const walkRotate = useMotionValue(0);
+  const walkAnimYRef = useRef<ReturnType<typeof animate> | null>(null);
+  const walkAnimRotateRef = useRef<ReturnType<typeof animate> | null>(null);
 
   const rotateX = useMotionValue(0);
   const rotateY = useMotionValue(0);
-
   const springConfig = { stiffness: 150, damping: 15 };
   const rotateXSpring = useSpring(rotateX, springConfig);
   const rotateYSpring = useSpring(rotateY, springConfig);
 
-  // Subtle face tilt toward mouse.
+  // Track mount state for client-only rendering.
   useEffect(() => {
-    if (!mounted || isMobile) return;
+    setMounted(true);
+  }, []);
+
+  // Record user interaction and wake up from sleep.
+  const touch = useCallback(() => {
+    lastInteractionRef.current = Date.now();
+    if (mode === 'sleeping') {
+      setMode('idle');
+      setBubbleText(null);
+    }
+  }, [mode]);
+
+  // Show a speech bubble and reset the idle timer.
+  const speak = useCallback(
+    (text: string) => {
+      setBubbleText(text);
+      touch();
+    },
+    [touch]
+  );
+
+  // Toggle autonomous roaming.
+  const toggleRoaming = useCallback(() => {
+    setRoamingEnabled((prev) => !prev);
+    touch();
+  }, [touch]);
+
+  // Toggle sleep mode.
+  const toggleSleep = useCallback(() => {
+    setMode((prev) => (prev === 'sleeping' ? 'idle' : 'sleeping'));
+    touch();
+  }, [touch]);
+
+  // Reset the pet to the bottom-right corner.
+  const resetPosition = useCallback(() => {
+    reset();
+    setBehind(false);
+    setLedge(false);
+    speak(locale === 'zh' ? '我回来啦！' : 'I am back!');
+  }, [reset, speak, locale]);
+
+  // Trigger a random context-aware line.
+  const saySomething = useCallback(() => {
+    speak(lines.random());
+  }, [lines, speak]);
+
+  const menuItems: MascotMenuItem[] = [
+    {
+      id: 'roam',
+      label: roamingEnabled
+        ? locale === 'zh'
+          ? '停止巡游'
+          : 'Stop roaming'
+        : locale === 'zh'
+          ? '开始巡游'
+          : 'Start roaming',
+      onClick: toggleRoaming,
+    },
+    {
+      id: 'sleep',
+      label:
+        mode === 'sleeping'
+          ? locale === 'zh'
+            ? '叫醒她'
+            : 'Wake up'
+          : locale === 'zh'
+            ? '睡觉'
+            : 'Sleep',
+      onClick: toggleSleep,
+    },
+    {
+      id: 'reset',
+      label: locale === 'zh' ? '重置位置' : 'Reset position',
+      onClick: resetPosition,
+    },
+    {
+      id: 'speak',
+      label: locale === 'zh' ? '说点什么' : 'Say something',
+      onClick: saySomething,
+    },
+  ];
+
+  // Face follows the mouse cursor relative to the mascot center.
+  useEffect(() => {
+    if (!mounted || isMobile || mode === 'sleeping') return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const { clientX, clientY } = e;
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      rotateY.set((clientX - centerX) / centerX * 8);
-      rotateX.set(-(clientY - centerY) / centerY * 8);
+      const centerX = x.get() + MASCOT_SIZE / 2;
+      const centerY = y.get() + MASCOT_SIZE / 2;
+      const deltaX = (e.clientX - centerX) / (window.innerWidth / 2);
+      const deltaY = (e.clientY - centerY) / (window.innerHeight / 2);
+      rotateY.set(deltaX * 10);
+      rotateX.set(-deltaY * 10);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [mounted, isMobile, rotateX, rotateY]);
+  }, [mounted, isMobile, mode, x, y, rotateX, rotateY]);
 
-  // Restore persisted position on mount.
+  // Fall asleep after a long idle period.
   useEffect(() => {
-    setMounted(true);
-    if (typeof window === 'undefined') return;
-
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const pos: MascotPosition = JSON.parse(raw);
-        x.set(pos.x);
-        y.set(pos.y);
-      }
-    } catch {
-      // Ignore storage errors.
+    if (!mounted || mode === 'dragging' || mode === 'sleeping' || !roamingEnabled) {
+      if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+      return;
     }
-  }, [x, y]);
 
-  const handleDragEnd = useCallback(() => {
-    setIsDragging(false);
-    if (typeof window === 'undefined') return;
+    sleepTimerRef.current = setTimeout(() => {
+      setMode('sleeping');
+    }, SLEEP_DELAY);
 
-    const currentX = x.get();
-    const currentY = y.get();
-    const maxX = window.innerWidth - 64;
-    const maxY = window.innerHeight - 64;
+    return () => {
+      if (sleepTimerRef.current) clearTimeout(sleepTimerRef.current);
+    };
+  }, [mounted, mode, roamingEnabled, touch]);
 
-    const safeX = clamp(currentX, 0, maxX);
-    const safeY = clamp(currentY, 0, maxY);
+  // Wake the pet on any user activity while she is sleeping.
+  useEffect(() => {
+    if (mode !== 'sleeping') return;
 
-    x.set(safeX);
-    y.set(safeY);
+    const wake = () => touch();
+    window.addEventListener('mousemove', wake);
+    window.addEventListener('keydown', wake);
+    window.addEventListener('pointerdown', wake);
 
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ x: safeX, y: safeY }));
-    } catch {
-      // Ignore storage errors.
+    return () => {
+      window.removeEventListener('mousemove', wake);
+      window.removeEventListener('keydown', wake);
+      window.removeEventListener('pointerdown', wake);
+    };
+  }, [mode, touch]);
+
+  // Show an occasional zzz bubble while sleeping.
+  useEffect(() => {
+    if (mode !== 'sleeping') {
+      if (zzzTimerRef.current) clearTimeout(zzzTimerRef.current);
+      return;
     }
-  }, [x, y]);
 
-  const handleClick = useCallback(() => {
-    if (isDragging) return;
-    setBubbleText(lines.random());
-  }, [isDragging, lines]);
+    const showZzz = () => {
+      setBubbleText(lines.sleep());
+      zzzTimerRef.current = setTimeout(showZzz, 5200);
+    };
+
+    zzzTimerRef.current = setTimeout(showZzz, 1200);
+    return () => {
+      if (zzzTimerRef.current) clearTimeout(zzzTimerRef.current);
+    };
+  }, [mode, lines]);
+
+  // Walk-cycle animation for the sprite.
+  useEffect(() => {
+    walkAnimYRef.current?.stop();
+    walkAnimRotateRef.current?.stop();
+
+    if (!animationEnabled || mode === 'sleeping' || mode === 'dragging') {
+      walkY.set(0);
+      walkRotate.set(0);
+      return;
+    }
+
+    if (mode === 'roaming') {
+      walkAnimYRef.current = animate(walkY, [0, -5, 0], {
+        duration: 0.45,
+        repeat: Infinity,
+        ease: 'easeInOut',
+      });
+      walkAnimRotateRef.current = animate(walkRotate, [-4, 4, -4], {
+        duration: 0.45,
+        repeat: Infinity,
+        ease: 'easeInOut',
+      });
+    } else {
+      walkAnimYRef.current = animate(walkY, [0, -4, 0], {
+        duration: 2.2,
+        repeat: Infinity,
+        ease: 'easeInOut',
+      });
+      walkAnimRotateRef.current = animate(walkRotate, [-2, 2, -2], {
+        duration: 4,
+        repeat: Infinity,
+        ease: 'easeInOut',
+      });
+    }
+  }, [animationEnabled, mode, walkY, walkRotate]);
+
+  // Roaming callbacks.
+  const handleMoveStart = useCallback(
+    (target: RoamTarget) => {
+      setMode('roaming');
+      setDirection(target.x >= x.get() ? 'right' : 'left');
+      setBehind(target.behind);
+      setLedge(target.ledge);
+    },
+    [x]
+  );
+
+  const handleMoveEnd = useCallback(() => {
+    persist();
+    setMode('idle');
+  }, [persist]);
+
+  useMascotRoaming({
+    enabled: roamingEnabled && !menuOpen,
+    mode,
+    x,
+    y,
+    windowWidth: windowSize.width,
+    windowHeight: windowSize.height,
+    onMoveStart: handleMoveStart,
+    onMoveEnd: handleMoveEnd,
+  });
 
   const handleDragStart = useCallback(() => {
-    setIsDragging(true);
     setBubbleText(null);
+    setMode('dragging');
+    setBehind(false);
+    setLedge(false);
+    justDraggedRef.current = true;
   }, []);
+
+  const handleDragEnd = useCallback(() => {
+    persist();
+    setMode('idle');
+    touch();
+    setTimeout(() => {
+      justDraggedRef.current = false;
+    }, 50);
+  }, [persist, touch]);
+
+  const handleClick = useCallback(() => {
+    if (justDraggedRef.current) return;
+    speak(lines.random());
+  }, [lines, speak]);
+
+  const handleDoubleClick = useCallback(() => {
+    speak(locale === 'zh' ? '哇！好兴奋！' : 'Whee! So excited!');
+    walkY.set(-12);
+    animate(walkY, 0, { duration: 0.4, ease: 'easeOut' });
+  }, [locale, speak, walkY]);
+
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      setMenuPos({ x: e.clientX, y: e.clientY });
+      setMenuOpen(true);
+      touch();
+    },
+    [touch]
+  );
 
   const dismissBubble = useCallback(() => {
     setBubbleText(null);
   }, []);
 
-  if (!mounted || isMobile) return null;
+  if (!mounted || !ready || isMobile) return null;
+
+  const zIndex = behind ? Z_INDEX_BEHIND : Z_INDEX_FRONT;
 
   return (
-    <motion.div
-      ref={containerRef}
-      drag
-      dragMomentum={false}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      style={{
-        x,
-        y,
-        position: 'fixed',
-        right: 24,
-        bottom: 24,
-        zIndex: 90,
-        cursor: isDragging ? 'grabbing' : 'grab',
-      }}
-      className="pointer-events-auto"
-      title="SAKU-CHAN"
-    >
-      <MascotBubble text={bubbleText ?? ''} visible={!!bubbleText} onDismiss={dismissBubble} />
-
-      <motion.button
-        type="button"
-        onClick={handleClick}
-        animate={
-          animationEnabled && !isDragging
-            ? {
-                y: [0, -4, 0],
-                rotate: [-2, 2, -2],
-              }
-            : undefined
-        }
-        transition={
-          animationEnabled
-            ? {
-                y: { duration: 2.2, repeat: Infinity, ease: 'easeInOut' },
-                rotate: { duration: 4, repeat: Infinity, ease: 'easeInOut' },
-              }
-            : undefined
-        }
+    <>
+      <motion.div
+        ref={containerRef}
+        drag
+        dragMomentum={false}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onContextMenu={handleContextMenu}
+        onMouseEnter={touch}
         style={{
-          rotateX: rotateXSpring,
-          rotateY: rotateYSpring,
-          transformPerspective: 200,
-          imageRendering: 'pixelated',
-          background: 'transparent',
-          border: 'none',
-          padding: 0,
-          cursor: isDragging ? 'grabbing' : 'pointer',
+          x,
+          y,
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          zIndex,
+          cursor: mode === 'dragging' ? 'grabbing' : 'grab',
         }}
-        className="relative w-16 h-16 block"
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.95 }}
+        className="pointer-events-auto"
+        title="SAKU-CHAN"
       >
-        <img
-          src="/image/mascot/saku-chan.png"
-          alt="SAKU-CHAN"
-          className="w-full h-full object-contain drop-shadow-md"
-          style={{ imageRendering: 'pixelated' }}
-          draggable={false}
+        <MascotBubble
+          text={bubbleText ?? ''}
+          visible={!!bubbleText}
+          onDismiss={dismissBubble}
         />
-      </motion.button>
-    </motion.div>
+
+        <motion.button
+          type="button"
+          onClick={handleClick}
+          onDoubleClick={handleDoubleClick}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
+          style={{
+            y: walkY,
+            rotateZ: ledge ? -75 : walkRotate,
+            rotateX: rotateXSpring,
+            rotateY: rotateYSpring,
+            scaleX: direction === 'left' ? -1 : 1,
+            scaleY: ledge ? 0.85 : 1,
+            transformPerspective: 200,
+            imageRendering: 'pixelated',
+            background: 'transparent',
+            border: 'none',
+            padding: 0,
+            cursor: mode === 'dragging' ? 'grabbing' : 'pointer',
+            opacity: mode === 'sleeping' ? 0.7 : 1,
+          }}
+          className="relative w-16 h-16 block"
+        >
+          <img
+            src="/image/mascot/saku-chan.png"
+            alt="SAKU-CHAN"
+            className="w-full h-full object-contain drop-shadow-md"
+            style={{ imageRendering: 'pixelated' }}
+            draggable={false}
+          />
+        </motion.button>
+      </motion.div>
+
+      <MascotMenu
+        open={menuOpen}
+        x={menuPos.x}
+        y={menuPos.y}
+        items={menuItems}
+        onClose={() => setMenuOpen(false)}
+      />
+    </>
   );
 }

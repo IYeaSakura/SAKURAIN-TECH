@@ -358,6 +358,12 @@ canvas {
   transform-style: preserve-3d;
 }
 
+/* Mascot cover zones — allow SAKU-CHAN to hide behind marked elements. */
+[data-mascot-zone~="cover"] {
+  position: relative !important;
+  z-index: 90 !important;
+}
+
 /* ===== 以下为旧 src/styles/minecraft-theme.css ===== */
 /* Minecraft Theme - Deep Customization with Enhanced Typography */
 
