@@ -21,8 +21,11 @@ import { useConfig, useIsDesktopClient } from '@/hooks';
 import { fetchLyrics, type LyricLine } from '@/lib/lyrics';
 import {
   getCachedAudioUrl,
+  isCorsSupported,
+  protectAsset,
   resolveOriginalSrc,
   revokeBlobUrl,
+  unprotectAsset,
 } from '@/lib/asset-cache';
 import {
   initAudioConnection,
@@ -246,7 +249,9 @@ export function MusicPlayerProvider({
     if (!isDesktopClient) return;
 
     const audio = new Audio();
-    audio.crossOrigin = 'anonymous';
+    // crossOrigin is set dynamically before loading each track so that
+    // development/preview domains can fall back to non-CORS playback when the
+    // CDN returns a fixed Access-Control-Allow-Origin.
     audio.preload = 'metadata';
     audio.volume = volume;
     audioRef.current = audio;
@@ -436,10 +441,21 @@ export function MusicPlayerProvider({
     if (!audioRef.current || !isDesktopClient || !hasUserInteracted) return;
     if (!currentSong.src) return;
 
+    // Keep the current track in IndexedDB while it is loaded so LRU eviction
+    // does not delete it mid-playback.
+    protectAsset(currentSong.src);
+
     let cancelled = false;
     const audio = audioRef.current;
 
     (async () => {
+      // When the CDN does not serve CORS headers for the current origin,
+      // remove crossOrigin so playback can still work without the Web Audio
+      // visualizer. Production on https://sakurain.net keeps CORS enabled.
+      const corsSupported = await isCorsSupported(currentSong.src);
+      if (cancelled) return;
+      audio.crossOrigin = corsSupported ? 'anonymous' : null;
+
       // Avoid redundant reloads when the same source is already bound. This
       // prevents a race where rapid state updates abort an in-flight play()
       // promise and incorrectly flip isPlaying back to false.
@@ -528,6 +544,8 @@ export function MusicPlayerProvider({
 
     return () => {
       cancelled = true;
+      // Release the protection for this track when switching to another song.
+      unprotectAsset(currentSong.src);
     };
   }, [currentIndex, currentPosition, isDesktopClient, hasUserInteracted, currentSong.src]);
 
@@ -582,6 +600,10 @@ export function MusicPlayerProvider({
     const nextSong = playlist[nextIndex];
     if (!nextSong?.src || failedSrcsRef.current.has(resolveAudioSrc(nextSong.src))) return;
 
+    // Protect the preloading track so it survives LRU eviction while being
+    // warmed up for playback.
+    protectAsset(nextSong.src);
+
     let cancelled = false;
 
     (async () => {
@@ -590,9 +612,15 @@ export function MusicPlayerProvider({
 
       if (!preloadRef.current) {
         preloadRef.current = new Audio();
-        preloadRef.current.crossOrigin = 'anonymous';
         preloadRef.current.preload = 'auto';
       }
+
+      // Match the main audio element's CORS mode so the preload behaves the
+      // same way on development/preview domains with a fixed CDN Origin.
+      const corsSupported = await isCorsSupported(nextSong.src);
+      if (cancelled) return;
+      preloadRef.current.crossOrigin = corsSupported ? 'anonymous' : null;
+
       if (preloadRef.current.src !== cachedSrc) {
         // Revoke the previous preload blob URL before replacing it.
         if (preloadBlobUrlRef.current && preloadBlobUrlRef.current !== cachedSrc) {
@@ -609,6 +637,7 @@ export function MusicPlayerProvider({
 
     return () => {
       cancelled = true;
+      unprotectAsset(nextSong.src);
     };
   }, [currentPosition, shuffledOrder, playlist, isDesktopClient, hasUserInteracted]);
 
