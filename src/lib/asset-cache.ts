@@ -11,7 +11,7 @@
  */
 
 const DB_NAME = 'sakurain-asset-cache';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'assets';
 
 const LIMITS = {
@@ -21,6 +21,7 @@ const LIMITS = {
 };
 
 interface CacheEntry {
+  key?: string;
   url: string;
   type: 'audio' | 'cover' | 'lyrics';
   blob?: Blob;
@@ -48,10 +49,13 @@ const protectedUrlRefs = new Map<string, number>();
 /**
  * Mark an asset URL as currently in use. Calls are reference-counted so the
  * same URL can be protected by both the current track and the preload track.
+ * Protection is keyed by the normalized asset path so CDN prefix changes do
+ * not break the reference count.
  */
 export function protectAsset(url: string): void {
   if (!url) return;
-  protectedUrlRefs.set(url, (protectedUrlRefs.get(url) || 0) + 1);
+  const key = normalizeCacheKey(url);
+  protectedUrlRefs.set(key, (protectedUrlRefs.get(key) || 0) + 1);
 }
 
 /**
@@ -60,11 +64,12 @@ export function protectAsset(url: string): void {
  */
 export function unprotectAsset(url: string): void {
   if (!url) return;
-  const count = protectedUrlRefs.get(url) || 0;
+  const key = normalizeCacheKey(url);
+  const count = protectedUrlRefs.get(key) || 0;
   if (count <= 1) {
-    protectedUrlRefs.delete(url);
+    protectedUrlRefs.delete(key);
   } else {
-    protectedUrlRefs.set(url, count - 1);
+    protectedUrlRefs.set(key, count - 1);
   }
 }
 
@@ -73,6 +78,31 @@ export function unprotectAsset(url: string): void {
  */
 function isCacheable(url: string): boolean {
   return /^https:\/\//.test(url);
+}
+
+/**
+ * Normalize a URL to a cache key based on the asset file path. Different CDN
+ * base URLs that serve the same file (e.g. cos.sakurain.net/mp3/song.mp3 and
+ * file.sakurain.net/music/mp3/song.mp3) share the same key, so switching the
+ * CDN prefix does not invalidate the local cache.
+ */
+function normalizeCacheKey(url: string): string {
+  if (typeof window === 'undefined') return url;
+  try {
+    const pathname = new URL(url, window.location.href).pathname;
+    const match = pathname.match(/\/(mp3|lyric|music-covers)\/.*$/);
+    return match ? match[0] : pathname;
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * Public resolver for the normalized cache key of a URL.
+ */
+export function resolveCacheKey(url: string): string {
+  if (typeof window === 'undefined') return url;
+  return normalizeCacheKey(url);
 }
 
 /**
@@ -140,10 +170,14 @@ function openDb(): Promise<IDBDatabase> {
     request.onsuccess = () => resolve(request.result);
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: 'url' });
-        store.createIndex('type', 'type', { unique: false });
+      if (db.objectStoreNames.contains(STORE_NAME)) {
+        // Schema v2 switches the key from the full URL to the normalized asset
+        // path. Drop the old store so entries are keyed consistently.
+        db.deleteObjectStore(STORE_NAME);
       }
+      const store = db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+      store.createIndex('type', 'type', { unique: false });
+      store.createIndex('url', 'url', { unique: false });
     };
   });
 }
@@ -169,8 +203,10 @@ async function withStore<T>(
  * Retrieve a single cache entry by its original URL.
  */
 async function getEntry(url: string): Promise<CacheEntry | undefined> {
+  if (!url) return undefined;
+  const key = normalizeCacheKey(url);
   try {
-    return await withStore('readonly', (store) => store.get(url));
+    return await withStore('readonly', (store) => store.get(key));
   } catch {
     return undefined;
   }
@@ -181,14 +217,17 @@ async function getEntry(url: string): Promise<CacheEntry | undefined> {
  */
 async function putEntry(entry: CacheEntry): Promise<void> {
   await ensureSpace(entry.type, entry.size);
-  await withStore('readwrite', (store) => store.put(entry));
+  const keyedEntry = { ...entry, key: normalizeCacheKey(entry.url) };
+  await withStore('readwrite', (store) => store.put(keyedEntry));
 }
 
 /**
  * Delete a single cache entry.
  */
 async function deleteEntry(url: string): Promise<void> {
-  await withStore('readwrite', (store) => store.delete(url));
+  if (!url) return;
+  const key = normalizeCacheKey(url);
+  await withStore('readwrite', (store) => store.delete(key));
 }
 
 /**
@@ -222,9 +261,10 @@ async function ensureSpace(type: CacheEntry['type'], needed: number): Promise<vo
   entries.sort((a, b) => a.cachedAt - b.cachedAt);
   for (const entry of entries) {
     if (total + needed <= limit) break;
+    if (!entry.key) continue;
     // Skip assets that are currently loaded or being preloaded by the player.
-    if (protectedUrlRefs.has(entry.url)) continue;
-    await deleteEntry(entry.url);
+    if (protectedUrlRefs.has(entry.key)) continue;
+    await withStore('readwrite', (store) => store.delete(entry.key!));
     total -= entry.size || 0;
   }
 

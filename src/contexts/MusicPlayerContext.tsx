@@ -20,10 +20,12 @@ import {
 import { useConfig, useIsDesktopClient } from '@/hooks';
 import { fetchLyrics, type LyricLine } from '@/lib/lyrics';
 import {
+  clearCorsProbeCache,
   getCachedAudioUrl,
   getCachedAudioUrlWithSource,
   isCorsSupported,
   protectAsset,
+  resolveCacheKey,
   resolveOriginalSrc,
   revokeBlobUrl,
   type AudioSource,
@@ -63,17 +65,13 @@ const shuffleArray = (length: number): number[] => {
 const sequentialOrder = (length: number): number[] =>
   Array.from({ length }, (_, i) => i);
 
-// Normalise audio src values so absolute element URLs can be compared with
-// the relative paths stored in the playlist. Blob URLs created by the asset
-// cache are mapped back to their original COS URL first.
+// Normalise audio src values so URLs from different CDN prefixes that point
+// to the same file compare equal. Blob URLs created by the asset cache are
+// mapped back to their normalized cache key first.
 const resolveAudioSrc = (src: string): string => {
   if (typeof window === 'undefined' || !src) return src;
   const originalSrc = resolveOriginalSrc(src);
-  try {
-    return new URL(originalSrc, window.location.href).pathname;
-  } catch {
-    return originalSrc;
-  }
+  return resolveCacheKey(originalSrc);
 };
 
 const isSameAudioSource = (audioSrc: string, songSrc: string): boolean =>
@@ -253,16 +251,19 @@ export function MusicPlayerProvider({
     if (!isDesktopClient) return;
 
     const audio = new Audio();
-    // crossOrigin is set dynamically before loading each track so that
-    // development/preview domains can fall back to non-CORS playback when the
-    // CDN returns a fixed Access-Control-Allow-Origin.
+    // Start in CORS-anonymous mode so the Web Audio visualizer can connect
+    // safely. If the CDN turns out not to serve CORS headers, this is flipped
+    // back to null before the track loads, which prevents the browser from
+    // muting the element due to a cross-origin MediaElementSource.
+    audio.crossOrigin = 'anonymous';
     audio.preload = 'metadata';
     audio.volume = volume;
     audioRef.current = audio;
 
-    // Set up the shared Web Audio analyser connection immediately so
-    // visualizers always find a ready-made connection in globalAudioMap.
-    initAudioConnection(audio);
+    // Do not create the Web Audio connection here. It is established only
+    // after we confirm the CDN supports CORS for the current origin, avoiding
+    // the silent-output bug that occurs when a MediaElementSource is attached
+    // to a non-CORS media element.
 
     const handleTimeUpdate = () => {
       const src = audio.currentSrc || audio.src;
@@ -285,6 +286,20 @@ export function MusicPlayerProvider({
       // Ignore errors raised by a previous resource after we have already
       // moved on to another track.
       if (!isSameAudioSource(failedSrc, currentSongRef.current.src)) return;
+
+      // If CORS mode failed, try loading the same source without CORS once.
+      // Some static-site/CDN edges do not serve Access-Control-Allow-Origin
+      // even though the file is playable directly.
+      if (
+        audio.crossOrigin === 'anonymous' &&
+        !(audio as unknown as { __corsFallbackAttempted?: boolean }).__corsFallbackAttempted
+      ) {
+        (audio as unknown as { __corsFallbackAttempted?: boolean }).__corsFallbackAttempted = true;
+        audio.crossOrigin = null;
+        clearCorsProbeCache();
+        audio.load();
+        return;
+      }
 
       const mediaError = audio.error;
       const errorDetails = mediaError
@@ -459,6 +474,13 @@ export function MusicPlayerProvider({
       const corsSupported = await isCorsSupported(currentSong.src);
       if (cancelled) return;
       audio.crossOrigin = corsSupported ? 'anonymous' : null;
+
+      if (corsSupported) {
+        // Initialise the shared Web Audio analyser only once CORS is confirmed.
+        // Attaching a MediaElementSource to a non-CORS element forces the
+        // browser to mute output, so this is skipped when CORS is unavailable.
+        initAudioConnection(audio);
+      }
 
       // Avoid redundant reloads when the same source is already bound. This
       // prevents a race where rapid state updates abort an in-flight play()
