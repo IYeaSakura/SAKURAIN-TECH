@@ -12,7 +12,7 @@ const LYRIC_DIR = path.join(PROJECT_ROOT, 'public', 'music', 'lyric');
 const COVER_DIR = path.join(PROJECT_ROOT, 'public', 'music', 'music-covers');
 const PLAYLIST_PATH = path.join(PROJECT_ROOT, 'content', 'data', 'playlist.json');
 
-const CDN_BASE_URL = 'https://file.sakurain.net/music';
+const CDN_BASE_URL = 'https://cos.sakurain.net';
 const CDN_MP3_PATH = '/mp3/';
 const CDN_LYRIC_PATH = '/lyric/';
 const CDN_COVERS_PATH = '/music-covers/';

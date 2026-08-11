@@ -1,17 +1,16 @@
 /**
  * Client-side persistent cache for COS-hosted music assets.
  *
- * Stores audio files, cover images and lyric text in IndexedDB so repeat visits
- * do not re-download the same resources from Tencent COS. The cache enforces
- * per-type size limits and evicts the oldest entries with a simple LRU policy.
- *
- * Only external HTTP(S) URLs are cached; local paths are passed through.
+ * Stores audio files, cover images and lyric text in IndexedDB so assets are
+ * downloaded from COS at most once. Cached entries are kept indefinitely and
+ * reused on every subsequent visit, minimising COS egress traffic. A size cap
+ * per asset type and an LRU eviction policy protect browser storage. Manual
+ * cache clearing is exposed via clearAssetCache().
  */
 
 const DB_NAME = 'sakurain-asset-cache';
 const DB_VERSION = 1;
 const STORE_NAME = 'assets';
-const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 const LIMITS = {
   audio: 200 * 1024 * 1024,
@@ -24,8 +23,6 @@ interface CacheEntry {
   type: 'audio' | 'cover' | 'lyrics';
   blob?: Blob;
   text?: string;
-  etag?: string;
-  lastModified?: string;
   size: number;
   cachedAt: number;
 }
@@ -86,9 +83,9 @@ export function clearCorsProbeCache(): void {
 
 /**
  * Probe whether the CDN serves CORS headers compatible with the current page
- * origin. This is a temporary workaround for CDNs that return a fixed
- * Access-Control-Allow-Origin value. Results are cached per origin for the
- * lifetime of the page session.
+ * origin. Results are cached per origin for the lifetime of the page session.
+ *
+ * This performs a single HEAD request per origin, not per asset.
  */
 export async function isCorsSupported(url: string): Promise<boolean> {
   if (typeof window === 'undefined' || !isCacheable(url)) return true;
@@ -234,70 +231,26 @@ async function ensureSpace(type: CacheEntry['type'], needed: number): Promise<vo
   }
 }
 
-type ValidationResult =
-  | { kind: 'refreshed'; entry: CacheEntry }
-  | { kind: 'response'; response: Response }
-  | undefined;
-
 /**
- * Fetch an external asset with conditional validation. Returns the existing
- * entry refreshed when the server responds 304 Not Modified, otherwise the
- * full 200 response so the caller can store the new body.
- */
-async function fetchWithValidation(url: string, existing?: CacheEntry): Promise<ValidationResult> {
-  const headers: HeadersInit = {};
-  if (existing?.etag) {
-    headers['If-None-Match'] = existing.etag;
-  } else if (existing?.lastModified) {
-    headers['If-Modified-Since'] = existing.lastModified;
-  }
-
-  const response = await fetch(url, { credentials: 'omit', headers });
-  if (response.status === 304 && existing) {
-    return { kind: 'refreshed', entry: { ...existing, cachedAt: Date.now() } };
-  }
-  if (!response.ok) return undefined;
-  return { kind: 'response', response };
-}
-
-/**
- * Fetch an external asset and store it in IndexedDB. Uses the existing entry
- * for a 304 Not Modified response to avoid re-downloading unchanged assets.
+ * Fetch an external asset and store it in IndexedDB.
  */
 async function fetchAndCache(
   url: string,
-  type: 'audio' | 'cover',
-  existing?: CacheEntry
+  type: 'audio' | 'cover'
 ): Promise<CacheEntry | undefined> {
-  const hasUsableContent = existing?.blob && existing.blob.size > 0;
-  const fetched = await fetchWithValidation(url, hasUsableContent ? existing : undefined);
-  if (!fetched) return undefined;
+  const response = await fetch(url, { credentials: 'omit' });
+  if (!response.ok) return undefined;
 
-  if (fetched.kind === 'refreshed') {
-    await putEntry(fetched.entry);
-    return fetched.entry;
-  }
-
-  const blob = await fetched.response.blob();
+  const blob = await response.blob();
   const entry: CacheEntry = {
     url,
     type,
     blob,
-    etag: fetched.response.headers.get('etag') || undefined,
-    lastModified: fetched.response.headers.get('last-modified') || undefined,
     size: blob.size,
     cachedAt: Date.now(),
   };
   await putEntry(entry);
   return entry;
-}
-
-/**
- * Check whether a cached entry has exceeded the 30-day TTL.
- * Failures are treated as "not expired" so the cache remains usable.
- */
-function isCacheExpired(entry: CacheEntry): boolean {
-  return Date.now() - entry.cachedAt > CACHE_TTL_MS;
 }
 
 /**
@@ -324,23 +277,19 @@ export function resolveOriginalSrc(src: string): string {
 }
 
 /**
- * Return a cached blob URL for an audio file, or the original URL if the file
- * is not cached yet. Cached files are reused for 30 days and refreshed after
- * the TTL expires.
+ * Return a cached blob URL for an audio file, or fetch and cache it if the
+ * file is not yet stored locally. Cached files are reused indefinitely.
  */
 export async function getCachedAudioUrl(src: string): Promise<string> {
   if (!src || typeof window === 'undefined' || !isCacheable(src)) return src;
   try {
     const entry = await getEntry(src);
-    if (entry?.blob) {
-      const expired = isCacheExpired(entry);
-      if (!expired) {
-        const blobUrl = URL.createObjectURL(entry.blob);
-        registerBlobUrl(blobUrl, src);
-        return blobUrl;
-      }
+    if (entry?.blob && entry.blob.size > 0) {
+      const blobUrl = URL.createObjectURL(entry.blob);
+      registerBlobUrl(blobUrl, src);
+      return blobUrl;
     }
-    const newEntry = await fetchAndCache(src, 'audio', entry);
+    const newEntry = await fetchAndCache(src, 'audio');
     if (newEntry?.blob) {
       const blobUrl = URL.createObjectURL(newEntry.blob);
       registerBlobUrl(blobUrl, src);
@@ -354,11 +303,11 @@ export async function getCachedAudioUrl(src: string): Promise<string> {
 
 /**
  * Return the raw lyric text for a URL, fetching and caching it if needed.
- * Cached lyrics are reused for 30 days and refreshed after the TTL expires.
+ * Cached lyrics are reused indefinitely.
  */
 export async function getCachedLyrics(url: string | undefined | null): Promise<string | null> {
-  if (!url || typeof window === 'undefined' || !isCacheable(url)) {
-    if (!url) return null;
+  if (!url || typeof window === 'undefined') return null;
+  if (!isCacheable(url)) {
     try {
       const response = await fetch(url, { credentials: 'omit' });
       return response.ok ? await response.text() : null;
@@ -369,27 +318,16 @@ export async function getCachedLyrics(url: string | undefined | null): Promise<s
 
   try {
     const entry = await getEntry(url);
-    if (entry?.text !== undefined) {
-      const expired = isCacheExpired(entry);
-      if (!expired) return entry.text;
-    }
+    if (entry?.text !== undefined) return entry.text;
 
-    const hasUsableContent = entry?.text !== undefined;
-    const fetched = await fetchWithValidation(url, hasUsableContent ? entry : undefined);
-    if (!fetched) return null;
+    const response = await fetch(url, { credentials: 'omit' });
+    if (!response.ok) return null;
 
-    if (fetched.kind === 'refreshed') {
-      await putEntry(fetched.entry);
-      return fetched.entry.text ?? null;
-    }
-
-    const text = await fetched.response.text();
+    const text = await response.text();
     await putEntry({
       url,
       type: 'lyrics',
       text,
-      etag: fetched.response.headers.get('etag') || undefined,
-      lastModified: fetched.response.headers.get('last-modified') || undefined,
       size: new Blob([text]).size,
       cachedAt: Date.now(),
     });
@@ -400,23 +338,19 @@ export async function getCachedLyrics(url: string | undefined | null): Promise<s
 }
 
 /**
- * Return a cached blob URL for a cover image, or the original URL if the image
- * is not cached yet. Cached covers are reused for 30 days and refreshed after
- * the TTL expires.
+ * Return a cached blob URL for a cover image, or fetch and cache it if the
+ * image is not yet stored locally. Cached covers are reused indefinitely.
  */
 export async function getCachedCoverUrl(url: string | undefined | null): Promise<string> {
   if (!url || typeof window === 'undefined' || !isCacheable(url)) return url || '';
   try {
     const entry = await getEntry(url);
-    if (entry?.blob) {
-      const expired = isCacheExpired(entry);
-      if (!expired) {
-        const blobUrl = URL.createObjectURL(entry.blob);
-        registerBlobUrl(blobUrl, url);
-        return blobUrl;
-      }
+    if (entry?.blob && entry.blob.size > 0) {
+      const blobUrl = URL.createObjectURL(entry.blob);
+      registerBlobUrl(blobUrl, url);
+      return blobUrl;
     }
-    const newEntry = await fetchAndCache(url, 'cover', entry);
+    const newEntry = await fetchAndCache(url, 'cover');
     if (newEntry?.blob) {
       const blobUrl = URL.createObjectURL(newEntry.blob);
       registerBlobUrl(blobUrl, url);
