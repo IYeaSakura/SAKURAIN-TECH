@@ -519,7 +519,7 @@ allowedDevOrigins: ["localhost", "127.0.0.1"]
 
 **Cause**: `check-friends-connectivity.js` makes outbound HTTPS requests to every friend link.
 
-**Solution**: The script now uses multi-threaded workers and URL deduplication to speed up checks. On slow networks, use `npm run build:fast` for local iteration, or set `SKIP_FRIEND_CHECK=true` / `CI=true` to skip the check. For CI/CD, ensure outbound HTTPS is allowed.
+**Solution**: The script now uses multi-threaded workers and URL deduplication to speed up checks. On slow networks, use `npm run build:fast` for local iteration, or set `SKIP_FRIEND_CHECK=true` to skip the check. For CI/CD, ensure outbound HTTPS is allowed.
 
 ### Write API Returns `Invalid signature`
 
