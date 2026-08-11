@@ -27,7 +27,7 @@ npm run build
 3. `node scripts/check-friends-connectivity.js`
    - Checks the connectivity of friend links listed in `public/data/friends.json` and updates their `status` and `checkInfo` fields.
    - Uses multi-threaded workers and URL deduplication to avoid redundant HTTP checks.
-   - Skips the check automatically when `CI=true` or `SKIP_FRIEND_CHECK=true`.
+   - Skips the check automatically when `SKIP_FRIEND_CHECK=true`.
    - Runs before `next build` so the friends page reflects the latest statuses.
 
 4. `node scripts/build-next.js`
@@ -91,7 +91,7 @@ These files remain local as build-time material but are not committed.
 
 **Purpose**: Check the connectivity status of friend links and update their online/offline/maintenance status.
 
-**Usage**: Automatically runs during `npm run build`. Skipped when `CI=true` or `SKIP_FRIEND_CHECK=true`.
+**Usage**: Automatically runs during `npm run build`. Skipped when `SKIP_FRIEND_CHECK=true`.
 
 **Input**: `public/data/friends.json`
 
