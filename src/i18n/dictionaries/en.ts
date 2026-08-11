@@ -72,7 +72,7 @@ export const en: Dictionary = {
     recentDevLog: 'Recent Dev Log',
     travelMap: 'Travel Map',
     locationMap: 'Location',
-    currentLocation: 'Xinglongtai District, Panjin City, Liaoning Province',
+    currentLocation: '盘锦市',
     clientLocation: 'You: {city}',
     distanceLabel: 'Our distance is {distance} km',
     travelMapVisited: '{count} cities visited',

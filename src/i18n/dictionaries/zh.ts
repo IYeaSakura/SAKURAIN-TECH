@@ -71,7 +71,7 @@ export const zh: Dictionary = {
     recentDevLog: '近期开发日志',
     travelMap: '足迹地图',
     locationMap: '位置',
-    currentLocation: '辽宁省盘锦市兴隆台区',
+    currentLocation: '盘锦市',
     clientLocation: '你：{city}',
     distanceLabel: '我们的距离是 {distance} km',
     travelMapVisited: '去过 {count} 座城市',

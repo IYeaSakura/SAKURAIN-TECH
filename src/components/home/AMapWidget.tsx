@@ -3,8 +3,8 @@
 /**
  * AMapWidget —— homepage location map powered by AMap.
  *
- * Displays the fixed current location (Xinglongtai District, Panjin City,
- * Liaoning Province) and the browser's geolocated client position. The great-
+ * Displays the fixed current location (Panjin City) and the browser's
+ * geolocated client position. The great-
  * circle distance between the two points is calculated and shown in the UI.
  * A compact preview map is shown on the dashboard; clicking it opens a large
  * modal map with the same markers. The map centers on the client location when
