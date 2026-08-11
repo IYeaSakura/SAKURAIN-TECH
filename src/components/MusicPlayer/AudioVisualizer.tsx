@@ -30,10 +30,14 @@ export const globalAudioMap = new WeakMap<HTMLAudioElement, AudioConnection>();
 /**
  * Create and cache a Web Audio analyser connection for an HTMLAudioElement.
  * Idempotent: returns the existing connection if one has already been created.
+ * Returns undefined when the element is not in CORS-anonymous mode, because
+ * attaching a MediaElementSource to a non-CORS element mutes audio output.
  */
 export function initAudioConnection(audio: HTMLAudioElement): AudioConnection | undefined {
   const existing = globalAudioMap.get(audio);
   if (existing) return existing;
+
+  if (audio.crossOrigin !== 'anonymous') return undefined;
 
   const AudioContextClass =
     window.AudioContext ||
@@ -186,6 +190,13 @@ export function AudioVisualizer({
       if (existing) {
         analyserRef.current = existing.analyser;
         isInitializedRef.current = true;
+        if (intervalId) clearInterval(intervalId);
+        return;
+      }
+
+      // Avoid attaching a MediaElementSource to a non-CORS element, which
+      // would force the browser to mute the audio output.
+      if (audio.crossOrigin !== 'anonymous') {
         if (intervalId) clearInterval(intervalId);
         return;
       }
