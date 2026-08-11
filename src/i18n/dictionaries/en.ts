@@ -71,6 +71,10 @@ export const en: Dictionary = {
     noPosts: 'No posts yet',
     recentDevLog: 'Recent Dev Log',
     travelMap: 'Travel Map',
+    locationMap: 'Location',
+    currentLocation: 'Xinglongtai District, Panjin City, Liaoning Province',
+    clientLocation: 'You: {city}',
+    distanceLabel: 'Our distance is {distance} km',
     travelMapVisited: '{count} cities visited',
     travelMapCurrent: 'Current: {city}',
     travelMapVisitedLabel: 'Visited',
@@ -143,6 +147,11 @@ export const en: Dictionary = {
     collapse: 'Collapse',
     trackNumber: 'Track',
     backToHome: 'Back to Home',
+    audioSource: {
+      local: 'Local',
+      get: 'GET',
+      direct: 'Direct',
+    },
     audioMetrics: {
       playing: 'PLAYING',
       paused: 'PAUSED',

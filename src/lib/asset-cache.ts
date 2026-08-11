@@ -276,29 +276,47 @@ export function resolveOriginalSrc(src: string): string {
   return blobUrlToOriginalSrc.get(src) || src;
 }
 
+export type AudioSource = 'local' | 'get' | 'direct';
+
+interface CachedAudioResult {
+  url: string;
+  source: AudioSource;
+}
+
 /**
  * Return a cached blob URL for an audio file, or fetch and cache it if the
  * file is not yet stored locally. Cached files are reused indefinitely.
+ * Also reports how the audio was resolved so the UI can show "Local" or "GET".
  */
-export async function getCachedAudioUrl(src: string): Promise<string> {
-  if (!src || typeof window === 'undefined' || !isCacheable(src)) return src;
+export async function getCachedAudioUrlWithSource(src: string): Promise<CachedAudioResult> {
+  if (!src || typeof window === 'undefined' || !isCacheable(src)) {
+    return { url: src, source: 'direct' };
+  }
   try {
     const entry = await getEntry(src);
     if (entry?.blob && entry.blob.size > 0) {
       const blobUrl = URL.createObjectURL(entry.blob);
       registerBlobUrl(blobUrl, src);
-      return blobUrl;
+      return { url: blobUrl, source: 'local' };
     }
     const newEntry = await fetchAndCache(src, 'audio');
     if (newEntry?.blob) {
       const blobUrl = URL.createObjectURL(newEntry.blob);
       registerBlobUrl(blobUrl, src);
-      return blobUrl;
+      return { url: blobUrl, source: 'get' };
     }
-    return src;
+    return { url: src, source: 'direct' };
   } catch {
-    return src;
+    return { url: src, source: 'direct' };
   }
+}
+
+/**
+ * Backward-compatible wrapper that only returns the resolved URL.
+ */
+export async function getCachedAudioUrl(src: string): Promise<string> {
+  const result = await getCachedAudioUrlWithSource(src);
+  return result.url;
 }
 
 /**

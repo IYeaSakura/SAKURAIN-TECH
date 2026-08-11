@@ -1,11 +1,14 @@
 'use client';
 
 /**
- * AMapWidget —— homepage travel map powered by AMap.
+ * AMapWidget —— homepage location map powered by AMap.
  *
- * A compact preview map is shown on the dashboard; clicking it opens a
- * large modal map with the same markers and route line. Cities are
- * connected in visit order and the current city pulses for emphasis.
+ * Displays the fixed current location (Xinglongtai District, Panjin City,
+ * Liaoning Province) and the browser's geolocated client position. The great-
+ * circle distance between the two points is calculated and shown in the UI.
+ * A compact preview map is shown on the dashboard; clicking it opens a large
+ * modal map with the same markers. The map centers on the client location when
+ * available, otherwise falls back to the fixed current location.
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -27,6 +30,23 @@ interface CityData {
   visited: City[];
 }
 
+/**
+ * Calculate the great-circle distance between two GPS coordinates in kilometres.
+ */
+function getDistanceKm(a: [number, number], b: [number, number]): number {
+  const R = 6371;
+  const dLat = ((b[1] - a[1]) * Math.PI) / 180;
+  const dLon = ((b[0] - a[0]) * Math.PI) / 180;
+  const lat1 = (a[1] * Math.PI) / 180;
+  const lat2 = (b[1] * Math.PI) / 180;
+  const sinDLat2 = Math.sin(dLat / 2);
+  const sinDLon2 = Math.sin(dLon / 2);
+  const haversine =
+    sinDLat2 * sinDLat2 + Math.cos(lat1) * Math.cos(lat2) * sinDLon2 * sinDLon2;
+  const c = 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+  return R * c;
+}
+
 export function AMapWidget() {
   const { t, locale } = useTranslation();
   const animationEnabled = useAnimationEnabled();
@@ -41,6 +61,7 @@ export function AMapWidget() {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [isOpen, setIsOpen] = useState(false);
   const [clientLocation, setClientLocation] = useState<{ city: string; coordinates: [number, number] } | null>(null);
+  const [distanceKm, setDistanceKm] = useState<number | null>(null);
 
   // Load city configuration.
   useEffect(() => {
@@ -168,9 +189,13 @@ export function AMapWidget() {
       const AMap = await AMapLoader.load({ key: AMAP_KEY, version: '2.0' });
       amapRef.current = AMap;
 
+      // Center on the browser-located position by default; fall back to the
+      // fixed current location if geolocation is unavailable.
+      const center = clientLocationRef.current?.coordinates ?? data?.current.coordinates;
+
       const map = new AMap.Map(container, {
         zoom,
-        center: data?.current.coordinates,
+        center,
         viewMode: '2D',
         mapStyle,
         dragEnable: draggable,
@@ -181,35 +206,15 @@ export function AMapWidget() {
 
       if (!data) return map;
 
-      const uniqueCities = Array.from(
-        new Map([...data.visited, data.current].map((c) => [c.name, c])).values()
-      );
-
-      // Route line connecting visited cities in order.
-      const routePath = data.visited.map((c) => c.coordinates);
-      if (routePath.length > 1) {
-        const polyline = new AMap.Polyline({
-          path: routePath,
-          strokeColor: 'var(--accent-primary)',
-          strokeWeight: 2,
-          strokeStyle: 'dashed',
-          strokeDash: [6, 4],
-          lineJoin: 'round',
-        });
-        map.add(polyline);
-      }
-
-      uniqueCities.forEach((city) => {
-        const isCurrent = city.name === data.current.name;
-        const marker = new AMap.Marker({
-          position: city.coordinates,
-          content: createMarkerContent(city, isCurrent),
-          offset: new AMap.Pixel(0, 0),
-          zIndex: isCurrent ? 30 : 20,
-          title: city.name,
-        });
-        map.add(marker);
+      // Fixed current location marker (Panjin Xinglongtai District).
+      const currentMarker = new AMap.Marker({
+        position: data.current.coordinates,
+        content: createMarkerContent(data.current, true),
+        offset: new AMap.Pixel(0, 0),
+        zIndex: 30,
+        title: t.home.currentLocation,
       });
+      map.add(currentMarker);
 
       if (clientLocationRef.current) {
         addClientMarker(map, clientLocationRef.current);
@@ -217,7 +222,7 @@ export function AMapWidget() {
 
       return map;
     },
-    [data, mapStyle, createMarkerContent]
+    [data, mapStyle, createMarkerContent, t.home.currentLocation]
   );
 
   // Preview map.
@@ -323,6 +328,15 @@ export function AMapWidget() {
     }
   }, [clientLocation, addClientMarker]);
 
+  // Calculate the distance between the fixed current location and the client.
+  useEffect(() => {
+    if (!data || !clientLocation) {
+      setDistanceKm(null);
+      return;
+    }
+    setDistanceKm(getDistanceKm(data.current.coordinates, clientLocation.coordinates));
+  }, [data, clientLocation]);
+
   // Sync AMap style with the site light/dark theme.
   useEffect(() => {
     const applyStyle = (map: unknown) => {
@@ -373,13 +387,15 @@ export function AMapWidget() {
           <div className="flex items-center gap-2">
             <Navigation className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
             <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-              {t.home.travelMap}
+              {t.home.locationMap}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
-              {t.home.travelMapVisited.replace('{count}', String(data.visited.length))}
-            </span>
+            {distanceKm !== null && (
+              <span className="text-[10px] font-mono uppercase" style={{ color: 'var(--text-muted)' }}>
+                {t.home.distanceLabel.replace('{distance}', distanceKm.toFixed(0))}
+              </span>
+            )}
             <Maximize2 className="w-3 h-3" style={{ color: 'var(--text-muted)' }} />
           </div>
         </div>
@@ -434,16 +450,18 @@ export function AMapWidget() {
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--accent-secondary)' }} />
-                {t.home.travelMapCurrent.replace('{city}', data.current.name)}
-              </div>
-              <div className={`flex items-center gap-2 ${clientLocation ? 'mb-1' : ''}`}>
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--accent-primary)' }} />
-                {t.home.travelMapVisitedLabel}
+                {t.home.currentLocation}
               </div>
               {clientLocation && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mb-1">
                   <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--accent-tertiary)' }} />
-                  {t.home.travelMapClient.replace('{city}', clientLocation.city)}
+                  {t.home.clientLocation.replace('{city}', clientLocation.city)}
+                </div>
+              )}
+              {distanceKm !== null && (
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--accent-primary)' }} />
+                  {t.home.distanceLabel.replace('{distance}', distanceKm.toFixed(0))}
                 </div>
               )}
             </div>
@@ -494,7 +512,7 @@ export function AMapWidget() {
                 <div className="flex items-center gap-2">
                   <Navigation className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
                   <span className="text-xs font-mono uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                    {t.home.travelMap}
+                    {t.home.locationMap}
                   </span>
                 </div>
                 <button
@@ -509,6 +527,36 @@ export function AMapWidget() {
 
               <div className="relative flex-1 min-h-0">
                 <div ref={modalRef} className="absolute inset-0" />
+
+                {status === 'ready' && (
+                  <div
+                    className="absolute bottom-4 left-4 right-4 sm:right-auto px-3 py-2 border-2 text-[10px] font-mono uppercase z-[1]"
+                    style={{
+                      background: 'var(--bg-secondary)',
+                      borderColor: 'var(--border-subtle)',
+                      color: 'var(--text-muted)',
+                    }}
+                  >
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--accent-secondary)' }} />
+                        {t.home.currentLocation}
+                      </div>
+                      {clientLocation && (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--accent-tertiary)' }} />
+                          {t.home.clientLocation.replace('{city}', clientLocation.city)}
+                        </div>
+                      )}
+                      {distanceKm !== null && (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--accent-primary)' }} />
+                          {t.home.distanceLabel.replace('{distance}', distanceKm.toFixed(0))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
