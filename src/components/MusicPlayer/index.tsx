@@ -168,6 +168,7 @@ export function MusicPlayer() {
     seek,
     playSong,
     cyclePlayMode,
+    currentAudioSource,
     toggleLyrics,
     togglePlaylist,
     audioRef,
@@ -241,7 +242,13 @@ export function MusicPlayer() {
                 {currentSong.title}
               </span>
               <span className="text-[10px] max-w-[90px] truncate" style={{ color: 'var(--text-muted)' }}>
-                {isLoading ? t.music.loading : error ? t.music.unavailable : isPlaying ? t.music.playing : `${currentNumber}/${totalSongs}`}
+                {isLoading
+                  ? t.music.loading
+                  : error
+                    ? t.music.unavailable
+                    : isPlaying
+                      ? `${t.music.playing} · ${t.music.audioSource[currentAudioSource]}`
+                      : `${currentNumber}/${totalSongs} · ${t.music.audioSource[currentAudioSource]}`}
               </span>
             </div>
 
@@ -482,6 +489,20 @@ export function MusicPlayer() {
                 className="flex items-center justify-center gap-2 mt-3 pt-2 border-t-2"
                 style={{ borderColor: 'var(--border-subtle)' }}
               >
+                <span
+                  className="px-1.5 py-0.5 text-[10px] font-mono font-bold uppercase border-2"
+                  style={{
+                    borderColor: 'var(--border-subtle)',
+                    color: currentAudioSource === 'local'
+                      ? '#22c55e'
+                      : currentAudioSource === 'get'
+                        ? '#3b82f6'
+                        : 'var(--text-muted)',
+                    background: 'var(--bg-primary)',
+                  }}
+                >
+                  {t.music.audioSource[currentAudioSource]}
+                </span>
                 <Shuffle className="w-3 h-3" style={{ color: 'var(--accent-primary)' }} />
                 <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
                   {tReplace(t.music.trackInfo, { current: currentNumber, total: totalSongs, mode: playMode })}

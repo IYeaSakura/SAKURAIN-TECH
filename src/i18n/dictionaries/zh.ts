@@ -70,6 +70,10 @@ export const zh: Dictionary = {
     noPosts: '还没有文章',
     recentDevLog: '近期开发日志',
     travelMap: '足迹地图',
+    locationMap: '位置',
+    currentLocation: '辽宁省盘锦市兴隆台区',
+    clientLocation: '你：{city}',
+    distanceLabel: '我们的距离是 {distance} km',
     travelMapVisited: '去过 {count} 座城市',
     travelMapCurrent: '当前所在地：{city}',
     travelMapVisitedLabel: '去过',
@@ -142,6 +146,11 @@ export const zh: Dictionary = {
     collapse: '收起',
     trackNumber: '序号',
     backToHome: '返回首页',
+    audioSource: {
+      local: '本地',
+      get: 'GET',
+      direct: '直连',
+    },
     audioMetrics: {
       playing: 'PLAYING',
       paused: 'PAUSED',

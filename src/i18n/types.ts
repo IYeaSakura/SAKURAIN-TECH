@@ -80,6 +80,10 @@ export interface Dictionary {
     noPosts: string;
     recentDevLog: string;
     travelMap: string;
+    locationMap: string;
+    currentLocation: string;
+    clientLocation: string;
+    distanceLabel: string;
     travelMapVisited: string;
     travelMapCurrent: string;
     travelMapVisitedLabel: string;
@@ -151,6 +155,11 @@ export interface Dictionary {
     collapse: string;
     trackNumber: string;
     backToHome: string;
+    audioSource: {
+      local: string;
+      get: string;
+      direct: string;
+    };
     audioMetrics: {
       playing: string;
       paused: string;

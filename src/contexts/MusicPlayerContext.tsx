@@ -21,10 +21,12 @@ import { useConfig, useIsDesktopClient } from '@/hooks';
 import { fetchLyrics, type LyricLine } from '@/lib/lyrics';
 import {
   getCachedAudioUrl,
+  getCachedAudioUrlWithSource,
   isCorsSupported,
   protectAsset,
   resolveOriginalSrc,
   revokeBlobUrl,
+  type AudioSource,
   unprotectAsset,
 } from '@/lib/asset-cache';
 import {
@@ -98,6 +100,7 @@ interface MusicPlayerState {
   showLyrics: boolean;
   showPlaylist: boolean;
   systemPaused: boolean;
+  currentAudioSource: AudioSource;
 }
 
 interface MusicPlayerActions {
@@ -153,6 +156,7 @@ export function MusicPlayerProvider({
   const [systemPaused, setSystemPaused] = useState(false);
   const [currentLyrics, setCurrentLyrics] = useState<LyricLine[]>([]);
   const [lyricsLoading, setLyricsLoading] = useState(false);
+  const [currentAudioSource, setCurrentAudioSource] = useState<AudioSource>('direct');
 
   // Keep refs in sync with the latest state for synchronous reads in handlers.
   useEffect(() => {
@@ -500,8 +504,9 @@ export function MusicPlayerProvider({
       setCurrentTime(0);
       setBuffered(0);
 
-      const cachedSrc = await getCachedAudioUrl(currentSong.src);
+      const { url: cachedSrc, source } = await getCachedAudioUrlWithSource(currentSong.src);
       if (cancelled) return;
+      setCurrentAudioSource(source);
 
       // Mark that we are about to swap src so the implicit pause/abort events
       // from the previous resource are ignored.
@@ -801,6 +806,7 @@ export function MusicPlayerProvider({
       showLyrics,
       showPlaylist,
       systemPaused,
+      currentAudioSource,
       togglePlay,
       next,
       prev,
@@ -837,6 +843,7 @@ export function MusicPlayerProvider({
       showLyrics,
       showPlaylist,
       systemPaused,
+      currentAudioSource,
       togglePlay,
       next,
       prev,
