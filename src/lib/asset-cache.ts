@@ -2,10 +2,12 @@
  * Client-side persistent cache for COS-hosted music assets.
  *
  * Stores audio files, cover images and lyric text in IndexedDB so assets are
- * downloaded from COS at most once. Cached entries are kept indefinitely and
- * reused on every subsequent visit, minimising COS egress traffic. A size cap
- * per asset type and an LRU eviction policy protect browser storage. Manual
- * cache clearing is exposed via clearAssetCache().
+ * downloaded from the CDN at most once. Cached entries are kept indefinitely
+ * and reused on every subsequent visit, minimising CDN egress traffic. A size
+ * cap per asset type and an LRU eviction policy protect browser storage. Audio
+ * playback streams directly from the CDN on first visit while the file is
+ * cached in the background; subsequent visits play from IndexedDB. Manual cache
+ * clearing is exposed via clearAssetCache().
  */
 
 const DB_NAME = 'sakurain-asset-cache';
@@ -13,7 +15,7 @@ const DB_VERSION = 1;
 const STORE_NAME = 'assets';
 
 const LIMITS = {
-  audio: 200 * 1024 * 1024,
+  audio: 512 * 1024 * 1024,
   cover: 20 * 1024 * 1024,
   lyrics: 1 * 1024 * 1024,
 };
@@ -254,6 +256,24 @@ async function fetchAndCache(
 }
 
 /**
+ * Download an audio file in the background and persist it to IndexedDB.
+ * This does not block playback; the caller is expected to stream the file
+ * directly from its original URL while caching happens asynchronously.
+ */
+async function cacheAudioInBackground(url: string): Promise<void> {
+  if (!url || typeof window === 'undefined' || !isCacheable(url)) return;
+
+  try {
+    const existing = await getEntry(url);
+    if (existing?.blob && existing.blob.size > 0) return;
+
+    await fetchAndCache(url, 'audio');
+  } catch {
+    // Background caching is best-effort; playback is not affected.
+  }
+}
+
+/**
  * Register a blob URL so audio source comparisons can map it back to the
  * original CDN URL.
  */
@@ -284,9 +304,15 @@ interface CachedAudioResult {
 }
 
 /**
- * Return a cached blob URL for an audio file, or fetch and cache it if the
- * file is not yet stored locally. Cached files are reused indefinitely.
- * Also reports how the audio was resolved so the UI can show "Local" or "GET".
+ * Return a playable URL for an audio file and report how it was resolved.
+ *
+ * - If the file is already cached locally, a blob URL is returned and the UI
+ *   shows "Local".
+ * - If the file is not yet cached, the original CDN URL is returned so the
+ *   browser can stream it via HTTP range requests. A background fetch is
+ *   started to cache the file for subsequent visits, and the UI shows "GET".
+ * - Non-HTTPS or unavailable sources fall back to the original URL and show
+ *   "Direct".
  */
 export async function getCachedAudioUrlWithSource(src: string): Promise<CachedAudioResult> {
   if (!src || typeof window === 'undefined' || !isCacheable(src)) {
@@ -299,13 +325,10 @@ export async function getCachedAudioUrlWithSource(src: string): Promise<CachedAu
       registerBlobUrl(blobUrl, src);
       return { url: blobUrl, source: 'local' };
     }
-    const newEntry = await fetchAndCache(src, 'audio');
-    if (newEntry?.blob) {
-      const blobUrl = URL.createObjectURL(newEntry.blob);
-      registerBlobUrl(blobUrl, src);
-      return { url: blobUrl, source: 'get' };
-    }
-    return { url: src, source: 'direct' };
+    // Stream from the original URL immediately; cache in the background so the
+    // next visit can play from IndexedDB without another CDN round-trip.
+    cacheAudioInBackground(src);
+    return { url: src, source: 'get' };
   } catch {
     return { url: src, source: 'direct' };
   }
