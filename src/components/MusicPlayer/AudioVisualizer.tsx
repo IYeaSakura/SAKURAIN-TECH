@@ -195,9 +195,9 @@ export function AudioVisualizer({
       }
 
       // Avoid attaching a MediaElementSource to a non-CORS element, which
-      // would force the browser to mute the audio output.
+      // would force the browser to mute the audio output. Do not stop polling
+      // here: the player may still be probing CORS and will connect later.
       if (audio.crossOrigin !== 'anonymous') {
-        if (intervalId) clearInterval(intervalId);
         return;
       }
 
@@ -235,7 +235,7 @@ export function AudioVisualizer({
       intervalId = window.setInterval(() => {
         attempts += 1;
         tryInit();
-        if (attempts >= 15 && intervalId) clearInterval(intervalId);
+        if (attempts >= 50 && intervalId) clearInterval(intervalId);
       }, 200);
     }
 
@@ -262,15 +262,24 @@ export function AudioVisualizer({
   }, [audioRef]);
 
   useEffect(() => {
-    if (!isInitializedRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Try to establish the Web Audio connection lazily when playback starts,
+    // in case the mount-time init ran before the player had finished CORS
+    // probing.
+    if (!isInitializedRef.current && audio.crossOrigin === 'anonymous') {
+      const connection = initAudioConnection(audio);
+      if (connection) {
+        analyserRef.current = connection.analyser;
+        isInitializedRef.current = true;
+      }
+    }
 
     if (isPlaying) {
-      const audio = audioRef.current;
-      if (audio) {
-        const connection = globalAudioMap.get(audio);
-        if (connection?.context.state === 'suspended') {
-          connection.context.resume();
-        }
+      const connection = globalAudioMap.get(audio);
+      if (connection?.context.state === 'suspended') {
+        connection.context.resume();
       }
       isActiveRef.current = true;
       draw();
