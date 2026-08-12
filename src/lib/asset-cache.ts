@@ -33,9 +33,9 @@ interface CacheEntry {
 const blobUrlToOriginalSrc = new Map<string, string>();
 
 /**
- * Cached CORS compatibility results per page origin. Used as a temporary
- * workaround when the CDN returns a fixed Access-Control-Allow-Origin that
- * does not match the current development or preview domain.
+ * Cached CORS compatibility results per resource origin. Different CDN
+ * domains (e.g. cos.sakurain.net vs file.sakurain.net) may have different
+ * CORS policies, so they are probed and cached independently.
  */
 const corsSupportedByOrigin = new Map<string, boolean>();
 
@@ -115,36 +115,47 @@ export function clearCorsProbeCache(): void {
 
 /**
  * Probe whether the CDN serves CORS headers compatible with the current page
- * origin. Results are cached per origin for the lifetime of the page session.
+ * origin for the requested resource. Results are cached per resource origin
+ * for the lifetime of the page session.
  *
- * This performs a single HEAD request per origin, not per asset.
+ * A tiny GET range request is used instead of HEAD because some CDNs serve
+ * CORS headers for HEAD but omit them for the actual GET that the audio
+ * element and Web Audio perform.
  */
 export async function isCorsSupported(url: string): Promise<boolean> {
   if (typeof window === 'undefined' || !isCacheable(url)) return true;
 
-  const origin = window.location.origin;
-  const cached = corsSupportedByOrigin.get(origin);
+  let resourceOrigin: string;
+  try {
+    resourceOrigin = new URL(url, window.location.href).origin;
+  } catch {
+    return false;
+  }
+
+  const cached = corsSupportedByOrigin.get(resourceOrigin);
   if (cached !== undefined) return cached;
 
   try {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), 5000);
     const response = await fetch(url, {
-      method: 'HEAD',
+      method: 'GET',
       credentials: 'omit',
       mode: 'cors',
+      headers: { Range: 'bytes=0-0' },
       signal: controller.signal,
     });
     window.clearTimeout(timeoutId);
 
+    const pageOrigin = window.location.origin;
     const acao = response.headers.get('Access-Control-Allow-Origin');
-    const supported = acao === '*' || acao === origin;
-    corsSupportedByOrigin.set(origin, supported);
+    const supported = response.ok && (acao === '*' || acao === pageOrigin);
+    corsSupportedByOrigin.set(resourceOrigin, supported);
     return supported;
   } catch {
     // A CORS error or network failure means we cannot rely on cross-origin
     // headers for this origin. Fall back to no-cors media playback.
-    corsSupportedByOrigin.set(origin, false);
+    corsSupportedByOrigin.set(resourceOrigin, false);
     return false;
   }
 }
