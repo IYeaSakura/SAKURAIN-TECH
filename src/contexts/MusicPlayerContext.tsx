@@ -251,17 +251,17 @@ export function MusicPlayerProvider({
     if (!isDesktopClient) return;
 
     const audio = new Audio();
-    // Start in CORS-anonymous mode so the Web Audio visualizer can connect
-    // safely. If the CDN turns out not to serve CORS headers, this is flipped
-    // back to null before the track loads, which prevents the browser from
-    // muting the element due to a cross-origin MediaElementSource.
-    audio.crossOrigin = 'anonymous';
+    // Start without CORS so playback works even for static-site/CDN edges that
+    // do not serve Access-Control-Allow-Origin. CORS is enabled only after we
+    // explicitly confirm the current resource supports it, because attaching a
+    // MediaElementSource to a non-CORS element mutes the audio output.
+    audio.crossOrigin = null;
     audio.preload = 'metadata';
     audio.volume = volume;
     audioRef.current = audio;
 
     // Do not create the Web Audio connection here. It is established only
-    // after we confirm the CDN supports CORS for the current origin, avoiding
+    // after we confirm the CDN supports CORS for the current resource, avoiding
     // the silent-output bug that occurs when a MediaElementSource is attached
     // to a non-CORS media element.
 
