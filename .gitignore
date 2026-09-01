@@ -44,3 +44,6 @@ node_modules
 .vscode/
 *.log
 dist/
+
+# 音乐文件静态镜像站点（由 scripts/generate-playlist.js 生成，用于独立文件服务器）
+dist-music/
