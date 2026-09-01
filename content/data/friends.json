@@ -76,7 +76,6 @@
   ],
   "friends": [
     {
-      "id": "187a99bb",
       "name": "中国人工智能学会",
       "url": "https://www.caai.cn/",
       "icon": "https://www.caai.cn/favicon.ico",
@@ -89,7 +88,6 @@
       "status": "online"
     },
     {
-      "id": "26d79673",
       "name": "共产党员网",
       "url": "https://www.12371.cn/",
       "icon": "https://p4.img.cctvpic.com/photoAlbum/templet/common/DEPA1356314678315297/sy_dyw377_0504.png",
@@ -102,7 +100,6 @@
       "status": "online"
     },
     {
-      "id": "ae4f0670",
       "name": "熵",
       "url": "https://www.nekt.qzz.io/",
       "icon": "https://www.nekt.qzz.io/head.png",
@@ -114,7 +111,6 @@
       "featured": true
     },
     {
-      "id": "89efd92d",
       "name": "孟轩网",
       "url": "https://www.mxw2024.top/",
       "icon": "https://www.mxw2024.top/favicon.ico",
@@ -126,7 +122,6 @@
       "featured": true
     },
     {
-      "id": "a48af9ed",
       "name": "孟轩科技's blog",
       "url": "https://blog.mxw2024.top/",
       "icon": "https://blog.mxw2024.top/assets/images/favicon.ico",
@@ -139,7 +134,6 @@
       "featured": true
     },
     {
-      "id": "2b5632db",
       "name": "白荼日记",
       "url": "https://blog.iletter.top/",
       "icon": "https://www.ittoolman.top/images/avatar.png",
@@ -152,7 +146,6 @@
       "featured": true
     },
     {
-      "name": "石猫博客",
       "url": "https://blog.imshimao.com/",
       "icon": "https://img.cdn1.vip/i/6a1ad021e2d4c_1780142113.jpeg",
       "feed": "https://blog.imshimao.com/feed",
@@ -164,7 +157,6 @@
       "featured": true
     },
     {
-      "id": "9ed4e1ee",
       "name": "阿叶Ayeez的小站",
       "url": "https://blog.Ayeez.cn/",
       "icon": "https://qiniu.ayeez.cn/avatar.jpg",
@@ -176,7 +168,6 @@
       "featured": true
     },
     {
-      "id": "44e3b2ff",
       "name": "Xuan's blog",
       "url": "https://blog.ybyq.wang/",
       "icon": "https://blog.ybyq.wang/usr/themes/handsome/assets/img/avatar.png",
@@ -189,7 +180,6 @@
       "featured": true
     },
     {
-      "id": "73cdea5d",
       "name": "RefactX Project",
       "url": "https://www.refact.cc",
       "icon": "https://refact.cc/avatar.png",
@@ -201,7 +191,6 @@
       "featured": true
     },
     {
-      "id": "2e0a4950",
       "name": "紫血小站",
       "url": "https://blog.ziyibbs.com",
       "icon": "https://blog.ziyibbs.com/favicon/logo.png",
@@ -214,7 +203,6 @@
       "featured": true
     },
     {
-      "id": "40a82b54",
       "name": "记录生活，精彩一刻",
       "url": "https://9sb.net",
       "icon": "https://9sb.net/logo.svg",
@@ -227,7 +215,6 @@
       "featured": true
     },
     {
-      "id": "82774d57",
       "name": "酥米的小站",
       "url": "https://www.sumi233.top/",
       "icon": "https://cdn.sumi233.top/gh/huang233893/blog-image-bed@main/top/huang233893/imgs/blog/usersumi.png",
@@ -239,7 +226,6 @@
       "featured": true
     },
     {
-      "id": "13112bf8",
       "name": "辰渊尘の个人博客",
       "url": "https://blog.mcxiaochen.top/",
       "icon": "https://blog.mcxiaochen.top/favicon.ico",
@@ -251,7 +237,6 @@
       "featured": true
     },
     {
-      "id": "7e47987f",
       "name": "Inalineの小站",
       "url": "https://inaline.net",
       "icon": "https://inaline.net/usr/themes/inaline/assets/images/logo/cover.png",
@@ -264,7 +249,6 @@
       "featured": true
     },
     {
-      "id": "9188c57f",
       "name": "麻辣工夫茶博客网",
       "url": "https://amvc.top",
       "icon": "https://amvc.top/touxiang.webp",
@@ -277,7 +261,6 @@
       "featured": true
     },
     {
-      "id": "056b84fc",
       "name": "Weiwei's blog",
       "url": "https://www.lov3u.top",
       "icon": "https://www.lov3u.top/wp-content/uploads/2026/02/TT.jpg",
@@ -289,7 +272,6 @@
       "featured": true
     },
     {
-      "id": "baebcad5",
       "name": "Modern Blog",
       "url": "https://blog.andyjin.website",
       "icon": "https://filestorage0.oss-cn-hongkong.aliyuncs.com/avatar.png",
@@ -301,7 +283,6 @@
       "featured": true
     },
     {
-      "id": "dbc2c8d0",
       "name": "轻风blog",
       "url": "https://www.qingfengnb.cn",
       "icon": "https://img.qingfengnb.cn/LightPicture/2025/07/bec6eb9625656d60.jpg",
@@ -314,7 +295,6 @@
       "featured": true
     },
     {
-      "id": "57f82378",
       "name": "云云星羽",
       "url": "https://starssr.com",
       "icon": "https://q1.qlogo.cn/g?b=qq&nk=521001121&s=640",
@@ -327,7 +307,6 @@
       "featured": true
     },
     {
-      "id": "f5e8f661",
       "name": "我的技术成长笔记",
       "url": "https://blog.longdahuasheng.top",
       "icon": "https://blog.longdahuasheng.top/logo.png",
@@ -340,7 +319,6 @@
       "featured": true
     },
     {
-      "id": "9704d1a4",
       "name": "Serenity's Blog",
       "url": "https://www.aobp.cn",
       "icon": "https://www.aobp.cn/upload/%E5%A4%B4%E5%83%8F.png",
@@ -353,7 +331,6 @@
       "featured": true
     },
     {
-      "id": "0cca9c5f",
       "name": "manyJ'sBlog",
       "url": "https://blog.jsoftstudio.top",
       "icon": "https://blog.jsoftstudio.top/css/all/favicon.ico",
@@ -365,7 +342,6 @@
       "featured": true
     },
     {
-      "id": "0ca78685",
       "name": "老卡尔的旧纸箱",
       "url": "https://karlbaey.top",
       "icon": "https://avatars.githubusercontent.com/u/191684279",
@@ -378,7 +354,6 @@
       "featured": true
     },
     {
-      "id": "c211091a",
       "name": "云海花瑶",
       "url": "https://www.moeyao.cn",
       "icon": "https://dn-qiniu-avatar.qbox.me/avatar/d00de9fbffe50946b950a3fd0cd1bfdb",
@@ -391,7 +366,6 @@
       "featured": true
     },
     {
-      "id": "10ee71f4",
       "name": "5ee博客",
       "url": "https://www.5ee.net",
       "icon": "https://lsky.5ee.net/lsky/2024/12/10/675799c108db1.gif",
@@ -404,7 +378,6 @@
       "featured": true
     },
     {
-      "id": "73ce5853",
       "name": "成烁BLOG",
       "url": "https://blog.goso.top",
       "icon": "https://blog.goso.top/logo.png",
@@ -417,7 +390,6 @@
       "featured": true
     },
     {
-      "id": "ca9a1f56",
       "name": "ATao-Blog",
       "url": "https://blog.atao.cyou",
       "icon": "https://cdn.atao.cyou/Web/Avatar.png",
@@ -430,7 +402,6 @@
       "featured": true
     },
     {
-      "id": "42fe17a0",
       "name": "YororoIce Town",
       "url": "https://www.yororoice.top",
       "icon": "https://www.yororoice.top/favicon.ico",
@@ -442,7 +413,6 @@
       "featured": true
     },
     {
-      "id": "d880e1ba",
       "name": "谶的博客",
       "url": "https://blog.fohok.xin",
       "icon": "https://blog.fohok.xin/wp-content/uploads/2025/08/a91fabf8a49526b0ab7941fb2659297e1755339178171.jpg",
@@ -455,7 +425,6 @@
       "featured": true
     },
     {
-      "id": "ff2bea7d",
       "name": "Saneko",
       "url": "https://saneko.me",
       "icon": "https://cdn.blog.saneko.me/Web/Avatar.png",
@@ -468,7 +437,6 @@
       "featured": true
     },
     {
-      "id": "6ff7e307",
       "name": "for_the_zero的小站",
       "url": "https://ftz.is-a.dev",
       "icon": "https://ftz.is-a.dev/assets/intro/avatar.png",
@@ -481,7 +449,6 @@
       "featured": true
     },
     {
-      "id": "52d35178",
       "name": "小慧博客",
       "url": "https://www.itxiaohui.top",
       "icon": "https://blogoss.itxiaohui.top/logo%20-uhlgnmrf.png",
@@ -494,7 +461,6 @@
       "featured": true
     },
     {
-      "id": "a82715e2",
       "name": "Liseezn'blog",
       "url": "https://blog.liseezn.top",
       "icon": "https://blog.liseezn.top/logo.webp",
@@ -502,6 +468,18 @@
       "description": {
         "zh": "分享学习，项目，及一些教程",
         "en": "分享学习，项目，及一些教程"
+      },
+      "category": "blogs",
+      "featured": true
+    },
+    {
+      "name": "ks blog",
+      "url": "https://www.cuizi.top/",
+      "icon": "https://www.cuizi.top/logo.png",
+      "feed": "https://www.cuizi.top/rss.xml",
+      "description": {
+        "zh": "保持好奇，保持诚实。",
+        "en": "保持好奇，保持诚实。"
       },
       "category": "blogs",
       "featured": true
