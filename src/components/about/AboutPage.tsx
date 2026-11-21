@@ -182,7 +182,7 @@ export default function AboutPage() {
   const achievementSlides = useMemo(() => getAchievementSlides(t), [t]);
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-24 lg:py-28">
         {/* Back-to-home button with pixel hover nudge. */}
         <motion.div

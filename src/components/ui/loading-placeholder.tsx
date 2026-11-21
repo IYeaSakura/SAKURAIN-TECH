@@ -33,16 +33,16 @@ export const LoadingPlaceholder = memo(() => {
       className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
       style={{ background: 'var(--bg-primary)' }}
     >
-      {/* Static background grid - no animation */}
+      {/* Static background grid - matches the global backdrop */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: `
-            linear-gradient(var(--accent-primary) 1px, transparent 1px),
-            linear-gradient(90deg, var(--accent-primary) 1px, transparent 1px)
+            linear-gradient(var(--grid-line) 1px, transparent 1px),
+            linear-gradient(90deg, var(--grid-line) 1px, transparent 1px)
           `,
-          backgroundSize: '60px 60px',
-          opacity: 0.03,
+          backgroundSize: 'var(--grid-size) var(--grid-size)',
+          backgroundPosition: 'center top',
         }}
       />
 

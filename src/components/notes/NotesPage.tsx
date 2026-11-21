@@ -122,7 +122,7 @@ export default function NotesPage({ notes, months }: NotesPageProps) {
   const loadMoreNotes = () => setLoadedCount((prev) => prev + NOTES_PER_LOAD);
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen">
       <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-28 lg:pt-36 pb-12">
         {/* Header */}
         <motion.section

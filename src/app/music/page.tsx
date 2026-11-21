@@ -300,7 +300,7 @@ export default function MusicPage() {
 
   if (!mounted) {
     return (
-      <div className="h-screen overflow-hidden flex flex-col" style={{ background: 'var(--bg-primary)' }}>
+      <div className="h-screen overflow-hidden flex flex-col">
         <header className="flex-none h-14 px-4 sm:px-6 pt-20 lg:pt-24">
           <div className="h-8 w-32 bg-[var(--bg-tertiary)] border-2 border-[var(--border-subtle)] animate-pulse" />
         </header>
@@ -316,7 +316,7 @@ export default function MusicPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col" style={{ background: 'var(--bg-primary)' }}>
+    <div className="h-screen overflow-hidden flex flex-col">
       {/* Top header */}
       <header className="flex-none pt-20 lg:pt-24 px-4 sm:px-6 pb-2">
         <motion.div

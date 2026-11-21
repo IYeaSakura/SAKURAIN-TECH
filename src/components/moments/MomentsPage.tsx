@@ -67,7 +67,7 @@ export function MomentsPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center font-mono">
           <div
             className="w-10 h-10 border-2 border-t-transparent animate-spin mx-auto mb-4"
@@ -80,7 +80,7 @@ export function MomentsPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-24 lg:py-28">
         {/* Header */}
         <motion.header

@@ -9,10 +9,7 @@ import dynamic from 'next/dynamic';
 const NotFoundPage = dynamic(() => import('./NotFoundPage'), {
   ssr: false,
   loading: () => (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{ background: 'var(--bg-primary)' }}
-    >
+    <div className="min-h-screen flex items-center justify-center">
       <p className="font-mono" style={{ color: 'var(--text-muted)' }}>
         {'>'} 404
       </p>

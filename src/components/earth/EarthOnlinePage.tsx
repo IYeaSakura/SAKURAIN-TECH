@@ -34,20 +34,7 @@ export default function EarthOnlinePage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
-      {/* Subtle grid background using theme border color */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `linear-gradient(var(--border-subtle) 1px, transparent 1px),
-                             linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)`,
-            backgroundSize: '80px 80px',
-            opacity: 0.15,
-          }}
-        />
-      </div>
-
+    <div className="min-h-screen relative overflow-hidden">
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Top navigation placeholder - global layout provides the actual nav */}
         <div className="h-16" />
@@ -105,7 +92,6 @@ export default function EarthOnlinePage() {
           transition={{ duration: 0.6, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="w-full px-6 lg:px-8 py-8 mt-4 border-t-2"
           style={{
-            background: 'var(--bg-primary)',
             borderColor: 'var(--border-subtle)',
           }}
         >

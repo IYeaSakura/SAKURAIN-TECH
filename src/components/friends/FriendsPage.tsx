@@ -1331,7 +1331,7 @@ export default function FriendsPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+      <div className="min-h-screen flex items-center justify-center">
         <div
           className="text-center p-8 border-2"
           style={{
@@ -1370,7 +1370,7 @@ export default function FriendsPage() {
   };
 
   return (
-    <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <div className="relative min-h-screen">
       {/* Main Content */}
       <main className="relative z-10">
         {/* Hero Section */}

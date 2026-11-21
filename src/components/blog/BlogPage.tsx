@@ -143,7 +143,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen">
       <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-28 lg:pt-36 pb-12">
         {/* Header */}
         <motion.section

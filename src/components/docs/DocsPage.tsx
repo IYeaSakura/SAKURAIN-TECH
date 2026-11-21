@@ -418,22 +418,12 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
     acc + cat.items.filter((i: DocItem) => i.type === 'series').length, 0);
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen relative overflow-hidden">
       {/* Unified background effects - blue-green palette */}
       <div className="fixed inset-0 pointer-events-none">
         <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
         <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
         <AmbientGlow color="var(--accent-primary)" opacity={0.08} position="center" size={600} />
-
-        {/* 80px grid background */}
-        <div
-          className="absolute inset-0 opacity-[0.02]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255, 0.1) 1px, transparent 1px),
-                             linear-gradient(90deg, rgba(255,255,255, 0.1) 1px, transparent 1px)`,
-            backgroundSize: '80px 80px'
-          }}
-        />
       </div>
 
       {/* Hero section - asymmetric layout */}

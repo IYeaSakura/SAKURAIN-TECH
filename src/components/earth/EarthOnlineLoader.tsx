@@ -9,10 +9,7 @@ import dynamic from 'next/dynamic';
 const EarthOnlinePage = dynamic(() => import('./EarthOnlinePage'), {
   ssr: false,
   loading: () => (
-    <div
-      className="min-h-screen flex items-center justify-center"
-      style={{ background: 'var(--bg-primary)' }}
-    >
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-center font-mono">
         <div
           className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-4"

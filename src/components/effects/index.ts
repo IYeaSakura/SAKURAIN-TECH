@@ -1,5 +1,4 @@
 // 原有特效
-export { GridBackground } from './GridBackground';
 export { ScrollProgress } from './ScrollProgress';
 export { AnimatedCounter } from './AnimatedCounter';
 export { MagneticButton } from './MagneticButton';

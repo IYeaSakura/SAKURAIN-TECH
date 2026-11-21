@@ -29,7 +29,7 @@ class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNod
   render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <div className="flex flex-col items-center justify-center min-h-screen p-4" style={{ background: 'var(--bg-primary)' }}>
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
           <p className="mb-4 text-lg" style={{ color: '#ef4444' }}>文档渲染出错</p>
           <p className="mb-4 text-sm text-center max-w-md" style={{ color: 'var(--text-secondary)' }}>
             {this.state.error?.message || '未知错误'}
@@ -244,7 +244,7 @@ export function ChapterReader({ chapter, series, category, content, onBack, onSe
 
   return (
     <ErrorBoundary>
-    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+    <div className="flex h-screen overflow-hidden">
       {/* TOC Sidebar - 固定高度，内部可滚动 */}
       {showToc && (
         <div

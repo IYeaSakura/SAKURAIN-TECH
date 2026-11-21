@@ -25,7 +25,7 @@ import {
   Shuffle,
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
-import { useAnimationEnabled, useIsDesktopClient, useTranslation } from '@/hooks';
+import { useAnimationEnabled, useTranslation } from '@/hooks';
 
 import type { SiteData } from '@/types';
 import type { Dictionary } from '@/i18n/types';
@@ -1089,7 +1089,6 @@ export default function FeedPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshCooldown, _setRefreshCooldown] = useState(0);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
-  const isDesktopClient = useIsDesktopClient();
   const animationEnabled = useAnimationEnabled();
   const abortControllerRef = useRef<AbortController | null>(null);
   // Initialize as already expired so the first refresh is allowed immediately
@@ -1582,17 +1581,7 @@ export default function FeedPage() {
 
   if (loading && allItems.length === 0) {
     return (
-      <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-        {isDesktopClient && (
-          <div
-            className="fixed inset-0 pointer-events-none opacity-[0.04]"
-            style={{
-              backgroundImage: `linear-gradient(var(--border-subtle) 1px, transparent 1px),
-                               linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)`,
-              backgroundSize: '80px 80px'
-            }}
-          />
-        )}
+      <div className="relative min-h-screen">
         <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-32 lg:pt-36">
           <LoadingProgress loaded={loadingProgress.loaded} total={loadingProgress.total} />
         </main>
@@ -1601,18 +1590,7 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      {isDesktopClient && (
-        <div
-          className="fixed inset-0 pointer-events-none opacity-[0.04]"
-          style={{
-            backgroundImage: `linear-gradient(var(--border-subtle) 1px, transparent 1px),
-                             linear-gradient(90deg, var(--border-subtle) 1px, transparent 1px)`,
-            backgroundSize: '80px 80px'
-          }}
-        />
-      )}
-
+    <div className="relative min-h-screen">
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-32 lg:pt-36 pb-12">
         {/* Top toolbar */}
         <motion.div

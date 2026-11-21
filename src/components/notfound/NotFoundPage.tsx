@@ -203,10 +203,7 @@ export default function NotFoundPage() {
   }, []);
 
   return (
-    <div
-      className="relative min-h-screen flex flex-col"
-      style={{ background: 'var(--bg-primary)' }}
-    >
+    <div className="relative min-h-screen flex flex-col">
       {/* Main Content */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center pt-20 pb-20 px-4">
         <div className="max-w-4xl mx-auto text-center">

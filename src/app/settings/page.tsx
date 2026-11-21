@@ -218,7 +218,7 @@ export default function SettingsPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+      <div className="min-h-screen">
         <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-32 pb-12">
           <div className="h-8 w-32 bg-[var(--bg-tertiary)] border-2 border-[var(--border-subtle)] animate-pulse mb-8" />
           <div className="space-y-4">
@@ -231,7 +231,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="relative min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <div className="relative min-h-screen">
       <main className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 pt-32 lg:pt-40 pb-12">
         {/* Header */}
         <motion.section

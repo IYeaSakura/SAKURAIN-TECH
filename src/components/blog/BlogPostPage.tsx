@@ -83,7 +83,7 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
     }));
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen">
       {post.content && (
         <ArticleSidebar
           wordCount={getWordCount(post.content)}

@@ -103,7 +103,7 @@ export function DocDetailView({ doc, category, content, onBack }: DocDetailViewP
   };
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+    <div className="flex h-screen overflow-hidden">
       {/* TOC Sidebar - 单一滚动区域 */}
       {showToc && hasToc && (
         <div 

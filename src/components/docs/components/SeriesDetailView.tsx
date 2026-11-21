@@ -171,32 +171,12 @@ export function SeriesDetailView({ series, category, onBack, onSelectChapter }: 
   const difficulty = totalChapters > 10 ? t.docs.difficultyAdvanced : t.docs.difficultyBeginner;
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen relative overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* Static grid background */}
-        <div
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage: `
-              linear-gradient(var(--accent-primary) 1px, transparent 1px),
-              linear-gradient(90deg, var(--accent-primary) 1px, transparent 1px)
-            `,
-            backgroundSize: '60px 60px',
-          }}
-        />
-        
         {/* Ambient glow effects */}
         <AmbientGlow position="top-left" color="var(--accent-primary)" size={400} opacity={0.1} />
         <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={300} opacity={0.06} />
-        
-        {/* Radial gradient mask */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(ellipse at center, transparent 0%, var(--bg-primary) 70%)`,
-          }}
-        />
       </div>
 
       {/* Floating code decoration */}

@@ -2369,3 +2369,49 @@ html.theme-transitioning {
 [data-preset="terminal"] .hero-mark {
   text-shadow: none;
 }
+
+/* ============================================
+   GLOBAL GRID BACKDROP
+   One blueprint grid for every route. It is painted on the
+   viewport (fixed) and sits at z-index -1, i.e. under all page
+   content but above the canvas color. Page roots therefore stay
+   transparent so the grid reads continuously; only real surfaces
+   (cards, panels, dock) paint an opaque background on top of it.
+   ============================================ */
+
+:root {
+  --grid-size: 80px;
+  --grid-line: color-mix(in srgb, var(--text-primary) 10%, transparent);
+}
+
+/* A dark ink line reads heavier on paper than a light line does on ink,
+   so the light theme gets a slightly softer stroke. */
+[data-theme="light"] {
+  --grid-line: color-mix(in srgb, var(--text-primary) 7%, transparent);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  background-position: center top;
+}
+
+/* Terminal preset is a flat CRT surface — the grid would fight the
+   scanlines, so it is switched off there. */
+[data-preset="terminal"] body::before {
+  display: none;
+}
+
+/* On phones the grid shrinks so it never crowds the narrow column. */
+@media (max-width: 640px) {
+  :root {
+    --grid-size: 56px;
+  }
+}

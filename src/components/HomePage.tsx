@@ -152,7 +152,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
 
   if (!dataLoaded) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center font-mono">
           <div
             className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin mx-auto mb-4"
@@ -168,7 +168,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col" style={{ background: 'var(--bg-primary)' }}>
+    <div className="relative min-h-screen flex flex-col">
       <main
         className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8"
       >

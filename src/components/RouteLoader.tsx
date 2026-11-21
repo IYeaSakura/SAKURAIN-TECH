@@ -30,10 +30,7 @@ export function RouteLoader() {
   }, [isLowQuality]);
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{ background: 'var(--bg-primary)' }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center px-4">
       {/* 像素风格加载动画 - 使用 CSS 动画 */}
       <div className="relative">
         {/* 外层旋转 */}
