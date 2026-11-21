@@ -3,15 +3,13 @@
 /**
  * AudioMetrics — real-time audio statistics for the music page.
  *
- * Connects to the shared HTMLAudioElement via Web Audio API and renders a
- * compact spectrum bar graph using a logarithmic 30 Hz ~ 16 kHz frequency
- * range, together with numeric read-outs for sample rate, bitrate and
- * playback state.
+ * Renders a compact spectrum plus truthful numeric read-outs. Spectrum data is
+ * supplied by the shared useSpectrum hook; bars and numbers are updated
+ * imperatively via refs so playback never triggers React re-renders.
  */
-
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { globalAudioMap } from './AudioVisualizer';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from '@/hooks';
+import { useSpectrum, type SpectrumFrame } from './shared/useSpectrum';
 
 interface AudioMetricsProps {
   audioRef: React.RefObject<HTMLAudioElement | null>;
@@ -20,184 +18,39 @@ interface AudioMetricsProps {
   systemPaused: boolean;
 }
 
-interface Metrics {
-  bars: number[];
-  peakDb: number;
-  sampleRate: number;
-  channels: number;
-  bitrate: number;
-}
-
-const MIN_FREQ = 60;
-const MAX_FREQ = 16000;
-const FFT_SIZE = 8192;
 const BAR_COUNT = 96;
-const SMOOTHING = 0.75;
-/** Curve power > 1 expands the low-frequency (left) bands visually. */
-const FREQ_CURVE_POWER = 1.3;
-
-function getLogBars(
-  dataArray: Uint8Array,
-  sampleRate: number,
-  fftSize: number,
-  barCount: number
-): number[] {
-  const binCount = dataArray.length;
-  const binSize = sampleRate / fftSize;
-  const ratio = Math.log(MAX_FREQ / MIN_FREQ);
-  const bars: number[] = [];
-
-  for (let i = 0; i < barCount; i++) {
-    const startT = Math.pow(i / barCount, FREQ_CURVE_POWER);
-    const endT = Math.pow((i + 1) / barCount, FREQ_CURVE_POWER);
-    const startFreq = MIN_FREQ * Math.exp(startT * ratio);
-    const endFreq = MIN_FREQ * Math.exp(endT * ratio);
-    const startBin = Math.max(0, Math.floor(startFreq / binSize));
-    const endBin = Math.min(binCount, Math.max(startBin + 1, Math.floor(endFreq / binSize)));
-
-    let sum = 0;
-    for (let j = startBin; j < endBin; j++) {
-      sum += dataArray[j];
-    }
-    bars.push(sum / (endBin - startBin));
-  }
-
-  return bars;
-}
 
 export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: AudioMetricsProps) {
   const { t } = useTranslation();
-  const animationRef = useRef<number>(0);
-  const isInitializedRef = useRef(false);
-  const lastFrameRef = useRef(0);
-  const smoothedBarsRef = useRef<number[]>(Array.from({ length: BAR_COUNT }, () => 0));
-  const [metrics, setMetrics] = useState<Metrics>({
-    bars: smoothedBarsRef.current,
-    peakDb: -96,
-    sampleRate: 44100,
-    channels: 2,
-    bitrate: 320,
-  });
+  const barsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const peakRef = useRef<HTMLSpanElement>(null);
+  const rateRef = useRef<HTMLSpanElement>(null);
+  const chRef = useRef<HTMLSpanElement>(null);
 
-  // Ensure a Web Audio analyser is attached to the shared audio element.
-  // The connection is normally created by MusicPlayerContext, but retry a few
-  // times in case the visualizer mounts before the audio element is ready.
+  const handleFrame = ({ bars, peakDb, sampleRate, channels }: SpectrumFrame) => {
+    // Imperative DOM updates — no setState, so the component never re-renders.
+    for (let i = 0; i < barsRef.current.length; i++) {
+      const el = barsRef.current[i];
+      if (!el) continue;
+      const value = bars[i] ?? 0;
+      el.style.height = `${Math.max(2, (value / 255) * 24)}px`;
+      el.style.background = value > 180 ? 'var(--accent-primary)' : 'var(--text-muted)';
+    }
+    if (peakRef.current) peakRef.current.textContent = `${peakDb} dB`;
+    if (rateRef.current) rateRef.current.textContent = `${(sampleRate / 1000).toFixed(1)} kHz`;
+    if (chRef.current) chRef.current.textContent = `${channels} ch`;
+  };
+
+  // Throttle to ~12.5 fps: plenty for DOM bars, far less work than per-frame.
+  useSpectrum({ audioRef, isPlaying, barCount: BAR_COUNT, onFrame: handleFrame, throttleMs: 80 });
+
+  // Clear bars when playback stops.
   useEffect(() => {
-    if (isInitializedRef.current) return;
-
-    let attempts = 0;
-    let intervalId: number | null = null;
-
-    const tryInit = () => {
-      const audio = audioRef.current;
-      if (!audio) return;
-
-      const existing = globalAudioMap.get(audio);
-      if (existing) {
-        isInitializedRef.current = true;
-        if (intervalId) clearInterval(intervalId);
-        return;
-      }
-
-      const AudioContextClass =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!AudioContextClass) {
-        if (intervalId) clearInterval(intervalId);
-        return;
-      }
-
-      try {
-        const audioContext = new AudioContextClass();
-        const analyser = audioContext.createAnalyser();
-        analyser.fftSize = FFT_SIZE;
-        analyser.smoothingTimeConstant = 0.82;
-
-        const source = audioContext.createMediaElementSource(audio);
-        source.connect(analyser);
-        analyser.connect(audioContext.destination);
-
-        globalAudioMap.set(audio, { context: audioContext, analyser, source });
-        isInitializedRef.current = true;
-        if (intervalId) clearInterval(intervalId);
-      } catch (err) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('[AudioMetrics] Audio context init failed:', err);
-        }
-      }
-    };
-
-    tryInit();
-    if (!isInitializedRef.current) {
-      intervalId = window.setInterval(() => {
-        attempts += 1;
-        tryInit();
-        if (attempts >= 15 && intervalId) clearInterval(intervalId);
-      }, 200);
-    }
-
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [audioRef]);
-
-  const readMetrics = useCallback(() => {
-    const audio = audioRef.current;
-    const connection = audio ? globalAudioMap.get(audio) : undefined;
-    const analyser = connection?.analyser;
-
-    let bars = smoothedBarsRef.current;
-    let peakDb = -96;
-
-    if (analyser) {
-      const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-      analyser.getByteFrequencyData(dataArray);
-
-      const rawBars = getLogBars(dataArray, analyser.context.sampleRate, analyser.fftSize, BAR_COUNT);
-      smoothedBarsRef.current = rawBars.map((value, i) => {
-        const prev = smoothedBarsRef.current[i] ?? 0;
-        return prev * SMOOTHING + value * (1 - SMOOTHING);
-      });
-      bars = smoothedBarsRef.current;
-
-      const peak = Math.max(...dataArray, 1);
-      peakDb = Math.round(20 * Math.log10(peak / 255));
-    }
-
-    setMetrics((prev) => ({
-      bars,
-      peakDb,
-      sampleRate: connection?.context.sampleRate || prev.sampleRate,
-      channels: 2,
-      bitrate: prev.bitrate,
-    }));
-  }, [audioRef]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    const connection = audio ? globalAudioMap.get(audio) : undefined;
-
-    const tick = () => {
-      if (connection?.context.state === 'suspended') {
-        connection.context.resume().catch(() => {});
-      }
-      const now = performance.now();
-      if (now - lastFrameRef.current >= 80) {
-        lastFrameRef.current = now;
-        readMetrics();
-      }
-      animationRef.current = requestAnimationFrame(tick);
-    };
-
-    if (isPlaying) {
-      animationRef.current = requestAnimationFrame(tick);
-    } else {
-      readMetrics();
-    }
-
-    return () => cancelAnimationFrame(animationRef.current);
-  }, [isPlaying, readMetrics, audioRef]);
+    if (isPlaying) return;
+    barsRef.current.forEach((el) => {
+      if (el) el.style.height = '2px';
+    });
+  }, [isPlaying]);
 
   const stateLabel = systemPaused
     ? t.music.audioMetrics.systemPaused
@@ -215,33 +68,28 @@ export function AudioMetrics({ audioRef, isPlaying, isLoading, systemPaused }: A
         style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}
       >
         <span>{stateLabel}</span>
-        <span style={{ color: 'var(--accent-primary)' }}>{metrics.peakDb} dB</span>
+        <span ref={peakRef} style={{ color: 'var(--accent-primary)' }}>-96 dB</span>
       </div>
 
       {/* Spectrum bars */}
       <div className="flex items-end gap-[1px] h-6 flex-1 min-w-0">
-        {metrics.bars.map((value, index) => {
-          const height = Math.max(2, (value / 255) * 24);
-          return (
-            <div
-              key={index}
-              className="flex-1 min-w-[1px]"
-              style={{
-                height: `${height}px`,
-                background: value > 180 ? 'var(--accent-primary)' : 'var(--text-muted)',
-              }}
-            />
-          );
-        })}
+        {Array.from({ length: BAR_COUNT }, (_, index) => (
+          <div
+            key={index}
+            ref={(el) => { barsRef.current[index] = el; }}
+            className="flex-1 min-w-[1px]"
+            style={{ height: '2px', background: 'var(--text-muted)' }}
+          />
+        ))}
       </div>
 
-      {/* Numeric read-outs */}
+      {/* Truthful numeric read-outs — no hardcoded bitrate/channels (⑤). */}
       <div
         className="hidden lg:flex flex-col justify-center text-[9px] font-mono leading-tight"
         style={{ color: 'var(--text-muted)' }}
       >
-        <span>{(metrics.sampleRate / 1000).toFixed(1)} kHz</span>
-        <span>{metrics.bitrate} kbps</span>
+        <span ref={rateRef}>-- kHz</span>
+        <span ref={chRef}>-- ch</span>
       </div>
     </div>
   );

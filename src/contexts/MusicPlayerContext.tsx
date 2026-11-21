@@ -32,9 +32,11 @@ import {
   unprotectAsset,
 } from '@/lib/asset-cache';
 import {
+  getAudioConnection,
   initAudioConnection,
   resumeAudioContext,
-} from '@/components/MusicPlayer/AudioVisualizer';
+  disposeAudioConnection,
+} from '@/components/MusicPlayer/shared/audio-analyser';
 
 // Playlist type definitions
 export interface Song {
@@ -155,6 +157,11 @@ export function MusicPlayerProvider({
   const [currentLyrics, setCurrentLyrics] = useState<LyricLine[]>([]);
   const [lyricsLoading, setLyricsLoading] = useState(false);
   const [currentAudioSource, setCurrentAudioSource] = useState<AudioSource>('direct');
+  // Bumping this rebuilds the <audio> element. Required because a
+  // MediaElementSource permanently redirects an element's output — after a
+  // CORS downgrade the only way back to direct (non-silenced) output is a
+  // fresh element. See handleError / handleOnline.
+  const [audioEpoch, setAudioEpoch] = useState(0);
 
   // Keep refs in sync with the latest state for synchronous reads in handlers.
   useEffect(() => {
@@ -198,6 +205,18 @@ export function MusicPlayerProvider({
     const handleOnline = () => {
       failedSrcsRef.current.clear();
       corsFallbackSrcRef.current = null;
+      // Drop the stale analyser so the spectrum can re-attach to a fresh CORS
+      // connection on the next load. The audio element itself is rebuilt by
+      // the epoch bump in handleError when needed; here we only clear the web
+      // audio graph, whose suspended/tainted state cannot be reused.
+      const hadConnection = Boolean(getAudioConnection(audioRef.current));
+      disposeAudioConnection(audioRef.current);
+      // A disposed MediaElementSource cannot be un-attached; rebuild the element
+      // so the next load can establish a fresh analyser + direct output.
+      if (hadConnection) {
+        trackChangeRef.current = true;
+        setAudioEpoch((e) => e + 1);
+      }
     };
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
@@ -311,25 +330,17 @@ export function MusicPlayerProvider({
       const failedKey = resolveAudioSrc(failedSrc);
       if (audio.crossOrigin === 'anonymous' && corsFallbackSrcRef.current !== failedKey) {
         corsFallbackSrcRef.current = failedKey;
-        audio.crossOrigin = null;
         clearCorsProbeCache();
-        // load() resets the element; playback must be requested again or the
-        // track stalls in a loading state with the transition lock held.
-        audio.load();
-        if (intendedPlayingRef.current) {
-          resumeAudioContext(audio);
-          const retry = audio.play();
-          if (retry !== undefined) {
-            retry.catch((err: unknown) => {
-              if ((err as Error | undefined)?.name === 'AbortError') return;
-              trackChangeRef.current = false;
-              intendedPlayingRef.current = false;
-              setError('Audio resource unavailable');
-              setIsLoading(false);
-              setIsPlaying(false);
-            });
-          }
-        }
+        // A MediaElementSource permanently redirects this element's output;
+        // keeping it while switching to no-CORS would leave audio silenced.
+        // Dispose the graph and rebuild a fresh, no-CORS element instead. The
+        // load effect (keyed on audioEpoch) reloads and resumes automatically
+        // because intendedPlayingRef is still true.
+        disposeAudioConnection(audio);
+        // Suppress abort/pause events emitted while the old element is torn
+        // down; the reload effect owns the transition lock from here.
+        trackChangeRef.current = true;
+        setAudioEpoch((e) => e + 1);
         return;
       }
 
@@ -483,8 +494,11 @@ export function MusicPlayerProvider({
         revokeBlobUrl(preloadBlobUrlRef.current);
         preloadBlobUrlRef.current = null;
       }
+      // The MediaElementSource is tied to this element; tear down the Web
+      // Audio graph before the element is discarded on an epoch rebuild.
+      disposeAudioConnection(audio);
     };
-  }, [isDesktopClient]);
+  }, [isDesktopClient, audioEpoch]);
 
   // Load current track after user interaction, using the persistent asset
   // cache for COS-hosted audio files.
@@ -503,7 +517,10 @@ export function MusicPlayerProvider({
       // When the CDN does not serve CORS headers for the current origin,
       // remove crossOrigin so playback can still work without the Web Audio
       // visualizer. Production on https://sakurain.net keeps CORS enabled.
-      const corsSupported = await isCorsSupported(currentSong.src);
+      // A source that already failed in CORS mode must stay in no-CORS mode
+      // after an element rebuild, otherwise we would loop on the same failure.
+      const alreadyDowngraded = corsFallbackSrcRef.current === resolveAudioSrc(currentSong.src);
+      const corsSupported = alreadyDowngraded ? false : await isCorsSupported(currentSong.src);
       if (cancelled) return;
       audio.crossOrigin = corsSupported ? 'anonymous' : null;
 
@@ -607,7 +624,7 @@ export function MusicPlayerProvider({
       // Release the protection for this track when switching to another song.
       unprotectAsset(currentSong.src);
     };
-  }, [currentIndex, currentPosition, isDesktopClient, hasUserInteracted, currentSong.src]);
+  }, [currentIndex, currentPosition, isDesktopClient, hasUserInteracted, currentSong.src, audioEpoch]);
 
   // Play / pause whenever the playing flag changes. The load-track effect
   // already handles playback when the track changes, so this effect is skipped
