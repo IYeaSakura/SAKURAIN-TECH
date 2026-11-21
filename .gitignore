@@ -26,7 +26,6 @@ public/data/uses.json
 public/config/security-config.json
 public/config/welcome-modal.json
 public/docs/
-public/resume/resume-data.json
 
 # 本地环境变量（含 API 密钥，勿提交）
 .env

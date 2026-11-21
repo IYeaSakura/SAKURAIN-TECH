@@ -18,7 +18,7 @@ npm run build
 
 2. `node scripts/sync-content-to-public.js`
    - Copies all managed content from `content/` to `public/` so the static build can consume it.
-   - Managed paths include `content/data/*`, `content/docs/*`, `content/config/*`, and `content/resume/*`.
+   - Managed paths include `content/data/*`, `content/docs/*`, and `content/config/*`.
    - Generates `public/data/docs.json` from `content/docs-index.json`; the index stores only metadata and file names, while the script fills in public paths.
    - Validates that every file referenced by `content/docs-index.json` exists under `content/docs` and warns about missing entries.
    - Preserves auto-generated friend link check info in `public/data/friends.json` when possible.
@@ -79,7 +79,7 @@ These files remain local as build-time material but are not committed.
 
 **Usage**: Automatically runs as the first step of `npm run build`.
 
-**Input**: `content/data/*`, `content/docs/*`, `content/config/*`, `content/resume/*`, plus `content/docs-index.json`.
+**Input**: `content/data/*`, `content/docs/*`, `content/config/*`, plus `content/docs-index.json`.
 
 **Output**: Corresponding paths under `public/`. `public/data/docs.json` is generated from `content/docs-index.json`. All generated files are listed in `.gitignore` and should not be edited directly.
 

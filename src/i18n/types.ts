@@ -32,7 +32,6 @@ export interface Dictionary {
     music: string;
     docs: string;
     algoViz: string;
-    resume: string;
     settings: string;
     terminal: string;
   };
@@ -560,21 +559,6 @@ export interface Dictionary {
     };
     applyEmailSubject: string;
     applyEmailBody: string;
-  };
-  resume: {
-    preview: string;
-    visitSite: string;
-    viewSource: string;
-    clickToEnlarge: string;
-    loadFailed: string;
-    coreStrengths: string;
-    techStack: string;
-    mainLanguages: string;
-    awardsCarousel: string;
-    education: string;
-    clubs: string;
-    internship: string;
-    projects: string;
   };
   algoViz: {
     title: string;

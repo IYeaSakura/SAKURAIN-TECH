@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react';
  * GitHub brand icon.
  * lucide-react 1.x removed brand icons (Github), so the legacy lucide
  * github path is inlined here as a drop-in replacement with the same
- * interface as a lucide icon. Shared by the About and Resume pages.
+ * interface as a lucide icon. Used by the About page.
  */
 export function GithubIcon({ className, style }: { className?: string; style?: CSSProperties }) {
   return (

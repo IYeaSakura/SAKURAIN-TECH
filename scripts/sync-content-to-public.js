@@ -27,7 +27,6 @@ const MANAGED_CONTENT = [
   { source: 'data', target: 'data' },
   { source: 'docs', target: 'docs' },
   { source: 'config', target: 'config' },
-  { source: path.join('resume', 'resume-data.json'), target: path.join('resume', 'resume-data.json') },
 ];
 
 /**
@@ -47,7 +46,6 @@ const SYNCED_PUBLIC_PATHS = [
   'config/security-config.json',
   'config/welcome-modal.json',
   'docs',
-  'resume/resume-data.json',
 ];
 
 /**
@@ -630,7 +628,6 @@ function buildSearchIndex() {
     { id: 'page:about', title: '关于', titleEn: 'About', description: '关于 SAKURAIN 与联系方式', href: '/about' },
     { id: 'page:docs', title: '文档', titleEn: 'Docs', description: '技术文档与系列教程', href: '/docs' },
     { id: 'page:algo-viz', title: '算法可视化', titleEn: 'Algorithm Visualization', description: '算法可视化演示', href: '/algo-viz' },
-    { id: 'page:resume', title: '简历', titleEn: 'Resume', description: '个人简历与经历', href: '/resume' },
     { id: 'page:settings', title: '设置', titleEn: 'Settings', description: '主题与偏好设置', href: '/settings' },
   ];
   for (const page of staticPages) {

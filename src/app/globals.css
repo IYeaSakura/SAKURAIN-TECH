@@ -239,7 +239,7 @@ body {
 
 .thin-scrollbar::-webkit-scrollbar-thumb {
   background: var(--border-subtle);
-  border-radius: 0;
+  border-radius: 4px;
 }
 
 /* 11. 禁用文本选择 - 用于动画元素 */
@@ -1006,7 +1006,7 @@ canvas {
   --border: 0 0% 90%;
   --input: 0 0% 90%;
   --ring: 207 85% 34%;
-  --radius: 0;
+  --radius: 0.5rem;
 
   /* ============================================
      TYPOGRAPHY SYSTEM
@@ -2080,7 +2080,7 @@ html.theme-transitioning {
   --border: 0 0% 7%;
   --input: 0 0% 7%;
   --ring: 343 100% 58%;
-  --radius: 0px;
+  --radius: 0.5rem;
 
   /* Brutalist geometry */
   --apple-radius-sm: 0px;
