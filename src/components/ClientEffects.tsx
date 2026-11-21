@@ -27,22 +27,33 @@ import { MobileProvider, useIsDesktopClient } from '@/contexts/MobileContext';
 import { PerformanceProvider, usePerformance } from '@/contexts/PerformanceContext';
 import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
 import { useStylePreset } from '@/hooks';
-import { TerminalShell } from '@/components/terminal/TerminalShell';
 import { GlobalContextMenu } from '@/components/CustomContextMenu';
 import { DebugProtection } from '@/components/DebugProtection';
 import { LoadingPlaceholder } from '@/components/ui/loading-placeholder';
 import { DynamicIsland } from '@/components/apple/DynamicIsland';
-// 轻量光标特效全站保留；直接从具体模块导入，
-// 避免经 barrel（@/components/effects）把全部特效打入共享 chunk
-import {
-  MagneticCursor,
-  VelocityCursor,
-} from '@/components/effects/MouseEffects';
 
 
 // 音乐播放器体积大且纯客户端，ssr:false 动态加载
 const MusicPlayer = dynamic(
   () => import('@/components/MusicPlayer').then((m) => m.MusicPlayer),
+  { ssr: false }
+);
+
+// 终端模式仅在切换 preset 时使用。它静态引入 react-markdown/remark/rehype 链路，
+// 若放在 layout 顶层会让整条链进入每一页的共享包；改为 ssr:false 动态加载，
+// 非终端用户完全不下载这部分 JS。
+const TerminalShell = dynamic(
+  () => import('@/components/terminal/TerminalShell').then((m) => m.TerminalShell),
+  { ssr: false }
+);
+
+// 鼠标特效需桌面端且开关开启时才用，动态化以避免常驻 shared chunk
+const MagneticCursor = dynamic(
+  () => import('@/components/effects/MouseEffects').then((m) => m.MagneticCursor),
+  { ssr: false }
+);
+const VelocityCursor = dynamic(
+  () => import('@/components/effects/MouseEffects').then((m) => m.VelocityCursor),
   { ssr: false }
 );
 
@@ -105,20 +116,23 @@ function useInitialLoad() {
 
     const loadCriticalResources = async () => {
       try {
-        await Promise.all([
+        // 字体加载失败或网络异常时 document.fonts.ready 可能长时间不 resolve，
+        // 用超时兜底，避免全屏 LoadingPlaceholder 一直盖住已 SSR 好的页面。
+        const fontsReady = Promise.race([
           document.fonts.ready,
+          new Promise((resolve) => setTimeout(resolve, 1200)),
+        ]);
+        await Promise.all([
+          fontsReady,
           new Promise((resolve) => requestAnimationFrame(resolve)),
         ]);
 
-        if (effectiveQuality === 'low') {
-          await new Promise((resolve) => setTimeout(resolve, 150));
-        }
-
         if (mounted) {
           setIsReady(true);
+          // 遮罩淡出留出极短一帧即可，去掉原先额外的 150ms 人为首屏延迟。
           setTimeout(() => {
             if (mounted) setIsLoading(false);
-          }, 150);
+          }, 50);
         }
       } catch (error) {
         console.error('Failed to load critical resources:', error);

@@ -97,6 +97,29 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="darkreader-lock" />
+        {/* Preload the three key latin subsets used by --font-mono / --font-pixel
+            so the swap to web fonts happens early instead of after CSS discovery. */}
+        <link
+          rel="preload"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+          href="/fonts/google/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2"
+        />
+        <link
+          rel="preload"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+          href="/fonts/google/pxiKyp0ihIEF2isfFJU.woff2"
+        />
+        <link
+          rel="preload"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+          href="/fonts/google/e3t4euO8T-267oIAQAu6jDQyK3nVivM.woff2"
+        />
         <script dangerouslySetInnerHTML={{ __html: LOCALE_HYDRATION_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: THEME_HYDRATION_SCRIPT }} />
       </head>

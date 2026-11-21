@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { encode } from 'plantuml-encoder';
 import { ImageModal } from './ImageModal';
 
 // PlantUML Renderer Component
@@ -19,6 +18,9 @@ export const PlantUML = ({ code }: { code: string }) => {
         let cleanCode = code.trim();
         if (!cleanCode.includes('@startuml')) cleanCode = '@startuml\n' + cleanCode;
         if (!cleanCode.includes('@enduml')) cleanCode = cleanCode + '\n@enduml';
+        // 编码库约 324KB，仅在真正渲染 PlantUML 图时按需加载，
+        // 不进入 blog/docs 首屏包。
+        const { encode } = await import('plantuml-encoder');
         const encoded = encode(cleanCode);
         const url = `https://www.plantuml.com/plantuml/png/${encoded}`;
         const img = new Image();
