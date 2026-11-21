@@ -8,8 +8,8 @@
  */
 import { useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { PIXEL_BORDER } from '@/utils/styles';
 import { formatTime } from './player-utils';
+import styles from '../player.module.css';
 
 interface ProgressSliderProps {
   currentTime: number;
@@ -66,16 +66,15 @@ export function ProgressSlider({
       aria-valuetext={`${formatTime(currentTime)} / ${formatTime(duration)}`}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      className={`cursor-pointer relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)] ${className}`}
-      style={{ background: 'var(--bg-tertiary)', border: PIXEL_BORDER }}
+      className={`${styles.seekBar} cursor-pointer focus:outline-none ${className}`.trim()}
     >
       <div
-        className="absolute inset-y-0 left-0 h-full"
-        style={{ background: 'var(--text-muted)', width: `${bufferedPercent}%`, opacity: 0.25 }}
+        className={`${styles.seekBuffered} absolute inset-y-0 left-0 h-full`}
+        style={{ width: `${bufferedPercent}%` }}
       />
       <motion.div
-        className="absolute inset-y-0 left-0 h-full z-10"
-        style={{ background: 'var(--accent-primary)', width: `${progressPercent}%` }}
+        className={`${styles.seekFill} absolute inset-y-0 left-0 z-10 h-full`}
+        style={{ width: `${progressPercent}%` }}
       />
     </div>
   );

@@ -19,8 +19,10 @@ const STATIC_COVER_DIR = path.join(STATIC_SITE_DIR, 'music', 'music-covers');
 
 const CDN_BASE_URL = (process.env.MUSIC_CDN_BASE_URL || 'https://music.sakurain.net/music').replace(/\/$/, '');
 const CDN_MP3_PATH = '/mp3/';
-const CDN_LYRIC_PATH = '/lyric/';
 const CDN_COVERS_PATH = '/music-covers/';
+// Lyrics are already shipped as static files under /music/lyric on the site.
+// Serving them same-origin avoids CORS failures on the external CDN.
+const LOCAL_LYRIC_PATH = '/music/lyric/';
 
 /**
  * Ensure a directory exists, creating it recursively if necessary.
@@ -448,7 +450,7 @@ async function generatePlaylist() {
     const lrcPath = path.join(LYRIC_DIR, `${basename}.lrc`);
     const hasLyrics = fs.existsSync(lrcPath);
     const lyricUrl = hasLyrics
-      ? `${CDN_BASE_URL}${CDN_LYRIC_PATH}${encodeURIComponent(`${basename}.lrc`)}`
+      ? `${LOCAL_LYRIC_PATH}${encodeURIComponent(`${basename}.lrc`)}`
       : null;
 
     songs.push({
@@ -458,6 +460,9 @@ async function generatePlaylist() {
       src: `${CDN_BASE_URL}${CDN_MP3_PATH}${encodeURIComponent(file)}`,
       cover,
       lyricUrl,
+      // Embed parsed lyrics so playback never depends on a cross-origin LRC
+      // request. lyricUrl is kept only as a runtime fallback.
+      lyrics: hasLyrics ? parseLrc(lrcPath) : [],
     });
   }
 

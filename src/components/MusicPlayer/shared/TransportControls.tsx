@@ -6,7 +6,7 @@
  * those are exposed as className props to preserve each layout.
  */
 import { Loader2, Pause, Play, SkipBack, SkipForward } from 'lucide-react';
-import { PIXEL_BORDER } from '@/utils/styles';
+import styles from '../player.module.css';
 
 interface TransportControlsProps {
   isPlaying: boolean;
@@ -37,8 +37,7 @@ export function TransportControls({
     <div className={containerClassName}>
       <button
         onClick={onPrev}
-        className={`${sideClassName} rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]`}
-        style={{ border: PIXEL_BORDER, color: 'var(--text-secondary)' }}
+        className={`${styles.controlButton} ${sideClassName}`}
         title={labels.previous}
       >
         <SkipBack className="w-5 h-5" />
@@ -46,12 +45,7 @@ export function TransportControls({
       <button
         onClick={onTogglePlay}
         disabled={isLoading && !hasError}
-        className={`${mainClassName} rounded-sm transition-all disabled:opacity-50`}
-        style={{
-          background: 'var(--accent-primary)',
-          border: PIXEL_BORDER,
-          color: 'var(--bg-primary)',
-        }}
+        className={`${styles.playButton} ${mainClassName} disabled:cursor-not-allowed disabled:opacity-50`}
       >
         {isLoading && !hasError ? (
           <Loader2 className="w-6 h-6 animate-spin" />
@@ -63,8 +57,7 @@ export function TransportControls({
       </button>
       <button
         onClick={onNext}
-        className={`${sideClassName} rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]`}
-        style={{ border: PIXEL_BORDER, color: 'var(--text-secondary)' }}
+        className={`${styles.controlButton} ${sideClassName}`}
         title={labels.next}
       >
         <SkipForward className="w-5 h-5" />

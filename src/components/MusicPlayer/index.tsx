@@ -10,16 +10,16 @@
  */
 
 import { useMemo, useEffect, useState } from 'react';
-import { PIXEL_BORDER, PIXEL_SHADOW } from '@/utils/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import { Music, ListMusic, Mic2, X } from 'lucide-react';
+import { ListMusic, Mic2, Pause, Play, X } from 'lucide-react';
+import styles from './player.module.css';
 import { useAnimationEnabled, useMusicPlayer, useStylePreset, useTranslation } from '@/hooks';
-import { AudioVisualizer } from './AudioVisualizer';
 import { ProgressSlider } from './shared/ProgressSlider';
 import { TransportControls } from './shared/TransportControls';
 import { VolumeControl } from './shared/VolumeControl';
 import { PlaylistItem } from './shared/PlaylistItem';
+import { TrackArt } from './shared/TrackArt';
 import { formatTime, getActiveLyric, getModeConfig } from './shared/player-utils';
 import type { Song } from '@/contexts/MusicPlayerContext';
 
@@ -99,13 +99,13 @@ export function MusicPlayer() {
     currentAudioSource,
     toggleLyrics,
     togglePlaylist,
-    audioRef,
   } = player;
 
   const activeLyric = useMemo(
     () => getActiveLyric(currentLyrics, currentTime),
     [currentLyrics, currentTime]
   );
+  const progressPercent = duration ? Math.min(100, (currentTime / duration) * 100) : 0;
 
   // Skip rendering on mobile, while loading playlist, on the music page,
   // in terminal mode, or when playlist is empty
@@ -131,33 +131,26 @@ export function MusicPlayer() {
         >
           <motion.button
             onClick={open}
-            whileHover={animationEnabled ? { x: -2, y: -2 } : undefined}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-3 py-2 rounded-sm transition-all"
-            style={{
-              background: 'var(--bg-secondary)',
-              border: PIXEL_BORDER,
-              boxShadow: isPlaying ? '4px 4px 0 var(--accent-primary)' : PIXEL_SHADOW,
-            }}
+            whileTap={{ scale: 0.97 }}
+            className={`${styles.miniButton} ${isPlaying ? styles.miniButtonPlaying : ''}`}
+            aria-label={currentSong.title}
           >
-            <div
-              className="w-8 h-8 flex items-center justify-center border-2"
-              style={{
-                background: 'var(--bg-primary)',
-                borderColor: 'var(--border-subtle)',
-              }}
-            >
-              <Music className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-            </div>
+            <TrackArt song={currentSong} isPlaying={isPlaying} className="w-10 h-10" />
 
-            <div className="flex flex-col items-start">
-              <span
-                className="text-xs font-bold max-w-[90px] truncate"
-                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
-              >
-                {currentSong.title}
-              </span>
-              <span className="text-[10px] max-w-[90px] truncate" style={{ color: 'var(--text-muted)' }}>
+            <div className="flex flex-col items-start flex-1 min-w-0 pr-1">
+              <div className="flex items-center gap-1.5 w-full">
+                <span
+                  className={`${styles.statusDot} ${isPlaying ? styles.statusDotLive : ''}`}
+                  aria-hidden="true"
+                />
+                <span
+                  className="text-xs font-bold max-w-[112px] truncate"
+                  style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
+                >
+                  {currentSong.title}
+                </span>
+              </div>
+              <span className="text-[10px] max-w-[128px] truncate" style={{ color: 'var(--text-muted)' }}>
                 {isLoading
                   ? t.music.loading
                   : error
@@ -168,15 +161,17 @@ export function MusicPlayer() {
               </span>
             </div>
 
-            <div className="w-10 h-6 flex items-end">
-              <AudioVisualizer
-                audioRef={audioRef}
-                isPlaying={isPlaying && !isLoading}
-                barCount={16}
-                width={40}
-                height={24}
-              />
-            </div>
+            <span
+              className={`${styles.iconButton} p-1.5`}
+              style={{ color: 'var(--accent-primary)' }}
+              aria-hidden="true"
+            >
+              {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            </span>
+
+            <span className={styles.microProgress} aria-hidden="true">
+              <span className={styles.microProgressFill} style={{ width: `${progressPercent}%` }} />
+            </span>
           </motion.button>
         </motion.div>
       ) : (
@@ -187,14 +182,7 @@ export function MusicPlayer() {
           transition={{ duration: 0.3 }}
           className="fixed bottom-6 right-6 z-[100] w-[300px]"
         >
-          <div
-            className="overflow-hidden"
-            style={{
-              background: 'var(--bg-secondary)',
-              border: PIXEL_BORDER,
-              boxShadow: PIXEL_SHADOW,
-            }}
-          >
+          <div className={`${styles.panel} overflow-hidden`}>
             {/* Header */}
             <div
               className="flex items-center justify-between px-3 py-2 border-b-2"
@@ -212,7 +200,7 @@ export function MusicPlayer() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={cyclePlayMode}
-                  className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
+                  className={`${styles.iconButton} p-1.5`}
                   style={{ color: 'var(--text-muted)' }}
                   title={t.music.playMode}
                 >
@@ -220,7 +208,7 @@ export function MusicPlayer() {
                 </button>
                 <button
                   onClick={togglePlaylist}
-                  className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
+                  className={`${styles.iconButton} ${showPlaylist ? styles.iconButtonActive : ''} p-1.5`}
                   style={{ color: showPlaylist ? 'var(--accent-primary)' : 'var(--text-muted)' }}
                   title={t.music.playlist}
                 >
@@ -228,7 +216,7 @@ export function MusicPlayer() {
                 </button>
                 <button
                   onClick={toggleLyrics}
-                  className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
+                  className={`${styles.iconButton} ${showLyrics ? styles.iconButtonActive : ''} p-1.5`}
                   style={{ color: showLyrics ? 'var(--accent-primary)' : 'var(--text-muted)' }}
                   title={t.music.bottomLyrics}
                 >
@@ -236,7 +224,7 @@ export function MusicPlayer() {
                 </button>
                 <button
                   onClick={close}
-                  className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
+                  className={`${styles.iconButton} p-1.5`}
                   style={{ color: 'var(--text-muted)' }}
                   title={t.music.collapse}
                 >
@@ -248,16 +236,11 @@ export function MusicPlayer() {
             {/* Track info */}
             <div className="px-4 py-4">
               <div className="flex items-center gap-3">
-                <div
-                  className="w-12 h-12 flex items-center justify-center border-2"
-                  style={{
-                    background: 'var(--bg-primary)',
-                    borderColor: 'var(--border-subtle)',
-                  }}
-                >
-                  <Music className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
-                </div>
+                <TrackArt song={currentSong} isPlaying={isPlaying} className="w-14 h-14" />
                 <div className="flex-1 min-w-0">
+                  <span className={`${styles.chip} ${styles.chipAccent} mb-1`}>
+                    {isPlaying ? t.music.playing : currentNumber + '/' + totalSongs}
+                  </span>
                   <p
                     className="font-bold text-sm truncate"
                     style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}
@@ -281,15 +264,9 @@ export function MusicPlayer() {
                     className="overflow-hidden"
                   >
                     <div
-                      className="mt-3 px-2 py-1.5 text-center border-2 text-xs font-bold truncate"
-                      style={{
-                        background: 'var(--bg-primary)',
-                        borderColor: 'var(--border-subtle)',
-                        color: 'var(--accent-primary)',
-                        fontFamily: 'var(--font-mono)',
-                      }}
+                      className={`${styles.chip} ${styles.chipAccent} mt-3 w-full justify-center px-2 py-1.5 text-center text-xs`}
                     >
-                      {activeLyric}
+                      <span className="truncate">{activeLyric}</span>
                     </div>
                   </motion.div>
                 )}
@@ -305,11 +282,6 @@ export function MusicPlayer() {
                   {tReplace(t.music.clickToRetry, { error })}
                 </div>
               )}
-
-              {/* Spectrum visualizer */}
-              <div className="mt-3">
-                <AudioVisualizer audioRef={audioRef} isPlaying={isPlaying} barCount={64} height={40} />
-              </div>
 
               {/* Progress */}
               <div className="mt-4">
@@ -359,16 +331,11 @@ export function MusicPlayer() {
                 style={{ borderColor: 'var(--border-subtle)' }}
               >
                 <span
-                  className="px-1.5 py-0.5 text-[10px] font-mono font-bold uppercase border-2"
-                  style={{
-                    borderColor: 'var(--border-subtle)',
-                    color: currentAudioSource === 'local'
-                      ? '#22c55e'
-                      : currentAudioSource === 'get'
-                        ? '#3b82f6'
-                        : 'var(--text-muted)',
-                    background: 'var(--bg-primary)',
-                  }}
+                  className={`${styles.chip} ${
+                    currentAudioSource === 'local' || currentAudioSource === 'get'
+                      ? styles.chipAccent
+                      : ''
+                  }`}
                 >
                   {t.music.audioSource[currentAudioSource]}
                 </span>

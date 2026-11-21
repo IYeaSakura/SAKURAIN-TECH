@@ -32,12 +32,6 @@ import {
   unprotectAsset,
   withCdnFallbacks,
 } from '@/lib/asset-cache';
-import {
-  getAudioConnection,
-  initAudioConnection,
-  resumeAudioContext,
-  disposeAudioConnection,
-} from '@/components/MusicPlayer/shared/audio-analyser';
 
 // Playlist type definitions
 export interface Song {
@@ -47,6 +41,8 @@ export interface Song {
   src: string;
   cover?: string;
   lyricUrl?: string;
+  /** Parsed LRC lines embedded at build time, so no cross-origin fetch is needed. */
+  lyrics?: LyricLine[];
 }
 
 interface PlaylistConfig {
@@ -158,12 +154,6 @@ export function MusicPlayerProvider({
   const [currentLyrics, setCurrentLyrics] = useState<LyricLine[]>([]);
   const [lyricsLoading, setLyricsLoading] = useState(false);
   const [currentAudioSource, setCurrentAudioSource] = useState<AudioSource>('direct');
-  // Bumping this rebuilds the <audio> element. Required because a
-  // MediaElementSource permanently redirects an element's output — after a
-  // CORS downgrade the only way back to direct (non-silenced) output is a
-  // fresh element. See handleError / handleOnline.
-  const [audioEpoch, setAudioEpoch] = useState(0);
-
   // Keep refs in sync with the latest state for synchronous reads in handlers.
   useEffect(() => {
     isPlayingRef.current = isPlaying;
@@ -186,7 +176,7 @@ export function MusicPlayerProvider({
   const failedSrcsRef = useRef<Set<string>>(new Set());
   // One CORS-downgrade attempt per concrete URL (original or mirror). Keyed by
   // raw URL, not the normalized path, so a mirror that does serve CORS headers
-  // is still allowed to create an analyser after the original host failed.
+  // is still probed independently after the original host failed.
   const corsDowngradedUrlsRef = useRef<Set<string>>(new Set());
   // Concrete URL currently in use for the active song. When the original CDN
   // host fails, the error handler advances this through the known mirrors.
@@ -214,18 +204,8 @@ export function MusicPlayerProvider({
     const handleOnline = () => {
       failedSrcsRef.current.clear();
       corsDowngradedUrlsRef.current.clear();
-      // Drop the stale analyser so the spectrum can re-attach to a fresh CORS
-      // connection on the next load. The audio element itself is rebuilt by
-      // the epoch bump in handleError when needed; here we only clear the web
-      // audio graph, whose suspended/tainted state cannot be reused.
-      const hadConnection = Boolean(getAudioConnection(audioRef.current));
-      disposeAudioConnection(audioRef.current);
-      // A disposed MediaElementSource cannot be un-attached; rebuild the element
-      // so the next load can establish a fresh analyser + direct output.
-      if (hadConnection) {
-        trackChangeRef.current = true;
-        setAudioEpoch((e) => e + 1);
-      }
+      clearCorsProbeCache();
+      // The next load re-probes CORS on the new network path.
     };
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
@@ -264,10 +244,22 @@ export function MusicPlayerProvider({
   const currentNumber = currentPosition + 1;
   const totalSongs = playlist.length;
 
-  // Fetch lyrics from the external COS URL whenever the current track changes.
+  // Prefer lyrics embedded in the playlist; only fall back to a network fetch
+  // for older playlists that still store a bare lyricUrl.
   useEffect(() => {
     let cancelled = false;
     setLyricsLoading(true);
+
+    const embedded = currentSong.lyrics;
+    if (embedded && embedded.length > 0) {
+      setCurrentLyrics(embedded);
+      setLyricsLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setCurrentLyrics([]);
     fetchLyrics(currentSong.lyricUrl).then((lyrics) => {
       if (cancelled) return;
       setCurrentLyrics(lyrics);
@@ -276,7 +268,7 @@ export function MusicPlayerProvider({
     return () => {
       cancelled = true;
     };
-  }, [currentSong.lyricUrl]);
+  }, [currentSong.lyrics, currentSong.lyricUrl]);
 
   // Mirror of the current song so event handlers can verify which resource
   // the element is actually playing without recreating listeners.
@@ -301,19 +293,13 @@ export function MusicPlayerProvider({
     if (!isDesktopClient) return;
 
     const audio = new Audio();
-    // Start without CORS so playback works even for static-site/CDN edges that
-    // do not serve Access-Control-Allow-Origin. CORS is enabled only after we
-    // explicitly confirm the current resource supports it, because attaching a
-    // MediaElementSource to a non-CORS element mutes the audio output.
+    // Start without CORS so playback works even for CDN edges that do not
+    // serve Access-Control-Allow-Origin. The loader enables CORS only after
+    // probing confirms it is available for the selected resource.
     audio.crossOrigin = null;
     audio.preload = 'metadata';
     audio.volume = volume;
     audioRef.current = audio;
-
-    // Do not create the Web Audio connection here. It is established only
-    // after we confirm the CDN supports CORS for the current resource, avoiding
-    // the silent-output bug that occurs when a MediaElementSource is attached
-    // to a non-CORS media element.
 
     const handleTimeUpdate = () => {
       const src = audio.currentSrc || audio.src;
@@ -342,7 +328,7 @@ export function MusicPlayerProvider({
       // If CORS mode failed, try the same URL without CORS once. Some CDN edges
       // do not serve Access-Control-Allow-Origin even though the file is
       // playable directly. Track the downgrade per concrete URL so a mirror
-      // that does serve CORS headers can still drive an analyser.
+      // that does serve CORS headers can still be used in CORS mode.
       if (
         failedSrc &&
         audio.crossOrigin === 'anonymous' &&
@@ -351,16 +337,9 @@ export function MusicPlayerProvider({
         corsDowngradedUrlsRef.current.add(failedSrc);
         clearCorsProbeCache();
         setAudioUrlOverride({ songSrc: currentSongRef.current.src, url: failedSrc });
-        // A MediaElementSource permanently redirects this element's output;
-        // keeping it while switching to no-CORS would leave audio silenced.
-        // Dispose the graph and rebuild a fresh, no-CORS element instead. The
-        // load effect (keyed on audioEpoch) reloads and resumes automatically
-        // because intendedPlayingRef is still true.
-        disposeAudioConnection(audio);
-        // Suppress abort/pause events emitted while the old element is torn
-        // down; the reload effect owns the transition lock from here.
+        // Without a Web Audio graph the same element can safely switch between
+        // CORS and no-CORS modes. The loader reassigns src and resumes playback.
         trackChangeRef.current = true;
-        setAudioEpoch((e) => e + 1);
         return;
       }
 
@@ -377,7 +356,6 @@ export function MusicPlayerProvider({
         clearCorsProbeCache();
         trackChangeRef.current = true;
         setAudioUrlOverride({ songSrc: currentSongRef.current.src, url: nextUrl });
-        setAudioEpoch((e) => e + 1);
         return;
       }
 
@@ -531,11 +509,8 @@ export function MusicPlayerProvider({
         revokeBlobUrl(preloadBlobUrlRef.current);
         preloadBlobUrlRef.current = null;
       }
-      // The MediaElementSource is tied to this element; tear down the Web
-      // Audio graph before the element is discarded on an epoch rebuild.
-      disposeAudioConnection(audio);
     };
-  }, [isDesktopClient, audioEpoch]);
+  }, [isDesktopClient]);
 
   // Load current track after user interaction, using the persistent asset
   // cache for COS-hosted audio files.
@@ -551,7 +526,7 @@ export function MusicPlayerProvider({
     // effect below runs after this one; without the lock it calls play() while
     // the element still has no src, gets a NotSupportedError and clears the
     // user's play intent. That made first-time (GET) tracks silent with no
-    // analyser data, while cached tracks appeared to work fine.
+    // audio entirely, while cached tracks appeared to work fine.
     trackChangeRef.current = true;
 
     let cancelled = false;
@@ -575,10 +550,9 @@ export function MusicPlayerProvider({
       }
 
       // When the CDN does not serve CORS headers for the current origin,
-      // remove crossOrigin so playback can still work without the Web Audio
-      // visualizer. A URL that already failed in CORS mode stays no-CORS;
-      // mirrors are evaluated independently so a CORS-capable mirror can still
-      // provide a spectrum.
+      // remove crossOrigin so playback does not depend on the CDN's CORS
+      // headers. A URL that already failed in CORS mode stays no-CORS;
+      // mirrors are evaluated independently.
       const alreadyDowngraded = corsDowngradedUrlsRef.current.has(requestSrc);
       const corsSupported = alreadyDowngraded ? false : await isCorsSupported(requestSrc);
       if (cancelled) return;
@@ -593,7 +567,6 @@ export function MusicPlayerProvider({
       // here: after a host failure the mirror has the same path but a different
       // origin, and must actually be loaded instead of reusing the failed one.
       if (audio.src === cachedSrc) {
-        initAudioConnection(audio);
         if (intendedPlayingRef.current && audio.paused) {
           const playPromise = audio.play();
           if (playPromise !== undefined) {
@@ -629,15 +602,10 @@ export function MusicPlayerProvider({
       }
       audio.load();
 
-      // src is now final (possibly a same-origin blob). Create the analyser
-      // here so locally cached playback gets a working spectrum too.
-      initAudioConnection(audio);
-
       // Auto-play the new track when playback is intended. Keep the transition
       // lock active until the 'playing' event confirms the new resource is
       // actually producing audio.
       if (intendedPlayingRef.current) {
-        resumeAudioContext(audio);
         const playPromise = audio.play();
         if (playPromise !== undefined) {
           playPromise.catch((err: unknown) => {
@@ -661,7 +629,7 @@ export function MusicPlayerProvider({
       // Release the protection for this track when switching to another song.
       unprotectAsset(currentSong.src);
     };
-  }, [currentIndex, currentPosition, isDesktopClient, hasUserInteracted, currentSong.src, audioUrlOverride, audioEpoch]);
+  }, [currentIndex, currentPosition, isDesktopClient, hasUserInteracted, currentSong.src, audioUrlOverride]);
 
   // Play / pause whenever the playing flag changes. The load-track effect
   // already handles playback when the track changes, so this effect is skipped
@@ -677,7 +645,6 @@ export function MusicPlayerProvider({
       // until a matching src has actually been attached.
       if (!audio.src || !isSameAudioSource(audio.src, currentSong.src)) return;
       if (!audio.paused) return;
-      resumeAudioContext(audio);
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch((err: unknown) => {
@@ -763,9 +730,6 @@ export function MusicPlayerProvider({
     setHasUserInteracted(true);
     setIsOpen(true);
     setSystemPaused(false);
-    // Resume Web Audio synchronously inside the user gesture so browsers do
-    // not keep the AudioContext suspended after the first interaction.
-    resumeAudioContext(audioRef.current);
     setIsPlaying((prev) => {
       const next = !prev;
       intendedPlayingRef.current = next;
@@ -785,7 +749,6 @@ export function MusicPlayerProvider({
     setSystemPaused(false);
     // A manual track change expresses intent to keep playback active.
     intendedPlayingRef.current = true;
-    resumeAudioContext(audioRef.current);
 
     if (playMode === 'repeat') {
       // Replay the current track from the beginning. No src change happens
@@ -843,7 +806,6 @@ export function MusicPlayerProvider({
     if (playlist.length === 0) return;
     setHasUserInteracted(true);
     setSystemPaused(false);
-    resumeAudioContext(audioRef.current);
     const prevPos = currentPositionRef.current;
     if (prevPos <= 0) {
       // In sequential mode, stay on the first track instead of wrapping to
@@ -874,8 +836,7 @@ export function MusicPlayerProvider({
       const targetIndex = playlist.findIndex((s) => s.id === id);
       if (targetIndex === -1) return;
       intendedPlayingRef.current = true;
-      resumeAudioContext(audioRef.current);
-      setIsPlaying(true);
+        setIsPlaying(true);
       setIsOpen(true);
       setHasUserInteracted(true);
 
@@ -900,7 +861,7 @@ export function MusicPlayerProvider({
         } else {
           // No usable src yet: force the loader to attach it and start playback.
           trackChangeRef.current = true;
-          setAudioEpoch((e) => e + 1);
+          setAudioUrlOverride({ songSrc: currentSong.src, url: currentSong.src });
         }
         return;
       }

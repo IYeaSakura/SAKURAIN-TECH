@@ -448,6 +448,11 @@ export async function getCachedAudioUrl(src: string): Promise<string> {
   return result.url;
 }
 
+/** Reject HTML error pages and other non-LRC payloads before caching. */
+function looksLikeLrc(text: string): boolean {
+  return /\[\d{1,3}:\d{2}(?:[.:]\d{1,3})?\]/.test(text);
+}
+
 /**
  * Return the raw lyric text for a URL, fetching and caching it if needed.
  * Cached lyrics are reused indefinitely.
@@ -457,7 +462,9 @@ export async function getCachedLyrics(url: string | undefined | null): Promise<s
   if (!isCacheable(url)) {
     try {
       const response = await fetch(url, { credentials: 'omit' });
-      return response.ok ? await response.text() : null;
+      if (!response.ok) return null;
+      const text = await response.text();
+      return looksLikeLrc(text) ? text : null;
     } catch {
       return null;
     }
@@ -465,12 +472,12 @@ export async function getCachedLyrics(url: string | undefined | null): Promise<s
 
   try {
     const entry = await getEntry(url);
-    if (entry?.text !== undefined && entry.text !== '') return entry.text;
+    if (entry?.text !== undefined && looksLikeLrc(entry.text)) return entry.text;
 
     // Try the primary host, then mirror CDNs. A single host outage must not
     // leave the track without lyrics.
     const text = await fetchTextWithFallback(url);
-    if (!text) return null;
+    if (!text || !looksLikeLrc(text)) return null;
 
     await putEntry({
       url,

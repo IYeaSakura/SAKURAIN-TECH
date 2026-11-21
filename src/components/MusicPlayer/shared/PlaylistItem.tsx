@@ -7,6 +7,7 @@
  */
 import { motion } from 'framer-motion';
 import type { Song } from '@/contexts/MusicPlayerContext';
+import styles from '../player.module.css';
 
 interface PlaylistItemProps {
   song: Song;
@@ -29,10 +30,8 @@ export function PlaylistItem({
   return (
     <button
       onClick={() => onSelect(song.id)}
-      className={`w-full text-left ${
-        full
-          ? 'p-3 transition-all hover:pl-4'
-          : 'p-2.5 transition-colors hover:bg-[var(--bg-tertiary)]'
+      className={`${styles.playlistRow} ${isCurrent ? styles.playlistRowActive : ''} w-full text-left ${
+        full ? 'p-3' : 'p-2.5'
       }`}
       style={{
         background: isCurrent ? 'var(--bg-tertiary)' : 'transparent',

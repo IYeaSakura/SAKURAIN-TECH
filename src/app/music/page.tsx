@@ -12,7 +12,6 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PIXEL_BORDER, PIXEL_SHADOW } from '@/utils/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -27,91 +26,20 @@ import {
   AlignLeft,
 } from 'lucide-react';
 import { useMusicPlayer, useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
-import { AudioMetrics } from '@/components/MusicPlayer/AudioMetrics';
 import { ProgressSlider } from '@/components/MusicPlayer/shared/ProgressSlider';
 import { TransportControls } from '@/components/MusicPlayer/shared/TransportControls';
 import { VolumeControl } from '@/components/MusicPlayer/shared/VolumeControl';
 import { PlaylistItem } from '@/components/MusicPlayer/shared/PlaylistItem';
+import { TrackArt } from '@/components/MusicPlayer/shared/TrackArt';
 import {
   formatTime,
   getActiveTimedLyricIndex,
   getModeConfig,
 } from '@/components/MusicPlayer/shared/player-utils';
-import { getCachedCoverUrl, revokeBlobUrl } from '@/lib/asset-cache';
 import type { Song } from '@/contexts/MusicPlayerContext';
 import type { LyricLine } from '@/lib/lyrics';
+import styles from '@/components/MusicPlayer/player.module.css';
 
-
-function generateCoverSvg(title: string) {
-  const hash = title.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  const hue = hash % 360;
-  const patternType = hash % 4;
-
-  let pattern = '';
-  if (patternType === 0) {
-    pattern = `<rect x='8' y='8' width='16' height='16' fill='hsla(${hue}, 70%, 60%, 0.8)'/>`;
-  } else if (patternType === 1) {
-    pattern = `<circle cx='16' cy='16' r='10' fill='none' stroke='hsla(${hue}, 70%, 60%, 0.8)' stroke-width='4'/>`;
-  } else if (patternType === 2) {
-    pattern = `<polygon points='16,4 28,28 4,28' fill='hsla(${hue}, 70%, 60%, 0.8)'/>`;
-  } else {
-    pattern = `<path d='M4 16h24M16 4v24' stroke='hsla(${hue}, 70%, 60%, 0.8)' stroke-width='4'/>`;
-  }
-
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 32 32'>
-    <rect width='32' height='32' fill='var(--bg-secondary)'/>
-    ${pattern}
-    <rect x='2' y='2' width='28' height='28' fill='none' stroke='var(--border-subtle)' stroke-width='2'/>
-  </svg>`;
-
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-}
-
-function CoverArt({ song }: { song: Song }) {
-  const fallback = useMemo(() => generateCoverSvg(song.title), [song.title]);
-  const [src, setSrc] = useState(song.cover || fallback);
-
-  useEffect(() => {
-    let blobUrl: string | null = null;
-    let cancelled = false;
-    const cover = song.cover;
-
-    // Reset to this track's placeholder so a previous track's cover is never
-    // shown while the new one loads (or when the new track has no cover).
-    setSrc(cover || fallback);
-    if (!cover) return;
-
-    getCachedCoverUrl(cover)
-      .then((cached) => {
-        if (cancelled) return;
-        if (cached !== cover) blobUrl = cached;
-        setSrc(cached);
-      })
-      .catch(() => {
-        if (!cancelled) setSrc(fallback);
-      });
-
-    return () => {
-      cancelled = true;
-      if (blobUrl) revokeBlobUrl(blobUrl);
-    };
-  }, [song.cover, fallback]);
-
-  return (
-    <div className="relative aspect-square w-full h-full overflow-hidden" style={{ border: PIXEL_BORDER, boxShadow: PIXEL_SHADOW }}>
-      <motion.img
-        key={song.id}
-        initial={{ opacity: 0, scale: 1.05 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        src={src}
-        alt={song.title}
-        className="w-full h-full object-cover"
-        style={{ imageRendering: 'pixelated' }}
-      />
-    </div>
-  )
-}
 
 const LYRIC_FONT_SIZES = ['text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl'];
 
@@ -175,10 +103,7 @@ function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined;
   }, [activeIndex]);
 
   return (
-    <div
-      className="h-full flex flex-col"
-      style={{ background: 'var(--bg-secondary)', border: PIXEL_BORDER, boxShadow: PIXEL_SHADOW }}
-    >
+    <div className={`${styles.lyricsPanel} h-full flex flex-col`}>
       <div
         className="flex items-center justify-between p-3 border-b-2"
         style={{ borderColor: 'var(--border-subtle)' }}
@@ -195,24 +120,24 @@ function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined;
         <div className="flex items-center gap-1">
           <button
             onClick={() => setScaleIndex((i) => Math.max(0, i - 1))}
-            className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
-            style={{ border: PIXEL_BORDER, color: 'var(--text-muted)' }}
+            className={`${styles.iconButton} ${styles.iconButtonFramed} p-1.5`}
+            style={{ color: 'var(--text-muted)' }}
             title={t.music.shrinkLyrics}
           >
             <Minus className="w-3 h-3" />
           </button>
           <button
             onClick={() => setScaleIndex((i) => Math.min(LYRIC_FONT_SIZES.length - 1, i + 1))}
-            className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
-            style={{ border: PIXEL_BORDER, color: 'var(--text-muted)' }}
+            className={`${styles.iconButton} ${styles.iconButtonFramed} p-1.5`}
+            style={{ color: 'var(--text-muted)' }}
             title={t.music.enlargeLyrics}
           >
             <Plus className="w-3 h-3" />
           </button>
           <button
             onClick={() => setCentered((c) => !c)}
-            className="p-1.5 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
-            style={{ border: PIXEL_BORDER, color: centered ? 'var(--accent-primary)' : 'var(--text-muted)' }}
+            className={`${styles.iconButton} ${styles.iconButtonFramed} ${centered ? styles.iconButtonActive : ''} p-1.5`}
+            style={{ color: centered ? 'var(--accent-primary)' : 'var(--text-muted)' }}
             title={centered ? t.music.alignLeft : t.music.alignCenter}
           >
             {centered ? <AlignCenter className="w-3 h-3" /> : <AlignLeft className="w-3 h-3" />}
@@ -222,7 +147,7 @@ function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined;
       <div className="flex-1 min-h-0">
         <div
           ref={containerRef}
-          className="h-full overflow-y-auto p-4 space-y-4 thin-scrollbar"
+          className={`${styles.lyricsScroll} h-full overflow-y-auto p-4 space-y-4 thin-scrollbar`}
         >
           {lines.map((line, index) => {
             const isActive = index === activeIndex;
@@ -235,7 +160,9 @@ function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined;
                   x: isActive ? 4 : 0,
                 }}
                 transition={{ duration: 0.2 }}
-                className={`${LYRIC_FONT_SIZES[scaleIndex] ?? 'text-base'} leading-relaxed ${centered ? 'text-center' : 'text-left'}`}
+                className={`${styles.lyricLine} ${isActive ? styles.lyricLineActive : ''} ${
+                  LYRIC_FONT_SIZES[scaleIndex] ?? 'text-base'
+                } leading-relaxed ${centered ? 'text-center' : 'text-left'}`}
                 style={{
                   color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
                   fontFamily: isActive ? 'var(--font-mono)' : 'inherit',
@@ -267,7 +194,7 @@ function PlaylistPanel({
   return (
     <div
       className="h-full flex flex-col"
-      style={{ background: 'var(--bg-secondary)', borderLeft: PIXEL_BORDER }}
+      style={{ background: 'var(--bg-secondary)', borderLeft: '2px solid var(--border-subtle)' }}
     >
       <div
         className="flex items-center justify-between p-3 border-b-2"
@@ -284,7 +211,7 @@ function PlaylistPanel({
         </div>
         <button
           onClick={onClose}
-          className="p-1 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
+          className={`${styles.iconButton} p-1`}
           style={{ color: 'var(--text-muted)' }}
           title={t.music.closePlaylist}
         >
@@ -337,7 +264,6 @@ export default function MusicPage() {
   }, []);
 
   const {
-    audioRef,
     isPlaying,
     currentTime,
     duration,
@@ -437,8 +363,8 @@ export default function MusicPage() {
             transition={{ duration: 0.4, delay: 0.05 }}
             className="flex-none lg:flex-1 h-[38%] sm:h-[42%] lg:h-auto flex items-center justify-center"
           >
-            <div className="h-full aspect-square max-h-full">
-              <CoverArt key={currentSong.id} song={currentSong} />
+            <div className={`${styles.coverStage} h-full aspect-square max-h-full`}>
+              <TrackArt key={currentSong.id} song={currentSong} isPlaying={isPlaying} className="w-full h-full" />
             </div>
           </motion.section>
 
@@ -516,11 +442,6 @@ export default function MusicPage() {
 
         {/* Controls row */}
         <div className="relative flex items-center justify-between gap-2 min-h-[2.5rem]">
-          {/* Audio metrics */}
-          <div className="hidden sm:flex items-center flex-1 min-w-0">
-            <AudioMetrics audioRef={audioRef} isPlaying={isPlaying} isLoading={isLoading} systemPaused={systemPaused} />
-          </div>
-
           {/* Playback controls — absolute center */}
           <TransportControls
             isPlaying={isPlaying}
@@ -538,24 +459,19 @@ export default function MusicPage() {
           {/* Extra controls */}
           <div className="flex items-center justify-end gap-1 sm:gap-2 flex-1">
             <span
-              className="hidden sm:inline-flex px-2 py-1 text-[10px] font-mono font-bold uppercase border-2"
-              style={{
-                borderColor: 'var(--border-subtle)',
-                color: currentAudioSource === 'local'
-                  ? '#22c55e'
-                  : currentAudioSource === 'get'
-                    ? '#3b82f6'
-                    : 'var(--text-muted)',
-                background: 'var(--bg-primary)',
-              }}
+              className={`${styles.chip} hidden sm:inline-flex ${
+                currentAudioSource === 'local' || currentAudioSource === 'get'
+                  ? styles.chipAccent
+                  : ''
+              }`}
               title={t.music.audioSource[currentAudioSource]}
             >
               {t.music.audioSource[currentAudioSource]}
             </span>
             <button
               onClick={cyclePlayMode}
-              className="p-1.5 sm:p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
-              style={{ border: PIXEL_BORDER, color: 'var(--accent-primary)' }}
+              className={`${styles.iconButton} ${styles.iconButtonFramed} p-1.5 sm:p-2`}
+              style={{ color: 'var(--accent-primary)' }}
               title={modeConfig.label}
             >
               <ModeIcon className="w-4 h-4" />
@@ -571,19 +487,16 @@ export default function MusicPage() {
             />
             <button
               onClick={togglePlaylist}
-              className="p-1.5 sm:p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
-              style={{
-                border: PIXEL_BORDER,
-                color: showPlaylist ? 'var(--accent-primary)' : 'var(--text-muted)',
-              }}
+              className={`${styles.iconButton} ${styles.iconButtonFramed} ${showPlaylist ? styles.iconButtonActive : ''} p-1.5 sm:p-2`}
+              style={{ color: showPlaylist ? 'var(--accent-primary)' : 'var(--text-muted)' }}
               title={t.music.playlist}
             >
               <ListMusic className="w-4 h-4" />
             </button>
             <button
               onClick={toggleFullscreen}
-              className="p-1.5 sm:p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
-              style={{ border: PIXEL_BORDER, color: 'var(--text-muted)' }}
+              className={`${styles.iconButton} ${styles.iconButtonFramed} p-1.5 sm:p-2`}
+              style={{ color: 'var(--text-muted)' }}
               title={isFullscreen ? t.music.exitFullscreen : t.music.fullscreen}
             >
               {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}

@@ -8,7 +8,7 @@
  * compact one.
  */
 import { Volume2, VolumeX } from 'lucide-react';
-import { PIXEL_BORDER } from '@/utils/styles';
+import styles from '../player.module.css';
 
 interface VolumeControlProps {
   volume: number;
@@ -35,8 +35,8 @@ export function VolumeControl({
     <>
       <button
         onClick={onToggleMute}
-        className={`${buttonClassName} rounded-sm`}
-        style={{ border: PIXEL_BORDER, color: 'var(--text-muted)' }}
+        className={`${styles.iconButton} ${styles.iconButtonFramed} ${buttonClassName}`}
+        style={{ color: isSilent ? 'var(--text-muted)' : 'var(--accent-primary)' }}
         title={isSilent ? labels.unmute : labels.mute}
       >
         {isSilent ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -48,10 +48,9 @@ export function VolumeControl({
         step="0.01"
         value={effectiveVolume}
         onChange={(e) => onVolumeChange(parseFloat(e.target.value))}
-        className={`${sliderClassName} appearance-none cursor-pointer rounded-sm`}
+        className={`${styles.volumeSlider} ${sliderClassName}`}
         style={{
           background: `linear-gradient(90deg, var(--accent-primary) ${effectiveVolume * 100}%, var(--bg-tertiary) ${effectiveVolume * 100}%)`,
-          border: PIXEL_BORDER,
         }}
       />
     </>
