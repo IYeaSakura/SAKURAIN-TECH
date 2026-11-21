@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import ClientEffects from "@/components/ClientEffects";
 import { SearchProvider, GlobalSearch } from "@/components/search";
 import { StylePresetProvider } from "@/contexts/StylePresetContext";
@@ -11,6 +11,17 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://sakurain.net"),
   title: "SAKURAIN | 2026",
   description: "SAKURAIN personal brand site — a practical, insightful and fun portal for tech creators.",
+};
+
+/**
+ * `viewportFit: cover` lets the layout reach into the notch/home-indicator area
+ * on iOS, which is what makes env(safe-area-inset-*) resolve to real values for
+ * the music player's bottom bar.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 /**

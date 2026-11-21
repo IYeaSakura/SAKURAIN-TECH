@@ -2415,3 +2415,32 @@ body::before {
     --grid-size: 56px;
   }
 }
+
+/* ============================================
+   MOBILE (TOUCH) BASELINE
+   Small, global adjustments that make the site behave like a native
+   app on phones: viewport height that accounts for browser chrome,
+   no double-tap zoom delay on controls, and no accidental scroll
+   while dragging a slider.
+   ============================================ */
+
+@layer utilities {
+  /* 100dvh with a 100vh fallback for browsers without dynamic viewport units. */
+  .h-dvh-safe {
+    height: 100vh;
+    height: 100dvh;
+  }
+}
+
+@media (pointer: coarse) {
+  button,
+  [role='button'],
+  a {
+    /* Removes the ~300ms double-tap-zoom delay on taps. */
+    touch-action: manipulation;
+  }
+
+  input[type='range'] {
+    touch-action: none;
+  }
+}

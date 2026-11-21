@@ -49,6 +49,24 @@ export function getActiveLyric(
   return timed[idx]?.text || '';
 }
 
+/**
+ * iOS / iPadOS detection. Needed because those browsers expose `volume` on
+ * HTMLMediaElement as read-only: assigning it is silently ignored, so a volume
+ * slider would look functional while changing nothing.
+ */
+export function isIOSDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  if (/iP(hone|ad|od)/.test(ua)) return true;
+  // iPadOS 13+ reports a desktop Safari UA; multi-touch is the reliable tell.
+  return /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+}
+
+/** Whether the element-level volume slider can actually do anything here. */
+export function supportsElementVolume(): boolean {
+  return !isIOSDevice();
+}
+
 type ModeLabels = { shuffle: string; repeat: string; sequential: string };
 
 const MODE_ICONS: Record<PlayMode, LucideIcon> = {

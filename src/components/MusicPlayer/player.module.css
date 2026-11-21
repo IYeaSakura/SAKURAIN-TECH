@@ -186,10 +186,31 @@
 
 .seekBar {
   position: relative;
-  overflow: hidden;
   background: var(--bg-tertiary);
   border: 2px solid var(--border-subtle);
   transition: border-color 0.16s ease, box-shadow 0.16s ease;
+  /* Dragging the bar must not also scroll the page on touch devices. */
+  touch-action: none;
+}
+/* Fingers need a taller target than the 8px bar; the pseudo-element extends
+   the hit area without changing layout or the visual thickness. */
+@media (pointer: coarse) {
+  .seekBar::before {
+    content: '';
+    position: absolute;
+    inset: -12px 0;
+  }
+  .volumeSlider {
+    height: 1.25rem;
+  }
+  .volumeSlider::-webkit-slider-thumb {
+    width: 14px;
+    height: 20px;
+  }
+  .volumeSlider::-moz-range-thumb {
+    width: 14px;
+    height: 20px;
+  }
 }
 .seekBar:hover,
 .seekBar:focus-visible {
@@ -207,7 +228,7 @@
   content: '';
   position: absolute;
   top: 0;
-  right: -2px;
+  right: 0;
   width: 3px;
   height: 100%;
   background: var(--text-primary);

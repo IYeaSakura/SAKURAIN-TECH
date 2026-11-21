@@ -196,7 +196,8 @@ export function DynamicIsland() {
   return (
     <div
       ref={containerRef}
-      className="fixed top-3 left-1/2 -translate-x-1/2 z-[100]"
+      className="fixed left-1/2 -translate-x-1/2 z-[100]"
+      style={{ top: 'calc(0.75rem + env(safe-area-inset-top, 0px))' }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -211,8 +212,10 @@ export function DynamicIsland() {
         }}
         className="island-shell relative overflow-hidden cursor-pointer select-none"
         style={{
-          width: expanded ? 380 : 'auto',
-          minWidth: expanded ? 340 : 160,
+          // Never wider than the phone viewport: the panel is 380px on desktop
+          // but must shrink to fit a 360px screen.
+          width: expanded ? 'min(380px, calc(100vw - 1.5rem))' : 'auto',
+          minWidth: expanded ? 'min(340px, calc(100vw - 1.5rem))' : 160,
           height: expanded ? 'auto' : 44,
         }}
       >

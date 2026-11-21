@@ -300,7 +300,7 @@ export default function MusicPage() {
 
   if (!mounted) {
     return (
-      <div className="h-screen overflow-hidden flex flex-col">
+      <div className="h-dvh-safe overflow-hidden flex flex-col">
         <header className="flex-none h-14 px-4 sm:px-6 pt-20 lg:pt-24">
           <div className="h-8 w-32 bg-[var(--bg-tertiary)] border-2 border-[var(--border-subtle)] animate-pulse" />
         </header>
@@ -316,7 +316,7 @@ export default function MusicPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col">
+    <div className="h-dvh-safe overflow-hidden flex flex-col overscroll-none">
       {/* Top header */}
       <header className="flex-none pt-20 lg:pt-24 px-4 sm:px-6 pb-2">
         <motion.div
@@ -406,8 +406,13 @@ export default function MusicPage() {
         initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.15 }}
-        className="flex-none h-20 sm:h-24 border-t-2 px-3 sm:px-6 flex flex-col justify-center gap-2 z-30"
-        style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}
+        className="flex-none min-h-[5rem] sm:min-h-[6rem] border-t-2 px-3 sm:px-6 py-2 flex flex-col justify-center gap-2 z-30"
+        style={{
+          background: 'var(--bg-secondary)',
+          borderColor: 'var(--border-subtle)',
+          // Keep the controls clear of the iOS home indicator.
+          paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))',
+        }}
       >
         {/* Progress row */}
         <div className="flex items-center gap-2 sm:gap-3">
@@ -451,7 +456,7 @@ export default function MusicPage() {
             onTogglePlay={togglePlay}
             onNext={next}
             labels={{ previous: t.music.previous, next: t.music.next }}
-            containerClassName="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2"
+            containerClassName="flex items-center gap-1 sm:gap-2 sm:absolute sm:left-1/2 sm:-translate-x-1/2"
             sideClassName="p-1.5 sm:p-2"
             mainClassName="p-2.5 sm:p-3"
           />
@@ -482,6 +487,7 @@ export default function MusicPage() {
               onVolumeChange={setVolume}
               onToggleMute={toggleMuted}
               labels={{ mute: t.music.mute, unmute: t.music.unmute }}
+              systemVolumeHint={t.music.systemVolume}
               buttonClassName="p-1.5 sm:p-2"
               sliderClassName="hidden sm:block w-20 lg:w-28 h-2"
             />
@@ -495,7 +501,7 @@ export default function MusicPage() {
             </button>
             <button
               onClick={toggleFullscreen}
-              className={`${styles.iconButton} ${styles.iconButtonFramed} p-1.5 sm:p-2`}
+              className={`${styles.iconButton} ${styles.iconButtonFramed} hidden sm:inline-flex p-1.5 sm:p-2`}
               style={{ color: 'var(--text-muted)' }}
               title={isFullscreen ? t.music.exitFullscreen : t.music.fullscreen}
             >

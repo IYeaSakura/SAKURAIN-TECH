@@ -33,11 +33,11 @@ interface CacheEntry {
 const blobUrlToOriginalSrc = new Map<string, string>();
 
 /**
- * Cached CORS compatibility results per resource origin. Different CDN
- * domains (e.g. cos.sakurain.net vs file.sakurain.net) may have different
- * CORS policies, so they are probed and cached independently.
+ * Cache-key → blob URL. The player may need a playable URL synchronously inside
+ * a user gesture (iOS only honours play() called in the gesture handler), so a
+ * previously resolved blob URL is memoised here and reused by later lookups.
  */
-const corsSupportedByOrigin = new Map<string, boolean>();
+const blobUrlByCacheKey = new Map<string, string>();
 
 /**
  * Reference-counted set of original URLs that are currently in use by the
@@ -205,67 +205,6 @@ function normalizeCacheKey(url: string): string {
 export function resolveCacheKey(url: string): string {
   if (typeof window === 'undefined') return url;
   return normalizeCacheKey(url);
-}
-
-/**
- * Clear the cached CORS compatibility results. Called when the browser detects
- * a network change so the next track can re-probe the CDN headers.
- */
-export function clearCorsProbeCache(): void {
-  corsSupportedByOrigin.clear();
-}
-
-/**
- * Probe whether the CDN serves CORS headers compatible with the current page
- * origin for the requested resource. Results are cached per resource origin
- * for the lifetime of the page session.
- *
- * A tiny GET range request is used instead of HEAD because some CDNs serve
- * CORS headers for HEAD but omit them for the actual GET that the audio
- * element and Web Audio perform.
- */
-export async function isCorsSupported(url: string): Promise<boolean> {
-  if (typeof window === 'undefined' || !isCacheable(url)) return true;
-
-  let resourceOrigin: string;
-  try {
-    resourceOrigin = new URL(url, window.location.href).origin;
-  } catch {
-    return false;
-  }
-
-  const cached = corsSupportedByOrigin.get(resourceOrigin);
-  if (cached !== undefined) return cached;
-
-  try {
-    const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), 5000);
-    const response = await fetch(url, {
-      method: 'GET',
-      credentials: 'omit',
-      mode: 'cors',
-      headers: { Range: 'bytes=0-0' },
-      signal: controller.signal,
-    });
-    window.clearTimeout(timeoutId);
-
-    const pageOrigin = window.location.origin;
-    const acao = response.headers.get('Access-Control-Allow-Origin');
-    const supported = response.ok && (acao === '*' || acao === pageOrigin);
-    corsSupportedByOrigin.set(resourceOrigin, supported);
-    return supported;
-  } catch {
-    // A CORS error or network failure means we cannot rely on cross-origin
-    // headers for this origin. Fall back to no-cors media playback.
-    corsSupportedByOrigin.set(resourceOrigin, false);
-    return false;
-  }
-}
-
-// Re-probe CORS compatibility after the browser reconnects so a different
-// network path or CDN edge node is re-evaluated before the next track loads.
-if (typeof window !== 'undefined') {
-  window.addEventListener('online', clearCorsProbeCache);
 }
 
 /**
@@ -473,12 +412,32 @@ async function fetchAndCache(
 }
 
 /**
+ * Speculative downloads (background caching, next-track preload) are a
+ * convenience; streaming is the requirement. On a metered or very slow
+ * connection — which is the common case on phones — skip them so the player
+ * does not burn data on a track the user may never hear.
+ */
+export function isPrefetchAllowed(): boolean {
+  if (typeof navigator === 'undefined') return true;
+  const connection = (
+    navigator as Navigator & {
+      connection?: { saveData?: boolean; effectiveType?: string };
+    }
+  ).connection;
+  if (!connection) return true;
+  if (connection.saveData) return false;
+  const type = connection.effectiveType;
+  return type !== 'slow-2g' && type !== '2g';
+}
+
+/**
  * Download an audio file in the background and persist it to IndexedDB.
  * This does not block playback; the caller is expected to stream the file
  * directly from its original URL while caching happens asynchronously.
  */
 async function cacheAudioInBackground(url: string): Promise<void> {
   if (!url || typeof window === 'undefined' || !isCacheable(url)) return;
+  if (!isPrefetchAllowed()) return;
 
   const key = normalizeCacheKey(url);
   const inFlight = audioCacheInFlight.get(key);
@@ -513,6 +472,7 @@ async function cacheAudioInBackground(url: string): Promise<void> {
  */
 export function registerBlobUrl(blobUrl: string, originalUrl: string): void {
   blobUrlToOriginalSrc.set(blobUrl, originalUrl);
+  blobUrlByCacheKey.set(normalizeCacheKey(originalUrl), blobUrl);
 }
 
 /**
@@ -521,6 +481,9 @@ export function registerBlobUrl(blobUrl: string, originalUrl: string): void {
 export function revokeBlobUrl(blobUrl: string): void {
   URL.revokeObjectURL(blobUrl);
   blobUrlToOriginalSrc.delete(blobUrl);
+  for (const [key, value] of blobUrlByCacheKey) {
+    if (value === blobUrl) blobUrlByCacheKey.delete(key);
+  }
 }
 
 /**
@@ -535,6 +498,32 @@ export type AudioSource = 'local' | 'get' | 'direct';
 interface CachedAudioResult {
   url: string;
   source: AudioSource;
+}
+
+/**
+ * Look up an already cached audio blob without touching the network.
+ *
+ * Returns a memoised blob URL when the track is in IndexedDB, otherwise null.
+ * Used to prepare a playable source *before* the user taps play, so the click
+ * handler can start playback synchronously (required by iOS) while still
+ * playing from the local cache.
+ */
+export async function peekCachedAudioUrl(src: string): Promise<string | null> {
+  if (!src || typeof window === 'undefined' || !isCacheable(src)) return null;
+
+  const key = normalizeCacheKey(src);
+  const memoised = blobUrlByCacheKey.get(key);
+  if (memoised) return memoised;
+
+  try {
+    const entry = await getEntry(src);
+    if (!entry?.blob || !isPlayableAudioBlob(entry.blob)) return null;
+    const blobUrl = URL.createObjectURL(entry.blob);
+    registerBlobUrl(blobUrl, src);
+    return blobUrl;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -553,15 +542,12 @@ export async function getCachedAudioUrlWithSource(src: string): Promise<CachedAu
     return { url: src, source: 'direct' };
   }
   try {
-    const entry = await getEntry(src);
-    if (entry?.blob && isPlayableAudioBlob(entry.blob)) {
-      const blobUrl = URL.createObjectURL(entry.blob);
-      registerBlobUrl(blobUrl, src);
-      return { url: blobUrl, source: 'local' };
-    }
+    const cachedUrl = await peekCachedAudioUrl(src);
+    if (cachedUrl) return { url: cachedUrl, source: 'local' };
 
     // A malformed entry must not be reused on every play; drop it so the
     // background fetch can replace it with a valid audio blob.
+    const entry = await getEntry(src);
     if (entry) await deleteEntry(src);
 
     // Stream from the original URL immediately; cache in the background so the

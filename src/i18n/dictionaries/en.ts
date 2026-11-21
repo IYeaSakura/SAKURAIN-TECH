@@ -140,6 +140,7 @@ export const en: Dictionary = {
     buffering: 'Buffering',
     systemPaused: 'System Paused',
     systemPausedNotice: 'System paused playback. Click play to resume.',
+    systemVolume: 'System volume',
     clickToRetry: '{error} — click to retry',
     playMode: 'Play mode',
     bottomLyrics: 'Bottom lyrics',

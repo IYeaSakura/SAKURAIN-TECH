@@ -2,11 +2,16 @@
 
 /**
  * Shared seek bar used by both the mini player and the full-screen page.
- * Owns the mouse-click and keyboard seek behaviour (arrow keys ±5s, Home/End)
- * plus the buffered/progress fill and ARIA slider semantics. Time labels are
- * rendered by each player so the two very different layouts stay untouched.
+ * Owns pointer (mouse + touch) dragging, keyboard seeking (arrow keys ±5s,
+ * Home/End) and the buffered/progress fill with ARIA slider semantics.
+ *
+ * Touch support matters here: a plain onClick bar cannot be dragged on a phone
+ * and its 8px height is far below a comfortable finger target, so the bar
+ * accepts pointer events and widens its hit area on coarse pointers in CSS.
+ * Time labels are rendered by each player so the two very different layouts
+ * stay untouched.
  */
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { formatTime } from './player-utils';
 import styles from '../player.module.css';
@@ -29,16 +34,51 @@ export function ProgressSlider({
 }: ProgressSliderProps) {
   const progressPercent = duration ? (currentTime / duration) * 100 : 0;
   const bufferedPercent = duration ? (buffered / duration) * 100 : 0;
+  const barRef = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef(false);
 
-  const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!duration) return;
-      const rect = e.currentTarget.getBoundingClientRect();
-      const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const seekTo = useCallback(
+    (clientX: number) => {
+      const el = barRef.current;
+      if (!el || !duration) return;
+      const rect = el.getBoundingClientRect();
+      if (!rect.width) return;
+      const percent = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
       onSeek(percent * duration);
     },
     [duration, onSeek]
   );
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!duration) return;
+      draggingRef.current = true;
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // Pointer capture is an optimisation; dragging still works without it.
+      }
+      seekTo(e.clientX);
+    },
+    [duration, seekTo]
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!draggingRef.current) return;
+      seekTo(e.clientX);
+    },
+    [seekTo]
+  );
+
+  const endDrag = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    draggingRef.current = false;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // Already released.
+    }
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -57,6 +97,7 @@ export function ProgressSlider({
 
   return (
     <div
+      ref={barRef}
       role="slider"
       tabIndex={0}
       aria-label="Seek"
@@ -64,7 +105,10 @@ export function ProgressSlider({
       aria-valuemax={Math.round(duration)}
       aria-valuenow={Math.round(currentTime)}
       aria-valuetext={`${formatTime(currentTime)} / ${formatTime(duration)}`}
-      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
       onKeyDown={handleKeyDown}
       className={`${styles.seekBar} cursor-pointer focus:outline-none ${className}`.trim()}
     >

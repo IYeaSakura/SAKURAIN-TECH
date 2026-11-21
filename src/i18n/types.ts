@@ -148,6 +148,7 @@ export interface Dictionary {
     buffering: string;
     systemPaused: string;
     systemPausedNotice: string;
+    systemVolume: string;
     clickToRetry: string;
     playMode: string;
     bottomLyrics: string;

@@ -139,6 +139,7 @@ export const zh: Dictionary = {
     buffering: '缓冲中',
     systemPaused: '系统暂停',
     systemPausedNotice: '系统已暂停播放，点击播放按钮恢复',
+    systemVolume: '系统音量',
     clickToRetry: '{error} — 点击重试',
     playMode: '切换播放顺序',
     bottomLyrics: '底部歌词',

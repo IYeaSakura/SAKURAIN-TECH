@@ -35,7 +35,7 @@ function MiniPlaylist({
 }) {
   return (
     <div
-      className="border-t-2 mt-3 max-h-48 overflow-y-auto"
+      className="border-t-2 mt-3 max-h-48 overflow-y-auto overscroll-contain"
       style={{ borderColor: 'var(--border-subtle)' }}
     >
       {playlist.map((song, index) => (
@@ -127,7 +127,9 @@ export function MusicPlayer() {
           initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed bottom-6 right-6 z-[100]"
+          className="fixed right-4 sm:right-6 z-[100]"
+          // Keep the player above the iOS home indicator.
+          style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
         >
           <motion.button
             onClick={open}
@@ -180,7 +182,8 @@ export function MusicPlayer() {
           initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed bottom-6 right-6 z-[100] w-[300px]"
+          className="fixed right-4 sm:right-6 z-[100] w-[min(300px,calc(100vw-2rem))]"
+          style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}
         >
           <div className={`${styles.panel} overflow-hidden`}>
             {/* Header */}
@@ -320,6 +323,7 @@ export function MusicPlayer() {
                   onVolumeChange={setVolume}
                   onToggleMute={toggleMuted}
                   labels={{ mute: t.music.mute, unmute: t.music.unmute }}
+                  systemVolumeHint={t.music.systemVolume}
                   buttonClassName="p-1.5"
                   sliderClassName="flex-1 h-2"
                 />

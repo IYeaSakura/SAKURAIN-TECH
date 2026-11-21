@@ -17,12 +17,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import { useConfig, useIsDesktopClient } from '@/hooks';
+import { useConfig, useMobileMounted } from '@/hooks';
 import { fetchLyrics, type LyricLine } from '@/lib/lyrics';
 import {
-  clearCorsProbeCache,
   getCachedAudioUrlWithSource,
-  isCorsSupported,
+  isPrefetchAllowed,
+  peekCachedAudioUrl,
   protectAsset,
   resolveCacheKey,
   resolveOriginalSrc,
@@ -128,7 +128,10 @@ export function MusicPlayerProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const isDesktopClient = useIsDesktopClient();
+  // The audio element only needs a mounted client, never a desktop viewport:
+  // mobile browsers must create it too. Gating this on `useIsDesktopClient`
+  // (which is false below 1024px) is why phones had a player UI but no sound.
+  const isClientMounted = useMobileMounted();
   const { data: playlistConfig, loading: playlistLoading } =
     useConfig<PlaylistConfig>('/data/playlist.json');
   const playlist = playlistConfig?.songs || [];
@@ -173,10 +176,6 @@ export function MusicPlayerProvider({
   const audioBlobUrlRef = useRef<string | null>(null);
   const preloadBlobUrlRef = useRef<string | null>(null);
   const failedSrcsRef = useRef<Set<string>>(new Set());
-  // One CORS-downgrade attempt per concrete URL (original or mirror). Keyed by
-  // raw URL, not the normalized path, so a mirror that does serve CORS headers
-  // is still probed independently after the original host failed.
-  const corsDowngradedUrlsRef = useRef<Set<string>>(new Set());
   // Concrete URL currently in use for the active song. When the original CDN
   // host fails, the error handler advances this through the known mirrors.
   const [audioUrlOverride, setAudioUrlOverride] = useState<{
@@ -195,6 +194,13 @@ export function MusicPlayerProvider({
   // Mirror of isPlaying for event handlers so they see the latest state without
   // recreating the audio element.
   const isPlayingRef = useRef(isPlaying);
+  // Playable source resolved ahead of the tap, so the gesture handler can call
+  // play() synchronously instead of after an await (iOS drops the gesture).
+  const peekedSrcRef = useRef<{ songSrc: string; url: string } | null>(null);
+  // Blob URL handed out by the prewarm lookup. Only one is kept alive at a time
+  // so browsing the playlist without pressing play cannot pin dozens of tracks
+  // in memory.
+  const peekedBlobUrlRef = useRef<string | null>(null);
 
   // Clear cached failures when the browser reconnects so previously failed
   // tracks can be retried over the new network path.
@@ -202,9 +208,6 @@ export function MusicPlayerProvider({
     if (typeof window === 'undefined') return;
     const handleOnline = () => {
       failedSrcsRef.current.clear();
-      corsDowngradedUrlsRef.current.clear();
-      clearCorsProbeCache();
-      // The next load re-probes CORS on the new network path.
     };
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
@@ -289,13 +292,18 @@ export function MusicPlayerProvider({
 
   // Initialise the single shared audio element
   useEffect(() => {
-    if (!isDesktopClient) return;
+    if (!isClientMounted) return;
 
     const audio = new Audio();
-    // Start without CORS so playback works even for CDN edges that do not
-    // serve Access-Control-Allow-Origin. The loader enables CORS only after
-    // probing confirms it is available for the selected resource.
+    // Nothing in the player analyses samples any more (the spectrum visualiser
+    // was removed), so CORS mode buys nothing and only adds a failure mode:
+    // with crossOrigin="anonymous" a CDN edge that omits ACAO makes the element
+    // error out instead of streaming. Plain no-CORS playback works everywhere.
     audio.crossOrigin = null;
+    // iOS Safari: without playsinline a programmatic play() can be promoted to
+    // the native fullscreen player and be refused in standalone/locked contexts.
+    audio.setAttribute('playsinline', 'true');
+    audio.setAttribute('webkit-playsinline', 'true');
     audio.preload = 'metadata';
     audio.volume = volume;
     audioRef.current = audio;
@@ -316,31 +324,13 @@ export function MusicPlayerProvider({
       // Do NOT discard errors just because a track transition is in progress:
       // the new resource itself can fail while the lock is held until 'playing'.
       // The source comparison below already filters out stale old-resource
-      // errors, so genuine failures still reach the mirror/CORS fallback.
+      // errors, so genuine failures still reach the mirror fallback.
       const failedSrc = audio.currentSrc || audio.src;
       // Ignore errors raised by a previous resource after we have already
       // moved on to another track.
       if (!isSameAudioSource(failedSrc, currentSongRef.current.src)) return;
 
       if (failedSrc) triedAudioUrlsRef.current.add(failedSrc);
-
-      // If CORS mode failed, try the same URL without CORS once. Some CDN edges
-      // do not serve Access-Control-Allow-Origin even though the file is
-      // playable directly. Track the downgrade per concrete URL so a mirror
-      // that does serve CORS headers can still be used in CORS mode.
-      if (
-        failedSrc &&
-        audio.crossOrigin === 'anonymous' &&
-        !corsDowngradedUrlsRef.current.has(failedSrc)
-      ) {
-        corsDowngradedUrlsRef.current.add(failedSrc);
-        clearCorsProbeCache();
-        setAudioUrlOverride({ songSrc: currentSongRef.current.src, url: failedSrc });
-        // Without a Web Audio graph the same element can safely switch between
-        // CORS and no-CORS modes. The loader reassigns src and resumes playback.
-        trackChangeRef.current = true;
-        return;
-      }
 
       // A host outage or a second failure should retry the same path on a
       // mirror CDN before the track is declared unavailable. Without this, a
@@ -352,7 +342,6 @@ export function MusicPlayerProvider({
           candidate !== failedSrc && !triedAudioUrlsRef.current.has(candidate)
       );
       if (nextUrl) {
-        clearCorsProbeCache();
         trackChangeRef.current = true;
         setAudioUrlOverride({ songSrc: currentSongRef.current.src, url: nextUrl });
         return;
@@ -509,12 +498,84 @@ export function MusicPlayerProvider({
         preloadBlobUrlRef.current = null;
       }
     };
-  }, [isDesktopClient]);
+  }, [isClientMounted]);
+
+  // Resolve the selected track's cached source before the user taps play.
+  // This is a pure IndexedDB lookup (never a network request); having the URL
+  // ready lets the tap handler attach it and call play() synchronously, which
+  // is the only thing iOS accepts for a first playback.
+  useEffect(() => {
+    if (!isClientMounted) return;
+    const songSrc = currentSong.src;
+    if (!songSrc) return;
+
+    let cancelled = false;
+    peekCachedAudioUrl(songSrc)
+      .then((url) => {
+        if (cancelled) return;
+        if (url) {
+          const previous = peekedBlobUrlRef.current;
+          // Release the previous prewarmed blob unless the player is using it.
+          if (
+            previous &&
+            previous !== url &&
+            previous !== audioRef.current?.src &&
+            previous !== preloadRef.current?.src
+          ) {
+            revokeBlobUrl(previous);
+          }
+          peekedBlobUrlRef.current = url;
+        }
+        peekedSrcRef.current = { songSrc, url: url || songSrc };
+      })
+      .catch(() => {
+        if (cancelled) return;
+        peekedSrcRef.current = { songSrc, url: songSrc };
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isClientMounted, currentSong.src]);
+
+  /**
+   * Start playback from inside a user gesture.
+   *
+   * iOS Safari (and Chrome on Android without a prior activation) only honours
+   * a programmatic play() that is called synchronously from the gesture. The
+   * normal load path awaits IndexedDB first, so calling play() there loses the
+   * permission and the first tap does nothing. Attaching the best known source
+   * here and starting immediately keeps the gesture; the async loader then
+   * confirms the resource and, if needed, upgrades it to the cached blob.
+   */
+  const startPlaybackFromGesture = useCallback((song?: Song) => {
+    const audio = audioRef.current;
+    const target = song ?? currentSongRef.current;
+    if (!audio || !target.src) return;
+
+    const peeked = peekedSrcRef.current;
+    const sourceUrl =
+      peeked && peeked.songSrc === target.src ? peeked.url : target.src;
+
+    if (!audio.src || !isSameAudioSource(audio.src, target.src)) {
+      audio.src = sourceUrl;
+      audio.load();
+    }
+
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err: unknown) => {
+        if ((err as Error | undefined)?.name === 'AbortError') return;
+        // Not fatal: the load effect retries once the resolved source is bound.
+        console.warn('[MusicPlayer] gesture play failed:', err);
+      });
+    }
+  }, []);
 
   // Load current track after user interaction, using the persistent asset
   // cache for COS-hosted audio files.
   useEffect(() => {
-    if (!audioRef.current || !isDesktopClient || !hasUserInteracted) return;
+    if (!audioRef.current || !isClientMounted || !hasUserInteracted) return;
     if (!currentSong.src) return;
 
     // Keep the current track in IndexedDB while it is loaded so LRU eviction
@@ -549,32 +610,27 @@ export function MusicPlayerProvider({
       }
 
       // Resolve the persistent cache first. A cache hit must not trigger any
-      // CDN request — not even the tiny CORS range probe — so cached tracks
-      // start instantly and still play when the network is unavailable.
+      // CDN request, so cached tracks start instantly and still play when the
+      // network is unavailable.
       const { url: cachedSrc, source } = await getCachedAudioUrlWithSource(requestSrc);
       if (cancelled) return;
 
-      if (source === 'local') {
-        // Blob URLs are same-origin and do not participate in CORS.
-        audio.crossOrigin = null;
-      } else {
-        // When the CDN does not serve CORS headers for the current origin,
-        // remove crossOrigin so playback does not depend on the CDN's CORS
-        // headers. A URL that already failed in CORS mode stays no-CORS;
-        // mirrors are evaluated independently.
-        const alreadyDowngraded = corsDowngradedUrlsRef.current.has(requestSrc);
-        const corsSupported = alreadyDowngraded ? false : await isCorsSupported(requestSrc);
-        if (cancelled) return;
-        audio.crossOrigin = corsSupported ? 'anonymous' : null;
-      }
-
+      // Playback never needs CORS any more (no audio analysis); keep the element
+      // in no-CORS mode so a CDN edge without ACAO cannot break the track.
+      audio.crossOrigin = null;
       setCurrentAudioSource(source);
 
-      // Avoid redundant reloads when the exact resolved source is already
-      // bound. Comparing the concrete URL (not a normalized path) is essential
-      // here: after a host failure the mirror has the same path but a different
-      // origin, and must actually be loaded instead of reusing the failed one.
-      if (audio.src === cachedSrc) {
+      // Avoid redundant reloads when the resolved source is already bound.
+      // Exact URL comparison is required for mirrors (same path, different
+      // origin). When no mirror override is in play the sources are compared by
+      // normalized path, because a blob URL handed out by the gesture handler
+      // and the one resolved here come from the same cache entry.
+      const usingOverride = requestSrc !== currentSong.src;
+      const alreadyLoaded = usingOverride
+        ? audio.src === cachedSrc
+        : isSameAudioSource(audio.src, cachedSrc);
+
+      if (alreadyLoaded && audio.src) {
         if (intendedPlayingRef.current && audio.paused) {
           const playPromise = audio.play();
           if (playPromise !== undefined) {
@@ -637,13 +693,13 @@ export function MusicPlayerProvider({
       // Release the protection for this track when switching to another song.
       unprotectAsset(currentSong.src);
     };
-  }, [currentIndex, currentPosition, isDesktopClient, hasUserInteracted, currentSong.src, audioUrlOverride]);
+  }, [currentIndex, currentPosition, isClientMounted, hasUserInteracted, currentSong.src, audioUrlOverride]);
 
   // Play / pause whenever the playing flag changes. The load-track effect
   // already handles playback when the track changes, so this effect is skipped
   // while a transition is in progress.
   useEffect(() => {
-    if (!audioRef.current || !isDesktopClient) return;
+    if (!audioRef.current || !isClientMounted) return;
 
     const audio = audioRef.current;
     if (isPlaying) {
@@ -668,22 +724,27 @@ export function MusicPlayerProvider({
         audio.pause();
       }
     }
-  }, [isPlaying, isDesktopClient, currentSong.src]);
+  }, [isPlaying, isClientMounted, currentSong.src]);
 
-  // Volume / mute synchronisation
+  // Volume / mute synchronisation. `muted` is applied in addition to `volume`
+  // because iOS exposes volume as read-only — assigning it is ignored, while
+  // `muted` works, so the mute button keeps working on phones.
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = isMuted ? 0 : volume;
+      audioRef.current.muted = isMuted;
     }
   }, [volume, isMuted]);
 
-  // Preload next track through the persistent cache.
+  // Preload next track through the persistent cache. Skipped on metered or very
+  // slow connections, where warming the next track costs more than it saves.
   useEffect(() => {
     if (
-      !isDesktopClient ||
+      !isClientMounted ||
       !hasUserInteracted ||
       playlist.length === 0 ||
-      shuffledOrder.length === 0
+      shuffledOrder.length === 0 ||
+      !isPrefetchAllowed()
     )
       return;
 
@@ -700,23 +761,13 @@ export function MusicPlayerProvider({
     let cancelled = false;
 
     (async () => {
-      const { url: cachedSrc, source } = await getCachedAudioUrlWithSource(nextSong.src);
+      const { url: cachedSrc } = await getCachedAudioUrlWithSource(nextSong.src);
       if (cancelled) return;
 
       if (!preloadRef.current) {
         preloadRef.current = new Audio();
-        preloadRef.current.preload = 'auto';
-      }
-
-      if (source === 'local') {
-        // No CORS probe for a cache hit; the preload must stay fully local.
         preloadRef.current.crossOrigin = null;
-      } else {
-        // Match the main audio element's CORS mode so the preload behaves the
-        // same way on development/preview domains with a fixed CDN Origin.
-        const corsSupported = await isCorsSupported(nextSong.src);
-        if (cancelled) return;
-        preloadRef.current.crossOrigin = corsSupported ? 'anonymous' : null;
+        preloadRef.current.preload = 'auto';
       }
 
       if (preloadRef.current.src !== cachedSrc) {
@@ -737,24 +788,35 @@ export function MusicPlayerProvider({
       cancelled = true;
       unprotectAsset(nextSong.src);
     };
-  }, [currentPosition, shuffledOrder, playlist, isDesktopClient, hasUserInteracted]);
+  }, [currentPosition, shuffledOrder, playlist, isClientMounted, hasUserInteracted]);
 
   const togglePlay = useCallback(() => {
     setHasUserInteracted(true);
     setIsOpen(true);
     setSystemPaused(false);
-    setIsPlaying((prev) => {
-      const next = !prev;
-      intendedPlayingRef.current = next;
-      if (error) {
-        setError(null);
-        failedSrcsRef.current.delete(resolveAudioSrc(currentSong.src));
-        triedAudioUrlsRef.current.clear();
-        setAudioUrlOverride(null);
-      }
-      return next;
-    });
-  }, [error, currentSong.src]);
+
+    const nextPlaying = !isPlayingRef.current;
+    // Keep the mirror in sync immediately so a double tap in the same tick
+    // toggles twice instead of starting playback twice.
+    isPlayingRef.current = nextPlaying;
+    intendedPlayingRef.current = nextPlaying;
+
+    if (nextPlaying) {
+      // Must happen synchronously inside the gesture for mobile browsers.
+      startPlaybackFromGesture();
+    } else {
+      audioRef.current?.pause();
+    }
+
+    if (error) {
+      setError(null);
+      failedSrcsRef.current.delete(resolveAudioSrc(currentSong.src));
+      triedAudioUrlsRef.current.clear();
+      setAudioUrlOverride(null);
+    }
+
+    setIsPlaying(nextPlaying);
+  }, [error, currentSong.src, startPlaybackFromGesture]);
 
   const next = useCallback(() => {
     if (playlist.length === 0) return;
@@ -849,10 +911,11 @@ export function MusicPlayerProvider({
       const targetIndex = playlist.findIndex((s) => s.id === id);
       if (targetIndex === -1) return;
       intendedPlayingRef.current = true;
-        setIsPlaying(true);
+      setIsPlaying(true);
       setIsOpen(true);
       setHasUserInteracted(true);
 
+      const targetSong = playlist[targetIndex];
       const targetPosition = shuffledOrder.findIndex((idx) => idx === targetIndex);
       if (targetPosition === currentPositionRef.current) {
         // Selecting the already-current song does not rerun the load effect,
@@ -872,8 +935,10 @@ export function MusicPlayerProvider({
             });
           }
         } else {
-          // No usable src yet: force the loader to attach it and start playback.
+          // No usable src yet: attach and start inside the gesture, then let
+          // the loader confirm the resolved (possibly cached) source.
           trackChangeRef.current = true;
+          startPlaybackFromGesture(targetSong);
           setAudioUrlOverride({ songSrc: currentSong.src, url: currentSong.src });
         }
         return;
@@ -881,6 +946,9 @@ export function MusicPlayerProvider({
 
       trackChangeRef.current = true;
       setAudioUrlOverride(null);
+      // Track switches from the playlist are gestures too: start immediately so
+      // mobile browsers accept the play() before the loader resolves the cache.
+      startPlaybackFromGesture(targetSong);
       if (targetPosition !== -1) {
         setCurrentPosition(targetPosition);
       } else {
@@ -891,7 +959,7 @@ export function MusicPlayerProvider({
         setCurrentPosition(pos >= 0 ? pos : 0);
       }
     },
-    [playlist, shuffledOrder, currentSong.src]
+    [playlist, shuffledOrder, currentSong.src, startPlaybackFromGesture]
   );
 
   const handleNextRef = useRef<() => void>(() => {});
@@ -919,6 +987,89 @@ export function MusicPlayerProvider({
     audioRef.current.currentTime = clamped;
     setCurrentTime(clamped);
   }, [duration]);
+
+  // Latest controls for the Media Session handlers. Handlers are registered
+  // once per track; routing through a ref avoids stale closures and pointless
+  // re-registration on every state change.
+  const mediaHandlersRef = useRef({ togglePlay, next, prev, seek });
+  useEffect(() => {
+    mediaHandlersRef.current = { togglePlay, next, prev, seek };
+  }, [togglePlay, next, prev, seek]);
+
+  // Media Session metadata: gives phones lock-screen / notification artwork and
+  // titles instead of "unknown track".
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    if (typeof MediaMetadata === 'undefined') return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentSong.title || 'SAKURAIN',
+        artist: currentSong.artist || 'SAKURAIN',
+        album: 'SAKURAIN',
+        artwork: currentSong.cover
+          ? [{ src: currentSong.cover, sizes: '512x512' }]
+          : [],
+      });
+    } catch {
+      // Some embedded browsers reject metadata; playback is unaffected.
+    }
+  }, [currentSong.title, currentSong.artist, currentSong.cover]);
+
+  // Media Session transport actions (lock screen, headset buttons, car units).
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    const session = navigator.mediaSession;
+
+    const setHandler = (
+      action: MediaSessionAction,
+      handler: ((details: MediaSessionActionDetails) => void) | null
+    ) => {
+      try {
+        session.setActionHandler(action, handler);
+      } catch {
+        // Action unsupported by this browser.
+      }
+    };
+
+    setHandler('play', () => {
+      if (!isPlayingRef.current) mediaHandlersRef.current.togglePlay();
+    });
+    setHandler('pause', () => {
+      if (isPlayingRef.current) mediaHandlersRef.current.togglePlay();
+    });
+    setHandler('nexttrack', () => mediaHandlersRef.current.next());
+    setHandler('previoustrack', () => mediaHandlersRef.current.prev());
+    setHandler('seekto', (details) => {
+      if (typeof details.seekTime === 'number') {
+        mediaHandlersRef.current.seek(details.seekTime);
+      }
+    });
+    setHandler('seekbackward', (details) => {
+      const offset = details.seekOffset ?? 10;
+      const current = audioRef.current?.currentTime ?? 0;
+      mediaHandlersRef.current.seek(Math.max(0, current - offset));
+    });
+    setHandler('seekforward', (details) => {
+      const offset = details.seekOffset ?? 10;
+      const current = audioRef.current?.currentTime ?? 0;
+      mediaHandlersRef.current.seek(current + offset);
+    });
+
+    return () => {
+      (['play', 'pause', 'nexttrack', 'previoustrack', 'seekto', 'seekbackward', 'seekforward'] as MediaSessionAction[])
+        .forEach((action) => setHandler(action, null));
+    };
+  }, []);
+
+  // Keep the lock-screen play button in sync with the real state.
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    try {
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    } catch {
+      // Ignore unsupported browsers.
+    }
+  }, [isPlaying]);
 
   const value = useMemo<MusicPlayerContextValue>(
     () => ({

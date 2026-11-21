@@ -170,7 +170,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
   return (
     <div className="relative min-h-screen flex flex-col">
       <main
-        className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8"
+        className="relative z-10 flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-16 lg:pt-8 pb-6 sm:pb-8"
       >
         {/* Hero / welcome */}
         <motion.section
