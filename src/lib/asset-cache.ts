@@ -81,6 +81,52 @@ function isCacheable(url: string): boolean {
 }
 
 /**
+ * Known CDN mirrors that serve identical asset paths. If one host is down or
+ * unreachable, the same path can be retried against the others. Cache keys are
+ * normalized by pathname, so all mirrors share one cache entry.
+ */
+const CDN_FALLBACK_HOSTS = ['file.sakurain.net', 'music.sakurain.net', 'cos.sakurain.net'];
+
+/**
+ * Build an ordered list of URLs to try: the original first, then the same path
+ * on every other known CDN host. Non-CDN or relative URLs are returned as-is.
+ */
+function withCdnFallbacks(url: string): string[] {
+  try {
+    const parsed = new URL(url);
+    if (!CDN_FALLBACK_HOSTS.includes(parsed.hostname)) return [url];
+    const candidates = [url];
+    for (const host of CDN_FALLBACK_HOSTS) {
+      if (host === parsed.hostname) continue;
+      const alt = new URL(parsed.toString());
+      alt.hostname = host;
+      candidates.push(alt.toString());
+    }
+    return candidates;
+  } catch {
+    return [url];
+  }
+}
+
+/**
+ * Fetch text, retrying the same path on mirror CDN hosts when the primary
+ * fails. Returns null only when every candidate fails or is not ok.
+ */
+async function fetchTextWithFallback(url: string): Promise<string | null> {
+  for (const candidate of withCdnFallbacks(url)) {
+    try {
+      const response = await fetch(candidate, { credentials: 'omit' });
+      if (!response.ok) continue;
+      const text = await response.text();
+      if (text) return text;
+    } catch {
+      // Try the next mirror host.
+    }
+  }
+  return null;
+}
+
+/**
  * Normalize a URL to a cache key based on the asset file path. Different CDN
  * base URLs that serve the same file (e.g. cos.sakurain.net/mp3/song.mp3 and
  * file.sakurain.net/music/mp3/song.mp3) share the same key, so switching the
@@ -291,10 +337,19 @@ async function fetchAndCache(
   url: string,
   type: 'audio' | 'cover'
 ): Promise<CacheEntry | undefined> {
-  const response = await fetch(url, { credentials: 'omit' });
-  if (!response.ok) return undefined;
+  let blob: Blob | undefined;
+  for (const candidate of withCdnFallbacks(url)) {
+    try {
+      const response = await fetch(candidate, { credentials: 'omit' });
+      if (!response.ok) continue;
+      blob = await response.blob();
+      if (blob && blob.size > 0) break;
+    } catch {
+      // Try the next mirror host.
+    }
+  }
+  if (!blob || blob.size === 0) return undefined;
 
-  const blob = await response.blob();
   const entry: CacheEntry = {
     url,
     type,
@@ -410,12 +465,13 @@ export async function getCachedLyrics(url: string | undefined | null): Promise<s
 
   try {
     const entry = await getEntry(url);
-    if (entry?.text !== undefined) return entry.text;
+    if (entry?.text !== undefined && entry.text !== '') return entry.text;
 
-    const response = await fetch(url, { credentials: 'omit' });
-    if (!response.ok) return null;
+    // Try the primary host, then mirror CDNs. A single host outage must not
+    // leave the track without lyrics.
+    const text = await fetchTextWithFallback(url);
+    if (!text) return null;
 
-    const text = await response.text();
     await putEntry({
       url,
       type: 'lyrics',

@@ -36,15 +36,39 @@ export function getAudioConnection(audio: HTMLAudioElement | null | undefined): 
 }
 
 /**
+ * True when the element's source is same-origin (blob:/data: URLs from the
+ * local asset cache, or a URL on this origin). A MediaElementSource on a
+ * same-origin element is safe: the audio graph is not tainted, so output is
+ * NOT muted even when crossOrigin is unset.
+ *
+ * Only a cross-origin source without CORS approval mutes Web Audio output.
+ */
+function isSameOriginMedia(src: string): boolean {
+  if (!src) return false;
+  if (src.startsWith('blob:') || src.startsWith('data:')) return true;
+  try {
+    return new URL(src, window.location.href).origin === window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Create and cache a Web Audio analyser connection for an HTMLAudioElement.
- * Idempotent. Returns undefined unless the element is in CORS-anonymous mode,
- * because attaching a MediaElementSource to a non-CORS element mutes output.
+ * Idempotent. Skips cross-origin sources that are not in CORS-anonymous mode,
+ * because attaching a MediaElementSource to those mutes output. Same-origin
+ * sources (e.g. a locally cached blob) are always analysable.
  */
 export function initAudioConnection(audio: HTMLAudioElement): AudioConnection | undefined {
   const existing = globalAudioMap.get(audio);
   if (existing) return existing;
 
-  if (audio.crossOrigin !== 'anonymous') return undefined;
+  // The src must already be assigned: a locally cached blob is same-origin and
+  // analysable even though crossOrigin is null. Only non-CORS cross-origin
+  // resources must be skipped to avoid muting playback.
+  const src = audio.src;
+  const analysable = isSameOriginMedia(src) || audio.crossOrigin === 'anonymous';
+  if (!analysable) return undefined;
 
   const AudioContextClass =
     window.AudioContext ||

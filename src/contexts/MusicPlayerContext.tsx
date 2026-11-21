@@ -524,12 +524,10 @@ export function MusicPlayerProvider({
       if (cancelled) return;
       audio.crossOrigin = corsSupported ? 'anonymous' : null;
 
-      if (corsSupported) {
-        // Initialise the shared Web Audio analyser only once CORS is confirmed.
-        // Attaching a MediaElementSource to a non-CORS element forces the
-        // browser to mute output, so this is skipped when CORS is unavailable.
-        initAudioConnection(audio);
-      }
+      // The analyser connection is created after audio.src is assigned (below),
+      // because a locally cached blob is same-origin and fully analysable even
+      // when crossOrigin is null. initAudioConnection() now decides from the
+      // actual src, so both direct-CORS and blob-cache playback get a spectrum.
 
       // Avoid redundant reloads when the same source is already bound. This
       // prevents a race where rapid state updates abort an in-flight play()
@@ -538,6 +536,10 @@ export function MusicPlayerProvider({
         isSameAudioSource(audio.src, currentSong.src) &&
         !failedSrcsRef.current.has(resolveAudioSrc(currentSong.src))
       ) {
+        // src is already bound; ensure the analyser exists for this element
+        // (no-op if already created). Covers blob-cache reuse after a previous
+        // track skipped the connection during CORS probing.
+        initAudioConnection(audio);
         if (intendedPlayingRef.current && audio.paused) {
           // Re-using the current resource can still emit pause/abort events
           // from the previous playback state. Hold the transition lock until
@@ -595,6 +597,10 @@ export function MusicPlayerProvider({
         audioBlobUrlRef.current = cachedSrc;
       }
       audio.load();
+
+      // src is now final (possibly a same-origin blob). Create the analyser
+      // here so locally cached playback gets a working spectrum too.
+      initAudioConnection(audio);
 
       // Auto-play the new track when playback is intended. Keep the transition
       // lock active until the 'playing' event confirms the new resource is
