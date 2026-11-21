@@ -47,6 +47,13 @@ const corsSupportedByOrigin = new Map<string, boolean>();
 const protectedUrlRefs = new Map<string, number>();
 
 /**
+ * Deduplicate concurrent downloads of the same audio path. The preload element
+ * and the main player can request the same track at nearly the same time;
+ * sharing one promise avoids downloading (and writing) it twice.
+ */
+const audioCacheInFlight = new Map<string, Promise<void>>();
+
+/**
  * Mark an asset URL as currently in use. Calls are reference-counted so the
  * same URL can be protected by both the current track and the preload track.
  * Protection is keyed by the normalized asset path so CDN prefix changes do
@@ -78,6 +85,55 @@ export function unprotectAsset(url: string): void {
  */
 function isCacheable(url: string): boolean {
   return /^https:\/\//.test(url);
+}
+
+/**
+ * A cached audio blob must actually contain audio. CDNs sometimes answer a
+ * missing file with a 200 text/html error page; caching that would make the
+ * next play fail even though the entry looks "cached".
+ */
+function isPlayableAudioBlob(blob: Blob | undefined): blob is Blob {
+  if (!blob || blob.size === 0) return false;
+  const type = (blob.type || '').toLowerCase();
+  if (!type) return true;
+  return (
+    type.startsWith('audio/') ||
+    type === 'application/octet-stream' ||
+    type === 'binary/octet-stream'
+  );
+}
+
+/** Reject HTML error pages returned with an audio-looking URL. */
+function isAudioContentType(contentType: string | null): boolean {
+  if (!contentType) return true;
+  const type = contentType.split(';', 1)[0].trim().toLowerCase();
+  return (
+    type.startsWith('audio/') ||
+    type === 'application/octet-stream' ||
+    type === 'binary/octet-stream'
+  );
+}
+
+/** Same guard for cover images. */
+function isUsableImageBlob(blob: Blob | undefined): blob is Blob {
+  if (!blob || blob.size === 0) return false;
+  const type = (blob.type || '').toLowerCase();
+  if (!type) return true;
+  return (
+    type.startsWith('image/') ||
+    type === 'application/octet-stream' ||
+    type === 'binary/octet-stream'
+  );
+}
+
+function isImageContentType(contentType: string | null): boolean {
+  if (!contentType) return true;
+  const type = contentType.split(';', 1)[0].trim().toLowerCase();
+  return (
+    type.startsWith('image/') ||
+    type === 'application/octet-stream' ||
+    type === 'binary/octet-stream'
+  );
 }
 
 /**
@@ -251,8 +307,29 @@ async function withStore<T>(
     const transaction = db.transaction(STORE_NAME, mode);
     const store = transaction.objectStore(STORE_NAME);
     const request = callback(store);
-    request.onerror = () => reject(request.error ?? new Error('IndexedDB request failed'));
-    request.onsuccess = () => resolve(request.result);
+    let result!: T;
+    let settled = false;
+
+    const fail = (error: DOMException | null) => {
+      if (settled) return;
+      settled = true;
+      reject(error ?? new Error('IndexedDB transaction failed'));
+    };
+
+    request.onsuccess = () => {
+      result = request.result;
+    };
+    request.onerror = () => fail(request.error);
+    // Resolve only after the transaction commits. Resolving on request success
+    // alone can report a write as complete before it is durably persisted,
+    // which matters when the tab is closed immediately after caching.
+    transaction.oncomplete = () => {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    };
+    transaction.onerror = () => fail(transaction.error);
+    transaction.onabort = () => fail(transaction.error);
   });
 }
 
@@ -270,12 +347,47 @@ async function getEntry(url: string): Promise<CacheEntry | undefined> {
 }
 
 /**
+ * Delete a single cache entry. Used when an existing entry is malformed
+ * (for example an HTML error page cached as audio).
+ */
+async function deleteEntry(url: string): Promise<void> {
+  if (!url) return;
+  const key = normalizeCacheKey(url);
+  try {
+    await withStore('readwrite', (store) => store.delete(key));
+  } catch {
+    // Best-effort cleanup; a failed delete must not block playback.
+  }
+}
+
+let persistenceRequested = false;
+
+/**
+ * Ask the browser to keep this origin's storage. Persistence is best-effort:
+ * it reduces the chance that a cached track is evicted between visits.
+ */
+async function requestPersistentStorage(): Promise<void> {
+  if (persistenceRequested || typeof navigator === 'undefined') return;
+  persistenceRequested = true;
+  try {
+    if (navigator.storage?.persist && !(await navigator.storage.persisted?.())) {
+      await navigator.storage.persist();
+    }
+  } catch {
+    // Browsers may deny persistence; the cache still works normally.
+  }
+}
+
+/**
  * Persist a cache entry to IndexedDB.
  */
 async function putEntry(entry: CacheEntry): Promise<void> {
   await ensureSpace(entry.type, entry.size);
   const keyedEntry = { ...entry, key: normalizeCacheKey(entry.url) };
   await withStore('readwrite', (store) => store.put(keyedEntry));
+  // Ask for persistent storage after a successful write (i.e. after the user
+  // has shown intent by playing a track).
+  void requestPersistentStorage();
 }
 
 /**
@@ -333,8 +445,16 @@ async function fetchAndCache(
     try {
       const response = await fetch(candidate, { credentials: 'omit' });
       if (!response.ok) continue;
-      blob = await response.blob();
-      if (blob && blob.size > 0) break;
+
+      const contentType = response.headers.get('content-type');
+      if (type === 'audio' && !isAudioContentType(contentType)) continue;
+      if (type === 'cover' && !isImageContentType(contentType)) continue;
+
+      const candidateBlob = await response.blob();
+      if (type === 'audio' && !isPlayableAudioBlob(candidateBlob)) continue;
+      if (type === 'cover' && !isUsableImageBlob(candidateBlob)) continue;
+      blob = candidateBlob;
+      break;
     } catch {
       // Try the next mirror host.
     }
@@ -360,13 +480,30 @@ async function fetchAndCache(
 async function cacheAudioInBackground(url: string): Promise<void> {
   if (!url || typeof window === 'undefined' || !isCacheable(url)) return;
 
-  try {
-    const existing = await getEntry(url);
-    if (existing?.blob && existing.blob.size > 0) return;
+  const key = normalizeCacheKey(url);
+  const inFlight = audioCacheInFlight.get(key);
+  if (inFlight) return inFlight;
 
-    await fetchAndCache(url, 'audio');
-  } catch {
-    // Background caching is best-effort; playback is not affected.
+  const task = (async () => {
+    try {
+      const existing = await getEntry(url);
+      if (isPlayableAudioBlob(existing?.blob)) return;
+
+      // Remove malformed entries (e.g. an HTML error page cached previously)
+      // before writing the fresh audio payload.
+      if (existing) await deleteEntry(url);
+
+      await fetchAndCache(url, 'audio');
+    } catch {
+      // Background caching is best-effort; playback is not affected.
+    }
+  })();
+
+  audioCacheInFlight.set(key, task);
+  try {
+    await task;
+  } finally {
+    audioCacheInFlight.delete(key);
   }
 }
 
@@ -417,14 +554,19 @@ export async function getCachedAudioUrlWithSource(src: string): Promise<CachedAu
   }
   try {
     const entry = await getEntry(src);
-    if (entry?.blob && entry.blob.size > 0) {
+    if (entry?.blob && isPlayableAudioBlob(entry.blob)) {
       const blobUrl = URL.createObjectURL(entry.blob);
       registerBlobUrl(blobUrl, src);
       return { url: blobUrl, source: 'local' };
     }
+
+    // A malformed entry must not be reused on every play; drop it so the
+    // background fetch can replace it with a valid audio blob.
+    if (entry) await deleteEntry(src);
+
     // Stream from the original URL immediately; cache in the background so the
     // next visit can play from IndexedDB without another CDN round-trip.
-    cacheAudioInBackground(src);
+    void cacheAudioInBackground(src);
     return { url: src, source: 'get' };
   } catch {
     return { url: src, source: 'direct' };
@@ -491,11 +633,13 @@ export async function getCachedCoverUrl(url: string | undefined | null): Promise
   if (!url || typeof window === 'undefined' || !isCacheable(url)) return url || '';
   try {
     const entry = await getEntry(url);
-    if (entry?.blob && entry.blob.size > 0) {
+    if (entry?.blob && isUsableImageBlob(entry.blob)) {
       const blobUrl = URL.createObjectURL(entry.blob);
       registerBlobUrl(blobUrl, url);
       return blobUrl;
     }
+    if (entry) await deleteEntry(url);
+
     const newEntry = await fetchAndCache(url, 'cover');
     if (newEntry?.blob) {
       const blobUrl = URL.createObjectURL(newEntry.blob);

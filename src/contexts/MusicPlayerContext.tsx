@@ -21,7 +21,6 @@ import { useConfig, useIsDesktopClient } from '@/hooks';
 import { fetchLyrics, type LyricLine } from '@/lib/lyrics';
 import {
   clearCorsProbeCache,
-  getCachedAudioUrl,
   getCachedAudioUrlWithSource,
   isCorsSupported,
   protectAsset,
@@ -549,17 +548,26 @@ export function MusicPlayerProvider({
         return;
       }
 
-      // When the CDN does not serve CORS headers for the current origin,
-      // remove crossOrigin so playback does not depend on the CDN's CORS
-      // headers. A URL that already failed in CORS mode stays no-CORS;
-      // mirrors are evaluated independently.
-      const alreadyDowngraded = corsDowngradedUrlsRef.current.has(requestSrc);
-      const corsSupported = alreadyDowngraded ? false : await isCorsSupported(requestSrc);
-      if (cancelled) return;
-      audio.crossOrigin = corsSupported ? 'anonymous' : null;
-
+      // Resolve the persistent cache first. A cache hit must not trigger any
+      // CDN request — not even the tiny CORS range probe — so cached tracks
+      // start instantly and still play when the network is unavailable.
       const { url: cachedSrc, source } = await getCachedAudioUrlWithSource(requestSrc);
       if (cancelled) return;
+
+      if (source === 'local') {
+        // Blob URLs are same-origin and do not participate in CORS.
+        audio.crossOrigin = null;
+      } else {
+        // When the CDN does not serve CORS headers for the current origin,
+        // remove crossOrigin so playback does not depend on the CDN's CORS
+        // headers. A URL that already failed in CORS mode stays no-CORS;
+        // mirrors are evaluated independently.
+        const alreadyDowngraded = corsDowngradedUrlsRef.current.has(requestSrc);
+        const corsSupported = alreadyDowngraded ? false : await isCorsSupported(requestSrc);
+        if (cancelled) return;
+        audio.crossOrigin = corsSupported ? 'anonymous' : null;
+      }
+
       setCurrentAudioSource(source);
 
       // Avoid redundant reloads when the exact resolved source is already
@@ -692,7 +700,7 @@ export function MusicPlayerProvider({
     let cancelled = false;
 
     (async () => {
-      const cachedSrc = await getCachedAudioUrl(nextSong.src);
+      const { url: cachedSrc, source } = await getCachedAudioUrlWithSource(nextSong.src);
       if (cancelled) return;
 
       if (!preloadRef.current) {
@@ -700,11 +708,16 @@ export function MusicPlayerProvider({
         preloadRef.current.preload = 'auto';
       }
 
-      // Match the main audio element's CORS mode so the preload behaves the
-      // same way on development/preview domains with a fixed CDN Origin.
-      const corsSupported = await isCorsSupported(nextSong.src);
-      if (cancelled) return;
-      preloadRef.current.crossOrigin = corsSupported ? 'anonymous' : null;
+      if (source === 'local') {
+        // No CORS probe for a cache hit; the preload must stay fully local.
+        preloadRef.current.crossOrigin = null;
+      } else {
+        // Match the main audio element's CORS mode so the preload behaves the
+        // same way on development/preview domains with a fixed CDN Origin.
+        const corsSupported = await isCorsSupported(nextSong.src);
+        if (cancelled) return;
+        preloadRef.current.crossOrigin = corsSupported ? 'anonymous' : null;
+      }
 
       if (preloadRef.current.src !== cachedSrc) {
         // Revoke the previous preload blob URL before replacing it.
