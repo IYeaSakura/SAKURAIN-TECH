@@ -30,6 +30,7 @@ import {
   revokeBlobUrl,
   type AudioSource,
   unprotectAsset,
+  withCdnFallbacks,
 } from '@/lib/asset-cache';
 import {
   getAudioConnection,
@@ -183,10 +184,18 @@ export function MusicPlayerProvider({
   const audioBlobUrlRef = useRef<string | null>(null);
   const preloadBlobUrlRef = useRef<string | null>(null);
   const failedSrcsRef = useRef<Set<string>>(new Set());
-  // One CORS-downgrade attempt per normalized source. Reset when the source
-  // changes or the browser reconnects, so a single bad edge does not poison
-  // every later track for the rest of the session.
-  const corsFallbackSrcRef = useRef<string | null>(null);
+  // One CORS-downgrade attempt per concrete URL (original or mirror). Keyed by
+  // raw URL, not the normalized path, so a mirror that does serve CORS headers
+  // is still allowed to create an analyser after the original host failed.
+  const corsDowngradedUrlsRef = useRef<Set<string>>(new Set());
+  // Concrete URL currently in use for the active song. When the original CDN
+  // host fails, the error handler advances this through the known mirrors.
+  const [audioUrlOverride, setAudioUrlOverride] = useState<{
+    songSrc: string;
+    url: string;
+  } | null>(null);
+  // Every URL already tried for the active song, so mirror retries terminate.
+  const triedAudioUrlsRef = useRef<Set<string>>(new Set());
   const prevPlayModeRef = useRef<PlayMode>('shuffle');
   // Tracks whether playback is intended to be active. Distinguishes user pause
   // from system pause and preserves play intent across track changes.
@@ -204,7 +213,7 @@ export function MusicPlayerProvider({
     if (typeof window === 'undefined') return;
     const handleOnline = () => {
       failedSrcsRef.current.clear();
-      corsFallbackSrcRef.current = null;
+      corsDowngradedUrlsRef.current.clear();
       // Drop the stale analyser so the spectrum can re-attach to a fresh CORS
       // connection on the next load. The audio element itself is rebuilt by
       // the epoch bump in handleError when needed; here we only clear the web
@@ -281,6 +290,12 @@ export function MusicPlayerProvider({
     currentSongRef.current = currentSong;
   }, [currentSong]);
 
+  // Each song gets a fresh set of CDN retry attempts. The override is keyed by
+  // song src, so a stale mirror from the previous track is naturally ignored.
+  useEffect(() => {
+    triedAudioUrlsRef.current.clear();
+  }, [currentSong.src]);
+
   // Initialise the single shared audio element
   useEffect(() => {
     if (!isDesktopClient) return;
@@ -313,24 +328,29 @@ export function MusicPlayerProvider({
     };
     const handleEnded = () => handleNextRef.current();
     const handleError = () => {
-      // Errors raised during a transition belong to the old resource and must
-      // not stop the newly requested track.
-      if (trackChangeRef.current) return;
-
+      // Do NOT discard errors just because a track transition is in progress:
+      // the new resource itself can fail while the lock is held until 'playing'.
+      // The source comparison below already filters out stale old-resource
+      // errors, so genuine failures still reach the mirror/CORS fallback.
       const failedSrc = audio.currentSrc || audio.src;
       // Ignore errors raised by a previous resource after we have already
       // moved on to another track.
       if (!isSameAudioSource(failedSrc, currentSongRef.current.src)) return;
 
-      // If CORS mode failed, try loading the same source without CORS once.
-      // Some static-site/CDN edges do not serve Access-Control-Allow-Origin
-      // even though the file is playable directly. The attempt is tracked per
-      // normalized source (not per element) so later tracks still get their
-      // own fallback, and is cleared on reconnect.
-      const failedKey = resolveAudioSrc(failedSrc);
-      if (audio.crossOrigin === 'anonymous' && corsFallbackSrcRef.current !== failedKey) {
-        corsFallbackSrcRef.current = failedKey;
+      if (failedSrc) triedAudioUrlsRef.current.add(failedSrc);
+
+      // If CORS mode failed, try the same URL without CORS once. Some CDN edges
+      // do not serve Access-Control-Allow-Origin even though the file is
+      // playable directly. Track the downgrade per concrete URL so a mirror
+      // that does serve CORS headers can still drive an analyser.
+      if (
+        failedSrc &&
+        audio.crossOrigin === 'anonymous' &&
+        !corsDowngradedUrlsRef.current.has(failedSrc)
+      ) {
+        corsDowngradedUrlsRef.current.add(failedSrc);
         clearCorsProbeCache();
+        setAudioUrlOverride({ songSrc: currentSongRef.current.src, url: failedSrc });
         // A MediaElementSource permanently redirects this element's output;
         // keeping it while switching to no-CORS would leave audio silenced.
         // Dispose the graph and rebuild a fresh, no-CORS element instead. The
@@ -340,6 +360,23 @@ export function MusicPlayerProvider({
         // Suppress abort/pause events emitted while the old element is torn
         // down; the reload effect owns the transition lock from here.
         trackChangeRef.current = true;
+        setAudioEpoch((e) => e + 1);
+        return;
+      }
+
+      // A host outage or a second failure should retry the same path on a
+      // mirror CDN before the track is declared unavailable. Without this, a
+      // first-time (GET) track depends entirely on one CDN host being healthy,
+      // while cached tracks keep playing from IndexedDB.
+      const candidates = withCdnFallbacks(currentSongRef.current.src);
+      const nextUrl = candidates.find(
+        (candidate) =>
+          candidate !== failedSrc && !triedAudioUrlsRef.current.has(candidate)
+      );
+      if (nextUrl) {
+        clearCorsProbeCache();
+        trackChangeRef.current = true;
+        setAudioUrlOverride({ songSrc: currentSongRef.current.src, url: nextUrl });
         setAudioEpoch((e) => e + 1);
         return;
       }
@@ -510,41 +547,54 @@ export function MusicPlayerProvider({
     // does not delete it mid-playback.
     protectAsset(currentSong.src);
 
+    // Claim the transition lock SYNCHRONOUSLY, before any await. The isPlaying
+    // effect below runs after this one; without the lock it calls play() while
+    // the element still has no src, gets a NotSupportedError and clears the
+    // user's play intent. That made first-time (GET) tracks silent with no
+    // analyser data, while cached tracks appeared to work fine.
+    trackChangeRef.current = true;
+
     let cancelled = false;
     const audio = audioRef.current;
+    // A failed original URL is replaced by a mirror for this same song. The
+    // override is ignored as soon as the selected song changes.
+    const requestSrc =
+      audioUrlOverride?.songSrc === currentSong.src
+        ? audioUrlOverride.url
+        : currentSong.src;
 
     (async () => {
+      const failedKey = resolveAudioSrc(currentSong.src);
+      if (failedSrcsRef.current.has(failedKey)) {
+        trackChangeRef.current = false;
+        intendedPlayingRef.current = false;
+        setError('Audio resource unavailable');
+        setIsLoading(false);
+        setIsPlaying(false);
+        return;
+      }
+
       // When the CDN does not serve CORS headers for the current origin,
       // remove crossOrigin so playback can still work without the Web Audio
-      // visualizer. Production on https://sakurain.net keeps CORS enabled.
-      // A source that already failed in CORS mode must stay in no-CORS mode
-      // after an element rebuild, otherwise we would loop on the same failure.
-      const alreadyDowngraded = corsFallbackSrcRef.current === resolveAudioSrc(currentSong.src);
-      const corsSupported = alreadyDowngraded ? false : await isCorsSupported(currentSong.src);
+      // visualizer. A URL that already failed in CORS mode stays no-CORS;
+      // mirrors are evaluated independently so a CORS-capable mirror can still
+      // provide a spectrum.
+      const alreadyDowngraded = corsDowngradedUrlsRef.current.has(requestSrc);
+      const corsSupported = alreadyDowngraded ? false : await isCorsSupported(requestSrc);
       if (cancelled) return;
       audio.crossOrigin = corsSupported ? 'anonymous' : null;
 
-      // The analyser connection is created after audio.src is assigned (below),
-      // because a locally cached blob is same-origin and fully analysable even
-      // when crossOrigin is null. initAudioConnection() now decides from the
-      // actual src, so both direct-CORS and blob-cache playback get a spectrum.
+      const { url: cachedSrc, source } = await getCachedAudioUrlWithSource(requestSrc);
+      if (cancelled) return;
+      setCurrentAudioSource(source);
 
-      // Avoid redundant reloads when the same source is already bound. This
-      // prevents a race where rapid state updates abort an in-flight play()
-      // promise and incorrectly flip isPlaying back to false.
-      if (
-        isSameAudioSource(audio.src, currentSong.src) &&
-        !failedSrcsRef.current.has(resolveAudioSrc(currentSong.src))
-      ) {
-        // src is already bound; ensure the analyser exists for this element
-        // (no-op if already created). Covers blob-cache reuse after a previous
-        // track skipped the connection during CORS probing.
+      // Avoid redundant reloads when the exact resolved source is already
+      // bound. Comparing the concrete URL (not a normalized path) is essential
+      // here: after a host failure the mirror has the same path but a different
+      // origin, and must actually be loaded instead of reusing the failed one.
+      if (audio.src === cachedSrc) {
         initAudioConnection(audio);
         if (intendedPlayingRef.current && audio.paused) {
-          // Re-using the current resource can still emit pause/abort events
-          // from the previous playback state. Hold the transition lock until
-          // playback actually resumes so those stale events are ignored.
-          trackChangeRef.current = true;
           const playPromise = audio.play();
           if (playPromise !== undefined) {
             playPromise.catch((err: unknown) => {
@@ -556,19 +606,8 @@ export function MusicPlayerProvider({
             });
           }
         } else {
-          // No transition is happening; release the lock so subsequent pause
-          // events are handled normally.
           trackChangeRef.current = false;
         }
-        return;
-      }
-
-      if (failedSrcsRef.current.has(resolveAudioSrc(currentSong.src))) {
-        trackChangeRef.current = false;
-        intendedPlayingRef.current = false;
-        setError('Audio resource unavailable');
-        setIsLoading(false);
-        setIsPlaying(false);
         return;
       }
 
@@ -578,14 +617,6 @@ export function MusicPlayerProvider({
       setDuration(0);
       setBuffered(0);
 
-      const { url: cachedSrc, source } = await getCachedAudioUrlWithSource(currentSong.src);
-      if (cancelled) return;
-      setCurrentAudioSource(source);
-
-      // Mark that we are about to swap src so the implicit pause/abort events
-      // from the previous resource are ignored.
-      trackChangeRef.current = true;
-
       // Revoke the previous blob URL only after the new src is ready.
       if (audioBlobUrlRef.current && audioBlobUrlRef.current !== cachedSrc) {
         revokeBlobUrl(audioBlobUrlRef.current);
@@ -593,7 +624,7 @@ export function MusicPlayerProvider({
       }
 
       audio.src = cachedSrc;
-      if (cachedSrc !== currentSong.src) {
+      if (cachedSrc !== requestSrc) {
         audioBlobUrlRef.current = cachedSrc;
       }
       audio.load();
@@ -630,7 +661,7 @@ export function MusicPlayerProvider({
       // Release the protection for this track when switching to another song.
       unprotectAsset(currentSong.src);
     };
-  }, [currentIndex, currentPosition, isDesktopClient, hasUserInteracted, currentSong.src, audioEpoch]);
+  }, [currentIndex, currentPosition, isDesktopClient, hasUserInteracted, currentSong.src, audioUrlOverride, audioEpoch]);
 
   // Play / pause whenever the playing flag changes. The load-track effect
   // already handles playback when the track changes, so this effect is skipped
@@ -641,6 +672,10 @@ export function MusicPlayerProvider({
     const audio = audioRef.current;
     if (isPlaying) {
       if (trackChangeRef.current) return;
+      // The playlist may still be loading. Calling play() on an element with
+      // no src rejects and clears play intent; the load effect owns playback
+      // until a matching src has actually been attached.
+      if (!audio.src || !isSameAudioSource(audio.src, currentSong.src)) return;
       if (!audio.paused) return;
       resumeAudioContext(audio);
       const playPromise = audio.play();
@@ -658,7 +693,7 @@ export function MusicPlayerProvider({
         audio.pause();
       }
     }
-  }, [isPlaying, isDesktopClient]);
+  }, [isPlaying, isDesktopClient, currentSong.src]);
 
   // Volume / mute synchronisation
   useEffect(() => {
@@ -737,6 +772,8 @@ export function MusicPlayerProvider({
       if (error) {
         setError(null);
         failedSrcsRef.current.delete(resolveAudioSrc(currentSong.src));
+        triedAudioUrlsRef.current.clear();
+        setAudioUrlOverride(null);
       }
       return next;
     });
@@ -779,6 +816,7 @@ export function MusicPlayerProvider({
 
     // Track changes always suppress pause events until the new track plays.
     trackChangeRef.current = true;
+    setAudioUrlOverride(null);
     setIsPlaying(true);
     // Read position synchronously from the ref so state setters stay outside
     // the updater (React StrictMode invokes updaters twice).
@@ -818,12 +856,14 @@ export function MusicPlayerProvider({
         return;
       }
       trackChangeRef.current = true;
+      setAudioUrlOverride(null);
       intendedPlayingRef.current = true;
       setIsPlaying(true);
       setCurrentPosition(shuffledOrderRef.current.length - 1);
       return;
     }
     trackChangeRef.current = true;
+    setAudioUrlOverride(null);
     intendedPlayingRef.current = true;
     setIsPlaying(true);
     setCurrentPosition(prevPos - 1);
@@ -835,9 +875,38 @@ export function MusicPlayerProvider({
       if (targetIndex === -1) return;
       intendedPlayingRef.current = true;
       resumeAudioContext(audioRef.current);
-      trackChangeRef.current = true;
       setIsPlaying(true);
+      setIsOpen(true);
+      setHasUserInteracted(true);
+
       const targetPosition = shuffledOrder.findIndex((idx) => idx === targetIndex);
+      if (targetPosition === currentPositionRef.current) {
+        // Selecting the already-current song does not rerun the load effect,
+        // so the transition lock must NOT be left set or playback would never
+        // be requested. Replay it directly when the src is already attached.
+        const audio = audioRef.current;
+        if (audio?.src && isSameAudioSource(audio.src, currentSong.src)) {
+          trackChangeRef.current = false;
+          audio.currentTime = 0;
+          setCurrentTime(0);
+          const promise = audio.play();
+          if (promise !== undefined) {
+            promise.catch((err: unknown) => {
+              if ((err as Error | undefined)?.name === 'AbortError') return;
+              intendedPlayingRef.current = false;
+              setIsPlaying(false);
+            });
+          }
+        } else {
+          // No usable src yet: force the loader to attach it and start playback.
+          trackChangeRef.current = true;
+          setAudioEpoch((e) => e + 1);
+        }
+        return;
+      }
+
+      trackChangeRef.current = true;
+      setAudioUrlOverride(null);
       if (targetPosition !== -1) {
         setCurrentPosition(targetPosition);
       } else {
@@ -847,10 +916,8 @@ export function MusicPlayerProvider({
         setShuffledOrder(newOrder);
         setCurrentPosition(pos >= 0 ? pos : 0);
       }
-      setIsOpen(true);
-      setHasUserInteracted(true);
     },
-    [playlist, shuffledOrder]
+    [playlist, shuffledOrder, currentSong.src]
   );
 
   const handleNextRef = useRef<() => void>(() => {});

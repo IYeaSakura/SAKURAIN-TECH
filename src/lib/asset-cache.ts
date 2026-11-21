@@ -91,7 +91,7 @@ const CDN_FALLBACK_HOSTS = ['file.sakurain.net', 'music.sakurain.net', 'cos.saku
  * Build an ordered list of URLs to try: the original first, then the same path
  * on every other known CDN host. Non-CDN or relative URLs are returned as-is.
  */
-function withCdnFallbacks(url: string): string[] {
+export function withCdnFallbacks(url: string): string[] {
   try {
     const parsed = new URL(url);
     if (!CDN_FALLBACK_HOSTS.includes(parsed.hostname)) return [url];
