@@ -2,12 +2,6 @@
 export { useConfig } from './useConfig';
 export { useNavigation } from './useNavigation';
 
-// 滚动相关 hooks
-export { useScrollProgress, useInView } from './useScrollProgress';
-
-// 交互相关 hooks
-export { useMagnetic } from './useMagnetic';
-
 // 响应式 hooks - 统一从 MobileContext 导出
 export {
   useIsMobile,

@@ -249,24 +249,6 @@ export function useDocumentContent(content: string) {
   return { content, toc, flatHeadings, searchContent, scrollToLine, scrollToHeadingById, lines };
 }
 
-export function useReadingProgress(chapterId: string) {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(`reading-progress-${chapterId}`);
-    if (saved) {
-      setProgress(parseFloat(saved));
-    }
-  }, [chapterId]);
-
-  const saveProgress = (value: number) => {
-    setProgress(value);
-    localStorage.setItem(`reading-progress-${chapterId}`, value.toString());
-  };
-
-  return { progress, saveProgress };
-}
-
 function parseToc(markdown: string): { toc: TocItem[]; headings: HeadingItem[] } {
   const lines = markdown.split(/\r?\n/);
   const toc: TocItem[] = [];

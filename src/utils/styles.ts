@@ -1,3 +1,7 @@
+// 统一的像素风格边框与阴影 token（供各页面/组件共享，避免重复定义）
+export const PIXEL_BORDER = '2px solid var(--border-subtle)';
+export const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
+
 // 像素风格切角边框 - 用于创建 8-bit 风格的 clip-path
 export const clipPathRounded = (r: number) => 
   `polygon(0 ${r}px, ${r}px ${r}px, ${r}px 0, calc(100% - ${r}px) 0, calc(100% - ${r}px) ${r}px, 100% ${r}px, 100% calc(100% - ${r}px), calc(100% - ${r}px) calc(100% - ${r}px), calc(100% - ${r}px) 100%, ${r}px 100%, ${r}px calc(100% - ${r}px), 0 calc(100% - ${r}px))`;

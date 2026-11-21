@@ -9,13 +9,12 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
+import { PIXEL_BORDER, PIXEL_SHADOW } from '@/utils/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Camera, MapPin, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
 import type { MomentData, MomentEntry, MomentImage } from '@/types';
 
-const PIXEL_BORDER = '2px solid var(--border-subtle)';
-const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
 const AVATAR_SRC = '/image/about/head.jpg';
 const NICKNAME = 'Yuyang';
 

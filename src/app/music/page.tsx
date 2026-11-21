@@ -12,6 +12,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { PIXEL_BORDER, PIXEL_SHADOW } from '@/utils/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play,
@@ -41,8 +42,6 @@ import { getCachedCoverUrl, revokeBlobUrl } from '@/lib/asset-cache';
 import type { Song } from '@/contexts/MusicPlayerContext';
 import type { LyricLine } from '@/lib/lyrics';
 
-const PIXEL_BORDER = '2px solid var(--border-subtle)';
-const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
 
 function formatTime(time: number) {
   if (!time || Number.isNaN(time)) return '0:00';

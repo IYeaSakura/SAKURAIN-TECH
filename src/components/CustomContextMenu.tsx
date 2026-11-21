@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { PIXEL_BORDER, PIXEL_SHADOW } from '@/utils/styles';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -38,8 +39,6 @@ interface ContextMenuProps {
   linkText?: string;
 }
 
-const PIXEL_BORDER = '2px solid var(--border-subtle)';
-const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
 
 export function CustomContextMenu({
   x,

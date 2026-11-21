@@ -26,7 +26,7 @@ import {
   Award,
   Mail
 } from 'lucide-react';
-import { GithubIcon as Github } from './GithubIcon';
+import { GithubIcon as Github } from '@/components/ui/GithubIcon';
 import {
   TwinklingStars,
   ScrollProgress

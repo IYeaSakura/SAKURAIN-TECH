@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
+import { PIXEL_BORDER, PIXEL_SHADOW } from '@/utils/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Mail,
@@ -28,7 +29,7 @@ import {
 } from 'lucide-react';
 import { useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
 import { Footer } from '@/components/sections/Footer';
-import { GithubIcon as Github } from './GithubIcon';
+import { GithubIcon as Github } from '@/components/ui/GithubIcon';
 import type { SiteData } from '@/types';
 
 interface TechItem {
@@ -128,8 +129,6 @@ const contactLinks = [
   { href: 'mailto:Yae_SakuRain@outlook.com', icon: Mail, label: 'Email' },
 ];
 
-const PIXEL_BORDER = '2px solid var(--border-subtle)';
-const PIXEL_SHADOW = '4px 4px 0 var(--border-subtle)';
 
 export default function AboutPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
