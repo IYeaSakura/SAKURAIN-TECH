@@ -186,7 +186,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
                 className="hero-mark text-2xl sm:text-4xl font-bold uppercase tracking-tight mb-1"
                 style={{ color: 'var(--text-primary)' }}
               >
-                SAKURAIN<span className="hero-caret" aria-hidden="true" />
+                SAKURAIN
               </h1>
               <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
                 {t.home.intro}
@@ -194,7 +194,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
             </div>
             <QuickLinksStrip />
           </div>
-          <hr className="neon-rule mt-5" />
+          <hr className="section-rule mt-5" />
         </motion.section>
 
         {/* Asymmetric dashboard */}

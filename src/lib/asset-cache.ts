@@ -279,15 +279,6 @@ async function putEntry(entry: CacheEntry): Promise<void> {
 }
 
 /**
- * Delete a single cache entry.
- */
-async function deleteEntry(url: string): Promise<void> {
-  if (!url) return;
-  const key = normalizeCacheKey(url);
-  await withStore('readwrite', (store) => store.delete(key));
-}
-
-/**
  * List all cache entries of a given type.
  */
 async function getEntriesByType(assetType: CacheEntry['type']): Promise<CacheEntry[]> {
