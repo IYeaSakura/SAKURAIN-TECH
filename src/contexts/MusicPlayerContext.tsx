@@ -176,6 +176,10 @@ export function MusicPlayerProvider({
   const audioBlobUrlRef = useRef<string | null>(null);
   const preloadBlobUrlRef = useRef<string | null>(null);
   const failedSrcsRef = useRef<Set<string>>(new Set());
+  // One CORS-downgrade attempt per normalized source. Reset when the source
+  // changes or the browser reconnects, so a single bad edge does not poison
+  // every later track for the rest of the session.
+  const corsFallbackSrcRef = useRef<string | null>(null);
   const prevPlayModeRef = useRef<PlayMode>('shuffle');
   // Tracks whether playback is intended to be active. Distinguishes user pause
   // from system pause and preserves play intent across track changes.
@@ -186,6 +190,18 @@ export function MusicPlayerProvider({
   // Mirror of isPlaying for event handlers so they see the latest state without
   // recreating the audio element.
   const isPlayingRef = useRef(isPlaying);
+
+  // Clear cached failures when the browser reconnects so previously failed
+  // tracks can be retried over the new network path.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleOnline = () => {
+      failedSrcsRef.current.clear();
+      corsFallbackSrcRef.current = null;
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, []);
 
   // Build shuffle order once the playlist is known
   useEffect(() => {
@@ -289,15 +305,31 @@ export function MusicPlayerProvider({
 
       // If CORS mode failed, try loading the same source without CORS once.
       // Some static-site/CDN edges do not serve Access-Control-Allow-Origin
-      // even though the file is playable directly.
-      if (
-        audio.crossOrigin === 'anonymous' &&
-        !(audio as unknown as { __corsFallbackAttempted?: boolean }).__corsFallbackAttempted
-      ) {
-        (audio as unknown as { __corsFallbackAttempted?: boolean }).__corsFallbackAttempted = true;
+      // even though the file is playable directly. The attempt is tracked per
+      // normalized source (not per element) so later tracks still get their
+      // own fallback, and is cleared on reconnect.
+      const failedKey = resolveAudioSrc(failedSrc);
+      if (audio.crossOrigin === 'anonymous' && corsFallbackSrcRef.current !== failedKey) {
+        corsFallbackSrcRef.current = failedKey;
         audio.crossOrigin = null;
         clearCorsProbeCache();
+        // load() resets the element; playback must be requested again or the
+        // track stalls in a loading state with the transition lock held.
         audio.load();
+        if (intendedPlayingRef.current) {
+          resumeAudioContext(audio);
+          const retry = audio.play();
+          if (retry !== undefined) {
+            retry.catch((err: unknown) => {
+              if ((err as Error | undefined)?.name === 'AbortError') return;
+              trackChangeRef.current = false;
+              intendedPlayingRef.current = false;
+              setError('Audio resource unavailable');
+              setIsLoading(false);
+              setIsPlaying(false);
+            });
+          }
+        }
         return;
       }
 
@@ -524,6 +556,7 @@ export function MusicPlayerProvider({
       setIsLoading(true);
       setError(null);
       setCurrentTime(0);
+      setDuration(0);
       setBuffered(0);
 
       const { url: cachedSrc, source } = await getCachedAudioUrlWithSource(currentSong.src);
@@ -724,37 +757,54 @@ export function MusicPlayerProvider({
     // Track changes always suppress pause events until the new track plays.
     trackChangeRef.current = true;
     setIsPlaying(true);
-    setCurrentPosition((prev) => {
-      const computedNext = prev + 1;
-      if (computedNext >= shuffledOrderRef.current.length) {
-        const currentIdx = shuffledOrderRef.current[prev];
-        const newOrder = shuffleArray(playlist.length);
-        // Ensure the next loop starts with a different track when possible,
-        // otherwise the current index would not change and the audio effect
-        // would not reload, leaving playback paused.
-        if (playlist.length > 1 && newOrder[0] === currentIdx) {
-          const swapIndex = Math.floor(Math.random() * (newOrder.length - 1)) + 1;
-          [newOrder[0], newOrder[swapIndex]] = [newOrder[swapIndex], newOrder[0]];
-        }
-        setShuffledOrder(newOrder);
-        return 0;
+    // Read position synchronously from the ref so state setters stay outside
+    // the updater (React StrictMode invokes updaters twice).
+    const currentPos = currentPositionRef.current;
+    const computedNext = currentPos + 1;
+    if (computedNext >= shuffledOrderRef.current.length) {
+      const currentIdx = shuffledOrderRef.current[currentPos];
+      const newOrder = shuffleArray(playlist.length);
+      // Ensure the next loop starts with a different track when possible,
+      // otherwise the current index would not change and the audio effect
+      // would not reload, leaving playback paused.
+      if (playlist.length > 1 && newOrder[0] === currentIdx) {
+        const swapIndex = Math.floor(Math.random() * (newOrder.length - 1)) + 1;
+        [newOrder[0], newOrder[swapIndex]] = [newOrder[swapIndex], newOrder[0]];
       }
-      return computedNext;
-    });
+      setShuffledOrder(newOrder);
+      setCurrentPosition(0);
+    } else {
+      setCurrentPosition(computedNext);
+    }
   }, [playlist.length, playMode]);
 
   const prev = useCallback(() => {
     if (playlist.length === 0) return;
     setHasUserInteracted(true);
     setSystemPaused(false);
-    intendedPlayingRef.current = true;
     resumeAudioContext(audioRef.current);
+    const prevPos = currentPositionRef.current;
+    if (prevPos <= 0) {
+      // In sequential mode, stay on the first track instead of wrapping to
+      // the end. Restart it from the beginning and keep playback intent.
+      if (playMode === 'sequential') {
+        if (audioRef.current) audioRef.current.currentTime = 0;
+        setCurrentTime(0);
+        intendedPlayingRef.current = true;
+        setIsPlaying(true);
+        return;
+      }
+      trackChangeRef.current = true;
+      intendedPlayingRef.current = true;
+      setIsPlaying(true);
+      setCurrentPosition(shuffledOrderRef.current.length - 1);
+      return;
+    }
     trackChangeRef.current = true;
+    intendedPlayingRef.current = true;
     setIsPlaying(true);
-    setCurrentPosition((prevPos) =>
-      prevPos <= 0 ? shuffledOrderRef.current.length - 1 : prevPos - 1
-    );
-  }, [playlist.length]);
+    setCurrentPosition(prevPos - 1);
+  }, [playlist.length, playMode]);
 
   const playSong = useCallback(
     (id: string) => {
@@ -834,7 +884,12 @@ export function MusicPlayerProvider({
       prev,
       open: () => setIsOpen(true),
       close: () => setIsOpen(false),
-      setVolume: setVolumeState,
+      // Dragging the volume slider while muted should restore audible sound;
+      // otherwise the slider appears frozen at zero (bug fix).
+      setVolume: (v: number) => {
+        setVolumeState(v);
+        if (v > 0 && isMuted) setIsMuted(false);
+      },
       setMuted: setIsMuted,
       toggleMuted: () => setIsMuted((m) => !m),
       seek,

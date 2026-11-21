@@ -76,27 +76,34 @@ function generateCoverSvg(title: string) {
 }
 
 function CoverArt({ song }: { song: Song }) {
-  const [src, setSrc] = useState(song.cover || generateCoverSvg(song.title));
+  const fallback = useMemo(() => generateCoverSvg(song.title), [song.title]);
+  const [src, setSrc] = useState(song.cover || fallback);
 
   useEffect(() => {
     let blobUrl: string | null = null;
     let cancelled = false;
     const cover = song.cover;
+
+    // Reset to this track's placeholder so a previous track's cover is never
+    // shown while the new one loads (or when the new track has no cover).
+    setSrc(cover || fallback);
     if (!cover) return;
 
-    getCachedCoverUrl(cover).then((cached) => {
-      if (cancelled) return;
-      if (cached !== cover) {
-        blobUrl = cached;
+    getCachedCoverUrl(cover)
+      .then((cached) => {
+        if (cancelled) return;
+        if (cached !== cover) blobUrl = cached;
         setSrc(cached);
-      }
-    });
+      })
+      .catch(() => {
+        if (!cancelled) setSrc(fallback);
+      });
 
     return () => {
       cancelled = true;
       if (blobUrl) revokeBlobUrl(blobUrl);
     };
-  }, [song.cover]);
+  }, [song.cover, fallback]);
 
   return (
     <div className="relative aspect-square w-full h-full overflow-hidden" style={{ border: PIXEL_BORDER, boxShadow: PIXEL_SHADOW }}>
@@ -159,16 +166,20 @@ function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined;
     const timed = lyrics.filter((l) => typeof l.time === 'number');
     if (timed.length === 0) return;
 
-    let idx = 0;
+    let timedIdx = 0;
     for (let i = 0; i < timed.length; i++) {
       if (currentTime >= (timed[i].time as number)) {
-        idx = i;
+        timedIdx = i;
       } else {
         break;
       }
     }
-    setActiveIndex(idx);
-  }, [currentTime, lyrics]);
+    // Map the timed-line index back to its position in the full `lines` array
+    // so the highlight points at the correct rendered row.
+    const activeLine = timed[timedIdx];
+    const lineIdx = lines.findIndex((l) => l === activeLine);
+    setActiveIndex(lineIdx >= 0 ? lineIdx : 0);
+  }, [currentTime, lyrics, lines]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -411,6 +422,22 @@ export default function MusicPage() {
     seek(percent * duration);
   };
 
+  // Keyboard support for the progress bar (arrow keys ±5s, Home/End).
+  const handleSeekKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!duration) return;
+      let next: number | null = null;
+      if (e.key === 'ArrowRight') next = currentTime + 5;
+      else if (e.key === 'ArrowLeft') next = currentTime - 5;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = duration;
+      if (next === null) return;
+      e.preventDefault();
+      seek(Math.max(0, Math.min(duration, next)));
+    },
+    [duration, currentTime, seek]
+  );
+
   const progressPercent = duration ? (currentTime / duration) * 100 : 0;
   const bufferedPercent = duration ? (buffered / duration) * 100 : 0;
 
@@ -488,7 +515,7 @@ export default function MusicPage() {
             className="flex-none lg:flex-1 h-[38%] sm:h-[42%] lg:h-auto flex items-center justify-center"
           >
             <div className="h-full aspect-square max-h-full">
-              <CoverArt song={currentSong} />
+              <CoverArt key={currentSong.id} song={currentSong} />
             </div>
           </motion.section>
 
@@ -539,11 +566,19 @@ export default function MusicPage() {
             {formatTime(currentTime)}
           </span>
           <div
+            role="slider"
+            tabIndex={0}
+            aria-label="Seek"
+            aria-valuemin={0}
+            aria-valuemax={Math.round(duration)}
+            aria-valuenow={Math.round(currentTime)}
+            aria-valuetext={`${formatTime(currentTime)} / ${formatTime(duration)}`}
             onClick={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               handleSeek(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)));
             }}
-            className="flex-1 h-2 cursor-pointer relative overflow-hidden"
+            onKeyDown={handleSeekKeyDown}
+            className="flex-1 h-2 cursor-pointer relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
             style={{ background: 'var(--bg-tertiary)', border: PIXEL_BORDER }}
           >
             <div

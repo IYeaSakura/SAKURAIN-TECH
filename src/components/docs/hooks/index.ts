@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import type { TocItem, HeadingItem } from '../types';
 
 export interface SearchResult {

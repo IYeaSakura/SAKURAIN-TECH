@@ -183,6 +183,22 @@ export function MusicPlayer() {
     [duration, seek]
   );
 
+  // Keyboard support for the progress bar (arrow keys ±5s, Home/End).
+  const handleSeekKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (!duration) return;
+      let next: number | null = null;
+      if (e.key === 'ArrowRight') next = currentTime + 5;
+      else if (e.key === 'ArrowLeft') next = currentTime - 5;
+      else if (e.key === 'Home') next = 0;
+      else if (e.key === 'End') next = duration;
+      if (next === null) return;
+      e.preventDefault();
+      seek(Math.max(0, Math.min(duration, next)));
+    },
+    [duration, currentTime, seek]
+  );
+
   const progressPercent = duration ? (currentTime / duration) * 100 : 0;
   const bufferedPercent = duration ? (buffered / duration) * 100 : 0;
   const activeLyric = useMemo(
@@ -399,7 +415,15 @@ export function MusicPlayer() {
                 <div
                   ref={progressRef}
                   onClick={handleSeek}
-                  className="h-2.5 cursor-pointer overflow-hidden relative"
+                  onKeyDown={handleSeekKeyDown}
+                  role="slider"
+                  tabIndex={0}
+                  aria-label="Seek"
+                  aria-valuemin={0}
+                  aria-valuemax={Math.round(duration)}
+                  aria-valuenow={Math.round(currentTime)}
+                  aria-valuetext={`${formatTime(currentTime)} / ${formatTime(duration)}`}
+                  className="h-2.5 cursor-pointer overflow-hidden relative focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
                   style={{ background: 'var(--bg-tertiary)', border: PIXEL_BORDER }}
                 >
                   <div
@@ -502,7 +526,7 @@ export function MusicPlayer() {
                 >
                   {t.music.audioSource[currentAudioSource]}
                 </span>
-                <Shuffle className="w-3 h-3" style={{ color: 'var(--accent-primary)' }} />
+                <ModeIcon className="w-3 h-3" style={{ color: 'var(--accent-primary)' }} />
                 <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
                   {tReplace(t.music.trackInfo, { current: currentNumber, total: totalSongs, mode: playMode })}
                 </span>
