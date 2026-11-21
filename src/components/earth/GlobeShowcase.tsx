@@ -166,24 +166,47 @@ export const GlobeShowcase = memo(function GlobeShowcase({ className = '' }: Glo
         }}
       >
         {/* Top control bar */}
-        <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
-          <div
-            className="flex items-center gap-2 px-3 py-1.5"
-            style={{
-              background: 'var(--bg-primary)',
-              border: '2px solid var(--accent-primary)',
-            }}
-          >
-            <Globe className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-            <span
-              className="text-[10px] font-bold uppercase tracking-wider"
-              style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
+        <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <div
+              className="flex items-center gap-2 px-3 py-1.5 shrink-0"
+              style={{
+                background: 'var(--bg-primary)',
+                border: '2px solid var(--accent-primary)',
+              }}
             >
-              {t.earth.earthOnlineTitle}
-            </span>
+              <Globe className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
+              <span
+                className="text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"
+                style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
+              >
+                {t.earth.earthOnlineTitle}
+              </span>
+            </div>
+
+            <div
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 shrink-0"
+              style={{
+                background: 'var(--bg-primary)',
+                border: '2px solid var(--accent-primary)',
+              }}
+            >
+              <span
+                className="text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"
+                style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}
+              >
+                {t.earth.renderer}
+              </span>
+              <span
+                className="text-xs font-bold uppercase tracking-wider"
+                style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
+              >
+                Cesium
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Fullscreen button */}
             <button
               onClick={isFullscreen ? exitFullscreen : enterFullscreen}
@@ -216,32 +239,8 @@ export const GlobeShowcase = memo(function GlobeShowcase({ className = '' }: Glo
           </div>
         </div>
 
-        {/* Renderer info tag */}
-        <div className="absolute top-14 left-4 z-30 flex items-center gap-3">
-          <div
-            className="flex items-center gap-2 px-3 py-1.5"
-            style={{
-              background: 'var(--bg-primary)',
-              border: '2px solid var(--accent-primary)',
-            }}
-          >
-            <span
-              className="text-[10px] font-bold uppercase tracking-wider"
-              style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}
-            >
-              {t.earth.renderer}
-            </span>
-            <span
-              className="text-xs font-bold uppercase tracking-wider"
-              style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
-            >
-              Cesium
-            </span>
-          </div>
-        </div>
-
         {/* Content area */}
-        <div className="absolute inset-0 pt-24 globe-showcase-content">
+        <div className="absolute inset-0 pt-16">
           <GlobeScene isDark={isDark} isLoaded={isLoaded} onLoad={handleLoad} />
         </div>
 

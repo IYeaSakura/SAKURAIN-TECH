@@ -59,30 +59,31 @@ export default function EarthOnlinePage() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="w-full px-6 lg:px-8 pt-2 pb-5"
         >
-          <div className="max-w-[1600px] mx-auto">
-            <div
-              className="inline-flex items-center gap-2 px-3 py-1.5 mb-4"
-              style={{
-                background: 'var(--bg-secondary)',
-                border: '2px solid var(--accent-primary)',
-                boxShadow: '4px 4px 0 var(--accent-primary)',
-              }}
-            >
-              <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-              <span
-                className="text-[10px] font-bold uppercase tracking-wider"
-                style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-wrap items-center gap-3 mb-3">
+              <h1
+                className="text-3xl sm:text-4xl font-bold uppercase tracking-wider"
+                style={{ fontFamily: 'var(--font-pixel)', color: 'var(--text-primary)' }}
               >
-                {t.earth.interactiveDemo}
-              </span>
+                {t.earth.earthOnlineTitle}
+              </h1>
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1.5"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  border: '2px solid var(--accent-primary)',
+                  boxShadow: '3px 3px 0 var(--accent-primary)',
+                }}
+              >
+                <Sparkles className="w-3.5 h-3.5" style={{ color: 'var(--accent-primary)' }} />
+                <span
+                  className="text-[10px] font-bold uppercase tracking-wider whitespace-nowrap"
+                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}
+                >
+                  {t.earth.interactiveDemo}
+                </span>
+              </div>
             </div>
-
-            <h1
-              className="text-3xl sm:text-4xl font-bold mb-3 uppercase tracking-wider"
-              style={{ fontFamily: 'var(--font-pixel)', color: 'var(--text-primary)' }}
-            >
-              {t.earth.earthOnlineTitle}
-            </h1>
 
             <p className="text-sm leading-relaxed max-w-3xl" style={{ color: 'var(--text-muted)' }}>
               {t.earth.earthOnlineDescription}
@@ -90,9 +91,9 @@ export default function EarthOnlinePage() {
           </div>
         </motion.header>
 
-        {/* Full-width globe showcase */}
+        {/* Globe showcase — capped to the same content width as the heading */}
         <main className="flex-1 px-4 lg:px-8">
-          <div className="max-w-[1600px] mx-auto w-full h-[500px] lg:h-[calc(100vh-280px)] lg:min-h-[480px]">
+          <div className="max-w-7xl mx-auto w-full aspect-video min-h-[340px] sm:min-h-[420px]">
             <GlobeShowcase />
           </div>
         </main>
