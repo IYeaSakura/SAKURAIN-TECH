@@ -375,7 +375,7 @@ export function AMapWidget() {
         initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="h-full min-h-[360px] sm:min-h-[420px] border-2 flex flex-col overflow-hidden group cursor-pointer"
+        className="brutal-card h-full min-h-[360px] sm:min-h-[420px] border-2 flex flex-col overflow-hidden group cursor-pointer"
         onClick={handleOpen}
         style={{
           background: 'var(--bg-secondary)',

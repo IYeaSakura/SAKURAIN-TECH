@@ -44,7 +44,7 @@ export function FriendsStatusWidget() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.35 }}
       onClick={() => navigateTo('/friends')}
-      className="w-full h-full min-h-[120px] p-5 border-2 flex flex-col text-left transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+      className="brutal-card w-full h-full min-h-[120px] p-5 border-2 flex flex-col text-left transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
       style={{
         background: 'var(--bg-secondary)',
         borderColor: 'var(--border-subtle)',

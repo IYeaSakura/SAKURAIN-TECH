@@ -168,7 +168,7 @@ export default function BlogIndex({ posts, tags, description, footer }: BlogPage
               </div>
 
               <h1
-                className="text-3xl sm:text-5xl font-bold uppercase tracking-tight mb-4"
+                className="hero-mark text-3xl sm:text-5xl font-bold uppercase tracking-tight mb-4"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
               >
                 {t.blog.title}

@@ -47,7 +47,7 @@ export function MusicWidget() {
       initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.1 }}
-      className="p-5 h-full border-2"
+      className="brutal-card p-5 h-full border-2"
       style={{
         background: 'var(--bg-secondary)',
         borderColor: 'var(--border-subtle)',

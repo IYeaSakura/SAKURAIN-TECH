@@ -69,7 +69,7 @@ export function LanguageStatsWidget() {
       initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.4 }}
-      className="h-full min-h-[220px] p-5 border-2 flex flex-col"
+      className="brutal-card h-full min-h-[220px] p-5 border-2 flex flex-col"
       style={{
         background: 'var(--bg-secondary)',
         borderColor: 'var(--border-subtle)',

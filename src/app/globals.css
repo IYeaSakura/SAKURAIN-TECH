@@ -2303,3 +2303,111 @@ html.theme-transitioning {
     radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--accent-secondary) 18%, transparent), transparent 40%),
     radial-gradient(circle at 80% 70%, color-mix(in srgb, var(--accent-tertiary) 12%, transparent), transparent 40%);
 }
+
+/* ============================================
+   GLOBAL VISUAL ACCENTS
+   A restrained, token-driven polish layer shared site-wide.
+   Reinforces the neo-brutalist + neon character without adding
+   new colors or motion. The terminal preset keeps its own overrides.
+   ============================================ */
+
+/* Neon-tinted text selection (terminal preset overrides this) */
+::selection {
+  background: color-mix(in srgb, var(--accent-secondary) 32%, transparent);
+  color: var(--text-primary);
+}
+
+/* Theme-colored focus ring (terminal preset overrides this) */
+:focus-visible {
+  outline: 2px solid var(--border-glow);
+  outline-offset: 2px;
+}
+
+@layer components {
+  /* Brutalist card accent: a thin neon rule along the top edge.
+     Uses ::before so it never conflicts with inline box-shadow/border. */
+  .brutal-card {
+    position: relative;
+  }
+
+  .brutal-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-secondary), var(--accent-tertiary) 60%, transparent);
+    opacity: 0.85;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .brutal-card:hover::before {
+    opacity: 1;
+  }
+
+  /* Neon divider rule — a 2px bar that fades to transparent. */
+  .neon-rule {
+    height: 2px;
+    border: 0;
+    background: linear-gradient(90deg, var(--accent-secondary), var(--accent-tertiary) 45%, transparent 85%);
+    opacity: 0.7;
+  }
+
+  /* Section kicker — small indexed terminal-style label. */
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--text-muted);
+  }
+
+  .kicker::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+    background: var(--accent-secondary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-secondary) 25%, transparent);
+  }
+
+  /* Pixel display title with a hard neon offset shadow. */
+  .hero-mark {
+    font-family: var(--font-pixel);
+    text-shadow:
+      3px 3px 0 color-mix(in srgb, var(--accent-secondary) 55%, transparent),
+      6px 6px 0 color-mix(in srgb, var(--accent-tertiary) 22%, transparent);
+  }
+
+  /* Blinking block cursor, echoing the terminal aesthetic. */
+  .hero-caret {
+    display: inline-block;
+    width: 0.32em;
+    height: 0.8em;
+    margin-left: 0.18em;
+    vertical-align: baseline;
+    background: var(--accent-secondary);
+    animation: apple-caret-pulse 1.1s step-end infinite;
+  }
+}
+
+/* The terminal preset stays sharp — no neon accents or soft shadows. */
+[data-preset="terminal"] .brutal-card::before,
+[data-preset="terminal"] .hero-caret {
+  display: none;
+}
+
+[data-preset="terminal"] .hero-mark {
+  text-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-caret {
+    animation: none;
+  }
+}

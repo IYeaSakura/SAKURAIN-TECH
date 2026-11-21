@@ -30,7 +30,7 @@ export function RecentDevLog({ notes, maxItems = 5 }: RecentDevLogProps) {
       initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="flex flex-col border-2 p-5"
+      className="brutal-card flex flex-col border-2 p-5"
       style={{
         background: 'var(--bg-secondary)',
         borderColor: 'var(--border-subtle)',

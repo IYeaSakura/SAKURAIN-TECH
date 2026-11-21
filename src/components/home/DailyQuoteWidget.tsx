@@ -50,7 +50,7 @@ export function DailyQuoteWidget() {
       initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
-      className="h-full min-h-[140px] p-5 border-2 flex flex-col justify-between"
+      className="brutal-card h-full min-h-[140px] p-5 border-2 flex flex-col justify-between"
       style={{
         background: 'var(--bg-secondary)',
         borderColor: 'var(--border-subtle)',

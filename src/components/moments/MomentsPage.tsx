@@ -100,7 +100,7 @@ export function MomentsPage() {
           <div className="flex items-center gap-3 mb-3">
             <Camera className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
             <h1
-              className="text-3xl sm:text-4xl font-bold uppercase"
+              className="hero-mark text-3xl sm:text-4xl font-bold uppercase"
               style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
             >
               {data.title}

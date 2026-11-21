@@ -25,7 +25,7 @@ export function SearchWidget() {
       initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="relative h-full min-h-[120px] p-5 border-2 flex flex-col"
+      className="brutal-card relative h-full min-h-[120px] p-5 border-2 flex flex-col"
       style={{
         background: 'var(--bg-secondary)',
         borderColor: 'var(--border-subtle)',

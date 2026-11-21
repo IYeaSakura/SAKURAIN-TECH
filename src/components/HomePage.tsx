@@ -91,7 +91,7 @@ function RecentPostsWidget({ posts }: { posts: BlogPost[] }) {
       initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
-      className="min-h-[320px] p-5 border-2 flex flex-col"
+      className="brutal-card min-h-[320px] p-5 border-2 flex flex-col"
       style={{
         background: 'var(--bg-secondary)',
         borderColor: 'var(--border-subtle)',
@@ -181,11 +181,12 @@ export default function HomePage({ posts, notes }: HomePageProps) {
         >
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div>
+              <span className="kicker mb-2">System / Online</span>
               <h1
-                className="text-2xl sm:text-4xl font-bold uppercase tracking-tight mb-1"
-                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+                className="hero-mark text-2xl sm:text-4xl font-bold uppercase tracking-tight mb-1"
+                style={{ color: 'var(--text-primary)' }}
               >
-                SAKURAIN
+                SAKURAIN<span className="hero-caret" aria-hidden="true" />
               </h1>
               <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
                 {t.home.intro}
@@ -193,6 +194,7 @@ export default function HomePage({ posts, notes }: HomePageProps) {
             </div>
             <QuickLinksStrip />
           </div>
+          <hr className="neon-rule mt-5" />
         </motion.section>
 
         {/* Asymmetric dashboard */}

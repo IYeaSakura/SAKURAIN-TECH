@@ -240,7 +240,7 @@ export default function AboutPage() {
               </div>
 
               <h1
-                className="text-5xl sm:text-7xl lg:text-8xl font-bold uppercase leading-none mb-4"
+                className="hero-mark text-5xl sm:text-7xl lg:text-8xl font-bold uppercase leading-none mb-4"
                 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
               >
                 YUYANG
