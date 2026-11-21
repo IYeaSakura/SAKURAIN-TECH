@@ -15,19 +15,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PIXEL_BORDER, PIXEL_SHADOW } from '@/utils/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Volume2,
-  VolumeX,
-  Shuffle,
-  Repeat1,
-  ListOrdered,
   ArrowLeft,
   Music,
   ListMusic,
-  Loader2,
   X,
   Maximize,
   Minimize,
@@ -38,17 +28,19 @@ import {
 } from 'lucide-react';
 import { useMusicPlayer, useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
 import { AudioMetrics } from '@/components/MusicPlayer/AudioMetrics';
+import { ProgressSlider } from '@/components/MusicPlayer/shared/ProgressSlider';
+import { TransportControls } from '@/components/MusicPlayer/shared/TransportControls';
+import { VolumeControl } from '@/components/MusicPlayer/shared/VolumeControl';
+import { PlaylistItem } from '@/components/MusicPlayer/shared/PlaylistItem';
+import {
+  formatTime,
+  getActiveTimedLyricIndex,
+  getModeConfig,
+} from '@/components/MusicPlayer/shared/player-utils';
 import { getCachedCoverUrl, revokeBlobUrl } from '@/lib/asset-cache';
 import type { Song } from '@/contexts/MusicPlayerContext';
 import type { LyricLine } from '@/lib/lyrics';
 
-
-function formatTime(time: number) {
-  if (!time || Number.isNaN(time)) return '0:00';
-  const mins = Math.floor(time / 60);
-  const secs = Math.floor(time % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
 
 function generateCoverSvg(title: string) {
   const hash = title.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
@@ -162,21 +154,13 @@ function LyricsPanel({ lyrics, currentTime }: { lyrics: LyricLine[] | undefined;
   }, [lyrics, t.music.noLyrics, t.music.enjoyMusic]);
 
   useEffect(() => {
-    if (!lyrics || lyrics.length === 0) return;
-    const timed = lyrics.filter((l) => typeof l.time === 'number');
-    if (timed.length === 0) return;
+    const timed = lyrics?.filter((l) => typeof l.time === 'number');
+    if (!timed || timed.length === 0) return;
 
-    let timedIdx = 0;
-    for (let i = 0; i < timed.length; i++) {
-      if (currentTime >= (timed[i].time as number)) {
-        timedIdx = i;
-      } else {
-        break;
-      }
-    }
     // Map the timed-line index back to its position in the full `lines` array
-    // so the highlight points at the correct rendered row.
-    const activeLine = timed[timedIdx];
+    // so the highlight points at the correct rendered row even if untimed rows
+    // (e.g. the "no lyrics" placeholders) are present.
+    const activeLine = timed[getActiveTimedLyricIndex(lyrics, currentTime)];
     const lineIdx = lines.findIndex((l) => l === activeLine);
     setActiveIndex(lineIdx >= 0 ? lineIdx : 0);
   }, [currentTime, lyrics, lines]);
@@ -309,54 +293,17 @@ function PlaylistPanel({
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar">
         <div className="divide-y-2" style={{ borderColor: 'var(--border-subtle)' }}>
-          {playlist.map((song, index) => {
-            const isCurrent = song.id === currentSong.id;
-            return (
-              <button
-                key={song.id}
-                onClick={() => onSelect(song.id)}
-                className="w-full text-left p-3 transition-all hover:pl-4"
-                style={{
-                  background: isCurrent ? 'var(--bg-tertiary)' : 'transparent',
-                  borderBottom: '2px solid var(--border-subtle)',
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className="text-xs font-mono w-5"
-                    style={{ color: isCurrent ? 'var(--accent-primary)' : 'var(--text-muted)' }}
-                  >
-                    {String(index + 1).padStart(2, '0')}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="text-sm font-bold truncate"
-                      style={{
-                        color: isCurrent ? 'var(--accent-primary)' : 'var(--text-primary)',
-                        fontFamily: 'var(--font-mono)',
-                      }}
-                    >
-                      {song.title}
-                    </p>
-                    <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
-                      {song.artist}
-                    </p>
-                  </div>
-                  {isCurrent && (
-                    <motion.div
-                      animate={{ opacity: [0.4, 1, 0.4] }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                      className="flex items-end gap-0.5 h-3"
-                    >
-                      <span className="w-1 h-1 bg-[var(--accent-primary)]" />
-                      <span className="w-1 h-3 bg-[var(--accent-primary)]" />
-                      <span className="w-1 h-2 bg-[var(--accent-primary)]" />
-                    </motion.div>
-                  )}
-                </div>
-              </button>
-            );
-          })}
+          {playlist.map((song, index) => (
+            <PlaylistItem
+              key={song.id}
+              song={song}
+              index={index}
+              isCurrent={song.id === currentSong.id}
+              isLast={index === playlist.length - 1}
+              onSelect={onSelect}
+              variant="full"
+            />
+          ))}
         </div>
       </div>
     </div>
@@ -417,35 +364,11 @@ export default function MusicPage() {
     togglePlaylist,
   } = player;
 
-  const handleSeek = (percent: number) => {
-    if (!duration) return;
-    seek(percent * duration);
-  };
-
-  // Keyboard support for the progress bar (arrow keys ±5s, Home/End).
-  const handleSeekKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (!duration) return;
-      let next: number | null = null;
-      if (e.key === 'ArrowRight') next = currentTime + 5;
-      else if (e.key === 'ArrowLeft') next = currentTime - 5;
-      else if (e.key === 'Home') next = 0;
-      else if (e.key === 'End') next = duration;
-      if (next === null) return;
-      e.preventDefault();
-      seek(Math.max(0, Math.min(duration, next)));
-    },
-    [duration, currentTime, seek]
-  );
-
-  const progressPercent = duration ? (currentTime / duration) * 100 : 0;
-  const bufferedPercent = duration ? (buffered / duration) * 100 : 0;
-
-  const modeConfig = {
-    shuffle: { icon: Shuffle, label: t.music.shuffle },
-    repeat: { icon: Repeat1, label: t.music.repeat },
-    sequential: { icon: ListOrdered, label: t.music.sequential },
-  }[playMode];
+  const modeConfig = getModeConfig(playMode, {
+    shuffle: t.music.shuffle,
+    repeat: t.music.repeat,
+    sequential: t.music.sequential,
+  });
 
   const ModeIcon = modeConfig.icon;
 
@@ -565,31 +488,13 @@ export default function MusicPage() {
           <span className="text-[10px] font-mono w-9 text-right" style={{ color: 'var(--text-muted)' }}>
             {formatTime(currentTime)}
           </span>
-          <div
-            role="slider"
-            tabIndex={0}
-            aria-label="Seek"
-            aria-valuemin={0}
-            aria-valuemax={Math.round(duration)}
-            aria-valuenow={Math.round(currentTime)}
-            aria-valuetext={`${formatTime(currentTime)} / ${formatTime(duration)}`}
-            onClick={(e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              handleSeek(Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)));
-            }}
-            onKeyDown={handleSeekKeyDown}
-            className="flex-1 h-2 cursor-pointer relative overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-            style={{ background: 'var(--bg-tertiary)', border: PIXEL_BORDER }}
-          >
-            <div
-              className="absolute inset-y-0 left-0 h-full"
-              style={{ background: 'var(--text-muted)', width: `${bufferedPercent}%`, opacity: 0.25 }}
-            />
-            <motion.div
-              className="absolute inset-y-0 left-0 h-full z-10"
-              style={{ background: 'var(--accent-primary)', width: `${progressPercent}%` }}
-            />
-          </div>
+          <ProgressSlider
+            currentTime={currentTime}
+            duration={duration}
+            buffered={buffered}
+            onSeek={seek}
+            className="flex-1 h-2"
+          />
           <span className="text-[10px] font-mono w-9" style={{ color: 'var(--text-muted)' }}>
             {formatTime(duration)}
           </span>
@@ -617,42 +522,18 @@ export default function MusicPage() {
           </div>
 
           {/* Playback controls — absolute center */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2">
-            <button
-              onClick={prev}
-              className="p-1.5 sm:p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
-              style={{ border: PIXEL_BORDER, color: 'var(--text-secondary)' }}
-              title={t.music.previous}
-            >
-              <SkipBack className="w-5 h-5" />
-            </button>
-            <button
-              onClick={togglePlay}
-              disabled={isLoading && !error}
-              className="p-2.5 sm:p-3 rounded-sm transition-all disabled:opacity-50"
-              style={{
-                background: 'var(--accent-primary)',
-                border: PIXEL_BORDER,
-                color: 'var(--bg-primary)',
-              }}
-            >
-              {isLoading && !error ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
-              ) : isPlaying ? (
-                <Pause className="w-6 h-6" />
-              ) : (
-                <Play className="w-6 h-6 ml-0.5" />
-              )}
-            </button>
-            <button
-              onClick={next}
-              className="p-1.5 sm:p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
-              style={{ border: PIXEL_BORDER, color: 'var(--text-secondary)' }}
-              title={t.music.next}
-            >
-              <SkipForward className="w-5 h-5" />
-            </button>
-          </div>
+          <TransportControls
+            isPlaying={isPlaying}
+            isLoading={isLoading}
+            hasError={Boolean(error)}
+            onPrev={prev}
+            onTogglePlay={togglePlay}
+            onNext={next}
+            labels={{ previous: t.music.previous, next: t.music.next }}
+            containerClassName="absolute left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2"
+            sideClassName="p-1.5 sm:p-2"
+            mainClassName="p-2.5 sm:p-3"
+          />
 
           {/* Extra controls */}
           <div className="flex items-center justify-end gap-1 sm:gap-2 flex-1">
@@ -679,26 +560,14 @@ export default function MusicPage() {
             >
               <ModeIcon className="w-4 h-4" />
             </button>
-            <button
-              onClick={toggleMuted}
-              className="p-1.5 sm:p-2 rounded-sm"
-              style={{ border: PIXEL_BORDER, color: 'var(--text-muted)' }}
-              title={isMuted || volume === 0 ? t.music.unmute : t.music.mute}
-            >
-              {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-            </button>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={isMuted ? 0 : volume}
-              onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="hidden sm:block w-20 lg:w-28 h-2 appearance-none cursor-pointer rounded-sm"
-              style={{
-                background: `linear-gradient(90deg, var(--accent-primary) ${(isMuted ? 0 : volume) * 100}%, var(--bg-tertiary) ${(isMuted ? 0 : volume) * 100}%)`,
-                border: PIXEL_BORDER,
-              }}
+            <VolumeControl
+              volume={volume}
+              isMuted={isMuted}
+              onVolumeChange={setVolume}
+              onToggleMute={toggleMuted}
+              labels={{ mute: t.music.mute, unmute: t.music.unmute }}
+              buttonClassName="p-1.5 sm:p-2"
+              sliderClassName="hidden sm:block w-20 lg:w-28 h-2"
             />
             <button
               onClick={togglePlaylist}

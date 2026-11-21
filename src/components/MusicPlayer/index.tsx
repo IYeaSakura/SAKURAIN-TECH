@@ -9,53 +9,20 @@
  * full controls.
  */
 
-import { useRef, useCallback, useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { PIXEL_BORDER, PIXEL_SHADOW } from '@/utils/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import {
-  Play,
-  Pause,
-  SkipBack,
-  SkipForward,
-  Volume2,
-  VolumeX,
-  Music,
-  Shuffle,
-  Repeat1,
-  ListOrdered,
-  ListMusic,
-  Mic2,
-  X,
-  Loader2,
-} from 'lucide-react';
+import { Music, ListMusic, Mic2, X } from 'lucide-react';
 import { useAnimationEnabled, useMusicPlayer, useStylePreset, useTranslation } from '@/hooks';
 import { AudioVisualizer } from './AudioVisualizer';
+import { ProgressSlider } from './shared/ProgressSlider';
+import { TransportControls } from './shared/TransportControls';
+import { VolumeControl } from './shared/VolumeControl';
+import { PlaylistItem } from './shared/PlaylistItem';
+import { formatTime, getActiveLyric, getModeConfig } from './shared/player-utils';
 import type { Song } from '@/contexts/MusicPlayerContext';
-import type { LyricLine } from '@/lib/lyrics';
 
-
-function formatTime(time: number) {
-  if (!time || Number.isNaN(time)) return '0:00';
-  const mins = Math.floor(time / 60);
-  const secs = Math.floor(time % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
-
-function getActiveLyric(lyrics: LyricLine[] | undefined, currentTime: number) {
-  if (!lyrics || lyrics.length === 0) return null;
-  const timed = lyrics.filter((l) => typeof l.time === 'number');
-  if (timed.length === 0) return null;
-  let idx = 0;
-  for (let i = 0; i < timed.length; i++) {
-    if (currentTime >= (timed[i].time as number)) {
-      idx = i;
-    } else {
-      break;
-    }
-  }
-  return timed[idx]?.text || '';
-}
 
 function MiniPlaylist({
   playlist,
@@ -71,54 +38,17 @@ function MiniPlaylist({
       className="border-t-2 mt-3 max-h-48 overflow-y-auto"
       style={{ borderColor: 'var(--border-subtle)' }}
     >
-      {playlist.map((song, index) => {
-        const isCurrent = song.id === currentSong.id;
-        return (
-          <button
-            key={song.id}
-            onClick={() => onSelect(song.id)}
-            className="w-full text-left p-2.5 transition-colors hover:bg-[var(--bg-tertiary)]"
-            style={{
-              background: isCurrent ? 'var(--bg-tertiary)' : 'transparent',
-              borderBottom: index < playlist.length - 1 ? '2px solid var(--border-subtle)' : 'none',
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className="text-[10px] font-mono w-5"
-                style={{ color: isCurrent ? 'var(--accent-primary)' : 'var(--text-muted)' }}
-              >
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p
-                  className="text-xs font-bold truncate"
-                  style={{
-                    color: isCurrent ? 'var(--accent-primary)' : 'var(--text-primary)',
-                    fontFamily: 'var(--font-mono)',
-                  }}
-                >
-                  {song.title}
-                </p>
-                <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>
-                  {song.artist}
-                </p>
-              </div>
-              {isCurrent && (
-                <motion.div
-                  animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                  className="flex items-end gap-0.5 h-3"
-                >
-                  <span className="w-0.5 h-1 bg-[var(--accent-primary)]" />
-                  <span className="w-0.5 h-3 bg-[var(--accent-primary)]" />
-                  <span className="w-0.5 h-2 bg-[var(--accent-primary)]" />
-                </motion.div>
-              )}
-            </div>
-          </button>
-        );
-      })}
+      {playlist.map((song, index) => (
+        <PlaylistItem
+          key={song.id}
+          song={song}
+          index={index}
+          isCurrent={song.id === currentSong.id}
+          isLast={index === playlist.length - 1}
+          onSelect={onSelect}
+          variant="mini"
+        />
+      ))}
     </div>
   );
 }
@@ -131,7 +61,6 @@ export function MusicPlayer() {
   const { t, tReplace } = useTranslation();
   const isMusicPage = pathname === '/music';
   const isTerminalMode = preset.id === 'terminal';
-  const progressRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -173,34 +102,6 @@ export function MusicPlayer() {
     audioRef,
   } = player;
 
-  const handleSeek = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (!progressRef.current || !duration) return;
-      const rect = progressRef.current.getBoundingClientRect();
-      const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      seek(percent * duration);
-    },
-    [duration, seek]
-  );
-
-  // Keyboard support for the progress bar (arrow keys ±5s, Home/End).
-  const handleSeekKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (!duration) return;
-      let next: number | null = null;
-      if (e.key === 'ArrowRight') next = currentTime + 5;
-      else if (e.key === 'ArrowLeft') next = currentTime - 5;
-      else if (e.key === 'Home') next = 0;
-      else if (e.key === 'End') next = duration;
-      if (next === null) return;
-      e.preventDefault();
-      seek(Math.max(0, Math.min(duration, next)));
-    },
-    [duration, currentTime, seek]
-  );
-
-  const progressPercent = duration ? (currentTime / duration) * 100 : 0;
-  const bufferedPercent = duration ? (buffered / duration) * 100 : 0;
   const activeLyric = useMemo(
     () => getActiveLyric(currentLyrics, currentTime),
     [currentLyrics, currentTime]
@@ -210,11 +111,11 @@ export function MusicPlayer() {
   // in terminal mode, or when playlist is empty
   if (!isClient || playlistLoading || totalSongs === 0 || isMusicPage || isTerminalMode) return null;
 
-  const modeConfig = {
-    shuffle: { icon: Shuffle, label: t.music.shuffle },
-    repeat: { icon: Repeat1, label: t.music.repeat },
-    sequential: { icon: ListOrdered, label: t.music.sequential },
-  }[playMode];
+  const modeConfig = getModeConfig(playMode, {
+    shuffle: t.music.shuffle,
+    repeat: t.music.repeat,
+    sequential: t.music.sequential,
+  });
 
   const ModeIcon = modeConfig.icon;
 
@@ -412,33 +313,13 @@ export function MusicPlayer() {
 
               {/* Progress */}
               <div className="mt-4">
-                <div
-                  ref={progressRef}
-                  onClick={handleSeek}
-                  onKeyDown={handleSeekKeyDown}
-                  role="slider"
-                  tabIndex={0}
-                  aria-label="Seek"
-                  aria-valuemin={0}
-                  aria-valuemax={Math.round(duration)}
-                  aria-valuenow={Math.round(currentTime)}
-                  aria-valuetext={`${formatTime(currentTime)} / ${formatTime(duration)}`}
-                  className="h-2.5 cursor-pointer overflow-hidden relative focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]"
-                  style={{ background: 'var(--bg-tertiary)', border: PIXEL_BORDER }}
-                >
-                  <div
-                    className="absolute inset-y-0 left-0 h-full"
-                    style={{
-                      background: 'var(--text-muted)',
-                      width: `${bufferedPercent}%`,
-                      opacity: 0.25,
-                    }}
-                  />
-                  <motion.div
-                    className="absolute inset-y-0 left-0 h-full z-10"
-                    style={{ background: 'var(--accent-primary)', width: `${progressPercent}%` }}
-                  />
-                </div>
+                <ProgressSlider
+                  currentTime={currentTime}
+                  duration={duration}
+                  buffered={buffered}
+                  onSeek={seek}
+                  className="h-2.5"
+                />
                 <div className="flex justify-between mt-1 text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
@@ -446,64 +327,29 @@ export function MusicPlayer() {
               </div>
 
               {/* Controls */}
-              <div className="flex items-center justify-center gap-3 mt-3">
-                <button
-                  onClick={prev}
-                  className="p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
-                  style={{ border: PIXEL_BORDER, color: 'var(--text-secondary)' }}
-                  title={t.music.previous}
-                >
-                  <SkipBack className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={togglePlay}
-                  disabled={isLoading && !error}
-                  className="p-3 rounded-sm transition-all disabled:opacity-50"
-                  style={{
-                    background: 'var(--accent-primary)',
-                    border: PIXEL_BORDER,
-                    color: 'var(--bg-primary)',
-                  }}
-                >
-                  {isLoading && !error ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                  ) : isPlaying ? (
-                    <Pause className="w-6 h-6" />
-                  ) : (
-                    <Play className="w-6 h-6 ml-0.5" />
-                  )}
-                </button>
-                <button
-                  onClick={next}
-                  className="p-2 rounded-sm transition-colors hover:bg-[var(--bg-tertiary)]"
-                  style={{ border: PIXEL_BORDER, color: 'var(--text-secondary)' }}
-                  title={t.music.next}
-                >
-                  <SkipForward className="w-5 h-5" />
-                </button>
-              </div>
+              <TransportControls
+                isPlaying={isPlaying}
+                isLoading={isLoading}
+                hasError={Boolean(error)}
+                onPrev={prev}
+                onTogglePlay={togglePlay}
+                onNext={next}
+                labels={{ previous: t.music.previous, next: t.music.next }}
+                containerClassName="flex items-center justify-center gap-3 mt-3"
+                sideClassName="p-2"
+                mainClassName="p-3"
+              />
 
               {/* Volume */}
               <div className="flex items-center gap-2 mt-3">
-                <button
-                  onClick={toggleMuted}
-                  className="p-1.5"
-                  style={{ border: PIXEL_BORDER, color: 'var(--text-muted)' }}
-                >
-                  {isMuted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </button>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={isMuted ? 0 : volume}
-                  onChange={(e) => setVolume(parseFloat(e.target.value))}
-                  className="flex-1 h-2 appearance-none cursor-pointer rounded-sm"
-                  style={{
-                    background: `linear-gradient(90deg, var(--accent-primary) ${(isMuted ? 0 : volume) * 100}%, var(--bg-tertiary) ${(isMuted ? 0 : volume) * 100}%)`,
-                    border: PIXEL_BORDER,
-                  }}
+                <VolumeControl
+                  volume={volume}
+                  isMuted={isMuted}
+                  onVolumeChange={setVolume}
+                  onToggleMute={toggleMuted}
+                  labels={{ mute: t.music.mute, unmute: t.music.unmute }}
+                  buttonClassName="p-1.5"
+                  sliderClassName="flex-1 h-2"
                 />
               </div>
 
