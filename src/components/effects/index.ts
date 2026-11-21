@@ -29,8 +29,5 @@ export {
   VelocityCursor,
 } from './MouseEffects';
 
-// 中国3D地图配置
-export * from './ChinaMap3DConfig';
-
 // 安全保护
 export { SecurityProtection } from './SecurityProtection';

@@ -710,25 +710,10 @@ export interface Dictionary {
     earthOnlineTitle: string;
     earthOnlineDescription: string;
     loadScene: string;
-    cesiumLabel: string;
-    chinaMapLabel: string;
-    cesiumTitle: string;
-    chinaMapTitle: string;
-    cesiumDescription: string;
-    chinaMapDescription: string;
-    featureCesiumTitle: string;
-    featureCesiumDescription: string;
-    featureChinaTitle: string;
-    featureChinaDescription: string;
-    currentDemo: string;
-    switchDemo: string;
-    switchEffects: string;
-    switch: string;
     running: string;
     renderer: string;
     globalPlayers: string;
     chinaPlayers: string;
-    doubleClickFullscreen: string;
     orbitParams: {
       title: string;
       type: string;
