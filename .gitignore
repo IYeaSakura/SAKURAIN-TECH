@@ -51,5 +51,5 @@ dist/
 # TypeScript 增量编译缓存（构建期自动生成，不应提交）
 *.tsbuildinfo
 
-# 音乐文件静态镜像站点（由 scripts/generate-playlist.js 生成，用于独立文件服务器）
+# 音乐文件静态镜像站点（由 npm run generate-music-site 手动生成，用于独立文件服务器）
 dist-music/

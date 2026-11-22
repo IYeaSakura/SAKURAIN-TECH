@@ -8,6 +8,7 @@
     "build": "node scripts/generate-playlist.js && node scripts/calculate-language-stats.js && node scripts/sync-content-to-public.js && node scripts/check-friends-connectivity.js && node scripts/build-next.js && node scripts/submit-sitemap.js",
     "build:fast": "next build",
     "generate-playlist": "node scripts/generate-playlist.js",
+    "generate-music-site": "node scripts/generate-playlist.js --static-site",
     "submit-sitemap": "node scripts/submit-sitemap.js",
     "start": "next start",
     "lint": "next lint"

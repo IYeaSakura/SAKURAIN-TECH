@@ -153,7 +153,7 @@ SAKURAIN-TECH/
 │   ├── resume/                       # Resume data (generated from content/)
 │   └── cesium/                       # Generated Cesium runtime assets (gitignored)
 ├── scripts/                          # Build and auxiliary scripts
-│   ├── generate-playlist.js          # Scan music files and build playlist.json
+│   ├── generate-playlist.js          # Scan music files and build playlist.json (use --static-site for dist-music)
 │   ├── sync-content-to-public.js     # Copy managed content from content/ to public/
 │   ├── check-friends-connectivity.js # Multi-threaded friend-link health checker
 │   ├── build-next.js                 # Wrapped next build for EdgeOne Pages
@@ -248,7 +248,8 @@ The Next.js dev server starts at `http://localhost:3000` with Turbopack enabled.
 | `npm run build` | Run all build scripts, then `next build` |
 | `npm run build:fast` | Run `next build` only, skipping all build scripts |
 | `npm run submit-sitemap` | Submit the generated sitemap to configured search engines |
-| `npm run generate-playlist` | Scan `public/music/` and generate `content/data/playlist.json` |
+| `npm run generate-playlist` | Scan `public/music/` and generate `content/data/playlist.json` (no `dist-music`) |
+| `npm run generate-music-site` | Manually generate the standalone media mirror at `dist-music/` |
 | `npm run start` | Start production preview server |
 | `npm run lint` | Run ESLint |
 
@@ -279,7 +280,7 @@ npm run build
 
 The build workflow runs the following steps in order. Each step must succeed before the next one starts:
 
-1. **`generate-playlist.js`**: Scans `public/music/` and generates `content/data/playlist.json`.
+1. **`generate-playlist.js`**: Scans `public/music/` and generates `content/data/playlist.json`. It does not create `dist-music`; use `npm run generate-music-site` manually when you need that standalone media mirror.
 2. **`sync-content-to-public.js`**: Copies managed content (`content/data/*`, `content/docs/*`, `content/config/*`, `content/resume/*`) into `public/`, and generates `public/data/docs.json` from `content/docs-index.json`.
 3. **`check-friends-connectivity.js`**: Multi-threaded friend-link health checker that updates `public/data/friends.json` with online/offline/maintenance status while deduplicating URLs.
 4. **`build-next.js`**: Wraps `next build` with extra heap memory, exports static pages and feeds to `dist/`, and copies required metadata files for EdgeOne Pages.

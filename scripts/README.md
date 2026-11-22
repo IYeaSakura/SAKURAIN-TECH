@@ -15,6 +15,7 @@ npm run build
 1. `node scripts/generate-playlist.js`
    - Scans `public/music/mp3/`, `public/music/lyric/` and `public/music/music-covers/`.
    - Writes `content/data/playlist.json` with external COS URLs for audio, lyrics and cover art.
+   - Does **not** produce `dist-music`; that standalone media mirror is generated only by the manual `npm run generate-music-site` command.
 
 2. `node scripts/sync-content-to-public.js`
    - Copies all managed content from `content/` to `public/` so the static build can consume it.
@@ -56,7 +57,15 @@ npm run build:fast
 **Usage**: Automatically runs as the first step of `npm run build`, or manually:
 
 ```bash
-node scripts/generate-playlist.js
+npm run generate-playlist
+# equivalent to: node scripts/generate-playlist.js
+```
+
+This command only writes `content/data/playlist.json`. To build the standalone static media mirror at `dist-music/`, use the separate opt-in command:
+
+```bash
+npm run generate-music-site
+# equivalent to: node scripts/generate-playlist.js --static-site
 ```
 
 **Input**: Local media arranged as three sibling directories under `public/music/`:
@@ -148,9 +157,10 @@ The automatic build integration is defined in `package.json`:
 {
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/generate-playlist.js && node scripts/sync-content-to-public.js && node scripts/check-friends-connectivity.js && node scripts/build-next.js && node scripts/submit-sitemap.js",
+    "build": "node scripts/generate-playlist.js && node scripts/calculate-language-stats.js && node scripts/sync-content-to-public.js && node scripts/check-friends-connectivity.js && node scripts/build-next.js && node scripts/submit-sitemap.js",
     "build:fast": "next build",
     "generate-playlist": "node scripts/generate-playlist.js",
+    "generate-music-site": "node scripts/generate-playlist.js --static-site",
     "submit-sitemap": "node scripts/submit-sitemap.js",
     "start": "next start",
     "lint": "next lint"

@@ -24,6 +24,10 @@ const CDN_COVERS_PATH = '/music-covers/';
 // Serving them same-origin avoids CORS failures on the external CDN.
 const LOCAL_LYRIC_PATH = '/music/lyric/';
 
+// The full build only refreshes the playlist JSON. The standalone static media
+// mirror (dist-music) is a manual, opt-in artifact for CDN deployment.
+const GENERATE_STATIC_SITE = process.argv.includes('--static-site');
+
 /**
  * Ensure a directory exists, creating it recursively if necessary.
  */
@@ -169,7 +173,8 @@ function encodePathSegment(segment) {
 /**
  * Generate a standalone static file-server site in dist-music. The directory
  * contains the mirrored media files and an index.html listing page suitable for
- * deployment to any static host or CDN.
+ * deployment to any static host or CDN. This is intentionally opt-in via
+ * `npm run generate-music-site` and is never produced by the full site build.
  */
 async function generateStaticSite(songs) {
   // Clean and recreate the static site directory so stale files from
@@ -470,7 +475,11 @@ async function generatePlaylist() {
   fs.writeFileSync(PLAYLIST_PATH, JSON.stringify({ songs }, null, 2), 'utf-8');
   console.log(`  ✓ Generated content/data/playlist.json (${songs.length} songs)`);
 
-  await generateStaticSite(songs);
+  if (GENERATE_STATIC_SITE) {
+    await generateStaticSite(songs);
+  } else {
+    console.log('  · Skipped dist-music (run npm run generate-music-site to build it)');
+  }
 }
 
 generatePlaylist().catch((err) => {
