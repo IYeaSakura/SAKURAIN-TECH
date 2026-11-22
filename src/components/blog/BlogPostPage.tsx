@@ -8,6 +8,7 @@
  * the site-wide visual language.
  */
 
+import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Tag, Share2, ArrowLeft, Scale } from 'lucide-react';
@@ -42,6 +43,13 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
   const { t, tReplace } = useTranslation();
 
   const slug = post.slug;
+
+  // 字数/阅读时长需要对整篇正文做两次全局正则匹配；正文只在换文章时变化。
+  const articleContent = post.content ?? '';
+  const articleStats = useMemo(
+    () => ({ wordCount: getWordCount(articleContent), readingTime: getReadingTime(articleContent) }),
+    [articleContent]
+  );
 
   const handleBack = () => {
     navigate('/blog');
@@ -86,8 +94,8 @@ function BlogPostContent({ post, allPosts }: BlogPostPageProps) {
     <div className="min-h-screen">
       {post.content && (
         <ArticleSidebar
-          wordCount={getWordCount(post.content)}
-          readingTime={tReplace(t.blog.readingTime, { time: getReadingTime(post.content) })}
+          wordCount={articleStats.wordCount}
+          readingTime={tReplace(t.blog.readingTime, { time: articleStats.readingTime })}
           date={post.date}
           onBack={handleBack}
           onPrevious={previousPost ? () => handleNavigate(previousPost.slug) : undefined}

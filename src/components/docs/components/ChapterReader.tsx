@@ -8,6 +8,7 @@ import { ThemeToggleButton } from './ThemeToggleButton';
 import { CodeBlock } from '@/components/markdown/CodeBlock';
 import { PlantUML } from '@/components/markdown/PlantUML';
 import type { Chapter, DocSeries, DocCategory, TocItem } from '../types';
+import { extractHeadings } from '../utils';
 
 const DocSearch = lazy(() => import('./DocSearch').then(m => ({ default: m.DocSearch })));
 
@@ -117,28 +118,20 @@ const markdownComponents = {
   hr: () => <hr className="my-8" style={{ borderColor: 'var(--border-color)' }} />,
 };
 
-// 解析标题
-function parseHeadings(content: string): Array<{ level: number; text: string; id: string }> {
-  const headings: Array<{ level: number; text: string; id: string }> = [];
-  const lines = content.split('\n');
-  for (const line of lines) {
-    const match = line.match(/^(#{2,4})\s+(.+)$/);
-    if (match) {
-      const text = match[2].trim();
-      const id = text.toLowerCase().replace(/[\s_]+/g, '-').replace(/[^\w\u4e00-\u9fa5-]/g, '').replace(/^-+|-+$/g, '').substring(0, 50) || 'heading';
-      headings.push({ level: match[1].length, text, id });
-    }
-  }
-  return headings;
-}
-
 export function ChapterReader({ chapter, series, category, content, onBack, onSelectChapter }: ChapterReaderProps) {
   const [showToc, setShowToc] = useState(true);
   const [activeHeading, setActiveHeading] = useState<string>(chapter.id);
   const mainRef = useRef<HTMLElement>(null);
 
-  // Phase 2：正文由服务端注入，标题目录从正文派生（跳过代码块逻辑沿用简易解析）
-  const flatHeadings = useMemo(() => parseHeadings(content), [content]);
+  // 正文由服务端注入；复用与 MarkdownRenderer 相同的标题解析，保证目录锚点与
+  // 正文 id 完全一致（同时跳过代码块里的 # 注释，旧版简易解析会把它们当标题）。
+  const flatHeadings = useMemo(() => extractHeadings(content), [content]);
+
+  // 移动端目录默认收起：原先 showToc 初始为 true，手机一进章节页就直接弹出
+  // 抽屉，同时挂载两份 UnifiedToc，挡住正文且浪费首屏渲染。
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 1023px)').matches) setShowToc(false);
+  }, []);
   
   // 简单的搜索功能
   const searchContent = (query: string) => {
@@ -173,8 +166,9 @@ export function ChapterReader({ chapter, series, category, content, onBack, onSe
   const prevChapter = currentIndex > 0 ? series.chapters[currentIndex - 1] : null;
   const nextChapter = currentIndex < series.chapters.length - 1 ? series.chapters[currentIndex + 1] : null;
 
-  // 使用 flatHeadings 确保有目录显示
-  const displayToc = buildTocFromHeadings(flatHeadings);
+  // 使用 flatHeadings 确保有目录显示；只在正文变化时重建，避免每次滚动
+  // （activeHeading 变化）都重新构造整棵目录树。
+  const displayToc = useMemo(() => buildTocFromHeadings(flatHeadings), [flatHeadings]);
 
   // 监听标题可见性
   useEffect(() => {

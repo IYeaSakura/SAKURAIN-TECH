@@ -19,11 +19,11 @@
  * - 旧版 react-lazy 的 preloadDocs/preloadBlog 等路由预加载已移除
  *   （Next 页面自带代码分割与预取）。
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { Toaster } from 'sonner';
-import { MobileProvider, useIsDesktopClient } from '@/contexts/MobileContext';
+import { MobileProvider, useIsDesktopClient, useMobileContext } from '@/contexts/MobileContext';
 import { PerformanceProvider, usePerformance } from '@/contexts/PerformanceContext';
 import { MusicPlayerProvider } from '@/contexts/MusicPlayerContext';
 import { useStylePreset } from '@/hooks';
@@ -157,6 +157,18 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isHomePage = pathname === '/';
   const isDesktopClient = useIsDesktopClient();
+  const { mounted, isDesktop } = useMobileContext();
+
+  // 文档阅读器（/docs/<category>/<item>[/<chapter>]）在窄屏下有固定的
+  // 顶部操作栏和底部章节导航；浮动播放器会挡住它们。这里在移动端阅读器
+  // 路由直接不挂载播放器组件（播放状态与音频都留在上层 Provider，不中断）。
+  const isReaderRoute = useMemo(
+    () =>
+      pathname.startsWith('/docs/') &&
+      pathname.split('/').filter(Boolean).length >= 3,
+    [pathname]
+  );
+  const hideFloatingPlayer = isReaderRoute && mounted && !isDesktop;
   const { enableMouseEffects, effectiveQuality } = usePerformance();
   const { preset } = useStylePreset();
   const { isReady, isLoading } = useInitialLoad();
@@ -229,8 +241,9 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
 
       {isTerminal ? <TerminalShell /> : children}
 
-      {/* 全局音乐播放器 - 挂在 layout 内，切换页面不会中断 */}
-      <MusicPlayer />
+      {/* 全局音乐播放器 - 挂在 layout 内，切换页面不会中断；
+          移动端阅读器下不挂载，避免遮挡操作栏（音频仍继续播放） */}
+      {!hideFloatingPlayer && <MusicPlayer />}
 
 
 

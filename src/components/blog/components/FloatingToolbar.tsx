@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -14,13 +14,7 @@ import {
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useTheme, useTranslation } from '@/hooks';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
-import { PlantUML } from '@/components/markdown/PlantUML';
-import { CodeBlock } from '@/components/markdown/CodeBlock';
+import { MarkdownRenderer } from '@/components/markdown/MarkdownRenderer';
 
 interface FloatingToolbarProps {
   onExit: () => void;
@@ -57,36 +51,6 @@ const ExportProgressDialog = ({ isOpen, title, progress }: { isOpen: boolean; ti
     </div>,
     document.body
   );
-};
-
-const markdownComponents = {
-  h1: ({ children }: { children?: any }) => <h1 className="text-3xl font-bold mt-8 mb-4" style={{ color: '#000' }}>{children}</h1>,
-  h2: ({ children }: { children?: any }) => <h2 className="text-2xl font-bold mt-6 mb-3" style={{ color: '#000' }}>{children}</h2>,
-  h3: ({ children }: { children?: any }) => <h3 className="text-xl font-semibold mt-5 mb-2" style={{ color: '#000' }}>{children}</h3>,
-  h4: ({ children }: { children?: any }) => <h4 className="text-lg font-semibold mt-4 mb-2" style={{ color: '#000' }}>{children}</h4>,
-  h5: ({ children }: { children?: any }) => <h5 className="text-base font-semibold mt-3 mb-2" style={{ color: '#000' }}>{children}</h5>,
-  h6: ({ children }: { children?: any }) => <h6 className="text-sm font-semibold mt-2 mb-2" style={{ color: '#000' }}>{children}</h6>,
-  p: ({ children }: { children?: any }) => <p className="my-3 leading-relaxed" style={{ color: '#333' }}>{children}</p>,
-  ul: ({ children }: { children?: any }) => <ul className="my-3 ml-6 list-disc" style={{ color: '#333' }}>{children}</ul>,
-  ol: ({ children }: { children?: any }) => <ol className="my-3 ml-6 list-decimal" style={{ color: '#333' }}>{children}</ol>,
-  li: ({ children }: { children?: any }) => <li className="my-1">{children}</li>,
-  a: ({ href, children }: { href?: string; children?: any }) => <a href={href} className="underline" style={{ color: '#0066cc' }} target="_blank" rel="noopener noreferrer">{children}</a>,
-  code: ({ inline, className, children }: any) => {
-    const match = /language-(\w+)/.exec(className || '');
-    const language = match ? match[1] : '';
-    const codeString = String(children).replace(/\n$/, '');
-    if (language === 'plantuml' || codeString.includes('@startuml')) return <PlantUML code={codeString} />;
-    if (inline) return <code className="px-1.5 py-0.5 rounded text-sm font-mono" style={{ background: '#f4f4f4', color: '#c7254e', border: '1px solid #ddd' }}>{children}</code>;
-    if (language) return <CodeBlock language={language} value={codeString} />;
-    return <CodeBlock language="text" value={codeString} />;
-  },
-  table: ({ children }: { children?: any }) => <div className="overflow-x-auto my-4 rounded-lg border border-gray-300"><table className="min-w-full border-collapse" style={{ color: '#333' }}>{children}</table></div>,
-  thead: ({ children }: { children?: any }) => <thead style={{ background: '#f5f5f5' }}>{children}</thead>,
-  th: ({ children }: { children?: any }) => <th className="border border-gray-300 px-4 py-3 text-left font-semibold" style={{ color: '#000' }}>{children}</th>,
-  td: ({ children }: { children?: any }) => <td className="border border-gray-300 px-4 py-3" style={{ color: '#333' }}>{children}</td>,
-  blockquote: ({ children }: { children?: any }) => <blockquote className="border-l-4 pl-4 my-4 py-2 rounded-r" style={{ borderColor: '#ddd', background: '#f9f9f9', color: '#666' }}>{children}</blockquote>,
-  hr: () => <hr className="my-6" style={{ borderColor: '#ddd' }} />,
-  img: ({ src, alt }: { src?: string | Blob; alt?: string }) => <img src={typeof src === 'string' ? src : undefined} alt={alt} className="max-w-full h-auto my-4" />,
 };
 
 export function FloatingToolbar({ onExit, content, title, className = '' }: FloatingToolbarProps) {
@@ -284,21 +248,29 @@ export function FloatingToolbar({ onExit, content, title, className = '' }: Floa
         <ExportProgressDialog isOpen={isExporting} title={t.blog.exportingPDF} progress={exportProgress} />
       </AnimatePresence>
 
-      <div
-        ref={exportContainerRef}
-        className="fixed -left-[9999px] top-0 w-[800px] bg-white p-10"
-        style={{ fontFamily: 'Microsoft YaHei, SimHei, PingFang SC, STHeiti, sans-serif' }}
-      >
-        {content && (
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkMath]}
-            rehypePlugins={[[rehypeKatex, { strict: false }]]}
-            components={markdownComponents}
-          >
-            {content}
-          </ReactMarkdown>
-        )}
-      </div>
+      {/* PDF 导出用的离屏副本：只在真正导出时挂载。
+          此前它在每篇博客页都把整篇文章再渲染一遍（KaTeX / 代码高亮 / 图片全跑两次），
+          是文章页最大的一笔无谓渲染开销。用 token 覆盖保证离屏副本始终是浅色打印配色。 */}
+      {(isExporting || exportProgress) && content && (
+        <div
+          ref={exportContainerRef}
+          className="fixed -left-[9999px] top-0 w-[800px] bg-white p-10"
+          style={{
+            fontFamily: 'Microsoft YaHei, SimHei, PingFang SC, STHeiti, sans-serif',
+            '--text-primary': '#000',
+            '--text-secondary': '#333',
+            '--text-muted': '#666',
+            '--accent-primary': '#0066cc',
+            '--border-color': '#ddd',
+            '--border-subtle': '#ddd',
+            '--bg-primary': '#fff',
+            '--bg-secondary': '#f5f5f5',
+            '--bg-card': '#fff',
+          } as CSSProperties}
+        >
+          <MarkdownRenderer content={content} />
+        </div>
+      )}
 
       <div
         className={`fixed right-6 z-40 hidden md:flex flex-col justify-center ${className}`}

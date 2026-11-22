@@ -19,20 +19,24 @@ export function useDocumentContent(content: string) {
     return { toc: parsedToc, flatHeadings: headings, lines: content.split('\n') };
   }, [content]);
 
-  // 预构建标题行号映射（用于快速查找）
+  // 预构建标题行号映射：单遍扫描即可。原实现对每个标题都 findIndex 扫描
+  // 全文（O(标题数 × 行数)），长文档首屏会卡住主线程。
   const headingLineMap = useMemo(() => {
     const map = new Map<string, number>();
-    flatHeadings.forEach(h => {
-      const lineIndex = lines.findIndex(line => {
-        const match = line.match(/^(\s{0,3})(#{1,4})\s+(.+?)(?:\r)?$/);
-        return match && match[3].trim() === h.text;
-      });
-      if (lineIndex >= 0) {
-        map.set(h.id, lineIndex);
+    let inCodeBlock = false;
+    lines.forEach((line, index) => {
+      if (line.trim().startsWith('```')) {
+        inCodeBlock = !inCodeBlock;
+        return;
       }
+      if (inCodeBlock) return;
+      const match = line.match(/^(\s{0,3})(#{1,4})\s+(.+?)(?:\r)?$/);
+      if (!match) return;
+      const id = generateHeadingId(match[3].trim());
+      if (!map.has(id)) map.set(id, index);
     });
     return map;
-  }, [flatHeadings, lines]);
+  }, [lines]);
 
   // 搜索文档内容 - 优化版本，使用 debounce 和限制结果
   const searchContent = useCallback((query: string, maxResults: number = 20): SearchResult[] => {
@@ -131,11 +135,8 @@ export function useDocumentContent(content: string) {
       const line = lines[i];
       const match = line.match(/^(\s{0,3})(#{1,4})\s+(.+?)(?:\r)?$/);
       if (match) {
-        const text = match[3].trim();
-        const heading = flatHeadings.find(h => h.text === text);
-        if (heading) {
-          targetHeadingId = heading.id;
-        }
+        const id = generateHeadingId(match[3].trim());
+        if (headingLineMap.has(id)) targetHeadingId = id;
       }
     }
 
@@ -181,7 +182,7 @@ export function useDocumentContent(content: string) {
     if (targetElement) {
       scrollToElement(targetElement, container);
     }
-  }, [lines, flatHeadings, scrollToElement]);
+  }, [lines, headingLineMap, scrollToElement]);
 
   // 根据标题 ID 滚动（带持续跳转机制）
   const scrollToHeadingById = useCallback((headingId: string, containerSelector?: string) => {
@@ -246,7 +247,7 @@ export function useDocumentContent(content: string) {
     scrollLoop();
   }, [scrollToElement]);
 
-  return { content, toc, flatHeadings, searchContent, scrollToLine, scrollToHeadingById, lines };
+  return { content, toc, flatHeadings, searchContent, scrollToLine, scrollToHeadingById, lines, headingLineMap };
 }
 
 function parseToc(markdown: string): { toc: TocItem[]; headings: HeadingItem[] } {

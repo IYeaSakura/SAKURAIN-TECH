@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Folder } from 'lucide-react';
 import { useDocumentContent } from '../hooks';
@@ -46,13 +46,21 @@ function buildTocFromHeadings(headings: Array<{ level: number; text: string; id:
 }
 
 export function DocDetailView({ doc, category, content, onBack }: DocDetailViewProps) {
-  const { toc, flatHeadings, searchContent, scrollToLine, scrollToHeadingById, lines } = useDocumentContent(content);
+  const { toc, flatHeadings, searchContent, scrollToLine, scrollToHeadingById, headingLineMap } = useDocumentContent(content);
   const [showToc, setShowToc] = useState(true);
   const [activeHeading, setActiveHeading] = useState<string>('');
   const mainRef = useRef<HTMLElement>(null);
 
-  // 使用 flatHeadings 构建目录（包含所有标题）
-  const displayToc = toc.length > 0 ? toc : buildTocFromHeadings(flatHeadings);
+  // 移动端目录默认收起，避免一进文档页就弹出抽屉并挂载两份目录树。
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 1023px)').matches) setShowToc(false);
+  }, []);
+
+  // 使用 flatHeadings 构建目录（包含所有标题）；仅在正文变化时重算。
+  const displayToc = useMemo(
+    () => (toc.length > 0 ? toc : buildTocFromHeadings(flatHeadings)),
+    [toc, flatHeadings]
+  );
   const hasToc = flatHeadings.length > 0;
 
   // 监听标题可见性
@@ -80,11 +88,8 @@ export function DocDetailView({ doc, category, content, onBack }: DocDetailViewP
     // 优先使用行号跳转（更精确）
     const heading = flatHeadings.find(h => h.id === id);
     if (heading) {
-      const lineIndex = lines.findIndex(line => {
-        const match = line.match(/^(\s{0,3})(#{1,4})\s+(.+?)(?:\r)?$/);
-        return match && match[3].trim() === heading.text;
-      });
-      if (lineIndex >= 0) {
+      const lineIndex = headingLineMap.get(id);
+      if (lineIndex !== undefined) {
         scrollToLine(lineIndex, 'main');
       } else {
         scrollToHeadingById(id, 'main');

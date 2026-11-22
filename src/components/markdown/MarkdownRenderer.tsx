@@ -8,7 +8,6 @@ import { PlantUML } from './PlantUML';
 import { CodeBlock } from './CodeBlock';
 import { ClickableImage } from './ImageModal';
 import { extractTextFromChildren, generateHeadingId, splitContentByHeadings } from '@/components/docs/utils';
-import type { HeadingAnchor } from '@/components/docs/types';
 import '@/styles/code-block.css';
 
 // 注意：不要再通过 components 映射 `math` 标签——rehype-katex 输出的 KaTeX HTML 中，
@@ -65,33 +64,40 @@ const MarkdownTd = ({ children }: { children?: any }) => (
   <td className="border px-4 py-3 whitespace-pre-line" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>{processCellChildren(children)}</td>
 );
 
-// Heading Anchor Component - rendered immediately with math support
-const HeadingAnchorElement = memo(({ heading }: { heading: HeadingAnchor }) => {
+// 只有含 Markdown/数学语法的标题才需要再跑一遍完整的 remark → rehype → KaTeX
+// 链路。长文档通常有几十个纯文本标题，逐个启动 ReactMarkdown 是明显浪费。
+const RICH_HEADING_MARKUP = /[\\$`*_[\]<>]/;
+
+// Heading Anchor Component - rendered immediately with math support.
+// 接收基础类型 props，memo 才能真正命中（原先每次都传新对象，memo 形同虚设）。
+const HeadingAnchorElement = memo(({ id, level, text }: { id: string; level: number; text: string }) => {
   const className = `font-bold scroll-mt-28 ${
-    heading.level === 2 ? 'text-2xl mt-10 mb-4' :
-    heading.level === 3 ? 'text-xl mt-8 mb-3' :
+    level === 2 ? 'text-2xl mt-10 mb-4' :
+    level === 3 ? 'text-xl mt-8 mb-3' :
     'text-lg mt-6 mb-3'
   }`;
 
-  // 使用 ReactMarkdown 渲染标题内容，支持数学公式
-  const renderHeadingContent = () => (
-    <ReactMarkdown 
-      remarkPlugins={[remarkGfm, remarkMath]} 
-      rehypePlugins={[[rehypeKatex, { strict: false }]]}
-      components={{
-        p: ({ children }: any) => <>{children}</>,  // 移除 p 标签包装
-      } as any}
-    >
-      {heading.text}
-    </ReactMarkdown>
-  );
+  const renderHeadingContent = () =>
+    RICH_HEADING_MARKUP.test(text) ? (
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[[rehypeKatex, { strict: false }]]}
+        components={{
+          p: ({ children }: any) => <>{children}</>,  // 移除 p 标签包装
+        } as any}
+      >
+        {text}
+      </ReactMarkdown>
+    ) : (
+      <>{text}</>
+    );
 
-  if (heading.level === 2) {
-    return <h2 id={heading.id} data-heading="true" className={className} style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }}>{renderHeadingContent()}</h2>;
-  } else if (heading.level === 3) {
-    return <h3 id={heading.id} data-heading="true" className={className} style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }}>{renderHeadingContent()}</h3>;
+  if (level === 2) {
+    return <h2 id={id} data-heading="true" className={className} style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }}>{renderHeadingContent()}</h2>;
+  } else if (level === 3) {
+    return <h3 id={id} data-heading="true" className={className} style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }}>{renderHeadingContent()}</h3>;
   } else {
-    return <h4 id={heading.id} data-heading="true" className={className} style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }}>{renderHeadingContent()}</h4>;
+    return <h4 id={id} data-heading="true" className={className} style={{ color: 'var(--text-primary)', scrollMarginTop: '7rem' }}>{renderHeadingContent()}</h4>;
   }
 });
 HeadingAnchorElement.displayName = 'HeadingAnchorElement';
@@ -253,11 +259,9 @@ export const MarkdownRenderer = ({ content }: MarkdownRendererProps) => {
         <div key={index}>
           {section.headingId && section.headingText && section.headingLevel && (
             <HeadingAnchorElement
-              heading={{
-                id: section.headingId,
-                level: section.headingLevel,
-                text: section.headingText
-              }}
+              id={section.headingId}
+              level={section.headingLevel!}
+              text={section.headingText}
             />
           )}
           <ContentChunk content={section.content || ' '} index={index} />
