@@ -649,7 +649,6 @@ export const en: Dictionary = {
     autoRedirect: 'Auto redirect in {seconds}s',
     cancelRedirect: 'Cancel',
     visitNow: 'Visit Now',
-    featured: 'Featured Friends',
     randomVisit: 'Random Visit',
     loadFailed: 'Failed to load friend links',
     siteInfo: {

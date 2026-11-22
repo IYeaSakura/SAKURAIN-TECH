@@ -38,7 +38,6 @@ interface Friend {
   icon: string;
   description: string;
   category: string;
-  featured: boolean;
   status?: 'online' | 'offline';
   unidirectional?: boolean;
   feed?: string;

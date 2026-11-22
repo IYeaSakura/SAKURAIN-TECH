@@ -547,7 +547,6 @@ export interface Dictionary {
     autoRedirect: string;
     cancelRedirect: string;
     visitNow: string;
-    featured: string;
     randomVisit: string;
     loadFailed: string;
     siteInfo: {

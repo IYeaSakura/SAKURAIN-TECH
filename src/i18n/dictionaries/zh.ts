@@ -641,7 +641,6 @@ export const zh: Dictionary = {
     autoRedirect: '{seconds} 秒后自动跳转',
     cancelRedirect: '取消跳转',
     visitNow: '立即访问',
-    featured: '友链推荐',
     randomVisit: '随机访问',
     loadFailed: '无法加载友链数据',
     siteInfo: {

@@ -32,9 +32,10 @@ export function FriendsStatusWidget() {
 
   const counts = useMemo(() => {
     if (!data) return { total: 0, categories: 0 };
+    const activeCategories = new Set(data.friends.map((friend) => friend.category));
     return {
       total: data.friends.length,
-      categories: data.categories.length,
+      categories: data.categories.filter((category) => activeCategories.has(category.id)).length,
     };
   }, [data]);
 

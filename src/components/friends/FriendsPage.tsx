@@ -18,13 +18,11 @@ import {
   Wifi,
   Mail,
   Sparkles,
-  Star,
   Monitor,
   Code,
   Palette,
   Wrench,
   Heart,
-  User,
   FileText,
   Send,
   Bug,
@@ -72,7 +70,6 @@ interface Friend {
   icon: string;
   description: LocalizedText;
   category: string;
-  featured: boolean;
   status?: 'online' | 'offline' | 'maintenance';
   unidirectional?: boolean;
   checkInfo?: CheckInfo;
@@ -109,7 +106,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; style?: 
   Palette,
   Wrench,
   Globe,
-  User,
 };
 
 const statusColor: Record<string, string> = {
@@ -456,20 +452,6 @@ const FriendCard = memo(function FriendCard({
               <p className="text-xs sm:text-sm leading-5 h-10 line-clamp-2 shrink-0 mb-3" style={{ color: 'var(--text-secondary)' }}>
                 {description}
               </p>
-
-              {friend.featured && (
-                <div
-                  className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-bold uppercase tracking-wider border-2 font-mono"
-                  style={{
-                    background: 'var(--bg-primary)',
-                    borderColor: 'var(--accent-primary)',
-                    color: 'var(--accent-primary)',
-                  }}
-                >
-                  <Star className="w-3 h-3" />
-                  {t.friends.featured}
-                </div>
-              )}
             </div>
 
             <motion.div
@@ -548,6 +530,7 @@ const HeroSection = memo(function HeroSection({
   stats,
   lastUpdated,
   onApplyClick,
+  onRandomClick,
   onDebugClick,
   showDebug,
 }: {
@@ -556,6 +539,7 @@ const HeroSection = memo(function HeroSection({
   stats: { friends: number; categories: number; online: number };
   lastUpdated?: string;
   onApplyClick: () => void;
+  onRandomClick: () => void;
   onDebugClick: () => void;
   showDebug: boolean;
 }) {
@@ -608,6 +592,20 @@ const HeroSection = memo(function HeroSection({
               >
                 <Mail className="w-4 h-4" />
                 {t.friends.apply}
+              </button>
+
+              <button
+                onClick={onRandomClick}
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--text-primary)',
+                  boxShadow: '4px 4px 0 var(--border-subtle)',
+                }}
+              >
+                <Shuffle className="w-4 h-4" />
+                {t.friends.randomVisit}
               </button>
 
               <button
@@ -1227,7 +1225,6 @@ export default function FriendsPage() {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [mailtoModalOpen, setMailtoModalOpen] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
-  const animationEnabled = useAnimationEnabled();
   const { t, locale } = useTranslation();
 
   const handleFriendClick = useCallback((friend: Friend) => {
@@ -1237,9 +1234,10 @@ export default function FriendsPage() {
 
   const handleRandomVisit = useCallback(() => {
     if (!data) return;
-    const featuredFriends = data.friends.filter((f) => f.featured && f.status === 'online');
-    if (featuredFriends.length === 0) return;
-    const randomFriend = featuredFriends[Math.floor(Math.random() * featuredFriends.length)];
+    const online = data.friends.filter((f) => f.status === 'online');
+    const pool = online.length > 0 ? online : data.friends;
+    if (pool.length === 0) return;
+    const randomFriend = pool[Math.floor(Math.random() * pool.length)];
     setSelectedFriend(randomFriend);
     setRedirectModalOpen(true);
   }, [data]);
@@ -1290,38 +1288,23 @@ export default function FriendsPage() {
     loadData();
   }, [loadData]);
 
-  const VISIBLE_CATEGORIES = ['personal'];
-  const DEMO_CATEGORY_ID = 'demo';
-
   const friendsByCategory = useMemo(() => {
     if (!data) return [];
-    return VISIBLE_CATEGORIES.map((catId) => {
-      const category = data.categories.find((c) => c.id === catId);
-      if (!category) return null;
-      return {
+    return data.categories
+      .map((category) => ({
         category,
-        friends: data.friends.filter((friend) => friend.category === catId),
-      };
-    }).filter((item): item is { category: FriendCategory; friends: Friend[] } => item !== null && item.friends.length > 0);
-  }, [data]);
-
-  const demoFriends = useMemo(() => {
-    if (!data) return [];
-    return data.friends.filter((friend) => friend.category === DEMO_CATEGORY_ID);
-  }, [data]);
-
-  const demoCategory = useMemo(() => {
-    if (!data) return null;
-    return data.categories.find((c) => c.id === DEMO_CATEGORY_ID) || null;
+        friends: data.friends.filter((friend) => friend.category === category.id),
+      }))
+      .filter((item) => item.friends.length > 0);
   }, [data]);
 
   const stats = useMemo(() => {
     if (!data) return { friends: 0, categories: 0, online: 0 };
-    const featuredFriends = data.friends.filter((f) => f.featured);
+    const activeCategories = new Set(data.friends.map((f) => f.category));
     return {
-      friends: featuredFriends.length,
-      categories: 3,
-      online: featuredFriends.filter((f) => f.status === 'online').length,
+      friends: data.friends.length,
+      categories: data.categories.filter((c) => activeCategories.has(c.id)).length,
+      online: data.friends.filter((f) => f.status === 'online').length,
     };
   }, [data]);
 
@@ -1380,6 +1363,7 @@ export default function FriendsPage() {
           stats={stats}
           lastUpdated={data.lastUpdated}
           onApplyClick={handleApplyClick}
+          onRandomClick={handleRandomVisit}
           onDebugClick={() => setShowDebug(!showDebug)}
           showDebug={showDebug}
         />
@@ -1402,56 +1386,6 @@ export default function FriendsPage() {
                   onClick={handleFriendClick}
                 />
               )
-          )}
-
-          {/* Featured Friends */}
-          {data.friends.some((f) => f.featured) && (
-            <motion.section
-              initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="mb-16"
-            >
-              <div className="flex items-center gap-4 mb-6 flex-wrap">
-                <div
-                  className="flex items-center justify-center w-12 h-12 border-2"
-                  style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}
-                >
-                  <Star className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
-                </div>
-                <h2
-                  className="text-xl sm:text-2xl font-bold uppercase"
-                  style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
-                >
-                  {t.friends.featured}
-                </h2>
-                <button
-                  onClick={handleRandomVisit}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
-                  style={{
-                    background: 'var(--bg-secondary)',
-                    borderColor: 'var(--accent-primary)',
-                    color: 'var(--accent-primary)',
-                    boxShadow: '3px 3px 0 var(--accent-primary)',
-                  }}
-                >
-                  <Shuffle className="w-4 h-4" />
-                  {t.friends.randomVisit}
-                </button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
-                {data.friends
-                  .filter((f) => f.featured)
-                  .map((friend, index) => (
-                    <FriendCard key={friend.id} friend={friend} index={index} onClick={handleFriendClick} />
-                  ))}
-              </div>
-            </motion.section>
-          )}
-
-          {/* Demo Sites */}
-          {demoFriends.length > 0 && demoCategory && (
-            <CategorySection category={demoCategory} friends={demoFriends} index={3} onClick={handleFriendClick} />
           )}
 
           {/* Apply Section */}
