@@ -14,7 +14,8 @@ npm run build
 
 1. `node scripts/generate-playlist.js`
    - Scans `public/music/mp3/`, `public/music/lyric/` and `public/music/music-covers/`.
-   - Writes `content/data/playlist.json` with external COS URLs for audio, lyrics and cover art.
+   - Writes `content/data/playlist.json` with mirror URLs for audio, lyrics and cover art.
+   - Lyrics are **not** embedded in the playlist; each track stores only `lyricUrl`, and the player fetches the LRC on demand.
    - Does **not** produce `dist-music`; that standalone media mirror is generated only by the manual `npm run generate-music-site` command.
 
 2. `node scripts/sync-content-to-public.js`
@@ -52,7 +53,7 @@ npm run build:fast
 
 ### 1. `generate-playlist.js`
 
-**Purpose**: Keep the music playlist JSON in sync with the files in `public/music/` while pointing the player at the external COS bucket.
+**Purpose**: Keep the music playlist JSON in sync with the files in `public/music/` while pointing the player at the external media mirror.
 
 **Usage**: Automatically runs as the first step of `npm run build`, or manually:
 
@@ -61,7 +62,7 @@ npm run generate-playlist
 # equivalent to: node scripts/generate-playlist.js
 ```
 
-This command only writes `content/data/playlist.json`. To build the standalone static media mirror at `dist-music/`, use the separate opt-in command:
+This command only writes `content/data/playlist.json`; it does not embed parsed lyrics. The player fetches `lyricUrl` at runtime through the same-origin `/api/lyric` edge function, with the main site's `/music/lyric/` copy as a fallback. To build the standalone static media mirror at `dist-music/`, use the separate opt-in command:
 
 ```bash
 npm run generate-music-site
@@ -76,9 +77,9 @@ npm run generate-music-site
 These files remain local as build-time material but are not committed.
 
 **Output**: `content/data/playlist.json` with:
-- `src`: external audio URL (`https://cos.sakurain.net/mp3/<url-encoded filename>`)
-- `lyricUrl`: external lyric URL (`https://cos.sakurain.net/lyric/<url-encoded filename>.lrc`)
-- `cover`: external cover URL (`https://cos.sakurain.net/music-covers/<url-encoded filename>.<ext>`)
+- `src`: mirror audio URL (`https://music.sakurain.net/music/mp3/<url-encoded filename>`)
+- `lyricUrl`: mirror lyric URL (`https://music.sakurain.net/music/lyric/<url-encoded filename>.lrc`); no `lyrics` array is written
+- `cover`: mirror cover URL (`https://music.sakurain.net/music/music-covers/<url-encoded filename>.<ext>`)
 
 ---
 

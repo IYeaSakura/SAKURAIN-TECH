@@ -246,27 +246,24 @@ export function MusicPlayerProvider({
   const currentNumber = currentPosition + 1;
   const totalSongs = playlist.length;
 
-  // Prefer lyrics embedded in the playlist; only fall back to a network fetch
-  // for older playlists that still store a bare lyricUrl.
+  // The playlist now stores only a mirror lyric URL, so lyrics are fetched on
+  // demand. Embedded lyrics are kept solely as a fallback for stale playlists
+  // that were generated before this field was removed.
   useEffect(() => {
     let cancelled = false;
     setLyricsLoading(true);
-
-    const embedded = currentSong.lyrics;
-    if (embedded && embedded.length > 0) {
-      setCurrentLyrics(embedded);
-      setLyricsLoading(false);
-      return () => {
-        cancelled = true;
-      };
-    }
-
     setCurrentLyrics([]);
+
     fetchLyrics(currentSong.lyricUrl).then((lyrics) => {
       if (cancelled) return;
-      setCurrentLyrics(lyrics);
+      if (lyrics.length > 0) {
+        setCurrentLyrics(lyrics);
+      } else if (currentSong.lyrics && currentSong.lyrics.length > 0) {
+        setCurrentLyrics(currentSong.lyrics);
+      }
       setLyricsLoading(false);
     });
+
     return () => {
       cancelled = true;
     };

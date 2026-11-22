@@ -20,9 +20,7 @@ const STATIC_COVER_DIR = path.join(STATIC_SITE_DIR, 'music', 'music-covers');
 const CDN_BASE_URL = (process.env.MUSIC_CDN_BASE_URL || 'https://music.sakurain.net/music').replace(/\/$/, '');
 const CDN_MP3_PATH = '/mp3/';
 const CDN_COVERS_PATH = '/music-covers/';
-// Lyrics are already shipped as static files under /music/lyric on the site.
-// Serving them same-origin avoids CORS failures on the external CDN.
-const LOCAL_LYRIC_PATH = '/music/lyric/';
+const CDN_LYRIC_PATH = '/lyric/';
 
 // The full build only refreshes the playlist JSON. The standalone static media
 // mirror (dist-music) is a manual, opt-in artifact for CDN deployment.
@@ -48,37 +46,6 @@ function parseFilename(basename) {
     return { artist: artist.trim(), title: titleParts.join(separator).trim() };
   }
   return { artist: 'Unknown Artist', title: basename.trim() };
-}
-
-/**
- * Parse an LRC file into a JSON lyrics array.
- * Supports multiple time tags on the same line and ignores metadata tags.
- */
-function parseLrc(lrcPath) {
-  const content = fs.readFileSync(lrcPath, 'utf-8');
-  const lines = content.split(/\r?\n/);
-  const entries = [];
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-
-    // Match all [mm:ss.xx] or [mm:ss.xxx] time tags at the start of the line.
-    const timeTagPattern = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/g;
-    const timeMatches = [...trimmed.matchAll(timeTagPattern)];
-    if (timeMatches.length === 0) continue;
-
-    const text = trimmed.replace(timeTagPattern, '').trim();
-    for (const match of timeMatches) {
-      const minutes = parseInt(match[1], 10);
-      const seconds = parseInt(match[2], 10);
-      const centis = parseInt(match[3].padEnd(3, '0'), 10);
-      const time = minutes * 60 + seconds + centis / 1000;
-      entries.push({ time, text });
-    }
-  }
-
-  return entries.sort((a, b) => a.time - b.time);
 }
 
 /**
@@ -452,10 +419,9 @@ async function generatePlaylist() {
     const artist = metadata.common.artist || parsed.artist;
     const cover = await extractCover(metadata, basename);
 
-    const lrcPath = path.join(LYRIC_DIR, `${basename}.lrc`);
-    const hasLyrics = fs.existsSync(lrcPath);
+    const hasLyrics = fs.existsSync(path.join(LYRIC_DIR, `${basename}.lrc`));
     const lyricUrl = hasLyrics
-      ? `${LOCAL_LYRIC_PATH}${encodeURIComponent(`${basename}.lrc`)}`
+      ? `${CDN_BASE_URL}${CDN_LYRIC_PATH}${encodeURIComponent(`${basename}.lrc`)}`
       : null;
 
     songs.push({
@@ -465,9 +431,6 @@ async function generatePlaylist() {
       src: `${CDN_BASE_URL}${CDN_MP3_PATH}${encodeURIComponent(file)}`,
       cover,
       lyricUrl,
-      // Embed parsed lyrics so playback never depends on a cross-origin LRC
-      // request. lyricUrl is kept only as a runtime fallback.
-      lyrics: hasLyrics ? parseLrc(lrcPath) : [],
     });
   }
 

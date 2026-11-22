@@ -41,7 +41,7 @@ A personal brand portal built with Next.js 15 App Router, deployed on Tencent Cl
 
 - **Next.js 15 App Router**: Server Components by default, with client islands for heavy interactivity.
 - **SSG-First**: ~57 pages prerendered at build time; dynamic edge APIs for write operations.
-- **EdgeOne Edge Functions**: Write APIs (`/api/comments`, `/api/danmaku/*`, `/api/feed/*`) live in `edge-functions/` and are deployed as EdgeOne Pages Functions, keeping the Next.js bundle free of Node.js runtime dependencies.
+- **EdgeOne Edge Functions**: APIs (`/api/comments`, `/api/danmaku/*`, `/api/feed/*`, `/api/lyric`) live in `edge-functions/` and are deployed as EdgeOne Pages Functions, keeping the Next.js bundle free of Node.js runtime dependencies.
 - **Static Export**: `next.config.ts` uses `output: "export"` with `distDir: "dist"`; EdgeOne Pages deploys the `dist/` directory directly, eliminating the SSR Node function package entirely.
 - **Turbopack Dev**: Fast cold-start dev server with on-demand route compilation.
 - **Mounted Gate Pattern**: Unified hydration-mismatch prevention via `MobileContext` and `useMobileMounted`.
@@ -112,10 +112,11 @@ SAKURAIN-TECH/
 │   ├── studio/                       # Portfolio studio
 │   ├── projects/                     # Projects showcase
 │   └── resume/                       # Resume page
-├── edge-functions/                   # EdgeOne Pages Functions (write APIs)
+├── edge-functions/                   # EdgeOne Pages Functions (APIs)
 │   ├── lib/                          # Shared edge logic (auth, rate-limit, KV)
 │   └── api/                          # Function entrypoints
 │       ├── comments.js               # /api/comments
+│       ├── lyric.js                  # /api/lyric (lyrics from media mirror)
 │       ├── danmaku/
 │       │   ├── list.js               # /api/danmaku/list
 │       │   ├── add.js                # /api/danmaku/add
@@ -342,6 +343,12 @@ X-Timestamp: <milliseconds since epoch>
 X-Nonce: <UUID>
 X-Signature: <hex(HMAC-SHA256("<timestamp>:<nonce>", API_SECRET_KEY))>
 ```
+
+### Lyrics
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/lyric` | GET | No | Fetch an LRC from the media mirror (`?name=<url-encoded filename>`) |
 
 ### Comments
 

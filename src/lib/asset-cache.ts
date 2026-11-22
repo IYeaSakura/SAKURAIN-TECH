@@ -191,9 +191,13 @@ async function fetchTextWithFallback(url: string): Promise<string | null> {
 function normalizeCacheKey(url: string): string {
   if (typeof window === 'undefined') return url;
   try {
-    const pathname = new URL(url, window.location.href).pathname;
+    const parsed = new URL(url, window.location.href);
+    const pathname = parsed.pathname;
     const match = pathname.match(/\/(mp3|lyric|music-covers)\/.*$/);
-    return match ? match[0] : pathname;
+    // Proxy endpoints such as /api/lyric?name=... rely on the query string to
+    // identify the resource; dropping it would collapse every lyric into one
+    // cache entry.
+    return match ? match[0] : `${pathname}${parsed.search}`;
   } catch {
     return url;
   }

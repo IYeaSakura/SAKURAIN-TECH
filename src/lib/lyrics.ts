@@ -1,8 +1,8 @@
 /**
  * Shared LRC lyric utilities.
  *
- * Used by the build-time playlist generator and the runtime player so both
- * sides agree on the lyric format.
+ * Used by the runtime player to fetch lyrics on demand. Build-time parsing was
+ * removed so playlist.json stays small; the playlist only stores a mirror URL.
  */
 
 import { getCachedLyrics } from './asset-cache';
@@ -38,15 +38,14 @@ export function parseLrc(content: string): LyricLine[] {
     }
   }
 
-  return entries.sort((a, b) => (a.time ?? 0) - (b.time ?? 0))
+  return entries.sort((a, b) => (a.time ?? 0) - (b.time ?? 0));
 }
 
 /**
- * Map any lyric URL to the site's own static copy. The CDN does not send
- * Access-Control-Allow-Origin, so a browser fetch to it is blocked even though
- * the LRC files are already deployed under /music/lyric on the site itself.
+ * Extract a safe LRC filename from either an absolute mirror URL or an older
+ * same-origin path. The filename alone is enough to address both endpoints.
  */
-function toLocalLyricUrl(url: string): string | null {
+function toLyricFilename(url: string): string | null {
   if (typeof window === 'undefined') return null;
   try {
     const parsed = new URL(url, window.location.href);
@@ -54,22 +53,48 @@ function toLocalLyricUrl(url: string): string | null {
     const filename = decodeURIComponent(
       parsed.pathname.split('/').filter(Boolean).pop() ?? ''
     );
-    return filename ? `/music/lyric/${encodeURIComponent(filename)}` : null;
+    if (!filename || /[/\\]/.test(filename) || filename.includes('..')) return null;
+    return filename;
   } catch {
     return null;
   }
 }
 
 /**
- * Fetch and parse an LRC file. The same-origin static copy is preferred; the
- * original URL is kept as a fallback for deployments that do not ship lyrics.
+ * The media mirror does not send CORS headers, so the browser reads it through
+ * this same-origin EdgeOne function. On production this is an https URL and is
+ * therefore also eligible for the persistent asset cache.
+ */
+function toProxyUrl(filename: string): string {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  return `${origin}/api/lyric?name=${encodeURIComponent(filename)}`;
+}
+
+/** Same-origin static copy, kept as a fallback for the edge proxy. */
+function toLocalUrl(filename: string): string {
+  return `/music/lyric/${encodeURIComponent(filename)}`;
+}
+
+/**
+ * Fetch and parse an LRC file. The mirror is the source of truth; it is read
+ * through the same-origin proxy. The static site copy and the legacy absolute
+ * URL are fallbacks for deployments without the edge function.
  * Returns an empty array when every candidate is missing or unparsable.
  */
 export async function fetchLyrics(url: string | undefined | null): Promise<LyricLine[]> {
   if (!url) return [];
 
-  const localUrl = toLocalLyricUrl(url);
-  const candidates = localUrl && localUrl !== url ? [localUrl, url] : [url];
+  const filename = toLyricFilename(url);
+  const candidates: string[] = [];
+
+  if (filename) {
+    candidates.push(toProxyUrl(filename));
+    const localUrl = toLocalUrl(filename);
+    if (!candidates.includes(localUrl)) candidates.push(localUrl);
+  }
+
+  // Last resort for deployments where the mirror has since enabled CORS.
+  if (url && !candidates.includes(url)) candidates.push(url);
 
   for (const candidate of candidates) {
     try {
