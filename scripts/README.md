@@ -69,6 +69,8 @@ npm run generate-music-site
 # equivalent to: node scripts/generate-playlist.js --static-site
 ```
 
+Regeneration only replaces `dist-music/index.html` and `dist-music/music/{mp3,lyric,music-covers}/`. A standalone `dist-music/.git` repository, `.gitignore`, and any other user-managed files at the mirror root are preserved, so you can commit and push mirror updates without re-initializing Git.
+
 **Input**: Local media arranged as three sibling directories under `public/music/`:
 - `public/music/mp3/` — audio files
 - `public/music/lyric/` — `.lrc` lyric files

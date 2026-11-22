@@ -142,13 +142,29 @@ function encodePathSegment(segment) {
  * contains the mirrored media files and an index.html listing page suitable for
  * deployment to any static host or CDN. This is intentionally opt-in via
  * `npm run generate-music-site` and is never produced by the full site build.
+ * Only generated files are cleaned, so a standalone .git repository and any
+ * user-managed files in dist-music survive regenerations.
  */
 async function generateStaticSite(songs) {
-  // Clean and recreate the static site directory so stale files from
-  // previous runs (e.g. renamed covers or removed tracks) do not linger.
-  if (fs.existsSync(STATIC_SITE_DIR)) {
-    fs.rmSync(STATIC_SITE_DIR, { recursive: true, force: true });
+  // dist-music may be a standalone Git repository used to publish the mirror
+  // to a separate remote. Only remove the files this generator owns; wiping
+  // the whole directory would destroy its .git history and user-managed files.
+  if (fs.existsSync(path.join(STATIC_SITE_DIR, '.git'))) {
+    console.log('  · Preserving dist-music/.git (standalone repository)');
   }
+
+  const generatedTargets = [
+    path.join(STATIC_SITE_DIR, 'index.html'),
+    STATIC_MP3_DIR,
+    STATIC_LYRIC_DIR,
+    STATIC_COVER_DIR,
+  ];
+  for (const target of generatedTargets) {
+    if (fs.existsSync(target)) {
+      fs.rmSync(target, { recursive: true, force: true });
+    }
+  }
+
   ensureDir(STATIC_SITE_DIR);
   ensureDir(STATIC_MP3_DIR);
   ensureDir(STATIC_LYRIC_DIR);
