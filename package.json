@@ -7,6 +7,7 @@
     "dev": "next dev --turbopack",
     "build": "node scripts/generate-playlist.js && node scripts/calculate-language-stats.js && node scripts/sync-content-to-public.js && node scripts/check-friends-connectivity.js && node scripts/build-next.js && node scripts/submit-sitemap.js",
     "build:fast": "next build",
+    "build:offline": "node scripts/build-offline.js",
     "generate-playlist": "node scripts/generate-playlist.js",
     "generate-music-site": "node scripts/generate-playlist.js --static-site",
     "submit-sitemap": "node scripts/submit-sitemap.js",
@@ -15,8 +16,6 @@
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.6.1",
     "cesium": "^1.143.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.42.2",
@@ -34,8 +33,7 @@
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
     "sonner": "^2.0.7",
-    "tailwind-merge": "^3.6.0",
-    "three": "^0.185.1"
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
@@ -43,7 +41,6 @@
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@types/react-syntax-highlighter": "^15.5.13",
-    "@types/three": "^0.185.1",
     "autoprefixer": "^10.4.21",
     "edgeone": "^1.6.16",
     "eslint": "^9.39.5",

@@ -185,6 +185,10 @@ function parseFeedPreview(content: string): FeedPreviewItem[] {
   return items;
 }
 
+// 弹窗可能被反复打开；订阅内容在短时间内不会变化，缓存 5 分钟避免重复请求。
+const FEED_PREVIEW_TTL = 5 * 60 * 1000;
+const feedPreviewCache = new Map<string, { items: FeedPreviewItem[]; timestamp: number }>();
+
 /** 将 feed 时间格式化为 YYYY.MM.DD，无法解析时返回空串 */
 function formatFeedDate(value: string, locale: Locale): string {
   if (!value) return '';
@@ -506,6 +510,7 @@ const FriendCard = memo(function FriendCard({
                   src={friend.icon}
                   alt={friend.name}
                   loading="lazy"
+                  decoding="async"
                   className="h-8 w-8 object-contain sm:h-9 sm:w-9"
                   onError={() => setImageError(true)}
                 />
@@ -1253,13 +1258,20 @@ const FriendDetailModal = memo(function FriendDetailModal({
       return;
     }
 
+    const feedUrl = friend.feed;
+    const cached = feedPreviewCache.get(feedUrl);
+    if (cached && Date.now() - cached.timestamp < FEED_PREVIEW_TTL) {
+      setFeedState({ status: 'ready', items: cached.items });
+      return;
+    }
+
     const controller = new AbortController();
     let cancelled = false;
     setFeedState({ status: 'loading', items: [] });
 
     const timeout = setTimeout(() => controller.abort(), 12000);
 
-    fetch(`/api/feed/get?url=${encodeURIComponent(friend.feed)}`, {
+    fetch(`/api/feed/get?url=${encodeURIComponent(feedUrl)}`, {
       signal: controller.signal,
       headers: {
         Accept:
@@ -1273,6 +1285,7 @@ const FriendDetailModal = memo(function FriendDetailModal({
       .then((content) => {
         if (cancelled) return;
         const items = parseFeedPreview(content).slice(0, 5);
+        feedPreviewCache.set(feedUrl, { items, timestamp: Date.now() });
         setFeedState({ status: 'ready', items });
       })
       .catch((error: Error) => {
@@ -1360,6 +1373,8 @@ const FriendDetailModal = memo(function FriendDetailModal({
                   <img
                     src={friend.icon}
                     alt={friend.name}
+                    loading="lazy"
+                    decoding="async"
                     className="h-10 w-10 object-contain"
                     onError={() => setImageError(true)}
                   />

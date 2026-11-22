@@ -189,8 +189,10 @@ export function ClickableImage({ src, alt }: { src?: string; alt?: string }) {
           div 会造成 <p> 非法嵌套（div-in-p 水合错误）；span 是合法 phrasing content */}
       <span className="block overflow-x-auto my-4" style={{ maxWidth: '100%' }}>
         <img 
-          src={src} 
-          alt={alt || ''} 
+          src={src}
+          alt={alt || ''}
+          loading="lazy"
+          decoding="async"
           className="max-w-full rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity"
           onClick={() => setIsModalOpen(true)}
         />

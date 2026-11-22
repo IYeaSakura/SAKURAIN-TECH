@@ -234,6 +234,8 @@ export function DynamicIsland() {
                 <img
                   src="/image/logo.webp"
                   alt="SAKURAIN"
+                  loading="lazy"
+                  decoding="async"
                   className="w-6 h-6 object-cover shrink-0"
                   style={{ imageRendering: 'pixelated' }}
                 />
@@ -281,6 +283,8 @@ export function DynamicIsland() {
                   <img
                     src="/image/logo.webp"
                     alt="SAKURAIN"
+                    loading="lazy"
+                    decoding="async"
                     className="w-7 h-7 object-cover"
                     style={{ imageRendering: 'pixelated' }}
                   />

@@ -75,6 +75,8 @@ export const BlogCard = memo(function BlogCard({
               <img
                 src={post.cover}
                 alt={post.title}
+                loading="lazy"
+                decoding="async"
                 className={`object-contain ${featuredLarge ? 'w-16 h-16 md:w-12 md:h-12' : 'w-16 h-16'}`}
               />
             </div>

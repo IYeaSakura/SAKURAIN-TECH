@@ -882,6 +882,8 @@ const FeedCard = memo(function FeedCard({
                 <img
                   src={item.sourceIcon}
                   alt={item.source}
+                  loading="lazy"
+                  decoding="async"
                   className="w-6 h-6 object-contain"
                   onError={() => setImageError(true)}
                 />
@@ -1106,6 +1108,7 @@ export default function FeedPage() {
     signal?: AbortSignal
   ): Promise<{ items: FeedItem[], timestamp: number, status: FeedSourceStatus }> => {
     const feedUrl = getFeedUrl(friend);
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {
       // Choose the endpoint based on the forceRefresh flag
       const apiUrl = forceRefresh
@@ -1113,7 +1116,7 @@ export default function FeedPage() {
         : `/api/feed/get?url=${encodeURIComponent(feedUrl)}`;
 
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout')), FETCH_TIMEOUT);
+        timeoutId = setTimeout(() => reject(new Error('Timeout')), FETCH_TIMEOUT);
       });
 
       const fetchPromise = fetch(apiUrl, {
@@ -1125,6 +1128,7 @@ export default function FeedPage() {
       });
 
       const response = await Promise.race([fetchPromise, timeoutPromise]);
+      clearTimeout(timeoutId);
 
       const content = await response.text();
       const timestampHeader = response.headers.get('X-Feed-Timestamp');
@@ -1210,6 +1214,7 @@ export default function FeedPage() {
         }
       };
     } catch (err) {
+      clearTimeout(timeoutId);
       const errorMsg = (err as Error).message || String(err);
       const isTimeout = errorMsg.includes('Timeout');
       const isAbort = (err as Error).name === 'AbortError';

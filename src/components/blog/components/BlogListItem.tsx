@@ -65,9 +65,11 @@ export const BlogListItem = memo(function BlogListItem({ post, index }: BlogList
             >
               <img
                 src={post.cover}
-                alt={post.title}
-                className="w-9 h-9 sm:w-10 sm:h-10 object-contain"
-              />
+              alt={post.title}
+              loading="lazy"
+              decoding="async"
+              className="w-9 h-9 sm:w-10 sm:h-10 object-contain"
+            />
             </div>
 
             <div className="flex-1 min-w-0">

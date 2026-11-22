@@ -1,5 +1,6 @@
 # Next.js build output
 .next/
+.next-dev/
 out/
 
 # 博客 Markdown 源文件统一由 content/blog/ 管理，构建期注入页面

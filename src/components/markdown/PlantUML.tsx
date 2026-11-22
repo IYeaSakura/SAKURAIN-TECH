@@ -38,7 +38,7 @@ export const PlantUML = ({ code }: { code: string }) => {
 
   return (
     <>
-      <div className="plantuml-diagram overflow-x-auto rounded-lg border p-4 my-4 text-center cursor-zoom-in hover:opacity-90 transition-opacity" style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-color)' }} onClick={() => setIsModalOpen(true)} title="点击放大查看"><img src={imageUrl} alt="PlantUML" className="inline-block max-w-full" /></div>
+      <div className="plantuml-diagram overflow-x-auto rounded-lg border p-4 my-4 text-center cursor-zoom-in hover:opacity-90 transition-opacity" style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-color)' }} onClick={() => setIsModalOpen(true)} title="点击放大查看"><img src={imageUrl} alt="PlantUML" loading="lazy" decoding="async" className="inline-block max-w-full" /></div>
       {isModalOpen && <ImageModal imageUrl={imageUrl} alt="PlantUML" onClose={() => setIsModalOpen(false)} />}
     </>
   );

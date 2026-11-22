@@ -64,7 +64,7 @@ A personal brand portal built with Next.js 15 App Router, deployed on Tencent Cl
 ### Additional Libraries
 
 - **Content Pipeline**: gray-matter, react-markdown, remark-gfm, remark-math, rehype-katex
-- **3D & Graphics**: Cesium, Three.js, @react-three/fiber, @react-three/drei
+- **3D & Graphics**: Cesium (lazy-loaded on the Earth page)
 - **Animation**: framer-motion, gsap
 - **UI Utilities**: lucide-react, clsx, tailwind-merge, sonner
 - **Edge Runtime**: crypto Web API, KVNamespace via global bindings
@@ -402,7 +402,7 @@ Error:
 
 - **SSG-First Rendering**: ~57 pages are prerendered at build time, eliminating runtime server load for content pages.
 - **Turbopack Development**: Fast cold-start and on-demand compilation during development.
-- **Optimize Package Imports**: `next.config.ts` configures `optimizePackageImports` for `lucide-react`, `framer-motion`, and `@react-three/drei` to reduce bundle size.
+- **Optimize Package Imports**: `next.config.ts` configures `optimizePackageImports` for `lucide-react` and `framer-motion` to reduce bundle size.
 - **Self-Hosted Fonts**: JetBrains Mono, VT323, and Press Start 2P fonts are self-hosted to eliminate external network blocking.
 - **Image Optimization**: Next.js Image component is used where possible; large audio files are served as static assets.
 - **Mounted Gate Pattern**: Heavy client-side effects are deferred until after hydration to prevent layout shift and hydration mismatch.
@@ -421,7 +421,7 @@ Error:
 ### Bundle Considerations
 
 - Cesium runtime assets live under `public/cesium/` and are served as static files, not bundled into JavaScript. The directory is gitignored and generated automatically during the build; if it is missing locally, copy it from `node_modules/cesium/Build/Cesium`.
-- Three.js and Cesium are loaded only on pages that need them via dynamic imports with `ssr: false`.
+- Cesium is loaded only on the Earth page via a dynamic import with `ssr: false`.
 - Heavy interactive pages such as `/earth-online` and `/algo-viz` are marked dynamic to avoid blocking static generation.
 
 ---
@@ -585,7 +585,6 @@ This project is built with the help of many open-source projects:
 - [React](https://react.dev/) - UI library
 - [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
 - [Cesium](https://cesium.com/) - 3D globe and mapping
-- [Three.js](https://threejs.org/) - 3D graphics library
 - [EdgeOne Pages](https://pages.edgeone.ai/) - Edge deployment platform
 
 ---

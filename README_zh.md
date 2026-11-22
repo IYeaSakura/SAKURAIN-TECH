@@ -64,7 +64,7 @@
 ### 附加库
 
 - **内容管线**: gray-matter、react-markdown、remark-gfm、remark-math、rehype-katex
-- **3D 与图形**: Cesium、Three.js、@react-three/fiber、@react-three/drei
+- **3D 与图形**: Cesium（地球页按需加载）
 - **动画**: framer-motion、gsap
 - **UI 工具**: lucide-react、clsx、tailwind-merge、sonner
 - **边缘运行时**: Web Crypto API、通过全局变量访问的 KVNamespace
@@ -366,7 +366,7 @@ X-Signature: <hex(HMAC-SHA256("<timestamp>:<nonce>", API_SECRET_KEY))>
 
 - **SSG 优先渲染**: 构建期预渲染 46 个页面，降低内容页运行时服务器负载。
 - **Turbopack 开发**: 开发环境冷启动快、按需编译。
-- **优化包导入**: `next.config.ts` 中为 `lucide-react`、`framer-motion`、`@react-three/drei` 配置 `optimizePackageImports`，减少打包体积。
+- **优化包导入**: `next.config.ts` 中为 `lucide-react`、`framer-motion` 配置 `optimizePackageImports`，减少打包体积。
 - **自托管字体**: JetBrains Mono、VT323、Press Start 2P 等字体本地化，避免境外网络阻塞。
 - **图片优化**: 尽量使用 Next.js Image 组件；大型音频文件作为静态资源提供。
 - **Mounted 门控模式**: 重型客户端特效延迟到水合后执行，避免布局偏移与水合不匹配。
@@ -385,7 +385,7 @@ X-Signature: <hex(HMAC-SHA256("<timestamp>:<nonce>", API_SECRET_KEY))>
 ### 打包注意事项
 
 - Cesium 运行时资产存放于 `public/cesium/`，作为静态文件提供，不打入 JavaScript 包。该目录已加入 `.gitignore`；若缺失，请从 `node_modules/cesium/Build/Cesium` 手动复制后再构建。
-- Three.js 与 Cesium 仅在需要它们的页面通过 `ssr: false` 动态导入。
+- Cesium 仅在地球页通过 `ssr: false` 动态导入。
 - `/earth-online`、`/algo-viz` 等重交互页面标记为 dynamic，避免阻塞静态生成。
 
 ---
@@ -549,7 +549,6 @@ allowedDevOrigins: ["localhost", "127.0.0.1"]
 - [React](https://react.dev/) - UI 库
 - [Tailwind CSS](https://tailwindcss.com/) - 实用优先 CSS 框架
 - [Cesium](https://cesium.com/) - 3D 地球与地图
-- [Three.js](https://threejs.org/) - 3D 图形库
 - [EdgeOne Pages](https://pages.edgeone.ai/) - 边缘部署平台
 
 ---

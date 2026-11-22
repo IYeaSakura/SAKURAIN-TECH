@@ -7,7 +7,9 @@ const nextConfig: NextConfig = {
   // needed because all pages are generated at build time and dynamic APIs are
   // implemented as EdgeOne Edge Functions in the ./edge-functions directory.
   output: "export",
-  distDir: "dist",
+  // 生产构建输出到 dist（EdgeOne 的发布目录）；开发服务使用独立目录，
+  // 避免 turbopack 把开发态 manifest 混进 dist 导致部署后资源 404。
+  distDir: process.env.NODE_ENV === "development" ? ".next-dev" : "dist",
 
   allowedDevOrigins: ["localhost", "127.0.0.1"],
 
@@ -16,7 +18,7 @@ const nextConfig: NextConfig = {
   },
 
   experimental: {
-    optimizePackageImports: ["lucide-react", "framer-motion", "@react-three/drei"],
+    optimizePackageImports: ["lucide-react", "framer-motion"],
     // Offload webpack compilation to a worker process to reduce peak memory
     // usage in the main process during builds with heavy dependencies.
     webpackBuildWorker: true,

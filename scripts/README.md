@@ -43,6 +43,8 @@ npm run build
    - Supports Bing (primary via `BING_API_KEY`), Baidu (via `BAIDU_PUSH_TOKEN`), and Google Search Console (via `GOOGLE_SERVICE_ACCOUNT_JSON`).
    - Reads `dist/sitemap.xml` first, falling back to `.next/server/app/sitemap.xml.body` or `public/sitemap.xml` for legacy setups.
 
+For a network-free local build use `npm run build:offline`. It runs the same steps with `SKIP_FRIEND_CHECK=true` and `SEARCH_ENGINE_SUBMIT=none`, skipping HTTP connectivity probes and sitemap submission while still refreshing friend statuses timestamps and producing the full static export.
+
 To skip all build scripts and run only `next build`, use:
 
 ```bash

@@ -20,28 +20,21 @@ import jsonLang from 'react-syntax-highlighter/dist/esm/languages/prism/json';
 import markup from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
 import css from 'react-syntax-highlighter/dist/esm/languages/prism/css';
 import cLang from 'react-syntax-highlighter/dist/esm/languages/prism/c';
-import cpp from 'react-syntax-highlighter/dist/esm/languages/prism/cpp';
 import lua from 'react-syntax-highlighter/dist/esm/languages/prism/lua';
 import java from 'react-syntax-highlighter/dist/esm/languages/prism/java';
 import jsx from 'react-syntax-highlighter/dist/esm/languages/prism/jsx';
 import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
-import go from 'react-syntax-highlighter/dist/esm/languages/prism/go';
-import rust from 'react-syntax-highlighter/dist/esm/languages/prism/rust';
-import ruby from 'react-syntax-highlighter/dist/esm/languages/prism/ruby';
-import php from 'react-syntax-highlighter/dist/esm/languages/prism/php';
-import scss from 'react-syntax-highlighter/dist/esm/languages/prism/scss';
-import docker from 'react-syntax-highlighter/dist/esm/languages/prism/docker';
-import nginx from 'react-syntax-highlighter/dist/esm/languages/prism/nginx';
 
-// 注册主语言名 + 常用别名，保证 markdown 里的 ```ts / ```sh / ```html 等都能高亮。
+// 仅注册站点内容实际使用的语言（见 content/blog 与 content/docs 的代码块统计）。
+// 未使用的语言包会被动态拆到独立 chunk，但没必要为它们付出下载与解析成本。
 const languageModules: Record<string, unknown> = {
   sql, typescript, javascript, python, bash, ini, markdown, yaml,
-  glsl, json: jsonLang, html: markup, xml: markup, markup, css, c: cLang, cpp,
-  lua, java, jsx, tsx, go, rust, ruby, php, scss, docker, dockerfile: docker, nginx,
+  glsl, json: jsonLang, html: markup, xml: markup, markup, css, c: cLang,
+  lua, java, jsx, tsx,
 };
 const languageAliases: Record<string, string> = {
   js: 'javascript', ts: 'typescript', py: 'python', sh: 'bash',
-  yml: 'yaml', md: 'markdown', rs: 'rust', rb: 'ruby',
+  yml: 'yaml', md: 'markdown',
 };
 
 Object.entries(languageModules).forEach(([name, mod]) => {

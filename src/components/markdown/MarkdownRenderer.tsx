@@ -1,12 +1,16 @@
 import { useState, useEffect, useMemo, memo, useRef, Children, cloneElement } from 'react';
+import dynamic from 'next/dynamic';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import { PlantUML } from './PlantUML';
-import { CodeBlock } from './CodeBlock';
 import { ClickableImage } from './ImageModal';
+
+// 代码高亮（PrismLight + 语言包）与 PlantUML 编码器都不参与首屏正文，
+// 拆成独立 chunk：SSR 仍输出完整 HTML，客户端仅在需要时下载。
+const CodeBlock = dynamic(() => import('./CodeBlock').then((m) => m.CodeBlock));
+const PlantUML = dynamic(() => import('./PlantUML').then((m) => m.PlantUML));
 import { extractTextFromChildren, generateHeadingId, splitContentByHeadings } from '@/components/docs/utils';
 import '@/styles/code-block.css';
 

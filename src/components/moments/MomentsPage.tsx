@@ -314,6 +314,8 @@ function PhotoGrid({
         <img
           src={photos[0].src}
           alt=""
+          loading="lazy"
+          decoding="async"
           className="w-full h-auto object-cover hover:scale-105 transition-transform duration-300"
         />
       </div>
@@ -333,6 +335,8 @@ function PhotoGrid({
             <img
               src={photo.src}
               alt=""
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             />
           </div>
@@ -354,6 +358,8 @@ function PhotoGrid({
             <img
               src={photo.src}
               alt=""
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             />
           </div>
@@ -375,6 +381,8 @@ function PhotoGrid({
           <img
             src={photo.src}
             alt=""
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           />
         </div>

@@ -1,16 +1,17 @@
 import { useState, useEffect, useMemo, useRef, Component, Suspense, lazy, type ReactNode } from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { UnifiedToc } from './UnifiedToc';
 import { ThemeToggleButton } from './ThemeToggleButton';
-import { CodeBlock } from '@/components/markdown/CodeBlock';
-import { PlantUML } from '@/components/markdown/PlantUML';
 import type { Chapter, DocSeries, DocCategory, TocItem } from '../types';
 import { extractHeadings } from '../utils';
 
 const DocSearch = lazy(() => import('./DocSearch').then(m => ({ default: m.DocSearch })));
+const CodeBlock = dynamic(() => import('@/components/markdown/CodeBlock').then((m) => m.CodeBlock));
+const PlantUML = dynamic(() => import('@/components/markdown/PlantUML').then((m) => m.PlantUML));
 
 // 错误边界组件
 class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { hasError: boolean; error?: Error }> {

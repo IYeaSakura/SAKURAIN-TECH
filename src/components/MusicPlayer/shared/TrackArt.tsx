@@ -51,6 +51,8 @@ export function TrackArt({ song, isPlaying = false, className = '' }: TrackArtPr
           key={src}
           src={src}
           alt=""
+          loading="lazy"
+          decoding="async"
           className={styles.trackArtImage}
           onError={() => setSrc('')}
         />

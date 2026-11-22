@@ -221,6 +221,8 @@ export default function AboutPage() {
               <img
                 src="/image/about/head.jpg"
                 alt="Yuyang"
+                loading="lazy"
+                decoding="async"
                 className="w-40 h-40 sm:w-52 sm:h-52 object-cover"
               />
             </div>
@@ -676,6 +678,8 @@ function AchievementImage({ slide }: { slide: AchievementSlide }) {
     <img
       src={slide.image}
       alt={slide.title}
+      loading="lazy"
+      decoding="async"
       className="w-full h-full object-cover"
       onError={() => setError(true)}
     />

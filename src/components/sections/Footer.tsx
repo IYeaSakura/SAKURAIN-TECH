@@ -173,6 +173,8 @@ export const Footer = memo(function Footer({ data }: FooterProps) {
                 <img
                   src="/image/ghs.png"
                   alt="备案图标"
+                  loading="lazy"
+                  decoding="async"
                   className="w-3 h-3"
                 />
                 皖公网安备34130202000598号

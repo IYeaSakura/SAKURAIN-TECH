@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, memo } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Sparkles, Layers } from 'lucide-react';
@@ -16,11 +17,9 @@ import { ImagePreviewProvider } from '@/contexts/ImagePreviewContext';
 import type { DocCategory, DocItem, DocSeries, Chapter, DocsConfig } from './types';
 import type { SiteData } from '@/types';
 
-// Import components directly (no lazy loading)
-import { DocDetailView as DocDetailViewComponent } from './components/DocDetailView';
-import { ChapterReader as ChapterReaderComponent } from './components/ChapterReader';
-const DocDetailView = DocDetailViewComponent;
-const ChapterReader = ChapterReaderComponent;
+// 阅读器只在真正打开文档/章节时加载。默认保留 SSR，静态导出中的正文不会丢失。
+const DocDetailView = dynamic(() => import('./components/DocDetailView').then((m) => m.DocDetailView));
+const ChapterReader = dynamic(() => import('./components/ChapterReader').then((m) => m.ChapterReader));
 
 const iconMap: Record<string, React.ComponentType<LucideProps>> = {
   Rocket, Briefcase, Code, Search, BookOpen, GraduationCap
