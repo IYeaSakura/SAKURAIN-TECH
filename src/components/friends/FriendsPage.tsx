@@ -32,6 +32,9 @@ import {
   X,
   AlertTriangle,
   Shuffle,
+  Rss,
+  ArrowUpRight,
+  BookOpen,
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { useAnimationEnabled, useTranslation } from '@/hooks';
@@ -64,12 +67,13 @@ interface CheckInfo {
 }
 
 interface Friend {
-  id: string;
+  id?: string;
   name: string;
   url: string;
   icon: string;
   description: LocalizedText;
   category: string;
+  feed?: string;
   status?: 'online' | 'offline' | 'maintenance';
   unidirectional?: boolean;
   checkInfo?: CheckInfo;
@@ -106,7 +110,92 @@ const iconMap: Record<string, React.ComponentType<{ className?: string; style?: 
   Palette,
   Wrench,
   Globe,
+  BookOpen,
 };
+
+/** 取主机名用于卡片副标题，非法 URL 时回退到原串 */
+function getHostname(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  }
+}
+
+interface FeedPreviewItem {
+  title: string;
+  link: string;
+  date: string;
+}
+
+/**
+ * 极简 feed 解析：只取标题/链接/时间，足够在友链预览里展示最近文章。
+ * 同时兼容 RSS / Atom / JSON Feed。
+ */
+function parseFeedPreview(content: string): FeedPreviewItem[] {
+  const items: FeedPreviewItem[] = [];
+  const clean = (value: string) => value.replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, '').trim();
+
+  try {
+    const json = JSON.parse(content);
+    const raw = Array.isArray(json.items) ? json.items : Array.isArray(json.entries) ? json.entries : null;
+    if (raw) {
+      for (const item of raw) {
+        items.push({
+          title: clean(String(item.title || '')),
+          link: String(item.url || item.link || item.external_url || ''),
+          date: String(item.date_published || item.published || item.updated || item.date || ''),
+        });
+      }
+      return items;
+    }
+  } catch {
+    // 非 JSON，继续按 XML 解析
+  }
+
+  if (typeof DOMParser === 'undefined') return items;
+
+  const doc = new DOMParser().parseFromString(content, 'text/xml');
+  if (doc.querySelector('rss')) {
+    doc.querySelectorAll('item').forEach((item) => {
+      const link = item.querySelector('link')?.textContent || '';
+      items.push({
+        title: clean(item.querySelector('title')?.textContent || ''),
+        link: link.trim(),
+        date: item.querySelector('pubDate')?.textContent || '',
+      });
+    });
+    return items;
+  }
+
+  if (doc.querySelector('feed')) {
+    doc.querySelectorAll('entry').forEach((entry) => {
+      const link =
+        entry.querySelector('link[rel="alternate"]')?.getAttribute('href') ||
+        entry.querySelector('link')?.getAttribute('href') ||
+        '';
+      items.push({
+        title: clean(entry.querySelector('title')?.textContent || ''),
+        link,
+        date: entry.querySelector('published')?.textContent || entry.querySelector('updated')?.textContent || '',
+      });
+    });
+  }
+
+  return items;
+}
+
+/** 将 feed 时间格式化为 YYYY.MM.DD，无法解析时返回空串 */
+function formatFeedDate(value: string, locale: Locale): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+}
 
 const statusColor: Record<string, string> = {
   online: '#22c55e',
@@ -358,31 +447,55 @@ const FriendCard = memo(function FriendCard({
   const animationEnabled = useAnimationEnabled();
   const { t, locale } = useTranslation();
   const description = getLocalizedText(friend.description, locale);
+  const hasFeed = Boolean(friend.feed);
 
   return (
     <motion.div
       initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: animationEnabled ? index * 0.05 : 0 }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={() => onClick(friend)}
-      className="group cursor-pointer"
+      transition={{ duration: 0.4, delay: animationEnabled ? index * 0.04 : 0 }}
+      className="h-full"
     >
-      <div
-        className="relative h-[172px] overflow-hidden transition-all duration-200"
+      <button
+        type="button"
+        onClick={() => onClick(friend)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onFocus={() => setIsHovered(true)}
+        onBlur={() => setIsHovered(false)}
+        aria-label={`${friend.name} — ${t.friends.open}`}
+        className="group relative block w-full h-full text-left overflow-hidden transition-all duration-200 focus:outline-none"
         style={{
           background: isHovered ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
           border: '2px solid var(--border-subtle)',
-          boxShadow: isHovered ? '4px 4px 0 var(--accent-primary)' : '4px 4px 0 var(--border-subtle)',
+          boxShadow: isHovered ? '5px 5px 0 var(--accent-primary)' : '4px 4px 0 var(--border-subtle)',
           transform: isHovered ? 'translate(-2px, -2px)' : 'none',
         }}
       >
-        <div className="p-4 sm:p-5 h-full flex flex-col">
-          <div className="flex items-start gap-3 sm:gap-4 flex-1 min-h-0">
-            {/* Icon */}
+        {/* Hover accent rail */}
+        <span
+          aria-hidden
+          className="absolute inset-y-0 left-0 w-[3px] transition-opacity duration-200"
+          style={{ background: 'var(--accent-primary)', opacity: isHovered ? 1 : 0 }}
+        />
+
+        {/* Index label */}
+        <span
+          aria-hidden
+          className="absolute right-0 top-0 px-2 py-1 text-[10px] font-mono tabular-nums leading-none border-b-2 border-l-2"
+          style={{
+            background: 'var(--bg-primary)',
+            borderColor: 'var(--border-subtle)',
+            color: isHovered ? 'var(--accent-primary)' : 'var(--text-muted)',
+          }}
+        >
+          {String(index + 1).padStart(2, '0')}
+        </span>
+
+        <div className="flex h-full flex-col p-4 sm:p-5 pr-12">
+          <div className="flex items-start gap-3 sm:gap-4">
             <div
-              className="flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center border-2 transition-colors"
+              className="flex h-12 w-12 flex-shrink-0 items-center justify-center border-2 transition-colors sm:h-14 sm:w-14"
               style={{
                 background: 'var(--bg-primary)',
                 borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
@@ -392,79 +505,102 @@ const FriendCard = memo(function FriendCard({
                 <img
                   src={friend.icon}
                   alt={friend.name}
-                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                  loading="lazy"
+                  className="h-8 w-8 object-contain sm:h-9 sm:w-9"
                   onError={() => setImageError(true)}
                 />
               ) : (
-                <Globe className="w-8 h-8 sm:w-10 sm:h-10" style={{ color: 'var(--accent-primary)' }} />
+                <Globe className="h-7 w-7 sm:h-8 sm:w-8" style={{ color: 'var(--accent-primary)' }} />
               )}
             </div>
 
-            {/* Content */}
-            <div className="flex-1 min-w-0 flex flex-col min-h-0">
-              <div className="flex items-center gap-2 mb-1.5 overflow-hidden">
-                <h3
-                  className="font-bold text-base sm:text-lg truncate flex-1"
-                  style={{ color: 'var(--text-primary)' }}
-                  title={friend.name}
-                >
-                  {friend.name}
-                </h3>
-
-                {friend.status && (
-                  <span
-                    className="flex-shrink-0 flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold uppercase border-2 font-mono truncate"
-                    style={{
-                      background: 'var(--bg-primary)',
-                      borderColor: `${statusColor[friend.status]}60`,
-                      color: statusColor[friend.status],
-                    }}
-                  >
-                    <span
-                      className="w-1 h-1"
-                      style={{
-                        background: statusColor[friend.status],
-                        boxShadow: friend.status === 'online' ? `0 0 4px ${statusColor[friend.status]}` : 'none',
-                      }}
-                    />
-                    {friend.status === 'online'
-                      ? t.friends.online
-                      : friend.status === 'maintenance'
-                        ? t.friends.maintenance
-                        : t.friends.offline}
-                  </span>
-                )}
-
-                {friend.unidirectional && (
-                  <span
-                    className="flex-shrink-0 px-1.5 py-0.5 text-[10px] font-bold uppercase border-2 font-mono truncate"
-                    style={{
-                      background: 'var(--bg-primary)',
-                      borderColor: 'var(--border-subtle)',
-                      color: 'var(--text-muted)',
-                    }}
-                  >
-                    {t.friends.oneWay}
-                  </span>
-                )}
-              </div>
-
-              <p className="text-xs sm:text-sm leading-5 h-10 line-clamp-2 shrink-0 mb-3" style={{ color: 'var(--text-secondary)' }}>
-                {description}
+            <div className="min-w-0 flex-1 pt-0.5">
+              <h3
+                className="truncate text-base font-bold sm:text-lg"
+                style={{ color: 'var(--text-primary)' }}
+                title={friend.name}
+              >
+                {friend.name}
+              </h3>
+              <p
+                className="mt-1 truncate font-mono text-[11px] leading-none"
+                style={{ color: 'var(--text-muted)' }}
+                title={friend.url}
+              >
+                {getHostname(friend.url)}
               </p>
             </div>
+          </div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 8 }}
-              animate={{ opacity: isHovered ? 1 : 0, x: isHovered ? 0 : 8 }}
-              transition={{ duration: 0.2 }}
-              className="flex-shrink-0 hidden sm:block self-center"
+          <p
+            className="mt-3 line-clamp-2 flex-1 text-xs leading-5 sm:text-sm"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            {description}
+          </p>
+
+          <div
+            className="mt-3 flex items-center justify-between gap-2 border-t-2 pt-3"
+            style={{ borderColor: 'var(--border-subtle)' }}
+          >
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              {friend.status && (
+                <span
+                  className="flex flex-shrink-0 items-center gap-1 border-2 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase"
+                  style={{
+                    background: 'var(--bg-primary)',
+                    borderColor: `${statusColor[friend.status]}60`,
+                    color: statusColor[friend.status],
+                  }}
+                >
+                  <span className="h-1 w-1" style={{ background: statusColor[friend.status] }} />
+                  {friend.status === 'online'
+                    ? t.friends.online
+                    : friend.status === 'maintenance'
+                      ? t.friends.maintenance
+                      : t.friends.offline}
+                </span>
+              )}
+
+              {hasFeed && (
+                <span
+                  className="flex flex-shrink-0 items-center gap-1 border-2 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase"
+                  style={{
+                    background: isHovered ? 'color-mix(in srgb, var(--accent-primary) 12%, var(--bg-primary))' : 'var(--bg-primary)',
+                    borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                    color: isHovered ? 'var(--accent-primary)' : 'var(--text-muted)',
+                  }}
+                  title={t.friends.subscribe}
+                >
+                  <Rss className="h-2.5 w-2.5" />
+                  Feed
+                </span>
+              )}
+
+              {friend.unidirectional && (
+                <span
+                  className="flex flex-shrink-0 border-2 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase"
+                  style={{
+                    background: 'var(--bg-primary)',
+                    borderColor: 'var(--border-subtle)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
+                  {t.friends.oneWay}
+                </span>
+              )}
+            </div>
+
+            <span
+              className="inline-flex flex-shrink-0 items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-wider"
+              style={{ color: isHovered ? 'var(--accent-primary)' : 'var(--text-muted)' }}
             >
-              <ExternalLink className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-            </motion.div>
+              {t.friends.open}
+              <ArrowUpRight className="h-3 w-3 transition-transform" style={{ transform: isHovered ? 'translate(1px, -1px)' : 'none' }} />
+            </span>
           </div>
         </div>
-      </div>
+      </button>
     </motion.div>
   );
 });
@@ -482,10 +618,11 @@ const CategorySection = memo(function CategorySection({
   onClick: (friend: Friend) => void;
 }) {
   const animationEnabled = useAnimationEnabled();
-  const { locale } = useTranslation();
+  const { t, locale } = useTranslation();
   const IconComponent = iconMap[category.icon] || Globe;
   const categoryName = getLocalizedText(category.name, locale);
   const categoryDescription = getLocalizedText(category.description, locale);
+  const feedCount = friends.filter((friend) => friend.feed).length;
 
   return (
     <motion.section
@@ -494,29 +631,66 @@ const CategorySection = memo(function CategorySection({
       transition={{ duration: 0.5, delay: index * 0.1 }}
       className="mb-16"
     >
-      <div className="flex items-center gap-4 mb-6">
-        <div
-          className="flex items-center justify-center w-12 h-12 border-2"
-          style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}
-        >
-          <IconComponent className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
-        </div>
-        <div>
-          <h2
-            className="text-xl sm:text-2xl font-bold uppercase"
-            style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+      <div
+        className="mb-7 flex flex-wrap items-end justify-between gap-4 border-b-2 pb-4"
+        style={{ borderColor: 'var(--border-subtle)' }}
+      >
+        <div className="flex items-center gap-4">
+          <div
+            className="flex h-12 w-12 items-center justify-center border-2"
+            style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}
           >
-            {categoryName}
-          </h2>
-          <p className="text-sm font-mono" style={{ color: 'var(--text-muted)' }}>
-            {categoryDescription}
-          </p>
+            <IconComponent className="h-6 w-6" style={{ color: 'var(--accent-primary)' }} />
+          </div>
+          <div>
+            <h2
+              className="text-xl font-bold uppercase sm:text-2xl"
+              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+            >
+              {categoryName}
+            </h2>
+            <p className="mt-0.5 font-mono text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>
+              {categoryDescription}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span
+            className="inline-flex items-center gap-1.5 border-2 px-2.5 py-1 font-mono text-[10px] font-bold uppercase"
+            style={{
+              background: 'var(--bg-secondary)',
+              borderColor: 'var(--border-subtle)',
+              color: 'var(--text-primary)',
+            }}
+          >
+            <Users className="h-3 w-3" style={{ color: 'var(--accent-primary)' }} />
+            {friends.length} {t.friends.friendSites}
+          </span>
+          {feedCount > 0 && (
+            <span
+              className="inline-flex items-center gap-1.5 border-2 px-2.5 py-1 font-mono text-[10px] font-bold uppercase"
+              style={{
+                background: 'var(--bg-secondary)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-muted)',
+              }}
+            >
+              <Rss className="h-3 w-3" style={{ color: 'var(--accent-secondary)' }} />
+              {feedCount} Feed
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
+      <div className="grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {friends.map((friend, friendIndex) => (
-          <FriendCard key={friend.id} friend={friend} index={friendIndex} onClick={onClick} />
+          <FriendCard
+            key={friend.id || friend.url}
+            friend={friend}
+            index={friendIndex}
+            onClick={onClick}
+          />
         ))}
       </div>
     </motion.section>
@@ -1038,177 +1212,439 @@ const ApplySection = memo(function ApplySection({
   );
 });
 
-// Redirect Modal Component
-const RedirectModal = memo(function RedirectModal({
-  isOpen,
+// Friend Preview Modal — 左侧站点信息，右侧最近订阅文章
+const FriendDetailModal = memo(function FriendDetailModal({
   friend,
-  onConfirm,
-  onCancel,
+  onClose,
 }: {
-  isOpen: boolean;
-  friend: Friend | null;
-  onConfirm: () => void;
-  onCancel: () => void;
+  friend: Friend;
+  onClose: () => void;
 }) {
   const animationEnabled = useAnimationEnabled();
-  const { t, tReplace } = useTranslation();
-  const [progress, setProgress] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(3);
+  const { t, locale } = useTranslation();
+  const [imageError, setImageError] = useState(false);
+  const [feedState, setFeedState] = useState<{
+    status: 'idle' | 'loading' | 'ready' | 'error';
+    items: FeedPreviewItem[];
+  }>({ status: friend.feed ? 'loading' : 'idle', items: [] });
+
+  const description = getLocalizedText(friend.description, locale);
 
   useEffect(() => {
-    if (!isOpen) {
-      setProgress(0);
-      setTimeLeft(3);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [onClose]);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [friend.url]);
+
+  useEffect(() => {
+    if (!friend.feed) {
+      setFeedState({ status: 'idle', items: [] });
       return;
     }
 
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 1;
-      });
-    }, 30);
+    const controller = new AbortController();
+    let cancelled = false;
+    setFeedState({ status: 'loading', items: [] });
 
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          onConfirm();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const timeout = setTimeout(() => controller.abort(), 12000);
+
+    fetch(`/api/feed/get?url=${encodeURIComponent(friend.feed)}`, {
+      signal: controller.signal,
+      headers: {
+        Accept:
+          'application/rss+xml, application/atom+xml, application/xml, text/xml, application/json, */*',
+      },
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.text();
+      })
+      .then((content) => {
+        if (cancelled) return;
+        const items = parseFeedPreview(content).slice(0, 5);
+        setFeedState({ status: 'ready', items });
+      })
+      .catch((error: Error) => {
+        if (cancelled || error.name === 'AbortError') return;
+        setFeedState({ status: 'error', items: [] });
+      })
+      .finally(() => clearTimeout(timeout));
 
     return () => {
-      clearInterval(interval);
-      clearInterval(timer);
+      cancelled = true;
+      controller.abort();
+      clearTimeout(timeout);
     };
-  }, [isOpen, onConfirm]);
-
-  if (!isOpen || !friend) return null;
+  }, [friend.feed]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="friend-preview-title"
+    >
       <motion.div
         initial={animationEnabled ? { opacity: 0 } : undefined}
-        animate={animationEnabled ? { opacity: 1 } : undefined}
+        animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="absolute inset-0"
-        style={{ background: 'rgba(0, 0, 0, 0.5)' }}
-        onClick={onCancel}
+        style={{ background: 'rgba(0, 0, 0, 0.62)' }}
+        onClick={onClose}
       />
+
       <motion.div
-        initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
-        animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
-        exit={{ opacity: 0, y: 20 }}
-        transition={{ duration: 0.3 }}
-        className="relative w-full max-w-md p-5 sm:p-6 border-2"
+        initial={animationEnabled ? { opacity: 0, y: 24, scale: 0.98 } : undefined}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 16, scale: 0.98 }}
+        transition={{ duration: 0.24, ease: 'easeOut' }}
+        className="relative flex max-h-[88vh] w-full max-w-4xl flex-col border-2"
         style={{
           background: 'var(--bg-secondary)',
           borderColor: 'var(--border-subtle)',
-          boxShadow: '6px 6px 0 var(--border-subtle)',
+          boxShadow: '8px 8px 0 var(--accent-primary)',
         }}
       >
-        <div className="flex items-center gap-3 mb-4">
-          <div
-            className="flex items-center justify-center w-12 h-12 border-2"
-            style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-subtle)' }}
-          >
-            <Globe className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
+        {/* Header */}
+        <div
+          className="flex flex-shrink-0 items-center justify-between gap-3 border-b-2 px-4 py-2.5 sm:px-5"
+          style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-subtle)' }}
+        >
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="h-2 w-2 flex-shrink-0" style={{ background: 'var(--accent-primary)' }} />
+            <span
+              className="truncate font-mono text-[11px] uppercase tracking-[0.18em]"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              {getHostname(friend.url)}
+            </span>
           </div>
-          <div>
-            <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
-              {t.friends.leavingSite}
-            </h3>
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              {t.friends.jumpToFriend}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t.friends.close}
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center border-2 transition-colors hover:bg-[var(--bg-tertiary)]"
+            style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+          {/* Left: site info */}
+          <div
+            className="border-b-2 p-5 sm:p-6 md:border-b-0 md:border-r-2"
+            style={{ borderColor: 'var(--border-subtle)' }}
+          >
+            <div className="flex items-start gap-4">
+              <div
+                className="flex h-16 w-16 flex-shrink-0 items-center justify-center border-2"
+                style={{
+                  background: 'var(--bg-primary)',
+                  borderColor: 'var(--border-subtle)',
+                  boxShadow: '3px 3px 0 var(--border-subtle)',
+                }}
+              >
+                {!imageError ? (
+                  <img
+                    src={friend.icon}
+                    alt={friend.name}
+                    className="h-10 w-10 object-contain"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <Globe className="h-8 w-8" style={{ color: 'var(--accent-primary)' }} />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3
+                  id="friend-preview-title"
+                  className="text-xl font-bold uppercase leading-tight sm:text-2xl"
+                  style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+                >
+                  {friend.name}
+                </h3>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  {friend.status && (
+                    <span
+                      className="flex items-center gap-1 border-2 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase"
+                      style={{
+                        background: 'var(--bg-primary)',
+                        borderColor: `${statusColor[friend.status]}60`,
+                        color: statusColor[friend.status],
+                      }}
+                    >
+                      <span className="h-1 w-1" style={{ background: statusColor[friend.status] }} />
+                      {friend.status === 'online'
+                        ? t.friends.online
+                        : friend.status === 'maintenance'
+                          ? t.friends.maintenance
+                          : t.friends.offline}
+                    </span>
+                  )}
+                  {friend.feed && (
+                    <span
+                      className="flex items-center gap-1 border-2 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase"
+                      style={{
+                        background: 'var(--bg-primary)',
+                        borderColor: 'var(--border-subtle)',
+                        color: 'var(--accent-secondary)',
+                      }}
+                    >
+                      <Rss className="h-2.5 w-2.5" />
+                      Feed
+                    </span>
+                  )}
+                  {friend.unidirectional && (
+                    <span
+                      className="border-2 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase"
+                      style={{
+                        background: 'var(--bg-primary)',
+                        borderColor: 'var(--border-subtle)',
+                        color: 'var(--text-muted)',
+                      }}
+                    >
+                      {t.friends.oneWay}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <p
+              className="mt-4 text-sm leading-6"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              {description}
+            </p>
+
+            <dl
+              className="mt-5 divide-y-2 border-2"
+              style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-primary)' }}
+            >
+              <div className="flex items-baseline gap-3 px-3 py-2">
+                <dt
+                  className="w-16 flex-shrink-0 font-mono text-[10px] uppercase tracking-wider"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {t.friends.siteInfo.url}
+                </dt>
+                <dd className="min-w-0 flex-1 truncate font-mono text-xs" style={{ color: 'var(--text-primary)' }}>
+                  <a
+                    href={friend.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:underline"
+                    style={{ color: 'var(--accent-primary)' }}
+                  >
+                    {getHostname(friend.url)}
+                  </a>
+                </dd>
+              </div>
+              {friend.feed && (
+                <div className="flex items-baseline gap-3 px-3 py-2">
+                  <dt
+                    className="w-16 flex-shrink-0 font-mono text-[10px] uppercase tracking-wider"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    {t.friends.siteInfo.rss}
+                  </dt>
+                  <dd className="min-w-0 flex-1 truncate font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    {friend.feed.replace(/^https?:\/\//, '')}
+                  </dd>
+                </div>
+              )}
+            </dl>
+
+            <div className="mt-5 flex flex-col gap-2">
+              <a
+                href={friend.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 border-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
+                style={{
+                  background: 'var(--accent-primary)',
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--bg-primary)',
+                  boxShadow: '4px 4px 0 var(--border-subtle)',
+                }}
+              >
+                <ExternalLink className="h-4 w-4" />
+                {t.friends.visitNow}
+              </a>
+              {friend.feed && (
+                <a
+                  href={friend.feed}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 border-2 px-4 py-2.5 text-sm font-bold uppercase tracking-wider transition-colors hover:bg-[var(--bg-tertiary)]"
+                  style={{
+                    background: 'var(--bg-secondary)',
+                    borderColor: 'var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                  }}
+                >
+                  <Rss className="h-4 w-4" />
+                  {t.friends.subscribe}
+                </a>
+              )}
+            </div>
+
+            <p
+              className="mt-4 flex items-start gap-1.5 font-mono text-[10px] leading-4"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
+              {t.friends.externalWarning}
             </p>
           </div>
-        </div>
 
-        <div
-          className="mb-4 p-4 border-2"
-          style={{
-            background: 'var(--bg-primary)',
-            borderColor: 'var(--border-subtle)',
-          }}
-        >
-          <p className="text-sm font-bold mb-1" style={{ color: 'var(--text-primary)' }}>
-            {friend.name}
-          </p>
-          <p className="text-xs truncate font-mono" style={{ color: 'var(--text-muted)' }}>
-            {friend.url}
-          </p>
-        </div>
-
-        <div
-          className="mb-4 p-3 border-2"
-          style={{
-            background: 'var(--bg-primary)',
-            borderColor: 'var(--border-subtle)',
-          }}
-        >
-          <div className="flex items-start gap-2">
-            <span style={{ color: 'var(--accent-secondary)' }}>⚠️</span>
-            <div>
-              <p className="text-xs font-bold uppercase font-mono" style={{ color: 'var(--text-primary)' }}>
-                {t.friends.warning}
-              </p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                {t.friends.externalWarning}
-              </p>
+          {/* Right: recent feed posts */}
+          <div className="flex min-h-0 flex-col p-5 sm:p-6" style={{ background: 'var(--bg-primary)' }}>
+            <div
+              className="mb-3 flex items-center justify-between gap-3 border-b-2 pb-2.5"
+              style={{ borderColor: 'var(--border-subtle)' }}
+            >
+              <h4
+                className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider"
+                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+              >
+                <Rss className="h-4 w-4" style={{ color: 'var(--accent-secondary)' }} />
+                {t.friends.recentPosts}
+              </h4>
+              {feedState.status === 'ready' && feedState.items.length > 0 && (
+                <span className="font-mono text-[10px] uppercase" style={{ color: 'var(--text-muted)' }}>
+                  {feedState.items.length} / 5
+                </span>
+              )}
             </div>
-          </div>
-        </div>
 
-        <div className="mb-4">
-          <div className="flex justify-between text-sm mb-2 font-mono">
-            <span style={{ color: 'var(--text-muted)' }}>{t.friends.redirectLabel}</span>
-            <span style={{ color: 'var(--text-primary)' }}>{tReplace(t.friends.seconds, { seconds: timeLeft })}</span>
-          </div>
-          <div
-            className="h-3 border-2 overflow-hidden"
-            style={{
-              background: 'var(--bg-primary)',
-              borderColor: 'var(--border-subtle)',
-            }}
-          >
-            <motion.div
-              className="h-full"
-              style={{ background: 'var(--accent-primary)', width: `${progress}%` }}
-              transition={{ duration: 0.1 }}
-            />
-          </div>
-        </div>
+            {feedState.status === 'loading' && (
+              <div className="space-y-3 py-1" aria-hidden>
+                {[0, 1, 2, 3, 4].map((row) => (
+                  <div key={row} className="flex items-start gap-3">
+                    <span
+                      className="mt-1 h-3 w-4 animate-pulse"
+                      style={{ background: 'var(--bg-tertiary)' }}
+                    />
+                    <div className="flex-1 space-y-2">
+                      <div
+                        className="h-3 w-full animate-pulse"
+                        style={{ background: 'var(--bg-tertiary)', animationDelay: `${row * 80}ms` }}
+                      />
+                      <div
+                        className="h-2 w-16 animate-pulse"
+                        style={{ background: 'var(--bg-tertiary)', animationDelay: `${row * 80}ms` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                <p className="pt-2 font-mono text-[10px] uppercase" style={{ color: 'var(--text-muted)' }}>
+                  {t.friends.feedLoading}
+                </p>
+              </div>
+            )}
 
-        <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 px-4 py-2 text-sm font-bold uppercase border-2 transition-colors hover:bg-[var(--bg-tertiary)]"
-            style={{
-              background: 'var(--bg-primary)',
-              borderColor: 'var(--border-subtle)',
-              color: 'var(--text-primary)',
-            }}
-          >
-            {t.friends.cancelRedirect}
-          </button>
-          <button
-            onClick={onConfirm}
-            className="flex-1 px-4 py-2 text-sm font-bold uppercase border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
-            style={{
-              background: 'var(--accent-primary)',
-              borderColor: 'var(--border-subtle)',
-              color: 'var(--bg-primary)',
-              boxShadow: '3px 3px 0 var(--border-subtle)',
-            }}
-          >
-            {t.friends.visitNow}
-          </button>
+            {feedState.status === 'idle' && (
+              <div
+                className="flex flex-1 flex-col items-center justify-center gap-3 border-2 border-dashed px-4 py-10 text-center"
+                style={{ borderColor: 'var(--border-subtle)' }}
+              >
+                <Rss className="h-6 w-6" style={{ color: 'var(--text-muted)' }} />
+                <p className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
+                  {t.friends.noFeed}
+                </p>
+              </div>
+            )}
+
+            {feedState.status === 'error' && (
+              <div
+                className="flex flex-1 flex-col items-center justify-center gap-3 border-2 border-dashed px-4 py-10 text-center"
+                style={{ borderColor: 'var(--border-subtle)' }}
+              >
+                <AlertCircle className="h-6 w-6" style={{ color: 'var(--accent-secondary)' }} />
+                <p className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
+                  {t.friends.feedError}
+                </p>
+                <a
+                  href={friend.feed}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 border-2 px-3 py-1.5 font-mono text-[10px] font-bold uppercase transition-colors hover:bg-[var(--bg-secondary)]"
+                  style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+                >
+                  {t.friends.subscribe}
+                  <ArrowUpRight className="h-3 w-3" />
+                </a>
+              </div>
+            )}
+
+            {feedState.status === 'ready' && feedState.items.length === 0 && (
+              <div
+                className="flex flex-1 flex-col items-center justify-center gap-3 border-2 border-dashed px-4 py-10 text-center"
+                style={{ borderColor: 'var(--border-subtle)' }}
+              >
+                <FileText className="h-6 w-6" style={{ color: 'var(--text-muted)' }} />
+                <p className="font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
+                  {t.friends.feedEmpty}
+                </p>
+              </div>
+            )}
+
+            {feedState.status === 'ready' && feedState.items.length > 0 && (
+              <ul className="min-h-0 flex-1">
+                {feedState.items.map((item, itemIndex) => (
+                  <li key={`${item.link}-${itemIndex}`}>
+                    <a
+                      href={item.link || friend.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-start gap-3 border-b-2 px-2 py-3 transition-colors last:border-b-0 hover:bg-[var(--bg-secondary)]"
+                      style={{ borderColor: 'var(--border-subtle)' }}
+                    >
+                      <span
+                        className="mt-1 flex-shrink-0 font-mono text-[10px] tabular-nums"
+                        style={{ color: 'var(--text-muted)' }}
+                      >
+                        {String(itemIndex + 1).padStart(2, '0')}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span
+                          className="line-clamp-2 text-sm font-medium leading-6"
+                          style={{ color: 'var(--text-primary)' }}
+                        >
+                          {item.title || t.feed.untitled}
+                        </span>
+                        {formatFeedDate(item.date, locale) && (
+                          <span
+                            className="mt-1 block font-mono text-[10px] tabular-nums"
+                            style={{ color: 'var(--text-muted)' }}
+                          >
+                            {formatFeedDate(item.date, locale)}
+                          </span>
+                        )}
+                      </span>
+                      <ArrowUpRight
+                        className="mt-1 h-4 w-4 flex-shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                        style={{ color: 'var(--accent-primary)' }}
+                      />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </motion.div>
     </div>
@@ -1221,7 +1657,6 @@ export default function FriendsPage() {
   const [footerData, setFooterData] = useState<SiteData['footer'] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [redirectModalOpen, setRedirectModalOpen] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [mailtoModalOpen, setMailtoModalOpen] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
@@ -1229,7 +1664,6 @@ export default function FriendsPage() {
 
   const handleFriendClick = useCallback((friend: Friend) => {
     setSelectedFriend(friend);
-    setRedirectModalOpen(true);
   }, []);
 
   const handleRandomVisit = useCallback(() => {
@@ -1239,19 +1673,9 @@ export default function FriendsPage() {
     if (pool.length === 0) return;
     const randomFriend = pool[Math.floor(Math.random() * pool.length)];
     setSelectedFriend(randomFriend);
-    setRedirectModalOpen(true);
   }, [data]);
 
-  const handleConfirmRedirect = useCallback(() => {
-    if (selectedFriend) {
-      window.open(selectedFriend.url, '_blank', 'noopener,noreferrer');
-    }
-    setRedirectModalOpen(false);
-    setSelectedFriend(null);
-  }, [selectedFriend]);
-
-  const handleCancelRedirect = useCallback(() => {
-    setRedirectModalOpen(false);
+  const handleCloseFriend = useCallback(() => {
     setSelectedFriend(null);
   }, []);
 
@@ -1396,12 +1820,9 @@ export default function FriendsPage() {
       {/* Footer */}
       {footerData && <Footer data={footerData} />}
 
-      <RedirectModal
-        isOpen={redirectModalOpen}
-        friend={selectedFriend}
-        onConfirm={handleConfirmRedirect}
-        onCancel={handleCancelRedirect}
-      />
+      <AnimatePresence>
+        {selectedFriend && <FriendDetailModal friend={selectedFriend} onClose={handleCloseFriend} />}
+      </AnimatePresence>
 
       {data && <ApplyModal isOpen={mailtoModalOpen} onClose={handleCloseMailtoModal} contact={data.applyInfo.contact} />}
     </div>

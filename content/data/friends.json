@@ -88,13 +88,13 @@
     {
       "id": "blogs",
       "name": {
-        "zh": "技术博客",
-        "en": "Tech Blogs"
+        "zh": "Friends' BLOGS",
+        "en": "Friends' BLOGS"
       },
       "icon": "BookOpen",
       "description": {
-        "zh": "个人技术博客和知识分享",
-        "en": "Personal tech blogs and knowledge sharing"
+        "zh": "朋友们的博客与日常记录",
+        "en": "Blogs and notes from our friends"
       }
     }
   ],

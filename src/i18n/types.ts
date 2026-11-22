@@ -538,15 +538,15 @@ export interface Dictionary {
     emailApply: string;
     formApply: string;
     close: string;
-    leavingSite: string;
-    jumpToFriend: string;
     externalWarning: string;
-    warning: string;
-    redirectLabel: string;
-    seconds: string;
-    autoRedirect: string;
-    cancelRedirect: string;
     visitNow: string;
+    open: string;
+    subscribe: string;
+    recentPosts: string;
+    feedLoading: string;
+    feedError: string;
+    feedEmpty: string;
+    noFeed: string;
     randomVisit: string;
     loadFailed: string;
     siteInfo: {
