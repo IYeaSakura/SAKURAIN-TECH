@@ -483,6 +483,18 @@
       },
       "category": "blogs",
       "featured": true
+    },
+    {
+      "name": "愈见博客",
+      "url": "https://cpumind.com/",
+      "icon": "https://pic1.imgdb.cn/i/034v6XMHAboKjGWOHAr8ig.jpg",
+      "feed": "https://cpumind.com/feed",
+      "description": {
+        "zh": "建站经验记录，实用工具推荐，免费的资源分享。",
+        "en": "Notes on building websites, practical tool recommendations, and free resources."
+      },
+      "category": "blogs",
+      "featured": true
     }
   ],
   "lastUpdated": "2026-07-22T20:10:02.121Z"
