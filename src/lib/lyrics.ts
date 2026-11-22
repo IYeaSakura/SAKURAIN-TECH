@@ -65,9 +65,16 @@ function toLyricFilename(url: string): string | null {
  * this same-origin EdgeOne function. On production this is an https URL and is
  * therefore also eligible for the persistent asset cache.
  */
-function toProxyUrl(filename: string): string {
+function toProxyUrl(sourceUrl: string, filename: string): string {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  return `${origin}/api/lyric?name=${encodeURIComponent(filename)}`;
+  const params = new URLSearchParams({ name: filename });
+  try {
+    const target = new URL(sourceUrl, window.location.href);
+    if (target.protocol === 'https:') params.set('url', target.toString());
+  } catch {
+    // Fall back to the filename-only form.
+  }
+  return `${origin}/api/lyric?${params.toString()}`;
 }
 
 /** Same-origin static copy, kept as a fallback for the edge proxy. */
@@ -88,7 +95,7 @@ export async function fetchLyrics(url: string | undefined | null): Promise<Lyric
   const candidates: string[] = [];
 
   if (filename) {
-    candidates.push(toProxyUrl(filename));
+    candidates.push(toProxyUrl(url, filename));
     const localUrl = toLocalUrl(filename);
     if (!candidates.includes(localUrl)) candidates.push(localUrl);
   }

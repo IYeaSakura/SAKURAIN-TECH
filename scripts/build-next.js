@@ -89,14 +89,18 @@ try {
     console.log('[build-next] Mirrored EdgeOne metadata into dist');
   }
 
-  // Audio files are sourced from an external COS bucket; the local copies in
-  // public/music are only build-time material. Strip them from the export so
-  // the deploy package does not bloat with duplicated media assets.
+  // Audio and cover art are served from the external media mirror; the local
+  // copies in public/music are only build-time material and must not bloat the
+  // deploy package. LRC files are tiny and are kept as a same-origin fallback
+  // for clients that cannot reach the /api/lyric edge function.
   const distMusicDir = path.join(distDir, 'music');
-  if (fs.existsSync(distMusicDir)) {
-    fs.rmSync(distMusicDir, { recursive: true, force: true });
-    console.log('[build-next] Removed duplicated dist/music assets (served from COS)');
+  for (const subDir of ['mp3', 'music-covers']) {
+    const target = path.join(distMusicDir, subDir);
+    if (fs.existsSync(target)) {
+      fs.rmSync(target, { recursive: true, force: true });
+    }
   }
+  console.log('[build-next] Kept dist/music/lyric, stripped mp3/covers');
 
   // Remove the internal Next.js build directory on CI to free tmpfs space for
   // the opennext static-export copy. Locally we keep it for incremental builds.

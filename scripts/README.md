@@ -126,6 +126,7 @@ These files remain local as build-time material but are not committed.
 - Runs `next build` with increased Node heap memory.
 - Copies required EdgeOne metadata files from `.next/` into `dist/`.
 - Adjusts paths inside `export-detail.json` and `required-server-files.json` to match the `dist/` layout.
+- Strips `dist/music/{mp3,music-covers}` (served from the media mirror) but keeps `dist/music/lyric/` as a small same-origin fallback when `/api/lyric` is unavailable.
 - Removes `.next` in CI to avoid ENOSPC on tmpfs builds.
 
 ---
