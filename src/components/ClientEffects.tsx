@@ -159,15 +159,16 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
   const isDesktopClient = useIsDesktopClient();
   const { mounted, isDesktop } = useMobileContext();
 
-  // 文档阅读器（/docs/<category>/<item>[/<chapter>]）在窄屏下有固定的
-  // 顶部操作栏和底部章节导航；浮动播放器会挡住它们。这里在移动端阅读器
-  // 路由直接不挂载播放器组件（播放状态与音频都留在上层 Provider，不中断）。
-  const isReaderRoute = useMemo(
-    () =>
-      pathname.startsWith('/docs/') &&
-      pathname.split('/').filter(Boolean).length >= 3,
-    [pathname]
-  );
+  // 阅读页在窄屏下有固定操作栏：文档阅读器是顶部栏 + 底部章节导航，
+  // 博客文章是底部工具栏。浮动播放器会挡住它们，因此在移动端阅读路由
+  // 直接不挂载播放器组件（播放状态与音频都留在上层 Provider，不中断）。
+  // 注意按“实际阅读页”匹配：/docs 与 /blog 列表页仍保留播放器。
+  const isReaderRoute = useMemo(() => {
+    const segments = pathname.split('/').filter(Boolean);
+    if (segments[0] === 'docs') return segments.length >= 3;
+    if (segments[0] === 'blog') return segments.length >= 2;
+    return false;
+  }, [pathname]);
   const hideFloatingPlayer = isReaderRoute && mounted && !isDesktop;
   const { enableMouseEffects, effectiveQuality } = usePerformance();
   const { preset } = useStylePreset();
