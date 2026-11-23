@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useMemo, memo } from 'react';
+import { useMemo, memo } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Sparkles, Layers } from 'lucide-react';
+import { BookOpen, Briefcase, Code, Search, Rocket, GraduationCap, Folder, ChevronRight, BookMarked, FileText, Layers } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
-import { MagneticCursor, VelocityCursor, AmbientGlow, GradientText, LightBeam } from '@/components/effects';
+import { MagneticCursor, VelocityCursor } from '@/components/effects';
 import { Footer } from '@/components/sections/Footer';
 import { useAnimationEnabled, useIsDesktopClient, useTranslation } from '@/hooks';
 import { deploymentConfig } from '@/config/deployment-config';
 import { DocListView } from './components/DocListView';
 import { SeriesDetailView } from './components/SeriesDetailView';
-import { clipPathRounded } from '@/utils/styles';
 import { ImagePreviewProvider } from '@/contexts/ImagePreviewContext';
 import type { DocCategory, DocItem, DocSeries, Chapter, DocsConfig } from './types';
 import type { SiteData } from '@/types';
@@ -216,48 +215,48 @@ interface DocHomeViewProps {
   siteData?: SiteData | null;
 }
 
-// Stat card with pixel-style border
-const StatCard = memo(({ value, label, icon: Icon, color, delay }: { 
-  value: string | number; 
-  label: string; 
+/* Shared brutalist card shell: 2px border + hard offset shadow, matching the
+ * blog / kitchen lists so the docs section reads as part of the same site. */
+const CARD_STYLE: React.CSSProperties = {
+  background: 'var(--bg-secondary)',
+  borderColor: 'var(--border-subtle)',
+  boxShadow: '4px 4px 0 var(--border-subtle)',
+};
+
+const StatCard = memo(({
+  value,
+  label,
+  icon: Icon,
+  delay,
+}: {
+  value: string | number;
+  label: string;
   icon: React.ComponentType<LucideProps>;
-  color: string;
   delay: number;
 }) => {
+  const animationEnabled = useAnimationEnabled();
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay, ease: [0.25, 0.1, 0.25, 1] }}
-      whileHover={{ scale: 1.05, y: -4 }}
-      className="relative p-5 text-center cursor-default group"
-      style={{
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '2px solid rgba(255, 255, 255, 0.08)',
-        clipPath: clipPathRounded(6),
-      }}
+      transition={{ delay: 0.2 + delay * 0.08, duration: 0.4 }}
+      className="border-2 p-4 text-center sm:p-5"
+      style={CARD_STYLE}
     >
-      {/* Hover glow */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(circle at center, var(--accent-glow), transparent 70%)' }}
-        initial={{ opacity: 0 }}
-        whileHover={{ opacity: 0.5 }}
-        transition={{ duration: 0.3 }}
-      />
-      
-      <Icon className="w-6 h-6 mx-auto mb-3" style={{ color }} />
-      <div className="font-sans font-bold text-2xl mb-1" style={{ color }}>
+      <Icon className="mx-auto mb-2 h-4 w-4" style={{ color: 'var(--accent-primary)' }} />
+      <div className="text-2xl font-bold leading-none" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}>
         {value}
       </div>
-      <div className="text-xs" style={{ color: 'var(--text-muted)' }}>{label}</div>
+      <div className="mt-2 font-mono text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+        {label}
+      </div>
     </motion.div>
   );
 });
 
 StatCard.displayName = 'StatCard';
 
-// Category card with pixel-style borders and hover glow effects
 const CategoryCard = memo(({
   category,
   index,
@@ -269,9 +268,7 @@ const CategoryCard = memo(({
   iconMap: Record<string, React.ComponentType<LucideProps>>;
   onSelect: (category: DocCategory) => void;
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
   const animationEnabled = useAnimationEnabled();
-  const isDesktopClient = useIsDesktopClient();
   const { t, tReplace } = useTranslation();
   const Icon = iconMap[category.icon] || Folder;
   const seriesCount = category.items.filter((i: DocItem) => i.type === 'series').length;
@@ -280,124 +277,56 @@ const CategoryCard = memo(({
   return (
     <motion.button
       key={category.id}
-      initial={animationEnabled ? { opacity: 0, y: 30 } : undefined}
-      animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
-      transition={{ duration: 0.5, delay: animationEnabled ? index * 0.1 : 0, ease: [0.25, 0.1, 0.25, 1] }}
+      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: animationEnabled ? Math.min(index, 8) * 0.04 : 0 }}
       onClick={() => onSelect(category)}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="group text-left relative cursor-pointer"
-      style={{ perspective: '1000px' }}
+      className="group relative flex h-full flex-col border-2 p-5 text-left transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5"
+      style={CARD_STYLE}
     >
-      {/* Pixel-style border */}
-      <div
-        className="relative p-6 overflow-hidden transition-all duration-300"
-        style={{
-          background: isHovered ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.02)',
-          border: `2px solid ${isHovered ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.08)'}`,
-          clipPath: clipPathRounded(8),
-          transform: isHovered ? 'translateY(-4px)' : 'none',
-        }}
-      >
-        {/* Corner glow effects - desktop only */}
-        {isDesktopClient && (
-          <>
-            <div className="absolute top-0 left-0 w-4 h-4 pointer-events-none">
-              <motion.div
-                className="absolute top-0 left-0 w-full h-[2px]"
-                style={{ background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)' }}
-                animate={isHovered ? { opacity: 1, x: [-16, 16] } : { opacity: 0, x: 0 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-              />
-              <motion.div
-                className="absolute top-0 left-0 w-[2px] h-full"
-                style={{ background: 'linear-gradient(to bottom, var(--accent-primary), transparent)' }}
-                animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              />
-            </div>
-            <div className="absolute top-0 right-0 w-4 h-4 pointer-events-none">
-              <motion.div
-                className="absolute top-0 right-0 w-full h-[2px]"
-                style={{ background: 'linear-gradient(to right, transparent, var(--accent-secondary), transparent)' }}
-                animate={isHovered ? { opacity: 1, x: [16, -16] } : { opacity: 0, x: 0 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-              />
-              <motion.div
-                className="absolute top-0 right-0 w-[2px] h-full"
-                style={{ background: 'linear-gradient(to bottom, var(--accent-secondary), transparent)' }}
-                animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              />
-            </div>
-          </>
-        )}
+      {/* Hover accent bar */}
+      <span
+        aria-hidden
+        className="absolute left-0 top-0 h-full w-1 origin-top scale-y-0 transition-transform duration-200 group-hover:scale-y-100"
+        style={{ background: 'var(--accent-primary)' }}
+      />
 
-        {/* Top gradient glow - desktop only */}
-        {isDesktopClient && (
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: 'radial-gradient(circle at 50% 0%, var(--accent-glow), transparent 60%)' }}
-            animate={{ opacity: isHovered ? 1 : 0.5 }}
-            transition={{ duration: 0.3 }}
-          />
-        )}
+      <div className="mb-3 flex items-center justify-between font-mono text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+        <span>#{String(index + 1).padStart(2, '0')}</span>
+        <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+      </div>
 
-        {/* Shine sweep effect - desktop only */}
-        {isDesktopClient && (
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: 'linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%)' }}
-            initial={{ x: '-100%' }}
-            animate={{ x: isHovered ? '200%' : '-100%' }}
-            transition={{ duration: 0.6 }}
-          />
-        )}
-
-        <div className="flex items-start justify-between mb-4 relative z-10">
-          <div
-            className="p-3 transition-all duration-300"
-            style={{
-              background: isHovered ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-              clipPath: clipPathRounded(4),
-            }}
-          >
-            <Icon
-              className="w-7 h-7 transition-colors duration-300"
-              style={{ color: isHovered ? 'var(--accent-primary)' : 'var(--text-muted)' }}
-            />
-          </div>
-          <ChevronRight
-            className="w-5 h-5 transition-all transform duration-300"
-            style={{
-              color: 'var(--text-muted)',
-              opacity: isHovered ? 1 : 0,
-              transform: isHovered ? 'translateX(4px)' : 'translateX(0)',
-            }}
-          />
-        </div>
-
+      <div className="mb-3 flex items-center gap-3">
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center border-2"
+          style={{ borderColor: 'var(--border-subtle)', color: 'var(--accent-primary)' }}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
         <h3
-          className="font-primary text-lg font-bold mb-3 relative z-10 transition-colors duration-300"
-          style={{ color: isHovered ? 'var(--text-primary)' : 'var(--text-secondary)' }}
+          className="truncate text-base font-bold leading-snug"
+          style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
         >
           {category.name}
         </h3>
+      </div>
 
-        <div className="flex items-center gap-4 text-sm relative z-10" style={{ color: 'var(--text-muted)' }}>
-          {seriesCount > 0 && (
-            <span className="flex items-center gap-1.5">
-              <BookMarked className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-              <span>{tReplace(t.docs.seriesCount, { count: seriesCount })}</span>
-            </span>
-          )}
-          {docCount > 0 && (
-            <span className="flex items-center gap-1.5">
-              <FileText className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
-              <span>{tReplace(t.docs.docCount, { count: docCount })}</span>
-            </span>
-          )}
-        </div>
+      <div
+        className="mt-auto flex flex-wrap items-center gap-3 border-t pt-3 font-mono text-[11px]"
+        style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}
+      >
+        {seriesCount > 0 && (
+          <span className="inline-flex items-center gap-1">
+            <BookMarked className="h-3 w-3" style={{ color: 'var(--accent-primary)' }} />
+            {tReplace(t.docs.seriesCount, { count: seriesCount })}
+          </span>
+        )}
+        {docCount > 0 && (
+          <span className="inline-flex items-center gap-1">
+            <FileText className="h-3 w-3" style={{ color: 'var(--accent-secondary)' }} />
+            {tReplace(t.docs.docCount, { count: docCount })}
+          </span>
+        )}
       </div>
     </motion.button>
   );
@@ -407,115 +336,75 @@ CategoryCard.displayName = 'CategoryCard';
 
 function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeViewProps) {
   const { t } = useTranslation();
-  const isDesktopClient = useIsDesktopClient();
+  const animationEnabled = useAnimationEnabled();
 
   // Compute overview statistics
   const categoryCount = config.categories.length;
-  const docCount = config.categories.reduce((acc: number, cat: DocCategory) => 
+  const docCount = config.categories.reduce((acc: number, cat: DocCategory) =>
     acc + cat.items.filter((i: DocItem) => i.type === 'doc').length, 0);
-  const seriesCount = config.categories.reduce((acc: number, cat: DocCategory) => 
+  const seriesCount = config.categories.reduce((acc: number, cat: DocCategory) =>
     acc + cat.items.filter((i: DocItem) => i.type === 'series').length, 0);
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Unified background effects - blue-green palette */}
-      <div className="fixed inset-0 pointer-events-none">
-        <AmbientGlow color="var(--accent-primary)" opacity={0.15} position="top-right" />
-        <AmbientGlow color="var(--accent-secondary)" opacity={0.1} position="bottom-left" />
-        <AmbientGlow color="var(--accent-primary)" opacity={0.08} position="center" size={600} />
-      </div>
-
-      {/* Hero section - asymmetric layout */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left side: title + description */}
-            <div className="">
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+    <div className="min-h-screen">
+      <main className="mx-auto w-full max-w-6xl px-4 pb-12 pt-28 sm:px-6 lg:pt-36">
+        {/* Header */}
+        <motion.section
+          initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-12"
+        >
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0">
+              <div
+                className="mb-4 inline-flex items-center gap-2 border-2 px-3 py-1.5"
+                style={{ borderColor: 'var(--border-subtle)' }}
               >
-                {/* Badge */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2, duration: 0.5 }}
-                  className="inline-flex items-center gap-2 px-4 py-2 mb-6"
-                  style={{
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    border: '1px solid rgba(59, 130, 246, 0.3)',
-                    clipPath: clipPathRounded(4),
-                  }}
+                <BookOpen className="h-4 w-4" style={{ color: 'var(--accent-primary)' }} />
+                <span
+                  className="text-[10px] font-bold uppercase tracking-wider"
+                  style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)' }}
                 >
-                  <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                  <span className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>{t.docs.knowledgeBase}</span>
-                </motion.div>
+                  Docs
+                </span>
+              </div>
 
-                {/* Main title - blue-green gradient */}
-                <h1 className="font-sans font-bold text-4xl sm:text-5xl lg:text-6xl font-black mb-6">
-                  <GradientText animate={true}>{config.title}</GradientText>
-                </h1>
+              <h1
+                className="hero-mark mb-4 text-3xl font-bold uppercase tracking-tight sm:text-5xl"
+                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+              >
+                {config.title}
+              </h1>
 
-                {/* Description */}
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.3 }}
-                  className="text-lg sm:text-xl max-w-2xl font-primary"
-                  style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}
-                >
-                  {config.description}
-                </motion.p>
-              </motion.div>
+              <p className="max-w-xl text-base sm:text-lg" style={{ color: 'var(--text-secondary)' }}>
+                {config.description}
+              </p>
             </div>
 
-            {/* Right side: stat cards - pixel style */}
-            <div className="">
-              <div className="grid grid-cols-3 gap-4">
-                <StatCard
-                  value={categoryCount}
-                  label={t.docs.categoryLabel}
-                  icon={Layers}
-                  color="var(--accent-primary)"
-                  delay={0.4}
-                />
-                <StatCard
-                  value={docCount}
-                  label={t.docs.docsLabel}
-                  icon={FileText}
-                  color="var(--accent-secondary)"
-                  delay={0.5}
-                />
-                <StatCard
-                  value={seriesCount}
-                  label={t.docs.seriesLabel}
-                  icon={BookMarked}
-                  color="#22c55e"
-                  delay={0.6}
-                />
-              </div>
+            <div className="grid shrink-0 grid-cols-3 gap-3 lg:w-[420px]">
+              <StatCard value={categoryCount} label={t.docs.categoryLabel} icon={Layers} delay={0} />
+              <StatCard value={docCount} label={t.docs.docsLabel} icon={FileText} delay={1} />
+              <StatCard value={seriesCount} label={t.docs.seriesLabel} icon={BookMarked} delay={2} />
             </div>
           </div>
-        </div>
-      </section>
+        </motion.section>
 
-      {/* Categories section */}
-      <section className="relative py-20">
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mb-12"
-          >
-            <h2 className="font-sans font-bold text-2xl mb-4">
-            <GradientText animate={true}>{t.docs.docCategories}</GradientText>
+        {/* Categories */}
+        <section>
+          <div className="mb-4 flex items-center gap-3">
+            <Layers className="h-4 w-4" style={{ color: 'var(--accent-primary)' }} />
+            <h2
+              className="font-mono text-[11px] uppercase tracking-[0.25em]"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              {t.docs.docCategories}
             </h2>
-            <p style={{ color: 'var(--text-muted)' }}>{t.docs.exploreDocs}</p>
-          </motion.div>
+            <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
+          </div>
+          <p className="mb-6 text-sm" style={{ color: 'var(--text-muted)' }}>{t.docs.exploreDocs}</p>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {config.categories.map((category: DocCategory, index: number) => (
               <CategoryCard
                 key={category.id}
@@ -526,14 +415,11 @@ function DocHomeView({ config, onSelectCategory, iconMap, siteData }: DocHomeVie
               />
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       {/* Footer - shared component */}
       {siteData?.footer && <Footer data={siteData.footer} />}
-
-      {/* Bottom light beam - desktop only */}
-      {isDesktopClient && <LightBeam position="bottom" color="var(--accent-secondary)" intensity={0.2} />}
     </div>
   );
 }

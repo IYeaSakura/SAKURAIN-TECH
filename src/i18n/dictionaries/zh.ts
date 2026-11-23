@@ -706,6 +706,8 @@ export const zh: Dictionary = {
     startLearning: '开始学习',
     chaptersTitle: '章节',
     currentToc: '当前目录',
+    seriesSection: '系列教程',
+    docsSection: '独立文档',
   },
   moments: {
     title: '动态',
@@ -843,5 +845,7 @@ export const zh: Dictionary = {
     back: '返回菜谱',
     prev: '上一道',
     next: '下一道',
+    random: '随机一道',
+    randomHint: '从全部菜谱里随机挑一道来读',
   },
 };

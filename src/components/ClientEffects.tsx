@@ -19,7 +19,7 @@
  * - 旧版 react-lazy 的 preloadDocs/preloadBlog 等路由预加载已移除
  *   （Next 页面自带代码分割与预取）。
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { Toaster } from 'sonner';
@@ -157,19 +157,12 @@ function GlobalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isHomePage = pathname === '/';
   const isDesktopClient = useIsDesktopClient();
-  const { mounted, isDesktop } = useMobileContext();
+  const { mounted, isMobile } = useMobileContext();
 
-  // 阅读页在窄屏下有固定操作栏：文档阅读器是顶部栏 + 底部章节导航，
-  // 博客文章是底部工具栏。浮动播放器会挡住它们，因此在移动端阅读路由
-  // 直接不挂载播放器组件（播放状态与音频都留在上层 Provider，不中断）。
-  // 注意按“实际阅读页”匹配：/docs 与 /blog 列表页仍保留播放器。
-  const isReaderRoute = useMemo(() => {
-    const segments = pathname.split('/').filter(Boolean);
-    if (segments[0] === 'docs') return segments.length >= 3;
-    if (segments[0] === 'blog') return segments.length >= 2;
-    return false;
-  }, [pathname]);
-  const hideFloatingPlayer = isReaderRoute && mounted && !isDesktop;
+  // 右下角浮动播放器只在桌面端挂载。移动端（<768px）屏幕窄，浮动卡会压住正文、
+  // 底部章节导航与博客工具栏；移动端改由顶部控制岛和 /music 页承担播放控制，
+  // 播放状态与音频都在上层 Provider 里，卸载组件不会中断播放。
+  const hideFloatingPlayer = !mounted || isMobile;
   const { enableMouseEffects, effectiveQuality } = usePerformance();
   const { preset } = useStylePreset();
   const { isReady, isLoading } = useInitialLoad();

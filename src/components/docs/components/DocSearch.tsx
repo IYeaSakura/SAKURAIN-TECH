@@ -109,16 +109,17 @@ export function DocSearch({ onSearch, onSelectResult, placeholder = '搜索本�
             setTimeout(() => inputRef.current?.focus(), 0);
           }
         }}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors"
+        className="flex items-center gap-2 border-2 px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5"
         style={{ 
           background: isOpen ? 'var(--accent-primary)' : 'var(--bg-secondary)',
-          color: isOpen ? 'white' : 'var(--text-secondary)'
+          borderColor: isOpen ? 'var(--accent-primary)' : 'var(--border-subtle)',
+          color: isOpen ? 'var(--bg-primary)' : 'var(--text-secondary)'
         }}
       >
-        <Search className="w-4 h-4" />
+        <Search className="w-3.5 h-3.5" />
         <span className="hidden sm:inline">搜索</span>
-        <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs rounded"
-             style={{ background: isOpen ? 'rgba(255,255,255,0.2)' : 'var(--bg-primary)' }}>
+        <kbd className="hidden md:inline-flex items-center gap-0.5 border px-1 py-0.5 text-[10px]"
+             style={{ borderColor: 'currentColor' }}>
           Ctrl+F
         </kbd>
       </button>
@@ -126,11 +127,11 @@ export function DocSearch({ onSearch, onSelectResult, placeholder = '搜索本�
       {/* 搜索下拉框 */}
       {isOpen && (
         <div 
-          className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-xl shadow-2xl border overflow-hidden z-50"
-          style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}
+          className="absolute right-0 top-full mt-2 w-80 sm:w-96 border-2 overflow-hidden z-50"
+          style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-subtle)', boxShadow: '6px 6px 0 var(--border-subtle)' }}
         >
           {/* 输入框 */}
-          <div className="flex items-center gap-2 p-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
+          <div className="flex items-center gap-2 p-3 border-b-2" style={{ borderColor: 'var(--border-subtle)' }}>
             <Search className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
             <input
               ref={inputRef}

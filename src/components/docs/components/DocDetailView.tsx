@@ -121,25 +121,29 @@ export function DocDetailView({ doc, category, content, onBack }: DocDetailViewP
           }}
         >
           {/* 顶部工具栏 - 固定在侧边栏顶部 */}
-          <div className="p-4 border-b flex items-center justify-between flex-shrink-0" style={{ borderColor: 'var(--border-color)' }}>
-            <button onClick={onBack} className="flex items-center gap-2 text-sm hover:opacity-80" style={{ color: 'var(--text-secondary)' }}>
-              <ArrowLeft className="w-4 h-4" />返回
+          <div className="p-4 border-b-2 flex items-center justify-between flex-shrink-0" style={{ borderColor: 'var(--border-subtle)' }}>
+            <button
+              onClick={onBack}
+              className="inline-flex items-center gap-2 border-2 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5"
+              style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />返回
             </button>
             <ThemeToggleButton />
           </div>
           
           {/* 文档信息 - 固定在侧边栏顶部 */}
-          <div className="p-4 border-b flex-shrink-0" style={{ borderColor: 'var(--border-color)' }}>
-            <div className="flex items-center gap-2 mb-2 text-sm" style={{ color: 'var(--text-muted)' }}>
-              <Folder className="w-4 h-4" />{category.name}
+          <div className="p-4 border-b-2 flex-shrink-0" style={{ borderColor: 'var(--border-subtle)' }}>
+            <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+              <Folder className="h-3.5 w-3.5" />{category.name}
             </div>
-            <div className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>{doc.title}</div>
+            <div className="text-sm font-bold" style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}>{doc.title}</div>
           </div>
           
           {/* 目录区域 - 可滚动 */}
           <div className="flex-1 overflow-y-auto min-h-0">
             <div className="p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>目录</h3>
+              <h3 className="mb-3 font-mono text-[10px] uppercase tracking-[0.25em]" style={{ color: 'var(--text-muted)' }}>目录</h3>
               <TocNav toc={displayToc} activeHeading={activeHeading} onSelect={handleSelectHeading} />
             </div>
           </div>
@@ -159,17 +163,18 @@ export function DocDetailView({ doc, category, content, onBack }: DocDetailViewP
             <div className="flex items-center justify-between h-16 lg:h-20">
               <motion.button
                 onClick={onBack}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
+                className="inline-flex items-center gap-2 border-2 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5"
                 style={{
                   background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-primary)'
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--text-primary)',
+                  boxShadow: '4px 4px 0 var(--border-subtle)',
                 }}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium">返回</span>
+                <ArrowLeft className="h-4 w-4" />
+                <span>返回</span>
               </motion.button>
 
               <div className="flex items-center gap-2">
@@ -185,8 +190,8 @@ export function DocDetailView({ doc, category, content, onBack }: DocDetailViewP
                 {hasToc && (
                   <button 
                     onClick={() => setShowToc(!showToc)} 
-                    className="lg:hidden p-2 rounded-lg text-sm" 
-                    style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
+                    className="lg:hidden border-2 px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wider" 
+                    style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
                   >
                     目录
                   </button>
@@ -217,29 +222,30 @@ export function DocDetailView({ doc, category, content, onBack }: DocDetailViewP
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.3 }}
-                  className="mt-12 rounded-xl p-5 flex items-center gap-4"
+                  className="mt-12 flex items-center gap-4 border-2 p-5"
                   style={{
-                    background: 'linear-gradient(135deg, var(--bg-secondary), var(--bg-primary))',
-                    border: '1px solid var(--border-subtle)',
+                    background: 'var(--bg-secondary)',
+                    borderColor: 'var(--border-subtle)',
+                    boxShadow: '4px 4px 0 var(--border-subtle)',
                   }}
                 >
                   <div
-                    className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0"
+                    className="flex h-10 w-10 flex-shrink-0 items-center justify-center border-2"
                     style={{
-                      background: 'var(--accent-primary)',
-                      boxShadow: '0 2px 10px var(--accent-glow)',
+                      background: 'var(--bg-primary)',
+                      borderColor: 'var(--accent-primary)',
+                      color: 'var(--accent-primary)',
                     }}
                   >
                     <svg
-                      width="24"
-                      height="24"
+                      width="20"
+                      height="20"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className="text-white"
                     >
                       <circle cx="12" cy="12" r="10" />
                       <path d="M12 6v6l4 2" />

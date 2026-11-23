@@ -80,11 +80,11 @@ export function SearchModal({ isOpen, onClose, allCategories, onSelectItem, onSe
         initial={{ opacity: 0, y: -20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -20, scale: 0.95 }}
-        className="relative w-full max-w-2xl rounded-xl overflow-hidden shadow-2xl"
-        style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)' }}
+        className="relative w-full max-w-2xl overflow-hidden border-2"
+        style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-subtle)', boxShadow: '8px 8px 0 var(--border-subtle)' }}
       >
         {/* Search Input */}
-        <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: 'var(--border-color)' }}>
+        <div className="flex items-center gap-3 p-4 border-b-2" style={{ borderColor: 'var(--border-subtle)' }}>
           <Search className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
@@ -100,7 +100,7 @@ export function SearchModal({ isOpen, onClose, allCategories, onSelectItem, onSe
               <X className="w-4 h-4" />
             </button>
           )}
-          <button onClick={onClose} className="text-xs px-2 py-1 rounded" style={{ background: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
+          <button onClick={onClose} className="text-xs px-2 py-1 border-2 font-mono" style={{ background: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
             ESC
           </button>
         </div>
@@ -117,7 +117,7 @@ export function SearchModal({ isOpen, onClose, allCategories, onSelectItem, onSe
                 <button
                   key={`${result.item.id}-${result.chapter?.id || 'item'}-${index}`}
                   onClick={() => handleSelect(result)}
-                  className="w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors hover:opacity-80"
+                  className="w-full flex items-start gap-3 p-3 text-left transition-opacity hover:opacity-80"
                   style={{ background: index % 2 === 0 ? 'transparent' : 'var(--bg-secondary)' }}
                 >
                   {result.item.type === 'series' ? (
@@ -130,7 +130,7 @@ export function SearchModal({ isOpen, onClose, allCategories, onSelectItem, onSe
                       <span className="font-medium truncate" style={{ color: 'var(--text-primary)' }}>
                         {result.chapter ? result.chapter.title : result.item.title}
                       </span>
-                      <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
+                      <span className="text-xs px-2 py-0.5 border flex-shrink-0" style={{ background: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
                         {result.category.name}
                       </span>
                     </div>

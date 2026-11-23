@@ -761,6 +761,8 @@ export interface Dictionary {
     startLearning: string;
     chaptersTitle: string;
     currentToc: string;
+    seriesSection: string;
+    docsSection: string;
   };
   moments: {
     title: string;
@@ -843,5 +845,7 @@ export interface Dictionary {
     back: string;
     prev: string;
     next: string;
+    random: string;
+    randomHint: string;
   };
 }

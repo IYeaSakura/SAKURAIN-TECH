@@ -111,9 +111,9 @@ export function UnifiedToc({ chapters, currentChapterId, headings, flatHeadings,
       return (
         <div key={item.id}>
           <div 
-            className="flex items-center rounded-lg transition-all duration-200"
+            className="flex items-center transition-all duration-200"
             style={{
-              background: isActive ? 'rgba(86,156,214,0.12)' : 'transparent',
+              background: isActive ? 'color-mix(in srgb, var(--accent-primary) 12%, transparent)' : 'transparent',
             }}
           >
             {hasChildren ? (
@@ -170,7 +170,7 @@ export function UnifiedToc({ chapters, currentChapterId, headings, flatHeadings,
             placeholder="搜索目录..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 rounded-lg text-sm border outline-none focus:ring-2 transition-all"
+            className="w-full pl-9 pr-8 py-2 text-sm border-2 outline-none transition-all"
             style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
           />
           {searchQuery && (
@@ -196,9 +196,9 @@ export function UnifiedToc({ chapters, currentChapterId, headings, flatHeadings,
                       onSelectChapter(chapter);
                     }
                   }}
-                  className="w-full flex items-center gap-2 py-2 px-2 rounded-lg text-left text-sm transition-all duration-200"
+                  className="w-full flex items-center gap-2 py-2 px-2 text-left text-sm transition-all duration-200"
                   style={{
-                    background: isActive ? 'rgba(86,156,214,0.12)' : 'transparent',
+                    background: isActive ? 'color-mix(in srgb, var(--accent-primary) 12%, transparent)' : 'transparent',
                     color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
                     fontWeight: isActive ? 500 : 400,
                   }}
@@ -233,12 +233,12 @@ export function UnifiedToc({ chapters, currentChapterId, headings, flatHeadings,
                 <button
                   key={heading.id}
                   onClick={() => handleSelectHeading(heading.id)}
-                  className="w-full text-left py-1.5 pr-2 text-sm rounded-lg transition-all duration-200 truncate"
+                  className="w-full text-left py-1.5 pr-2 text-sm transition-all duration-200 truncate"
                   style={{
                     paddingLeft: `${(heading.level - 2) * 12 + 8}px`,
                     color: activeHeading === heading.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
                     fontWeight: activeHeading === heading.id ? 500 : 400,
-                    background: activeHeading === heading.id ? 'rgba(86,156,214,0.12)' : 'transparent',
+                    background: activeHeading === heading.id ? 'color-mix(in srgb, var(--accent-primary) 12%, transparent)' : 'transparent',
                   }}
                 >
                   {heading.text}

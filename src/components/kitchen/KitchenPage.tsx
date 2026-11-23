@@ -10,7 +10,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Search, UtensilsCrossed, Flame, Calendar, X } from 'lucide-react';
+import { Search, UtensilsCrossed, Flame, Calendar, X, Shuffle } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import { useAnimationEnabled, useTranslation } from '@/hooks';
 import type { SiteData } from '@/types';
@@ -123,6 +123,13 @@ export default function KitchenPage({ recipes, tags, footer }: KitchenPageProps)
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  /** 随机阅读：优先在当前筛选结果里挑，避免把用户筛掉的菜推给他。 */
+  const openRandom = () => {
+    const pool = filtered.length > 0 ? filtered : recipes;
+    if (pool.length === 0) return;
+    openRecipe(pool[Math.floor(Math.random() * pool.length)].slug);
+  };
+
   return (
     <div className="min-h-screen">
       <main className="relative z-10 mx-auto w-full max-w-6xl px-4 pb-24 pt-28 sm:px-6 lg:px-8">
@@ -137,29 +144,49 @@ export default function KitchenPage({ recipes, tags, footer }: KitchenPageProps)
             boxShadow: '6px 6px 0 var(--border-subtle)',
           }}
         >
-          <div className="mb-3 flex items-center gap-3">
-            <span
-              className="flex h-9 w-9 items-center justify-center border-2"
-              style={{ borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <div className="mb-3 flex items-center gap-3">
+                <span
+                  className="flex h-9 w-9 items-center justify-center border-2"
+                  style={{ borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
+                >
+                  <UtensilsCrossed className="h-4 w-4" />
+                </span>
+                <span className="font-mono text-[11px] uppercase tracking-[0.25em]" style={{ color: 'var(--text-muted)' }}>
+                  kitchen
+                </span>
+              </div>
+              <h1
+                className="mb-2 text-2xl font-bold sm:text-3xl"
+                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+              >
+                {t.kitchen.title}
+              </h1>
+              <p className="text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
+                {t.kitchen.subtitle}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-4 font-mono text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                <span>{recipes.length} {t.kitchen.recipeUnit}</span>
+                <span>{tags.length} {t.kitchen.tagUnit}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={openRandom}
+              title={t.kitchen.randomHint}
+              className="inline-flex shrink-0 items-center justify-center gap-2 border-2 px-3 py-2 font-mono text-[11px] uppercase tracking-wider transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0"
+              style={{
+                background: 'var(--accent-primary)',
+                borderColor: 'var(--accent-primary)',
+                color: 'var(--bg-primary)',
+                boxShadow: '4px 4px 0 var(--border-subtle)',
+              }}
             >
-              <UtensilsCrossed className="h-4 w-4" />
-            </span>
-            <span className="font-mono text-[11px] uppercase tracking-[0.25em]" style={{ color: 'var(--text-muted)' }}>
-              kitchen
-            </span>
-          </div>
-          <h1
-            className="mb-2 text-2xl font-bold sm:text-3xl"
-            style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
-          >
-            {t.kitchen.title}
-          </h1>
-          <p className="text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
-            {t.kitchen.subtitle}
-          </p>
-          <div className="mt-4 flex flex-wrap gap-4 font-mono text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-            <span>{recipes.length} {t.kitchen.recipeUnit}</span>
-            <span>{tags.length} {t.kitchen.tagUnit}</span>
+              <Shuffle className="h-4 w-4" />
+              {t.kitchen.random}
+            </button>
           </div>
         </motion.header>
 

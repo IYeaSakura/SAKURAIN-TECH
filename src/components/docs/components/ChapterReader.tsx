@@ -38,7 +38,7 @@ class ErrorBoundary extends Component<{ children: ReactNode; fallback?: ReactNod
           </p>
           <button 
             onClick={() => window.location.reload()} 
-            className="px-4 py-2 rounded-lg text-white"
+            className="border-2 px-4 py-2 font-mono text-[11px] uppercase tracking-wider"
             style={{ background: 'var(--accent-primary)' }}
           >
             刷新页面
@@ -252,9 +252,13 @@ export function ChapterReader({ chapter, series, category, content, onBack, onSe
           }}
         >
           {/* 顶部工具栏 - 固定 */}
-          <div className="p-4 border-b flex items-center justify-between flex-shrink-0" style={{ borderColor: 'var(--border-color)' }}>
-            <button onClick={onBack} className="flex items-center gap-2 text-sm hover:opacity-80" style={{ color: 'var(--text-secondary)' }}>
-              <ArrowLeft className="w-4 h-4" />返回系列
+          <div className="p-4 border-b-2 flex items-center justify-between flex-shrink-0" style={{ borderColor: 'var(--border-subtle)' }}>
+            <button
+              onClick={onBack}
+              className="inline-flex items-center gap-2 border-2 px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5"
+              style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />返回系列
             </button>
             <ThemeToggleButton />
           </div>
@@ -294,17 +298,18 @@ export function ChapterReader({ chapter, series, category, content, onBack, onSe
             <div className="flex items-center justify-between h-16 lg:h-20">
               <motion.button
                 onClick={onBack}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
+                className="inline-flex items-center gap-2 border-2 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5"
                 style={{
                   background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-primary)'
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--text-primary)',
+                  boxShadow: '4px 4px 0 var(--border-subtle)',
                 }}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium">返回</span>
+                <ArrowLeft className="h-4 w-4" />
+                <span>返回</span>
               </motion.button>
 
               <div className="flex items-center gap-2">
@@ -319,15 +324,15 @@ export function ChapterReader({ chapter, series, category, content, onBack, onSe
                 <ThemeToggleButton />
                 <button
                   onClick={() => setShowToc(!showToc)}
-                  className="hidden lg:flex p-2 rounded-lg text-sm items-center gap-1"
-                  style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
+                  className="hidden lg:flex items-center gap-1 border-2 px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wider"
+                  style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
                 >
-                  <List className="w-4 h-4" />目录
+                  <List className="h-3.5 w-3.5" />目录
                 </button>
                 <button
                   onClick={() => setShowToc(!showToc)}
-                  className="lg:hidden p-2 rounded-lg text-sm"
-                  style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
+                  className="lg:hidden border-2 px-2.5 py-1.5 font-mono text-[11px] uppercase tracking-wider"
+                  style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
                 >
                   目录
                 </button>
@@ -349,26 +354,26 @@ export function ChapterReader({ chapter, series, category, content, onBack, onSe
             </motion.article>
 
             {/* Chapter Navigation */}
-            <div className="mt-16 pt-8 border-t flex items-center justify-between" style={{ borderColor: 'var(--border-color)' }}>
+            <div className="mt-16 pt-8 border-t-2 flex items-center justify-between gap-3" style={{ borderColor: 'var(--border-subtle)' }}>
               <button
                 onClick={handlePrevChapter}
                 disabled={!prevChapter}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-                style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+                className="inline-flex items-center gap-2 border-2 px-3 py-2 font-mono text-[11px] uppercase tracking-wider transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0"
+                style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="h-4 w-4" />
                 <span className="hidden sm:inline truncate max-w-[150px]">{prevChapter ? prevChapter.title : '上一章'}</span>
                 <span className="sm:hidden">上一章</span>
               </button>
               <button
                 onClick={handleNextChapter}
                 disabled={!nextChapter}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-                style={{ background: 'var(--accent-primary)', color: 'white' }}
+                className="inline-flex items-center gap-2 border-2 px-3 py-2 font-mono text-[11px] uppercase tracking-wider transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0"
+                style={{ background: 'var(--accent-primary)', borderColor: 'var(--accent-primary)', color: 'var(--bg-primary)' }}
               >
                 <span className="hidden sm:inline truncate max-w-[150px]">{nextChapter ? nextChapter.title : '下一章'}</span>
                 <span className="sm:hidden">下一章</span>
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>

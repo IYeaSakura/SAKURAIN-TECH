@@ -1,9 +1,8 @@
-import { useState, memo } from 'react';
+import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, BookOpen, Clock, BarChart3, ChevronRight, PlayCircle, Sparkles, Layers } from 'lucide-react';
+import { ArrowLeft, BookOpen, Clock, BarChart3, ChevronRight, PlayCircle, Layers } from 'lucide-react';
 import { ThemeToggleButton } from './ThemeToggleButton';
-import { AmbientGlow } from '@/components/effects';
-import { useTranslation } from '@/hooks';
+import { useAnimationEnabled, useTranslation } from '@/hooks';
 import type { DocSeries, DocCategory, Chapter } from '../types';
 
 interface SeriesDetailViewProps {
@@ -13,23 +12,6 @@ interface SeriesDetailViewProps {
   onSelectChapter: (category: DocCategory, series: DocSeries, chapter: Chapter) => void;
 }
 
-// Floating code decoration
-const CodeDecoration = memo(({ className }: { className?: string }) => {
-  return (
-    <div 
-      className={`absolute font-mono text-xs sm:text-sm opacity-10 pointer-events-none animate-float-slow ${className}`}
-    >
-      <div className="text-[var(--accent-primary)]">{'<Series.load>'}</div>
-      <div className="text-[var(--accent-secondary)] ml-2">chapters: ready</div>
-      <div className="text-[var(--accent-tertiary)] ml-2">progress: 0%</div>
-      <div className="text-[var(--text-muted)]">{'</Series.load>'}</div>
-    </div>
-  );
-});
-
-CodeDecoration.displayName = 'CodeDecoration';
-
-// Chapter list item component
 const ChapterItem = memo(({
   chapter,
   index,
@@ -39,341 +21,182 @@ const ChapterItem = memo(({
   index: number;
   onClick: () => void;
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const animationEnabled = useAnimationEnabled();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -30 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.05, ease: [0.25, 0.1, 0.25, 1] }}
+    <motion.button
+      type="button"
       onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="group flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all duration-300 relative overflow-hidden"
+      initial={animationEnabled ? { opacity: 0, y: 12 } : undefined}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: animationEnabled ? Math.min(index, 10) * 0.03 : 0 }}
+      className="group relative flex w-full items-center gap-4 border-2 p-4 text-left transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5"
       style={{
-        background: 'var(--bg-card)',
-        border: '3px solid',
-        borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
-        transform: isHovered ? 'translateX(8px) scale(1.01)' : 'none',
-        boxShadow: isHovered 
-          ? `0 10px 30px var(--accent-glow), 0 0 20px var(--accent-primary)15, inset -3px -3px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 3px 3px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)` 
-          : 'inset -3px -3px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 3px 3px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
+        background: 'var(--bg-secondary)',
+        borderColor: 'var(--border-subtle)',
+        boxShadow: '4px 4px 0 var(--border-subtle)',
       }}
     >
-      {/* Glow background */}
-      <motion.div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background: `linear-gradient(90deg, var(--accent-primary)10, transparent 50%)`,
-        }}
-        animate={{ opacity: isHovered ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
+      <span
+        aria-hidden
+        className="absolute left-0 top-0 h-full w-1 origin-top scale-y-0 transition-transform duration-200 group-hover:scale-y-100"
+        style={{ background: 'var(--accent-primary)' }}
       />
 
-      {/* Chapter number */}
-      <div 
-        className="flex items-center justify-center w-12 h-12 rounded-lg flex-shrink-0 font-bold text-lg transition-all duration-300 relative z-10"
-        style={{ 
-          background: isHovered ? 'var(--accent-primary)' : 'var(--bg-primary)',
-          color: isHovered ? 'white' : 'var(--accent-primary)',
-          boxShadow: isHovered ? '0 0 20px var(--accent-glow)' : 'none',
-        }}
+      <span
+        className="flex h-10 w-10 shrink-0 items-center justify-center border-2 font-mono text-sm font-bold"
+        style={{ borderColor: 'var(--border-subtle)', color: 'var(--accent-primary)' }}
       >
-        {index + 1}
-      </div>
-      
-      {/* Chapter info */}
-      <div className="flex-1 min-w-0 relative z-10">
-        <h3 
-          className="font-primary font-semibold text-lg mb-1 truncate transition-all duration-300"
-          style={{ 
-            color: 'var(--text-primary)',
-            textShadow: isHovered ? '0 0 10px var(--accent-glow)' : 'none',
-          }}
+        {String(index + 1).padStart(2, '0')}
+      </span>
+
+      <span className="min-w-0 flex-1">
+        <span
+          className="block truncate text-base font-bold leading-snug"
+          style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
         >
           {chapter.title}
-        </h3>
-        <p 
-          className="text-sm truncate"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          {chapter.description}
-        </p>
-      </div>
-      
-      {/* Arrow indicator */}
-      <ChevronRight 
-        className="w-5 h-5 flex-shrink-0 transition-all duration-300 relative z-10"
-        style={{ 
-          color: 'var(--text-muted)',
-          opacity: isHovered ? 1 : 0,
-          transform: isHovered ? 'translateX(4px)' : 'translateX(-4px)',
-        }} 
+        </span>
+        {chapter.description && (
+          <span className="mt-1 block truncate text-[13px]" style={{ color: 'var(--text-muted)' }}>
+            {chapter.description}
+          </span>
+        )}
+      </span>
+
+      <ChevronRight
+        className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-1"
+        style={{ color: 'var(--text-muted)' }}
       />
-    </motion.div>
+    </motion.button>
   );
 });
 
 ChapterItem.displayName = 'ChapterItem';
 
-// Glowing badge component
-const GlowBadge = memo(({ text }: { text: string }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.8 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="inline-flex items-center gap-2 mb-4 relative"
-    >
-      {/* Outer glow */}
-      <div 
-        className="absolute -inset-2 rounded-xl animate-pulse-glow"
-        style={{
-          background: `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary))`,
-          filter: 'blur(15px)',
-          opacity: 0.4,
-          zIndex: -1,
-        }}
-      />
-      <div
-        className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 relative overflow-hidden group"
-        style={{
-          background: 'var(--bg-card)',
-          border: '2px solid color-mix(in srgb, var(--accent-primary) 80%, transparent)',
-          boxShadow: '0 0 20px var(--accent-glow), inset 0 0 10px var(--accent-primary)10',
-        }}
-      >
-        {/* Inner light effect */}
-        <div 
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{
-            background: `linear-gradient(90deg, transparent, var(--accent-primary)20, transparent)`,
-          }}
-        />
-        <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-        <span
-          className="font-primary text-sm font-bold uppercase tracking-wider relative z-10"
-          style={{ color: 'var(--accent-primary)' }}
-        >
-          {text}
-        </span>
-      </div>
-    </motion.div>
-  );
-});
-
-GlowBadge.displayName = 'GlowBadge';
-
 export function SeriesDetailView({ series, category, onBack, onSelectChapter }: SeriesDetailViewProps) {
   const { t, tReplace } = useTranslation();
+  const animationEnabled = useAnimationEnabled();
   const totalChapters = series.chapters.length;
   const estimatedTime = `${Math.ceil(totalChapters * 15)}`;
   const difficulty = totalChapters > 10 ? t.docs.difficultyAdvanced : t.docs.difficultyBeginner;
 
+  const metaChip = (icon: React.ReactNode, text: string) => (
+    <span
+      className="inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[11px] uppercase tracking-wider"
+      style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}
+    >
+      {icon}
+      {text}
+    </span>
+  );
+
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Ambient glow effects */}
-        <AmbientGlow position="top-left" color="var(--accent-primary)" size={400} opacity={0.1} />
-        <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={300} opacity={0.06} />
-      </div>
-
-      {/* Floating code decoration */}
-      <CodeDecoration className="top-32 left-8 hidden lg:block" />
-      <CodeDecoration className="bottom-32 right-8 hidden lg:block" />
-
-      {/* Header */}
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="fixed top-0 left-0 right-0 z-50 mc-navbar"
-      >
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 lg:h-20">
-            <motion.button
-              onClick={onBack}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
-              style={{
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-primary)'
-              }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">{t.docs.back}</span>
-            </motion.button>
-
-            <div className="flex items-center">
-              <ThemeToggleButton />
-            </div>
-          </div>
-        </div>
-      </motion.header>
-
-      {/* Hero Section */}
-      <div className="relative pt-24 lg:pt-28 py-12 sm:py-16 px-4">
-        <div className="max-w-4xl mx-auto relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {/* Badge */}
-            <div className="flex items-center gap-3 mb-4">
-              <GlowBadge text={category.name} />
-              <div 
-                className="px-3 py-1 rounded-lg text-xs font-semibold"
-                style={{ 
-                  background: 'var(--bg-card)',
-                  color: 'var(--accent-secondary)',
-                  border: '2px solid var(--accent-secondary)',
-                }}
-              >
-                {tReplace(t.docs.chapterCount, { count: totalChapters })}
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-6">
-              {/* Icon */}
-              <motion.div 
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="hidden sm:flex w-24 h-24 rounded-2xl items-center justify-center flex-shrink-0"
-                style={{ 
-                  background: 'var(--bg-card)',
-                  border: '3px solid var(--accent-primary)',
-                  boxShadow: '0 0 40px var(--accent-glow), inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
-                }}
-              >
-                <BookOpen className="w-12 h-12" style={{ color: 'var(--accent-primary)' }} />
-              </motion.div>
-              
-              <div className="flex-1">
-                {/* Title */}
-                <h1 
-                  className="font-primary text-2xl sm:text-3xl lg:text-4xl font-black mb-4"
-                  style={{ 
-                    color: 'var(--text-primary)',
-                    letterSpacing: '-0.02em',
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {series.title}
-                </h1>
-                
-                {/* Description */}
-                <p 
-                  className="text-lg mb-6 font-primary"
-                  style={{ color: 'var(--text-secondary)', lineHeight: 1.7 }}
-                >
-                  {series.description}
-                </p>
-                
-                {/* Metadata */}
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <div 
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg"
-                    style={{ 
-                      background: 'var(--bg-card)',
-                      border: '2px solid var(--border-subtle)',
-                    }}
-                  >
-                    <Clock className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                    <span style={{ color: 'var(--text-secondary)' }}>{tReplace(t.docs.estimatedTime, { time: estimatedTime })}</span>
-                  </div>
-                  <div 
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg"
-                    style={{ 
-                      background: 'var(--bg-card)',
-                      border: '2px solid var(--border-subtle)',
-                    }}
-                  >
-                    <BarChart3 className="w-4 h-4" style={{ color: 'var(--accent-secondary)' }} />
-                    <span style={{ color: 'var(--text-secondary)' }}>{difficulty}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Start Learning Button */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 -mt-4 mb-8 relative z-10">
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          onClick={() => onSelectChapter(category, series, series.chapters[0])}
-          className="group relative flex items-center justify-center gap-3 px-8 py-4 rounded-xl text-white font-bold text-lg transition-all duration-300 overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, var(--accent-primary), color-mix(in srgb, var(--accent-primary) 80%, var(--accent-secondary)))',
-            boxShadow: '0 4px 20px var(--accent-glow)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
-            e.currentTarget.style.boxShadow = '0 8px 30px var(--accent-glow), 0 0 60px var(--accent-primary)40';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 4px 20px var(--accent-glow)';
-          }}
-        >
-          {/* Light effect background */}
-          <div 
-            className="absolute inset-0 transition-transform duration-600"
+    <div className="min-h-screen">
+      <main className="mx-auto w-full max-w-4xl px-4 pb-20 pt-28 sm:px-6 lg:pt-36">
+        {/* Toolbar */}
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-2 border-2 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5"
             style={{
-              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-              transform: 'translateX(-100%)',
+              background: 'var(--bg-secondary)',
+              borderColor: 'var(--border-subtle)',
+              color: 'var(--text-primary)',
+              boxShadow: '4px 4px 0 var(--border-subtle)',
             }}
-          />
-          <PlayCircle className="w-6 h-6 relative z-10" />
-          <span className="relative z-10 font-primary">{t.docs.startLearning}</span>
-        </motion.button>
-      </div>
-
-      {/* Chapter List */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-20 relative z-10">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="flex items-center gap-3 mb-6"
-        >
-          <Layers className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-          <h2 
-            className="text-xl font-bold font-primary"
-            style={{ color: 'var(--text-primary)' }}
           >
-            {t.docs.chaptersTitle}
-          </h2>
-          <div className="flex-1 h-px" style={{ background: 'var(--border-subtle)' }} />
-        </motion.div>
-        
-        <div className="space-y-3">
-          {series.chapters.map((chapter, index) => (
-            <ChapterItem
-              key={chapter.id}
-              chapter={chapter}
-              index={index}
-              onClick={() => onSelectChapter(category, series, chapter)}
-            />
-          ))}
+            <ArrowLeft className="h-4 w-4" />
+            {t.docs.back}
+          </button>
+          <ThemeToggleButton />
         </div>
-      </div>
-      
-      {/* Bottom gradient fade */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to top, var(--bg-primary), transparent)',
-        }}
-      />
+
+        {/* Series header */}
+        <motion.section
+          initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8 border-2 p-6 sm:p-8"
+          style={{
+            background: 'var(--bg-secondary)',
+            borderColor: 'var(--border-subtle)',
+            boxShadow: '6px 6px 0 var(--border-subtle)',
+          }}
+        >
+          <div className="mb-4 flex items-center gap-3">
+            <span
+              className="flex h-9 w-9 items-center justify-center border-2"
+              style={{ borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
+            >
+              <BookOpen className="h-4 w-4" />
+            </span>
+            <span className="font-mono text-[11px] uppercase tracking-[0.25em]" style={{ color: 'var(--text-muted)' }}>
+              {category.name}
+            </span>
+          </div>
+
+          <h1
+            className="hero-mark mb-3 text-2xl font-bold leading-tight sm:text-4xl"
+            style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+          >
+            {series.title}
+          </h1>
+
+          {series.description && (
+            <p className="mb-5 text-sm leading-7 sm:text-base" style={{ color: 'var(--text-secondary)' }}>
+              {series.description}
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {metaChip(<Layers className="h-3 w-3" style={{ color: 'var(--accent-primary)' }} />, tReplace(t.docs.chapterCount, { count: totalChapters }))}
+            {metaChip(<Clock className="h-3 w-3" style={{ color: 'var(--accent-primary)' }} />, tReplace(t.docs.estimatedTime, { time: estimatedTime }))}
+            {metaChip(<BarChart3 className="h-3 w-3" style={{ color: 'var(--accent-secondary)' }} />, difficulty)}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onSelectChapter(category, series, series.chapters[0])}
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 border-2 px-6 py-3 font-mono text-[11px] uppercase tracking-wider transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5 sm:w-auto"
+            style={{
+              background: 'var(--accent-primary)',
+              borderColor: 'var(--accent-primary)',
+              color: 'var(--bg-primary)',
+              boxShadow: '4px 4px 0 var(--border-subtle)',
+            }}
+          >
+            <PlayCircle className="h-4 w-4" />
+            {t.docs.startLearning}
+          </button>
+        </motion.section>
+
+        {/* Chapters */}
+        <section>
+          <div className="mb-5 flex items-center gap-3">
+            <Layers className="h-4 w-4" style={{ color: 'var(--accent-primary)' }} />
+            <h2 className="font-mono text-[11px] uppercase tracking-[0.25em]" style={{ color: 'var(--text-muted)' }}>
+              {t.docs.chaptersTitle}
+            </h2>
+            <span className="font-mono text-[11px]" style={{ color: 'var(--accent-primary)' }}>
+              {String(totalChapters).padStart(2, '0')}
+            </span>
+            <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
+          </div>
+
+          <div className="space-y-3">
+            {series.chapters.map((chapter, index) => (
+              <ChapterItem
+                key={chapter.id}
+                chapter={chapter}
+                index={index}
+                onClick={() => onSelectChapter(category, series, chapter)}
+              />
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

@@ -714,6 +714,8 @@ export const en: Dictionary = {
     startLearning: 'Start Learning',
     chaptersTitle: 'Chapters',
     currentToc: 'Current TOC',
+    seriesSection: 'Series',
+    docsSection: 'Standalone Docs',
   },
   moments: {
     title: 'Moments',
@@ -851,5 +853,7 @@ export const en: Dictionary = {
     back: 'Back to kitchen',
     prev: 'Previous',
     next: 'Next',
+    random: 'Random dish',
+    randomHint: 'Pick a random recipe to read',
   },
 };

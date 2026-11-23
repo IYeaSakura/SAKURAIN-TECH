@@ -1,9 +1,10 @@
 import { useState, useEffect, memo } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, ChevronRight, FileText, FolderOpen, Search, BookMarked, GraduationCap, ArrowLeft, Sparkles } from 'lucide-react';
+import { BookMarked, ChevronRight, FileText, FolderOpen, Search, ArrowLeft, Layers } from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
 import { SearchModal } from './SearchModal';
 import { ThemeToggleButton } from './ThemeToggleButton';
-import { AmbientGlow } from '@/components/effects';
+import { useAnimationEnabled, useTranslation } from '@/hooks';
 import type { DocCategory, DocItem, DocSeries, SingleDoc, IconMap } from '../types';
 
 interface DocListViewProps {
@@ -13,140 +14,74 @@ interface DocListViewProps {
   iconMap: IconMap;
 }
 
-// 浮动代码装饰
-const CodeDecoration = memo(({ className }: { className?: string }) => {
-  return (
-    <div 
-      className={`absolute font-mono text-xs sm:text-sm opacity-10 pointer-events-none animate-float-slow ${className}`}
-    >
-      <div className="text-[var(--accent-primary)]">{'<Category.load>'}</div>
-      <div className="text-[var(--accent-secondary)] ml-2">items: ready</div>
-      <div className="text-[var(--accent-tertiary)] ml-2">type: docs</div>
-      <div className="text-[var(--text-muted)]">{'</Category.load>'}</div>
-    </div>
-  );
-});
+/* 与博客 / 菜谱列表一致的 brutalist 卡片：2px 描边 + 硬阴影 */
+const CARD_STYLE: React.CSSProperties = {
+  background: 'var(--bg-secondary)',
+  borderColor: 'var(--border-subtle)',
+  boxShadow: '4px 4px 0 var(--border-subtle)',
+};
 
-CodeDecoration.displayName = 'CodeDecoration';
-
-// 系列卡片组件
 const SeriesCard = memo(({
   series,
   index,
-  onClick,
+  onOpen,
 }: {
   series: DocSeries;
   index: number;
-  onClick: () => void;
+  onOpen: () => void;
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const animationEnabled = useAnimationEnabled();
+  const { t, tReplace } = useTranslation();
 
   return (
     <motion.button
-      initial={{ opacity: 0, y: 30 }}
+      type="button"
+      onClick={onOpen}
+      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.08, ease: [0.25, 0.1, 0.25, 1] }}
-      onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="group text-left relative cursor-pointer"
-      style={{ perspective: '1000px' }}
+      transition={{ duration: 0.35, delay: animationEnabled ? Math.min(index, 8) * 0.04 : 0 }}
+      className="group relative flex h-full flex-col border-2 p-5 text-left transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5"
+      style={CARD_STYLE}
     >
-      {/* 发光边框效果（统一使用非简写属性，避免 background 简写与 backgroundSize 冲突） */}
-      <div
-        className="absolute -inset-[2px] rounded-xl transition-opacity duration-500"
-        style={{
-          backgroundImage: isHovered
-            ? `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))`
-            : 'none',
-          backgroundColor: 'transparent',
-          backgroundSize: '300% 300%',
-          animation: isHovered ? 'gradient-shift 3s ease infinite' : 'none',
-          opacity: isHovered ? 1 : 0,
-          filter: 'blur(4px)',
-          zIndex: -1,
-        }}
+      <span
+        aria-hidden
+        className="absolute left-0 top-0 h-full w-1 origin-top scale-y-0 transition-transform duration-200 group-hover:scale-y-100"
+        style={{ background: 'var(--accent-primary)' }}
       />
-      <div
-        className="relative p-6 rounded-xl overflow-hidden transition-all duration-300"
-        style={{
-          background: 'var(--bg-card)',
-          border: '3px solid',
-          borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
-          transform: isHovered ? 'translateY(-8px) scale(1.02)' : 'none',
-          boxShadow: isHovered 
-            ? `0 20px 40px var(--accent-glow), 0 0 30px var(--accent-primary)20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)` 
-            : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
-        }}
-      >
-        {/* Glow background - 仅桌面端显示（CSS 断点控制，保证 SSR/CSR DOM 一致） */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none hidden md:block"
-          style={{
-            background: `radial-gradient(circle at 50% 0%, var(--accent-primary)15, transparent 60%)`,
-          }}
-          animate={{ opacity: isHovered ? 1 : 0 }}
-          transition={{ duration: 0.3 }}
-        />
 
-        {/* Shine effect - 仅桌面端显示（CSS 断点控制，保证 SSR/CSR DOM 一致） */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none hidden md:block"
-          style={{
-            background: `linear-gradient(105deg, transparent 40%, var(--accent-primary)10 45%, var(--accent-primary)20 50%, var(--accent-primary)10 55%, transparent 60%)`,
-            transform: 'translateX(-100%)',
-          }}
-          animate={isHovered ? { x: '200%' } : { x: '-100%' }}
-          transition={{ duration: 0.6 }}
-        />
+      <div className="mb-3 flex items-center justify-between font-mono text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+        <span>#{String(index + 1).padStart(2, '0')}</span>
+        <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+      </div>
 
-        <div className="flex items-start justify-between mb-4 relative z-10">
-          <div 
-            className="p-3 rounded-lg transition-all duration-300"
-            style={{ 
-              background: isHovered ? 'var(--accent-primary)' : 'var(--bg-primary)',
-              boxShadow: isHovered ? '0 0 20px var(--accent-glow)' : 'none',
-            }}
-          >
-            <GraduationCap 
-              className="w-6 h-6 transition-colors duration-300" 
-              style={{ color: isHovered ? 'white' : 'var(--accent-primary)' }} 
-            />
-          </div>
-          <ChevronRight 
-            className="w-5 h-5 transition-all duration-300" 
-            style={{ 
-              color: 'var(--text-muted)',
-              opacity: isHovered ? 1 : 0,
-              transform: isHovered ? 'translateX(4px)' : 'translateX(0)',
-            }} 
-          />
-        </div>
-        
-        <h3 
-          className="font-primary text-lg font-bold mb-2 relative z-10 transition-all duration-300"
-          style={{ 
-            color: 'var(--text-primary)',
-            textShadow: isHovered ? '0 0 20px var(--accent-glow)' : 'none',
-          }}
+      <div className="mb-3 flex items-center gap-3">
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center border-2"
+          style={{ borderColor: 'var(--border-subtle)', color: 'var(--accent-primary)' }}
+        >
+          <BookMarked className="h-4 w-4" />
+        </span>
+        <h3
+          className="min-w-0 flex-1 truncate text-base font-bold leading-snug"
+          style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
         >
           {series.title}
         </h3>
-        
-        <p 
-          className="text-sm line-clamp-2 mb-4 relative z-10"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          {series.description}
-        </p>
-        
-        <div 
-          className="flex items-center gap-2 text-xs relative z-10"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          <BookOpen className="w-3.5 h-3.5" style={{ color: 'var(--accent-secondary)' }} />
-          <span>{series.chapters.length} 个章节</span>
-        </div>
+      </div>
+
+      <p className="mb-4 line-clamp-2 text-[13px] leading-6" style={{ color: 'var(--text-secondary)' }}>
+        {series.description}
+      </p>
+
+      <div
+        className="mt-auto flex items-center justify-between border-t pt-3 font-mono text-[11px]"
+        style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}
+      >
+        <span>{tReplace(t.docs.chapterCount, { count: series.chapters.length })}</span>
+        <span className="inline-flex items-center gap-1" style={{ color: 'var(--accent-primary)' }}>
+          {t.docs.startLearning}
+          <ChevronRight className="h-3 w-3" />
+        </span>
       </div>
     </motion.button>
   );
@@ -154,168 +89,89 @@ const SeriesCard = memo(({
 
 SeriesCard.displayName = 'SeriesCard';
 
-// 独立文档卡片组件
 const DocCard = memo(({
   doc,
   index,
-  onClick,
+  onOpen,
 }: {
   doc: SingleDoc;
   index: number;
-  onClick: () => void;
+  onOpen: () => void;
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const animationEnabled = useAnimationEnabled();
 
   return (
     <motion.button
-      initial={{ opacity: 0, y: 30 }}
+      type="button"
+      onClick={onOpen}
+      initial={animationEnabled ? { opacity: 0, y: 16 } : undefined}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.08, ease: [0.25, 0.1, 0.25, 1] }}
-      onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="group text-left relative cursor-pointer"
-      style={{ perspective: '1000px' }}
+      transition={{ duration: 0.35, delay: animationEnabled ? Math.min(index, 8) * 0.04 : 0 }}
+      className="group relative flex h-full flex-col border-2 p-5 text-left transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5"
+      style={CARD_STYLE}
     >
-      {/* 发光边框效果（统一使用非简写属性，避免 background 简写与 backgroundSize 冲突） */}
-      <div
-        className="absolute -inset-[2px] rounded-xl transition-opacity duration-500"
-        style={{
-          backgroundImage: isHovered
-            ? `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary), var(--accent-primary))`
-            : 'none',
-          backgroundColor: 'transparent',
-          backgroundSize: '300% 300%',
-          animation: isHovered ? 'gradient-shift 3s ease infinite' : 'none',
-          opacity: isHovered ? 1 : 0,
-          filter: 'blur(4px)',
-          zIndex: -1,
-        }}
+      <span
+        aria-hidden
+        className="absolute left-0 top-0 h-full w-1 origin-top scale-y-0 transition-transform duration-200 group-hover:scale-y-100"
+        style={{ background: 'var(--accent-secondary)' }}
       />
-      <div
-        className="relative p-6 rounded-xl overflow-hidden transition-all duration-300"
-        style={{
-          background: 'var(--bg-card)',
-          border: '3px solid',
-          borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
-          transform: isHovered ? 'translateY(-8px) scale(1.02)' : 'none',
-          boxShadow: isHovered 
-            ? `0 20px 40px var(--accent-glow), 0 0 30px var(--accent-primary)20, inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)` 
-            : 'inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
-        }}
-      >
-        {/* Glow background - 仅桌面端显示（CSS 断点控制，保证 SSR/CSR DOM 一致） */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none hidden md:block"
-          style={{
-            background: `radial-gradient(circle at 50% 0%, var(--accent-primary)15, transparent 60%)`,
-          }}
-          animate={{ opacity: isHovered ? 1 : 0 }}
-          transition={{ duration: 0.3 }}
-        />
 
-        {/* Shine effect - 仅桌面端显示（CSS 断点控制，保证 SSR/CSR DOM 一致） */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none hidden md:block"
-          style={{
-            background: `linear-gradient(105deg, transparent 40%, var(--accent-primary)10 45%, var(--accent-primary)20 50%, var(--accent-primary)10 55%, transparent 60%)`,
-            transform: 'translateX(-100%)',
-          }}
-          animate={isHovered ? { x: '200%' } : { x: '-100%' }}
-          transition={{ duration: 0.6 }}
-        />
+      <div className="mb-3 flex items-center justify-between font-mono text-[11px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+        <span>#{String(index + 1).padStart(2, '0')}</span>
+        <ChevronRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+      </div>
 
-        <div className="flex items-start justify-between mb-4 relative z-10">
-          <FileText 
-            className="w-8 h-8 transition-all duration-300"
-            style={{ 
-              color: isHovered ? 'var(--accent-secondary)' : 'var(--accent-primary)',
-              filter: isHovered ? 'drop-shadow(0 0 10px var(--accent-glow))' : 'none',
-            }}
-          />
-          <ChevronRight 
-            className="w-5 h-5 transition-all duration-300" 
-            style={{ 
-              color: 'var(--text-muted)',
-              opacity: isHovered ? 1 : 0,
-              transform: isHovered ? 'translateX(4px)' : 'translateX(0)',
-            }} 
-          />
-        </div>
-        
-        <h3 
-          className="font-primary text-lg font-bold mb-2 relative z-10 transition-all duration-300"
-          style={{ 
-            color: 'var(--text-primary)',
-            textShadow: isHovered ? '0 0 20px var(--accent-glow)' : 'none',
-          }}
+      <div className="mb-3 flex items-center gap-3">
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center border-2"
+          style={{ borderColor: 'var(--border-subtle)', color: 'var(--accent-secondary)' }}
+        >
+          <FileText className="h-4 w-4" />
+        </span>
+        <h3
+          className="min-w-0 flex-1 truncate text-base font-bold leading-snug"
+          style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
         >
           {doc.title}
         </h3>
-        
-        <p 
-          className="text-sm line-clamp-2 relative z-10"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          {doc.description}
-        </p>
       </div>
+
+      <p className="line-clamp-3 text-[13px] leading-6" style={{ color: 'var(--text-secondary)' }}>
+        {doc.description}
+      </p>
     </motion.button>
   );
 });
 
 DocCard.displayName = 'DocCard';
 
-// 发光徽章组件
-const GlowBadge = memo(({ text }: { text: string }) => {
+function SectionHeading({
+  icon: Icon,
+  label,
+  count,
+}: {
+  icon: React.ComponentType<LucideProps>;
+  label: string;
+  count: number;
+}) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.8 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="inline-flex items-center gap-2 mb-6 relative"
-    >
-      {/* 外发光 */}
-      <div 
-        className="absolute -inset-2 rounded-xl animate-pulse-glow"
-        style={{
-          background: `linear-gradient(45deg, var(--accent-primary), var(--accent-secondary))`,
-          filter: 'blur(15px)',
-          opacity: 0.4,
-          zIndex: -1,
-        }}
-      />
-      <div
-        className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 relative overflow-hidden group"
-        style={{
-          background: 'var(--bg-card)',
-          border: '2px solid color-mix(in srgb, var(--accent-primary) 80%, transparent)',
-          boxShadow: '0 0 20px var(--accent-glow), inset 0 0 10px var(--accent-primary)10',
-        }}
-      >
-        {/* 内部光效 */}
-        <div 
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          style={{
-            background: `linear-gradient(90deg, transparent, var(--accent-primary)20, transparent)`,
-          }}
-        />
-        <Sparkles className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-        <span
-          className="font-primary text-sm font-bold uppercase tracking-wider relative z-10"
-          style={{ color: 'var(--accent-primary)' }}
-        >
-          {text}
-        </span>
-      </div>
-    </motion.div>
+    <div className="mb-5 flex items-center gap-3">
+      <Icon className="h-4 w-4" style={{ color: 'var(--accent-primary)' }} />
+      <h2 className="font-mono text-[11px] uppercase tracking-[0.25em]" style={{ color: 'var(--text-muted)' }}>
+        {label}
+      </h2>
+      <span className="font-mono text-[11px]" style={{ color: 'var(--accent-primary)' }}>
+        {String(count).padStart(2, '0')}
+      </span>
+      <div className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
+    </div>
   );
-});
-
-GlowBadge.displayName = 'GlowBadge';
+}
 
 export function DocListView({ category, onBack, onSelectItem, iconMap }: DocListViewProps) {
   const [searchOpen, setSearchOpen] = useState(false);
+  const { t, tReplace } = useTranslation();
+  const animationEnabled = useAnimationEnabled();
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
@@ -335,7 +191,7 @@ export function DocListView({ category, onBack, onSelectItem, iconMap }: DocList
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen">
       <SearchModal
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
@@ -343,177 +199,142 @@ export function DocListView({ category, onBack, onSelectItem, iconMap }: DocList
         onSelectItem={handleSelectItem}
       />
 
-      {/* 背景效果 */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* 环境光效 */}
-        <AmbientGlow position="top-left" color="var(--accent-primary)" size={400} opacity={0.1} />
-        <AmbientGlow position="bottom-right" color="var(--accent-secondary)" size={300} opacity={0.06} />
-      </div>
+      <main className="mx-auto w-full max-w-6xl px-4 pb-20 pt-28 sm:px-6 lg:pt-36">
+        {/* Toolbar: back + search + theme */}
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-2 border-2 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5"
+            style={{
+              background: 'var(--bg-secondary)',
+              borderColor: 'var(--border-subtle)',
+              color: 'var(--text-primary)',
+              boxShadow: '4px 4px 0 var(--border-subtle)',
+            }}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t.docs.back}
+          </button>
 
-      {/* 浮动代码装饰 */}
-      <CodeDecoration className="top-32 left-8 hidden lg:block" />
-      <CodeDecoration className="bottom-32 right-8 hidden lg:block" />
-
-      {/* Header */}
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="fixed top-0 left-0 right-0 z-50 mc-navbar"
-      >
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 lg:h-20">
-            <motion.button
-              onClick={onBack}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200"
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="inline-flex items-center gap-2 border-2 px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-transform duration-200 hover:-translate-x-0.5 hover:-translate-y-0.5"
               style={{
                 background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-subtle)',
-                color: 'var(--text-primary)'
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-secondary)',
               }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">返回</span>
-            </motion.button>
-
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setSearchOpen(true)} 
-                className="p-2 rounded-lg transition-all duration-300"
-                style={{ 
-                  color: 'var(--text-secondary)',
-                  background: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-subtle)',
-                }}
+              <Search className="h-4 w-4" />
+              <span className="hidden sm:inline">{t.docs.search}</span>
+              <kbd
+                className="hidden border px-1 text-[10px] sm:inline"
+                style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}
               >
-                <Search className="w-5 h-5" />
-              </button>
-              <ThemeToggleButton />
-            </div>
+                ⌘K
+              </kbd>
+            </button>
+            <ThemeToggleButton />
           </div>
         </div>
-      </motion.header>
 
-      {/* Hero */}
-      <div className="relative pt-24 lg:pt-28 py-16 sm:py-20 px-4">
-        <div className="max-w-6xl mx-auto text-center relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        {/* Header card */}
+        <motion.header
+          initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-10 border-2 p-6 sm:p-8"
+          style={{
+            background: 'var(--bg-secondary)',
+            borderColor: 'var(--border-subtle)',
+            boxShadow: '6px 6px 0 var(--border-subtle)',
+          }}
+        >
+          <div className="mb-3 flex items-center gap-3">
+            <span
+              className="flex h-10 w-10 items-center justify-center border-2"
+              style={{ borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
+            >
+              <Icon className="h-5 w-5" />
+            </span>
+            <span className="font-mono text-[11px] uppercase tracking-[0.25em]" style={{ color: 'var(--text-muted)' }}>
+              {category.id}
+            </span>
+          </div>
+
+          <h1
+            className="hero-mark mb-3 text-2xl font-bold uppercase tracking-tight sm:text-4xl"
+            style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
           >
-            {/* 发光徽章 */}
-            <GlowBadge text={category.name} />
-            
-            {/* 图标 */}
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="mb-6"
-            >
-              <div 
-                className="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center"
-                style={{ 
-                  background: 'var(--bg-card)',
-                  border: '3px solid var(--accent-primary)',
-                  boxShadow: '0 0 40px var(--accent-glow), inset -4px -4px 0 color-mix(in srgb, var(--bg-secondary) 40%, black), inset 4px 4px 0 color-mix(in srgb, var(--bg-secondary) 150%, white)',
-                }}
-              >
-                <Icon className="w-10 h-10" style={{ color: 'var(--accent-primary)' }} />
-              </div>
-            </motion.div>
-            
-            {/* 标题 */}
-            <h1 
-              className="font-primary text-3xl sm:text-4xl lg:text-5xl font-black mb-4"
-              style={{ 
-                color: 'var(--text-primary)',
-                letterSpacing: '-0.02em',
-                lineHeight: 1.1,
-              }}
-            >
-              {category.name}
-            </h1>
-          </motion.div>
-        </div>
-      </div>
+            {category.name}
+          </h1>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-20 relative z-10">
-        {/* 系列教程 */}
+          <div
+            className="flex flex-wrap items-center gap-4 font-mono text-[11px] uppercase tracking-wider"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            {seriesItems.length > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <BookMarked className="h-3 w-3" style={{ color: 'var(--accent-primary)' }} />
+                {tReplace(t.docs.seriesCount, { count: seriesItems.length })}
+              </span>
+            )}
+            {docItems.length > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <FileText className="h-3 w-3" style={{ color: 'var(--accent-secondary)' }} />
+                {tReplace(t.docs.docCount, { count: docItems.length })}
+              </span>
+            )}
+          </div>
+        </motion.header>
+
+        {/* Series */}
         {seriesItems.length > 0 && (
-          <div className="mb-12">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex items-center gap-3 mb-8"
-            >
-              <BookMarked className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-              <h2 
-                className="text-xl font-bold font-primary"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                系列教程
-              </h2>
-              <div className="flex-1 h-px" style={{ background: 'var(--border-subtle)' }} />
-            </motion.div>
-            
-            <div className="grid gap-6 md:grid-cols-2">
+          <section className="mb-10">
+            <SectionHeading icon={BookMarked} label={t.docs.seriesSection} count={seriesItems.length} />
+            <div className="grid gap-5 md:grid-cols-2">
               {seriesItems.map((series, index) => (
                 <SeriesCard
                   key={series.id}
                   series={series}
                   index={index}
-                  onClick={() => handleSelectItem(category, series)}
+                  onOpen={() => handleSelectItem(category, series)}
                 />
               ))}
             </div>
-          </div>
+          </section>
         )}
 
-        {/* 独立文档 */}
+        {/* Standalone docs */}
         {docItems.length > 0 && (
-          <div>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex items-center gap-3 mb-8"
-            >
-              <FileText className="w-5 h-5" style={{ color: 'var(--accent-primary)' }} />
-              <h2 
-                className="text-xl font-bold font-primary"
-                style={{ color: 'var(--text-primary)' }}
-              >
-                独立文档
-              </h2>
-              <div className="flex-1 h-px" style={{ background: 'var(--border-subtle)' }} />
-            </motion.div>
-            
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <section>
+            <SectionHeading icon={FileText} label={t.docs.docsSection} count={docItems.length} />
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {docItems.map((doc, index) => (
                 <DocCard
                   key={doc.id}
                   doc={doc}
                   index={index}
-                  onClick={() => handleSelectItem(category, doc)}
+                  onOpen={() => handleSelectItem(category, doc)}
                 />
               ))}
             </div>
+          </section>
+        )}
+
+        {seriesItems.length === 0 && docItems.length === 0 && (
+          <div
+            className="border-2 px-6 py-16 text-center"
+            style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }}
+          >
+            <Layers className="mx-auto mb-3 h-5 w-5" />
+            <p className="text-sm">{t.docs.noContent}</p>
           </div>
         )}
-      </div>
-      
-      {/* 底部渐变 */}
-      <div
-        className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
-        style={{
-          background: 'linear-gradient(to top, var(--bg-primary), transparent)',
-        }}
-      />
+      </main>
     </div>
   );
 }

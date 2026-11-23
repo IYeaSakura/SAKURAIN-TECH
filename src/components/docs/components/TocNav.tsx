@@ -54,10 +54,10 @@ function TocTreeItem({
         <button
           ref={itemRef}
           onClick={handleSelect}
-          className={`flex-1 text-left py-1.5 px-2 rounded-lg text-sm transition-all duration-200 ${isActive ? 'font-medium' : 'hover:opacity-80'}`}
+          className={`flex-1 text-left py-1.5 px-2 text-sm transition-all duration-200 ${isActive ? 'font-medium' : 'hover:opacity-80'}`}
           style={{
             color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
-            background: isActive ? 'rgba(86,156,214,0.12)' : 'transparent'
+            background: isActive ? 'color-mix(in srgb, var(--accent-primary) 12%, transparent)' : 'transparent'
           }}
           type="button"
         >
@@ -152,7 +152,7 @@ export function TocNav({ toc, activeHeading, onSelect }: TocNavProps) {
             placeholder={t.docs.searchToc}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 rounded-lg text-sm border outline-none focus:ring-2 transition-all"
+            className="w-full pl-9 pr-8 py-2 text-sm border-2 outline-none transition-all"
             style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
           />
           {searchQuery && (
