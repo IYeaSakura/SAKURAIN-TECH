@@ -1,0 +1,12 @@
+{
+  "$comment": "友链连通性状态来源。builtinCheck.enabled=false 时构建不再运行 scripts/check-friends-connectivity.js（脚本仍保留）；页面运行时改为读取 api.baseUrl + api.statusPath，由 sakurain-api 每 3 小时探测一次并写入 SQLite。api.enabled=false 时回退使用 friends.json 里的静态 status 字段。",
+  "builtinCheck": {
+    "enabled": false
+  },
+  "api": {
+    "enabled": true,
+    "baseUrl": "https://api.sakurain.net",
+    "statusPath": "/api/friends/status",
+    "timeoutMs": 6000
+  }
+}

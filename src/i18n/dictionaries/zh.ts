@@ -604,6 +604,8 @@ export const zh: Dictionary = {
     debug: '调试',
     debugPanelTitle: '友链连通性调试',
     lastUpdated: '最后更新',
+    statusSource: '状态来源',
+    apiInterval: '每 {hours} 小时自动检测',
     online: '在线',
     maintenance: '维护中',
     offline: '离线',

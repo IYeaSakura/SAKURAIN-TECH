@@ -44,6 +44,8 @@ const SYNCED_PUBLIC_PATHS = [
   'data/language-stats.json',
   'config/security-config.json',
   'config/welcome-modal.json',
+  'config/rss.json',
+  'config/friends.json',
   'docs',
 ];
 

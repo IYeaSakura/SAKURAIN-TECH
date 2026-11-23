@@ -510,6 +510,8 @@ export interface Dictionary {
     debug: string;
     debugPanelTitle: string;
     lastUpdated: string;
+    statusSource: string;
+    apiInterval: string;
     online: string;
     maintenance: string;
     offline: string;

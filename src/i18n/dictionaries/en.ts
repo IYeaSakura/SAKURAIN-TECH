@@ -612,6 +612,8 @@ export const en: Dictionary = {
     debug: 'Debug',
     debugPanelTitle: 'Friend Link Connectivity Debug',
     lastUpdated: 'Last updated',
+    statusSource: 'Status source',
+    apiInterval: 'Auto-checked every {hours} h',
     online: 'Online',
     maintenance: 'Maintenance',
     offline: 'Offline',

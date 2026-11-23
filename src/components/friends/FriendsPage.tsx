@@ -103,6 +103,46 @@ interface FriendsData {
   lastUpdated?: string;
 }
 
+/** sakurain-api /api/friends/status 的单条结果 */
+interface ApiStatusItem {
+  url: string;
+  urlKey: string;
+  status?: 'online' | 'offline' | 'maintenance' | 'unknown';
+  statusCode?: number | null;
+  responseTime?: number | null;
+  error?: string | null;
+  attempts?: number | null;
+  usedHttpFallback?: boolean;
+  hasProtection?: boolean;
+  isMaintenance?: boolean;
+  maintenanceReason?: string | null;
+  checkedAt?: string | null;
+}
+
+interface ApiStatusPayload {
+  generatedAt?: string;
+  intervalHours?: number;
+  items?: ApiStatusItem[];
+  lastRun?: { finished_at?: string | null } | null;
+}
+
+interface FriendsConfig {
+  builtinCheck?: { enabled?: boolean };
+  api?: {
+    enabled?: boolean;
+    baseUrl?: string;
+    statusPath?: string;
+    timeoutMs?: number;
+  };
+}
+
+interface StatusMeta {
+  updatedAt?: string;
+  intervalHours: number;
+}
+
+const DEFAULT_STATUS_API = 'https://api.sakurain.net';
+
 // Icon mapping
 const iconMap: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   Monitor,
@@ -120,6 +160,89 @@ function getHostname(url: string): string {
   } catch {
     return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
   }
+}
+
+/** 与 sakurain-api 的 url_key 规则一致：host[:port] + 去尾斜杠的 path */
+function normalizeUrlKey(url: string): string {
+  try {
+    const parsed = new URL(url);
+    let key = parsed.hostname.toLowerCase();
+    if (parsed.port && parsed.port !== '80' && parsed.port !== '443') {
+      key += `:${parsed.port}`;
+    }
+    const pathname = parsed.pathname.replace(/\/$/, '');
+    if (pathname) key += pathname;
+    return key;
+  } catch {
+    return url.toLowerCase().replace(/\/$/, '');
+  }
+}
+
+/**
+ * 从 sakurain-api 拉取检测状态。
+ * 失败或未启用时返回 null，页面继续用 friends.json 里的静态 status。
+ */
+async function loadFriendStatuses(
+  config: FriendsConfig | null
+): Promise<{ items: ApiStatusItem[]; meta: StatusMeta } | null> {
+  const api = config?.api;
+  if (api?.enabled === false) return null;
+
+  const baseUrl = (api?.baseUrl || DEFAULT_STATUS_API).replace(/\/$/, '');
+  const path = api?.statusPath || '/api/friends/status';
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), api?.timeoutMs ?? 6000);
+
+  try {
+    const response = await fetch(`${baseUrl}${path}`, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json()) as ApiStatusPayload;
+    if (!Array.isArray(payload.items) || payload.items.length === 0) return null;
+    return {
+      items: payload.items,
+      meta: {
+        updatedAt: payload.lastRun?.finished_at ?? payload.generatedAt,
+        intervalHours: payload.intervalHours ?? 3,
+      },
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function applyStatuses(friends: Friend[], items: ApiStatusItem[]): Friend[] {
+  const byKey = new Map<string, ApiStatusItem>();
+  for (const item of items) {
+    byKey.set(item.urlKey || normalizeUrlKey(item.url), item);
+  }
+
+  return friends.map((friend) => {
+    const item = byKey.get(normalizeUrlKey(friend.url));
+    if (!item || !item.status || item.status === 'unknown') return friend;
+    return {
+      ...friend,
+      status: item.status as Friend['status'],
+      checkInfo: {
+        lastChecked: item.checkedAt ?? '',
+        statusCode: item.statusCode ?? null,
+        error: item.error ?? null,
+        attempts: item.attempts ?? 0,
+        usedHttpFallback: Boolean(item.usedHttpFallback),
+        responseTime: item.responseTime ?? null,
+        isAntiBot: false,
+        hasProtection: Boolean(item.hasProtection),
+        isMaintenance: Boolean(item.isMaintenance),
+        maintenanceReason: item.maintenanceReason ?? null,
+        isJsChallenge: false,
+        jsChallengeIndicator: null,
+      },
+    };
+  });
 }
 
 interface FeedPreviewItem {
@@ -708,6 +831,7 @@ const HeroSection = memo(function HeroSection({
   description,
   stats,
   lastUpdated,
+  statusMeta,
   onApplyClick,
   onRandomClick,
   onDebugClick,
@@ -717,6 +841,7 @@ const HeroSection = memo(function HeroSection({
   description: string;
   stats: { friends: number; categories: number; online: number };
   lastUpdated?: string;
+  statusMeta?: StatusMeta | null;
   onApplyClick: () => void;
   onRandomClick: () => void;
   onDebugClick: () => void;
@@ -820,6 +945,22 @@ const HeroSection = memo(function HeroSection({
                   hour: '2-digit',
                   minute: '2-digit',
                 })}
+              </div>
+            )}
+
+            {statusMeta && (
+              <div
+                className="mt-2 inline-flex flex-wrap items-center gap-2 px-3 py-1.5 border-2 text-xs font-mono"
+                style={{
+                  background: 'var(--bg-secondary)',
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                <Wifi className="w-3 h-3" style={{ color: 'var(--accent-secondary)' }} />
+                {t.friends.statusSource}: api.sakurain.net
+                <span aria-hidden>·</span>
+                {t.friends.apiInterval.replace('{hours}', String(statusMeta.intervalHours))}
               </div>
             )}
           </motion.div>
@@ -1675,6 +1816,7 @@ export default function FriendsPage() {
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [mailtoModalOpen, setMailtoModalOpen] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+  const [statusMeta, setStatusMeta] = useState<StatusMeta | null>(null);
   const { t, locale } = useTranslation();
 
   const handleFriendClick = useCallback((friend: Friend) => {
@@ -1711,11 +1853,29 @@ export default function FriendsPage() {
         return res.json();
       }),
       fetch('/data/site-data.json').then((res) => res.json()),
+      fetch('/config/friends.json')
+        .then((res) => (res.ok ? (res.json() as Promise<FriendsConfig>) : null))
+        .catch(() => null),
     ])
-      .then(([friendsData, siteData]: [FriendsData, SiteData]) => {
+      .then(([friendsData, siteData, config]: [FriendsData, SiteData, FriendsConfig | null]) => {
         setData(friendsData);
         setFooterData(siteData.footer);
         setLoading(false);
+
+        // 检测状态由 sakurain-api 提供（每 3 小时一轮），慢请求不阻塞首屏。
+        void loadFriendStatuses(config).then((result) => {
+          if (!result) return;
+          setStatusMeta(result.meta);
+          setData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  friends: applyStatuses(prev.friends, result.items),
+                  lastUpdated: result.meta.updatedAt ?? prev.lastUpdated,
+                }
+              : prev
+          );
+        });
       })
       .catch(() => {
         setError(t.friends.loadFailed);
@@ -1801,6 +1961,7 @@ export default function FriendsPage() {
           description={localizedDescription}
           stats={stats}
           lastUpdated={data.lastUpdated}
+          statusMeta={statusMeta}
           onApplyClick={handleApplyClick}
           onRandomClick={handleRandomVisit}
           onDebugClick={() => setShowDebug(!showDebug)}

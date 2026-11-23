@@ -27,7 +27,7 @@ for (const script of [
   'generate-playlist.js',
   'calculate-language-stats.js',
   'sync-content-to-public.js',
-  'check-friends-connectivity.js',
+  'check-friends.js',
   'build-next.js',
 ]) {
   run(script);
