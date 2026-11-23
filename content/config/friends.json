@@ -1,11 +1,12 @@
 {
-  "$comment": "友链连通性状态来源。builtinCheck.enabled=false 时构建不再运行 scripts/check-friends-connectivity.js（脚本仍保留）；页面运行时改为读取 api.baseUrl + api.statusPath，由 sakurain-api 每 3 小时探测一次并写入 SQLite。api.enabled=false 时回退使用 friends.json 里的静态 status 字段。",
+  "$comment": "友链数据源。清单与检测状态都由 sakurain-api 提供：页面运行时先读 api.baseUrl + api.listPath（后台 https://api.sakurain.net/admin 维护），失败再回退构建时的静态 friends.json，并用 api.statusPath 合并检测状态。builtinCheck.enabled=false 时构建不再运行 scripts/check-friends-connectivity.js（脚本仍保留）。",
   "builtinCheck": {
     "enabled": false
   },
   "api": {
     "enabled": true,
     "baseUrl": "https://api.sakurain.net",
+    "listPath": "/api/friends/list",
     "statusPath": "/api/friends/status",
     "timeoutMs": 6000
   }

@@ -101,6 +101,7 @@ interface FriendsData {
   categories: FriendCategory[];
   applyInfo: ApplyInfo;
   lastUpdated?: string;
+  intervalHours?: number;
 }
 
 /** sakurain-api /api/friends/status 的单条结果 */
@@ -132,6 +133,7 @@ interface FriendsConfig {
     enabled?: boolean;
     baseUrl?: string;
     statusPath?: string;
+    listPath?: string;
     timeoutMs?: number;
   };
 }
@@ -215,6 +217,38 @@ async function loadFriendStatuses(
   }
 }
 
+/**
+ * 从 sakurain-api 拉取完整友链文档（标题、分类、友链、检测状态）。
+ * 友链清单以后台 api.sakurain.net/admin 为源，拉取失败时回退本地 friends.json。
+ */
+async function loadFriendsDocument(config: FriendsConfig | null): Promise<FriendsData | null> {
+  const api = config?.api;
+  if (api?.enabled === false) return null;
+
+  const baseUrl = (api?.baseUrl || DEFAULT_STATUS_API).replace(/\/$/, '');
+  const path = api?.listPath || '/api/friends/list';
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), api?.timeoutMs ?? 6000);
+
+  try {
+    const response = await fetch(`${baseUrl}${path}`, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) return null;
+    const payload = (await response.json()) as FriendsData;
+    if (!Array.isArray(payload.friends) || !Array.isArray(payload.categories)) return null;
+    // 后台还没导入数据时继续用本地静态清单，避免页面空白。
+    if (payload.friends.length === 0) return null;
+    return payload;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** 把 /api/friends/status 的结果合并进本地静态清单（回退路径） */
 function applyStatuses(friends: Friend[], items: ApiStatusItem[]): Friend[] {
   const byKey = new Map<string, ApiStatusItem>();
   for (const item of items) {
@@ -1857,12 +1891,25 @@ export default function FriendsPage() {
         .then((res) => (res.ok ? (res.json() as Promise<FriendsConfig>) : null))
         .catch(() => null),
     ])
-      .then(([friendsData, siteData, config]: [FriendsData, SiteData, FriendsConfig | null]) => {
-        setData(friendsData);
+      .then(async ([staticData, siteData, config]: [FriendsData, SiteData, FriendsConfig | null]) => {
         setFooterData(siteData.footer);
+
+        // 友链清单以后台 api.sakurain.net/admin 为源，拉不到再用构建时的静态副本。
+        const remote = await loadFriendsDocument(config);
+        const friendsData = remote ?? staticData;
+        setData(friendsData);
         setLoading(false);
 
-        // 检测状态由 sakurain-api 提供（每 3 小时一轮），慢请求不阻塞首屏。
+        if (remote) {
+          // 接口已经把检测状态合并进清单，不需要再单独请求一次。
+          setStatusMeta({
+            updatedAt: remote.lastUpdated,
+            intervalHours: remote.intervalHours ?? 3,
+          });
+          return;
+        }
+
+        // 回退路径：静态清单 + 每 3 小时一轮的状态接口。
         void loadFriendStatuses(config).then((result) => {
           if (!result) return;
           setStatusMeta(result.meta);
