@@ -25,11 +25,6 @@
         "icon": "BookOpen"
       },
       {
-        "label": "项目",
-        "href": "/projects",
-        "icon": "Briefcase"
-      },
-      {
         "label": "开发日志",
         "href": "/dev-log",
         "icon": "MessageSquare"
