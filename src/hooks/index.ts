@@ -18,6 +18,9 @@ export { useIsMobile as useMobile } from '@/contexts/MobileContext';
 // 动画控制 hook
 export { useAnimationEnabled } from './useAnimationEnabled';
 
+// 弹层滚动锁定
+export { useScrollLock } from './useScrollLock';
+
 // 主题相关 hooks
 export { useTheme } from './useTheme';
 

@@ -525,6 +525,13 @@ export interface Dictionary {
     failReason: string;
     oneWay: string;
     onlineSites: string;
+    offlineSection: string;
+    offlineSectionHint: string;
+    offlineFor: string;
+    offlineLastOnline: string;
+    dayUnit: string;
+    hourUnit: string;
+    justNow: string;
     categories: string;
     friendSites: string;
     addFirst: string;

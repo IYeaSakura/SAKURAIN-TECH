@@ -40,7 +40,7 @@ import {
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
 import FriendApplyForm from './FriendApplyForm';
-import { useAnimationEnabled, useTranslation } from '@/hooks';
+import { useAnimationEnabled, useScrollLock, useTranslation } from '@/hooks';
 import { RouteLoader } from '@/components/RouteLoader';
 import type { SiteData } from '@/types';
 import type { Locale } from '@/i18n/types';
@@ -67,6 +67,8 @@ interface CheckInfo {
   maintenanceReason?: string | null;
   isJsChallenge?: boolean;
   jsChallengeIndicator?: string | null;
+  /** 最近一次在线的时间；站点当前离线时用于计算离线时长 */
+  offlineSince?: string | null;
 }
 
 interface Friend {
@@ -123,6 +125,7 @@ interface ApiStatusItem {
   isMaintenance?: boolean;
   maintenanceReason?: string | null;
   checkedAt?: string | null;
+  offlineSince?: string | null;
 }
 
 interface ApiStatusPayload {
@@ -319,6 +322,7 @@ function applyStatuses(friends: Friend[], items: ApiStatusItem[]): Friend[] {
         maintenanceReason: item.maintenanceReason ?? null,
         isJsChallenge: false,
         jsChallengeIndicator: null,
+        offlineSince: item.offlineSince ?? null,
       },
     };
   });
@@ -1079,6 +1083,132 @@ const HeroSection = memo(function HeroSection({
   );
 });
 
+/** 底部独立一栏：把当前离线的站点集中列出，并标出离线时长。 */
+const OfflineSection = memo(function OfflineSection({ friends }: { friends: Friend[] }) {
+  const { locale, t, tReplace } = useTranslation();
+
+  const offline = useMemo(() => {
+    const stamp = (friend: Friend) => {
+      const value = friend.checkInfo?.offlineSince;
+      const parsed = value ? new Date(value).getTime() : Number.NaN;
+      return Number.isFinite(parsed) ? parsed : 0;
+    };
+    // 离线越久排越前面；没有时间戳的排最后。
+    return friends
+      .filter((friend) => friend.status === 'offline')
+      .sort((a, b) => {
+        const sa = stamp(a);
+        const sb = stamp(b);
+        if (sa === sb) return 0;
+        if (sa === 0) return 1;
+        if (sb === 0) return -1;
+        return sa - sb;
+      });
+  }, [friends]);
+
+  if (offline.length === 0) return null;
+
+  const formatStamp = (value?: string | null) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleString(locale === 'zh' ? 'zh-CN' : 'en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const durationLabel = (value?: string | null) => {
+    const parsed = value ? new Date(value).getTime() : Number.NaN;
+    if (!Number.isFinite(parsed)) return '—';
+    const hours = Math.max(0, Math.floor((Date.now() - parsed) / 3_600_000));
+    const days = Math.floor(hours / 24);
+    const unit = days > 0 ? `${days} ${t.friends.dayUnit}` : hours > 0 ? `${hours} ${t.friends.hourUnit}` : t.friends.justNow;
+    return tReplace(t.friends.offlineFor, { duration: unit });
+  };
+
+  return (
+    <section className="mb-14 border-2" style={{ borderColor: 'var(--border-subtle)' }}>
+      <div
+        className="flex flex-wrap items-center justify-between gap-3 border-b-2 px-4 py-3 sm:px-5"
+        style={{ background: 'color-mix(in srgb, var(--danger) 12%, var(--bg-primary))', borderColor: 'var(--border-subtle)' }}
+      >
+        <div className="flex items-center gap-3">
+          <span
+            className="flex h-9 w-9 items-center justify-center border-2"
+            style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}
+          >
+            <AlertTriangle className="h-4 w-4" />
+          </span>
+          <div>
+            <h2
+              className="text-base font-bold uppercase sm:text-lg"
+              style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+            >
+              {t.friends.offlineSection}
+            </h2>
+            <p className="mt-0.5 text-xs leading-5" style={{ color: 'var(--text-secondary)' }}>
+              {t.friends.offlineSectionHint}
+            </p>
+          </div>
+        </div>
+        <span
+          className="border-2 px-2 py-1 font-mono text-xs font-bold"
+          style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}
+        >
+          {offline.length}
+        </span>
+      </div>
+
+      <div>
+        {offline.map((friend) => {
+          const since = friend.checkInfo?.offlineSince;
+          return (
+            <div
+              key={friend.id || friend.url}
+              className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b-2 px-4 py-3 last:border-b-0 sm:px-5"
+              style={{ borderColor: 'var(--border-subtle)' }}
+            >
+              <span
+                className="flex h-8 w-8 flex-shrink-0 items-center justify-center border-2 font-mono text-xs font-bold"
+                style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
+              >
+                {(friend.name || '?').slice(0, 1).toUpperCase()}
+              </span>
+              <div className="min-w-0 flex-1">
+                <a
+                  href={friend.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate text-sm font-bold hover:underline"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  {friend.name}
+                </a>
+                <p className="truncate font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                  {getHostname(friend.url)}
+                  {friend.checkInfo?.error ? ` · ${friend.checkInfo.error}` : ''}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-mono text-xs font-bold" style={{ color: 'var(--danger)' }}>
+                  {durationLabel(since)}
+                </p>
+                <p className="mt-0.5 font-mono text-[11px]" style={{ color: 'var(--text-muted)' }}>
+                  {t.friends.offlineLastOnline} {formatStamp(since)}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+});
+
 // Apply Modal Component —— 左侧选申请形式，右侧直接是表单
 const ApplyModal = memo(function ApplyModal({
   isOpen,
@@ -1125,13 +1255,13 @@ const ApplyModal = memo(function ApplyModal({
       if (event.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = previousOverflow;
     };
   }, [isOpen, onClose]);
+
+  // 弹窗打开时锁住页面滚动，滚轮只作用在弹窗内部
+  useScrollLock(isOpen);
 
   if (!isOpen) return null;
 
@@ -1291,7 +1421,11 @@ const ApplyModal = memo(function ApplyModal({
           </aside>
 
           {/* Right: 内容 */}
-          <div className="min-h-0 overflow-y-auto p-4 sm:p-6">
+          <div
+            className="min-h-0 overflow-y-auto p-4 sm:p-6"
+            data-scroll-lock-passthrough
+            style={{ overscrollBehavior: 'contain' }}
+          >
             {pane === 'mail' ? (
               <div className="space-y-4">
                 <div
@@ -1501,13 +1635,13 @@ const FriendDetailModal = memo(function FriendDetailModal({
       if (event.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = previousOverflow;
     };
   }, [onClose]);
+
+  // 弹窗打开时锁住页面滚动，滚轮只能滚弹窗内部
+  useScrollLock(true);
 
   useEffect(() => {
     if (!friend.feed) {
@@ -1611,7 +1745,11 @@ const FriendDetailModal = memo(function FriendDetailModal({
           </button>
         </div>
 
-        <div className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        <div
+          className="grid min-h-0 flex-1 overflow-y-auto md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
+          data-scroll-lock-passthrough
+          style={{ overscrollBehavior: 'contain' }}
+        >
           {/* Left: site info */}
           <div
             className="border-b-2 p-5 sm:p-6 md:border-b-0 md:border-r-2"
@@ -2014,7 +2152,10 @@ export default function FriendsPage() {
     return data.categories
       .map((category) => ({
         category,
-        friends: data.friends.filter((friend) => friend.category === category.id),
+        // 离线的站点收进底部独立一栏，不再混在分类里
+        friends: data.friends.filter(
+          (friend) => friend.category === category.id && friend.status !== 'offline'
+        ),
       }))
       .filter((item) => item.friends.length > 0);
   }, [data]);
@@ -2109,6 +2250,9 @@ export default function FriendsPage() {
                 />
               )
           )}
+
+          {/* 底部独立一栏：当前离线的站点与离线时长 */}
+          <OfflineSection friends={data.friends} />
 
           {/* Apply Section */}
           <ApplySection applyInfo={localizedApplyInfo} onApplyClick={handleApplyClick} />

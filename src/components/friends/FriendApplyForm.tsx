@@ -27,7 +27,14 @@ const COPY = {
     createSubtitle: '填好下面几项就行，站主会人工看一遍，通过后邮件通知你。',
     updateTitle: '修改站点',
     updateSubtitle: '填的是已经在友链里的站点，审核通过后会按下面的内容覆盖原信息。',
-    updateHint: '网站地址必须和友链里现有的那条一致，否则认不出来。',
+    updateHint: '上半部分填你现在的信息，用来找到你那条友链；下半部分填要改成什么，不改的留空就行。',
+    originalSection: '原站点 · 用来定位',
+    originalUrl: '原网站地址',
+    originalUrlHint: '必须和友链里现在这条一致，否则认不出是哪一条',
+    originalName: '原网站名称',
+    originalNameHint: '记不清可以不填',
+    targetSection: '要改成的内容',
+    keepHint: '留空表示保持原样，只填想改的字段就行',
     back: '返回友链页',
     name: '网站名称',
     namePlaceholder: '你的站点叫什么',
@@ -69,7 +76,14 @@ const COPY = {
     createSubtitle: 'Fill in the fields below. Applications are reviewed manually and you will get an email once approved.',
     updateTitle: 'Update a site',
     updateSubtitle: 'For a site that is already listed. Once approved, these details replace the current ones.',
-    updateHint: 'The URL must match the entry that is already listed.',
+    updateHint: 'Top half: where you are listed now, so we can find your entry. Bottom half: what to change — leave a field empty to keep it as is.',
+    originalSection: 'Current listing · used to find you',
+    originalUrl: 'Current site URL',
+    originalUrlHint: 'Must match the listed entry exactly, otherwise we cannot tell which site it is',
+    originalName: 'Current site name',
+    originalNameHint: 'Leave empty if you do not remember',
+    targetSection: 'What to change',
+    keepHint: 'Leave empty to keep the current value',
     back: 'Back to friends',
     name: 'Site name',
     namePlaceholder: 'What is your site called',
@@ -114,6 +128,9 @@ interface SubmitState {
 }
 
 const EMPTY_FORM = {
+  // 修改站点时用来定位原友链
+  originalUrl: '',
+  originalName: '',
   name: '',
   url: '',
   icon: '',
@@ -173,16 +190,18 @@ export default function FriendApplyForm({
     []
   );
 
-  // 联系邮箱必填，审核结果全靠它回信；修改站点时图标可以留空沿用原来的。
+  // 修改站点时只要求「原地址 + 邮箱 + 确认」：其余留空表示保持原样。
   const canSubmit = useMemo(
     () =>
       Boolean(
-        form.name.trim() &&
-          form.url.trim() &&
-          (isUpdate || form.icon.trim()) &&
-          form.description.trim() &&
-          form.email.trim() &&
-          agree
+        isUpdate
+          ? form.originalUrl.trim() && form.email.trim() && agree
+          : form.name.trim() &&
+              form.url.trim() &&
+              form.icon.trim() &&
+              form.description.trim() &&
+              form.email.trim() &&
+              agree
       ),
     [form, agree, isUpdate]
   );
@@ -203,6 +222,9 @@ export default function FriendApplyForm({
           icon: form.icon.trim(),
           description: form.description.trim(),
           feed: form.feed.trim() || null,
+          // 修改申请：定位用的原站点
+          originalUrl: isUpdate ? form.originalUrl.trim() : '',
+          originalName: isUpdate ? form.originalName.trim() : '',
           email: form.email.trim(),
           website: form.website,
           elapsedMs: Date.now() - openedAt.current,
@@ -331,28 +353,72 @@ export default function FriendApplyForm({
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={copy.name} requiredBadge={copy.required}>
+        {isUpdate && (
+          <>
+            <SectionLabel>{copy.originalSection}</SectionLabel>
+
+            <Field
+              label={copy.originalUrl}
+              requiredBadge={copy.required}
+              hint={copy.originalUrlHint}
+            >
+              <input
+                type="url"
+                className="w-full border-2 px-3 py-2 text-sm outline-none focus:border-[var(--accent-primary)]"
+                style={fieldStyle}
+                value={form.originalUrl}
+                onChange={update('originalUrl')}
+                placeholder={copy.urlPlaceholder}
+                maxLength={300}
+                required
+              />
+            </Field>
+
+            <Field label={copy.originalName} optionalBadge={copy.optional} hint={copy.originalNameHint}>
+              <input
+                className="w-full border-2 px-3 py-2 text-sm outline-none focus:border-[var(--accent-primary)]"
+                style={fieldStyle}
+                value={form.originalName}
+                onChange={update('originalName')}
+                placeholder={copy.namePlaceholder}
+                maxLength={60}
+              />
+            </Field>
+
+            <SectionLabel hint={copy.keepHint}>{copy.targetSection}</SectionLabel>
+          </>
+        )}
+
+        <Field
+          label={copy.name}
+          requiredBadge={isUpdate ? undefined : copy.required}
+          optionalBadge={isUpdate ? copy.optional : undefined}
+        >
           <input
             className="w-full border-2 px-3 py-2 text-sm outline-none focus:border-[var(--accent-primary)]"
             style={fieldStyle}
             value={form.name}
             onChange={update('name')}
-            placeholder={copy.namePlaceholder}
+            placeholder={isUpdate ? copy.keepHint : copy.namePlaceholder}
             maxLength={60}
-            required
+            required={!isUpdate}
           />
         </Field>
 
-        <Field label={copy.url} requiredBadge={copy.required}>
+        <Field
+          label={copy.url}
+          requiredBadge={isUpdate ? undefined : copy.required}
+          optionalBadge={isUpdate ? copy.optional : undefined}
+        >
           <input
             type="url"
             className="w-full border-2 px-3 py-2 text-sm outline-none focus:border-[var(--accent-primary)]"
             style={fieldStyle}
             value={form.url}
             onChange={update('url')}
-            placeholder={copy.urlPlaceholder}
+            placeholder={isUpdate ? copy.keepHint : copy.urlPlaceholder}
             maxLength={300}
-            required
+            required={!isUpdate}
           />
         </Field>
 
@@ -374,16 +440,20 @@ export default function FriendApplyForm({
           />
         </Field>
 
-        <Field label={copy.description} requiredBadge={copy.required}>
+        <Field
+          label={copy.description}
+          requiredBadge={isUpdate ? undefined : copy.required}
+          optionalBadge={isUpdate ? copy.optional : undefined}
+        >
           <textarea
             className="w-full resize-y border-2 px-3 py-2 text-sm outline-none focus:border-[var(--accent-primary)]"
             style={fieldStyle}
             value={form.description}
             onChange={update('description')}
-            placeholder={copy.descriptionPlaceholder}
+            placeholder={isUpdate ? copy.keepHint : copy.descriptionPlaceholder}
             rows={3}
             maxLength={200}
-            required
+            required={!isUpdate}
           />
         </Field>
 
@@ -485,6 +555,27 @@ const fieldStyle = {
   borderColor: 'var(--border-subtle)',
   color: 'var(--text-primary)',
 } as const;
+
+function SectionLabel({ children, hint }: { children: ReactNode; hint?: string }) {
+  return (
+    <div className="pt-1">
+      <div className="flex items-center gap-2">
+        <span
+          className="font-mono text-[11px] font-bold uppercase tracking-[0.14em]"
+          style={{ color: 'var(--accent-primary)' }}
+        >
+          {children}
+        </span>
+        <span className="h-px flex-1" style={{ background: 'var(--border-subtle)' }} />
+      </div>
+      {hint && (
+        <span className="mt-1 block text-[11px] leading-4" style={{ color: 'var(--text-muted)' }}>
+          {hint}
+        </span>
+      )}
+    </div>
+  );
+}
 
 function Field({
   label,
