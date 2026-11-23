@@ -186,6 +186,90 @@
           "file": "data-analysis.md"
         }
       ]
+    },
+    {
+      "id": "deploy",
+      "name": "容器化部署",
+      "icon": "Briefcase",
+      "items": [
+        {
+          "type": "doc",
+          "id": "nginx",
+          "title": "Nginx 容器化部署和使用",
+          "description": "用容器跑 Nginx 反向代理，配 Certbot 自动续期，作为所有子站点的统一入口",
+          "file": "Nginx 容器化部署和使用.md"
+        },
+        {
+          "type": "doc",
+          "id": "registry",
+          "title": "Registry 容器化部署并配置 HTTPS",
+          "description": "自建私有 Docker Registry，配置 HTTPS 与 Nginx 上游，用于镜像分发",
+          "file": "Registry 容器化部署并配置 HTTPS.md"
+        },
+        {
+          "type": "doc",
+          "id": "gitlab-ce",
+          "title": "GitLab CE 容器化部署并配置 HTTPS",
+          "description": "GitLab CE Omnibus 容器化部署，覆盖卷挂载、初始密码与 HTTPS 配置",
+          "file": "GitLab CE 容器化部署并配置 HTTPS.md"
+        },
+        {
+          "type": "doc",
+          "id": "gitlab-runner",
+          "title": "GitLab Runner 容器化部署",
+          "description": "GitLab Runner 容器注册与配置，打通 CI 流水线的执行端",
+          "file": "GitLab Runner 容器化部署.md"
+        },
+        {
+          "type": "doc",
+          "id": "memos",
+          "title": "Memos 容器化部署并配置 HTTPS",
+          "description": "Memos 单容器部署与 HTTPS 配置，含数据卷与用户初始化",
+          "file": "Memos 容器化部署并配置 HTTPS.md"
+        },
+        {
+          "type": "doc",
+          "id": "siyuan",
+          "title": "SiYuan 容器化部署并配置 HTTPS",
+          "description": "思源笔记容器化部署与 HTTPS 配置，含工作空间挂载与反代要点",
+          "file": "SiYuan 容器化部署并配置 HTTPS.md"
+        },
+        {
+          "type": "doc",
+          "id": "filecodebox",
+          "title": "FileCodeBox 容器化部署并配置 HTTPS",
+          "description": "FileCodeBox 文件快递柜部署，管理后台配置与上传大小限制",
+          "file": "FileCodeBox 容器化部署并配置 HTTPS.md"
+        },
+        {
+          "type": "doc",
+          "id": "monitoring-stack",
+          "title": "Monitoring Stack 容器化部署并配置 HTTPS",
+          "description": "Prometheus + Grafana + cAdvisor 监控栈部署，含 Grafana 数据源与看板配置",
+          "file": "Monitoring Stack 容器化部署并配置 HTTPS.md"
+        },
+        {
+          "type": "doc",
+          "id": "deepseek-harness",
+          "title": "DeepSeek Harness 容器化部署并配置 HTTPS",
+          "description": "DeepSeek Harness 容器化部署，含鉴权、证书与升级维护要点",
+          "file": "DeepSeek Harness 容器化部署并配置 HTTPS.md"
+        }
+      ]
+    },
+    {
+      "id": "troubleshoot",
+      "name": "排障记录",
+      "icon": "Search",
+      "items": [
+        {
+          "type": "doc",
+          "id": "cadvisor-no-metrics",
+          "title": "cAdvisor 采不到 Docker 容器指标",
+          "description": "cAdvisor 0.49.1 不认 Docker 29 的 containerd 镜像存储，升级到 v0.55.1 解决",
+          "file": "cAdvisor 采不到 Docker 容器指标.md"
+        }
+      ]
     }
   ]
 }
