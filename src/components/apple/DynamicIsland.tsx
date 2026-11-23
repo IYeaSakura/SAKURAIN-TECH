@@ -162,6 +162,70 @@ export function DynamicIsland() {
     ? (player.currentTime / player.duration) * 100
     : 0;
 
+  /* 顶部控制岛里的进度条：支持点击定位、拖拽与键盘寻址。 */
+  const seekBarRef = useRef<HTMLDivElement>(null);
+  const seekingRef = useRef(false);
+
+  const seekToX = useCallback(
+    (clientX: number) => {
+      const el = seekBarRef.current;
+      const duration = player.duration;
+      if (!el || !duration) return;
+      const rect = el.getBoundingClientRect();
+      if (!rect.width) return;
+      const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+      player.seek(ratio * duration);
+    },
+    [player.duration, player.seek]
+  );
+
+  const handleSeekDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!player.duration) return;
+      event.stopPropagation();
+      seekingRef.current = true;
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch {
+        // 捕获失败也能拖，只是离开元素后会断。
+      }
+      seekToX(event.clientX);
+    },
+    [player.duration, seekToX]
+  );
+
+  const handleSeekMove = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!seekingRef.current) return;
+      event.stopPropagation();
+      seekToX(event.clientX);
+    },
+    [seekToX]
+  );
+
+  const handleSeekEnd = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (!seekingRef.current) return;
+    seekingRef.current = false;
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // 已经释放。
+    }
+  }, []);
+
+  const handleSeekKey = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      const duration = player.duration;
+      if (!duration) return;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+        event.preventDefault();
+        const delta = event.key === 'ArrowRight' ? 5 : -5;
+        player.seek(Math.min(duration, Math.max(0, player.currentTime + delta)));
+      }
+    },
+    [player]
+  );
+
   const handleNav = useCallback(
     (href: string) => {
       setExpanded(false);
@@ -428,13 +492,30 @@ export function DynamicIsland() {
                   </button>
                 </div>
                 <div
-                  className="h-2 border-2 mb-1 overflow-hidden"
-                  style={{ borderColor: 'var(--border-subtle)' }}
+                  className="mb-2 -my-1 py-1.5 cursor-pointer touch-none select-none"
+                  role="slider"
+                  tabIndex={0}
+                  aria-label="Seek"
+                  aria-valuemin={0}
+                  aria-valuemax={Math.round(player.duration || 0)}
+                  aria-valuenow={Math.round(player.currentTime)}
+                  onClick={(event) => event.stopPropagation()}
+                  onPointerDown={handleSeekDown}
+                  onPointerMove={handleSeekMove}
+                  onPointerUp={handleSeekEnd}
+                  onPointerCancel={handleSeekEnd}
+                  onKeyDown={handleSeekKey}
                 >
-                  <motion.div
-                    className="h-full"
-                    style={{ background: 'var(--accent-primary)', width: `${progressPercent}%` }}
-                  />
+                  <div
+                    ref={seekBarRef}
+                    className="h-2 border-2 overflow-hidden pointer-events-none"
+                    style={{ borderColor: 'var(--border-subtle)' }}
+                  >
+                    <motion.div
+                      className="h-full"
+                      style={{ background: 'var(--accent-primary)', width: `${progressPercent}%` }}
+                    />
+                  </div>
                 </div>
                 <div
                   className="flex justify-between text-[10px] font-mono mb-2"

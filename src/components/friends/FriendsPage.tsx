@@ -71,6 +71,8 @@ interface Friend {
   name: string;
   url: string;
   icon: string;
+  /** sakurain-api 缓存的图标副本，原图标失效时回退到这里 */
+  iconCached?: string;
   description: LocalizedText;
   category: string;
   feed?: string;
@@ -162,6 +164,46 @@ function getHostname(url: string): string {
   } catch {
     return url.replace(/^https?:\/\//, '').replace(/\/$/, '');
   }
+}
+
+/**
+ * 友链图标：优先用站点自己的图标，加载失败时回退到 sakurain-api 的缓存副本，
+ * 两者都不可用才显示地球占位。
+ */
+function FriendIcon({
+  friend,
+  className,
+  iconClassName,
+}: {
+  friend: Pick<Friend, 'name' | 'icon' | 'iconCached'>;
+  className: string;
+  iconClassName: string;
+}) {
+  const sources = useMemo(
+    () => [friend.icon, friend.iconCached].filter((src): src is string => Boolean(src)),
+    [friend.icon, friend.iconCached]
+  );
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    setIndex(0);
+  }, [friend.icon, friend.iconCached]);
+
+  if (index >= sources.length) {
+    return <Globe className={className} style={{ color: 'var(--accent-primary)' }} />;
+  }
+
+  return (
+    <img
+      src={sources[index]}
+      alt={friend.name}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      className={iconClassName}
+      onError={() => setIndex((current) => current + 1)}
+    />
+  );
 }
 
 /** 与 sakurain-api 的 url_key 规则一致：host[:port] + 去尾斜杠的 path */
@@ -604,7 +646,6 @@ const FriendCard = memo(function FriendCard({
   onClick: (friend: Friend) => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
-  const [imageError, setImageError] = useState(false);
   const animationEnabled = useAnimationEnabled();
   const { t, locale } = useTranslation();
   const description = getLocalizedText(friend.description, locale);
@@ -662,18 +703,11 @@ const FriendCard = memo(function FriendCard({
                 borderColor: isHovered ? 'var(--accent-primary)' : 'var(--border-subtle)',
               }}
             >
-              {!imageError ? (
-                <img
-                  src={friend.icon}
-                  alt={friend.name}
-                  loading="lazy"
-                  decoding="async"
-                  className="h-8 w-8 object-contain sm:h-9 sm:w-9"
-                  onError={() => setImageError(true)}
-                />
-              ) : (
-                <Globe className="h-7 w-7 sm:h-8 sm:w-8" style={{ color: 'var(--accent-primary)' }} />
-              )}
+              <FriendIcon
+                friend={friend}
+                className="h-7 w-7 sm:h-8 sm:w-8"
+                iconClassName="h-8 w-8 object-contain sm:h-9 sm:w-9"
+              />
             </div>
 
             <div className="min-w-0 flex-1 pt-0.5">
@@ -1110,7 +1144,8 @@ const ApplyModal = memo(function ApplyModal({
   };
 
   const handleOpenForm = () => {
-    window.open('https://f.wps.cn/g/oEZK9Vpu/', '_blank', 'noopener,noreferrer');
+    // 站内自助申请页，提交后进入 sakurain-api 后台审核。
+    window.open('/friends/apply', '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -1268,10 +1303,10 @@ const ApplyModal = memo(function ApplyModal({
               onClick={handleOpenMailto}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold uppercase border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
               style={{
-                background: 'var(--accent-primary)',
-                borderColor: 'var(--border-subtle)',
-                color: 'var(--bg-primary)',
-                boxShadow: '3px 3px 0 var(--border-subtle)',
+                background: 'var(--bg-primary)',
+                borderColor: 'var(--accent-primary)',
+                color: 'var(--accent-primary)',
+                boxShadow: '3px 3px 0 var(--accent-primary)',
               }}
             >
               <Send className="w-4 h-4" />
@@ -1281,10 +1316,10 @@ const ApplyModal = memo(function ApplyModal({
               onClick={handleOpenForm}
               className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold uppercase border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
               style={{
-                background: 'var(--bg-primary)',
-                borderColor: 'var(--accent-primary)',
-                color: 'var(--accent-primary)',
-                boxShadow: '3px 3px 0 var(--accent-primary)',
+                background: 'var(--accent-primary)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--bg-primary)',
+                boxShadow: '3px 3px 0 var(--border-subtle)',
               }}
             >
               <FileText className="w-4 h-4" />
@@ -1402,7 +1437,6 @@ const FriendDetailModal = memo(function FriendDetailModal({
 }) {
   const animationEnabled = useAnimationEnabled();
   const { t, locale } = useTranslation();
-  const [imageError, setImageError] = useState(false);
   const [feedState, setFeedState] = useState<{
     status: 'idle' | 'loading' | 'ready' | 'error';
     items: FeedPreviewItem[];
@@ -1422,10 +1456,6 @@ const FriendDetailModal = memo(function FriendDetailModal({
       document.body.style.overflow = previousOverflow;
     };
   }, [onClose]);
-
-  useEffect(() => {
-    setImageError(false);
-  }, [friend.url]);
 
   useEffect(() => {
     if (!friend.feed) {
@@ -1544,18 +1574,11 @@ const FriendDetailModal = memo(function FriendDetailModal({
                   boxShadow: '3px 3px 0 var(--border-subtle)',
                 }}
               >
-                {!imageError ? (
-                  <img
-                    src={friend.icon}
-                    alt={friend.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="h-10 w-10 object-contain"
-                    onError={() => setImageError(true)}
-                  />
-                ) : (
-                  <Globe className="h-8 w-8" style={{ color: 'var(--accent-primary)' }} />
-                )}
+                <FriendIcon
+                  friend={friend}
+                  className="h-8 w-8"
+                  iconClassName="h-10 w-10 object-contain"
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <h3
