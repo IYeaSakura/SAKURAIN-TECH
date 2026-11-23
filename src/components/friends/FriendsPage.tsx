@@ -1220,7 +1220,7 @@ const ApplyModal = memo(function ApplyModal({
   contact: string;
 }) {
   const animationEnabled = useAnimationEnabled();
-  const { t, tReplace } = useTranslation();
+  const { t, tReplace, locale } = useTranslation();
   const [pane, setPane] = useState<'create' | 'update' | 'mail'>('create');
   const [copied, setCopied] = useState(false);
   const [siteInfoCopied, setSiteInfoCopied] = useState(false);
@@ -1292,9 +1292,10 @@ const ApplyModal = memo(function ApplyModal({
     window.location.href = mailtoLink;
   };
 
+  const zh = locale === 'zh';
   const panes = [
-    { id: 'create' as const, label: '新增站点', hint: '还没在友链里', icon: Plus },
-    { id: 'update' as const, label: '修改站点', hint: '已在友链里', icon: Pencil },
+    { id: 'create' as const, label: zh ? '新增站点' : 'Add a site', hint: zh ? '还没在友链里' : 'Not listed yet', icon: Plus },
+    { id: 'update' as const, label: zh ? '修改站点' : 'Update a site', hint: zh ? '已在友链里' : 'Already listed', icon: Pencil },
   ];
 
   return (
@@ -1422,6 +1423,7 @@ const ApplyModal = memo(function ApplyModal({
 
           {/* Right: 内容 */}
           <div
+            key={pane}
             className="min-h-0 overflow-y-auto p-4 sm:p-6"
             data-scroll-lock-passthrough
             style={{ overscrollBehavior: 'contain' }}
