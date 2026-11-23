@@ -17,7 +17,6 @@ const SEARCH_INDEX_TARGET = path.join(PUBLIC_DIR, 'data', 'search-index.json');
 const BLOG_POSTS_DIR = path.join(CONTENT_DIR, 'blog');
 const NOTES_POSTS_DIR = path.join(CONTENT_DIR, 'notes', 'posts');
 const FRIENDS_SOURCE = path.join(CONTENT_DIR, 'data', 'friends.json');
-const SITE_DATA_SOURCE = path.join(CONTENT_DIR, 'data', 'site-data.json');
 
 /**
  * Managed content mappings from content/ to public/.
@@ -612,33 +611,10 @@ function buildSearchIndex() {
     }
   }
 
-  // Services from site-data.json
-  const siteData = safeReadJson(SITE_DATA_SOURCE);
-  if (siteData?.services) {
-    for (const service of siteData.services) {
-      const details = service.details?.sections || [];
-      const detailText = details
-        .map((s) => [s.title, ...(s.items || []).map((i) => `${i.name} ${i.desc}`)].join(' '))
-        .join(' ');
-      documents.push({
-        id: `service:${service.id}`,
-        type: 'service',
-        title: String(service.title || ''),
-        description: String(service.description || ''),
-        content: truncateText(cleanMarkdown(`${service.subtitle || ''} ${service.features?.join(' ') || ''} ${detailText}`)),
-        href: '/projects',
-        date: '',
-        tags: service.tech || [],
-        category: 'services',
-      });
-    }
-  }
-
   // Static pages
   const staticPages = [
     { id: 'page:home', title: '首页', titleEn: 'Home', description: 'SAKURAIN 个人品牌站首页', href: '/' },
     { id: 'page:blog', title: '博客', titleEn: 'Blog', description: '技术博客与文章归档', href: '/blog' },
-    { id: 'page:projects', title: '项目', titleEn: 'Projects', description: '技术服务与项目展示', href: '/projects' },
     { id: 'page:dev-log', title: '开发日志', titleEn: 'Dev Log', description: '开发迭代记录与技术日志', href: '/dev-log' },
     { id: 'page:friends', title: '友链', titleEn: 'Friends', description: '友情链接与技术社区', href: '/friends' },
     { id: 'page:friends-circle', title: '朋友圈', titleEn: 'Friends Circle', description: '订阅好友博客更新', href: '/friends-circle' },

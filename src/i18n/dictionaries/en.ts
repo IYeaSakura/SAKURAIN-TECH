@@ -13,7 +13,6 @@ export const en: Dictionary = {
   nav: {
     home: 'Home',
     blog: 'Blog',
-    projects: 'Projects',
     devLog: 'Dev Log',
     friends: 'Friends',
     friendsCircle: 'Feed',
@@ -838,14 +837,6 @@ export const en: Dictionary = {
     title: 'Developer Tools Detected',
     devToolsOpen: 'Developer tools are open',
     closeAndRefresh: 'Please close developer tools and refresh the page',
-  },
-  projects: {
-    title: 'Projects',
-    viewDetails: 'View project {name} details',
-    featured: 'Featured project',
-    modalTitle: 'Project details: {name}',
-    visitDemo: 'Visit demo',
-    viewGithub: 'GitHub',
   },
   kitchen: {
     title: 'Kitchen',

@@ -12,7 +12,6 @@ export const zh: Dictionary = {
   nav: {
     home: '首页',
     blog: '博客',
-    projects: '项目',
     devLog: '开发日志',
     friends: '友链',
     friendsCircle: '朋友圈',
@@ -830,14 +829,6 @@ export const zh: Dictionary = {
     title: '调试工具检测',
     devToolsOpen: '检测到开发者工具已打开',
     closeAndRefresh: '请关闭调试工具后刷新页面',
-  },
-  projects: {
-    title: '项目',
-    viewDetails: '查看项目 {name} 详情',
-    featured: '精选项目',
-    modalTitle: '项目详情：{name}',
-    visitDemo: '访问演示',
-    viewGithub: 'GitHub',
   },
   kitchen: {
     title: '菜谱',

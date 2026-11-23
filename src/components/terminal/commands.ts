@@ -107,7 +107,6 @@ function pathToRoute(p: string): string {
 
   const routeMap: Record<string, string> = {
     'home.md': '/',
-    'projects.tsx': '/projects',
     'friends.json': '/friends',
     'friends-circle.tsx': '/friends-circle',
     'earth-online.tsx': '/earth-online',

@@ -22,7 +22,6 @@ export interface Dictionary {
   nav: {
     home: string;
     blog: string;
-    projects: string;
     devLog: string;
     friends: string;
     friendsCircle: string;
@@ -830,14 +829,6 @@ export interface Dictionary {
     title: string;
     devToolsOpen: string;
     closeAndRefresh: string;
-  };
-  projects: {
-    title: string;
-    viewDetails: string;
-    featured: string;
-    modalTitle: string;
-    visitDemo: string;
-    viewGithub: string;
   };
   kitchen: {
     title: string;
