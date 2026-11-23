@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { FEED_POST_LIMIT, generateJSONFeed, getBlogPosts, getSiteInfo } from "@/lib/feeds";
+import { generateJSONFeed, getFeedItems, getSiteInfo } from "@/lib/feeds";
 
 export const dynamic = "force-static";
 
-/** JSON Feed 1.1 —— https://sakurain.net/feed.json（最新 20 篇博客） */
+/** JSON Feed 1.1 —— https://sakurain.net/feed.json（博客 / 文档 / 动态 / 菜谱混排） */
 export function GET() {
-  const posts = getBlogPosts(FEED_POST_LIMIT);
+  const items = getFeedItems();
   const siteInfo = getSiteInfo();
 
-  return new NextResponse(generateJSONFeed(posts, siteInfo), {
+  return new NextResponse(generateJSONFeed(items, siteInfo), {
     headers: {
       "Content-Type": "application/feed+json; charset=utf-8",
     },

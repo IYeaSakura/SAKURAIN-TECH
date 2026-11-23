@@ -849,7 +849,7 @@ export const en: Dictionary = {
   },
   kitchen: {
     title: 'Kitchen',
-    subtitle: 'Home-cooking recipes with ingredients and the steps that matter, newest first.',
+    subtitle: 'Notes from my recent attempts at learning to cook — ingredients and steps, newest first.',
     searchPlaceholder: 'Search dishes, ingredients or tags…',
     allTags: 'All',
     empty: 'No recipes match',

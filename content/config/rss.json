@@ -1,0 +1,11 @@
+{
+  "$comment": "RSS 收录配置。total 为全局上限；sources 里每一项是一个内容源，新增类型时在 src/lib/feeds.ts 的 LOADERS 里补一个读取函数即可扩展。limit 缺省时只受 total 约束；enabled=false 可单独关掉某个源。priority 决定总量超限时先保留谁。",
+  "total": 20,
+  "priority": ["blog", "docs", "moments", "kitchen"],
+  "sources": {
+    "blog": { "enabled": true, "limit": 10 },
+    "docs": { "enabled": true, "limit": 5 },
+    "moments": { "enabled": true, "limit": 3 },
+    "kitchen": { "enabled": true, "limit": 3 }
+  }
+}

@@ -841,7 +841,7 @@ export const zh: Dictionary = {
   },
   kitchen: {
     title: '菜谱',
-    subtitle: '家常菜的做法与关键步骤记录，按日期归档。',
+    subtitle: '这是本人近期学习做饭的笔记，做法与关键步骤按日期归档。',
     searchPlaceholder: '搜索菜名、食材或标签…',
     allTags: '全部',
     empty: '没有匹配的菜谱',
