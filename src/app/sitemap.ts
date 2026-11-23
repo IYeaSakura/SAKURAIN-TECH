@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL, formatDate, getBlogPosts, getDocPagePaths } from "@/lib/feeds";
+import { getAllRecipes } from "@/lib/content/kitchen";
 
 export const dynamic = "force-static";
 
@@ -23,7 +24,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE_URL}/earth-online`, lastModified: today, changeFrequency: "weekly", priority: 0.5 },
     { url: `${SITE_URL}/algo-viz`, lastModified: today, changeFrequency: "weekly", priority: 0.5 },
     { url: `${SITE_URL}/moments`, lastModified: today, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${SITE_URL}/kitchen`, lastModified: today, changeFrequency: "weekly", priority: 0.6 },
   ];
+
+  // 菜谱：lastmod 取 frontmatter date
+  const recipes: MetadataRoute.Sitemap = getAllRecipes().map((recipe) => ({
+    url: `${SITE_URL}/kitchen/${recipe.slug}`,
+    lastModified: formatDate(recipe.date),
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }));
 
   // 博客文章：lastmod 取 frontmatter date
   const blogPosts: MetadataRoute.Sitemap = getBlogPosts().map((post) => ({
@@ -44,5 +54,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     };
   });
 
-  return [...staticPages, ...blogPosts, ...docPages];
+  return [...staticPages, ...blogPosts, ...docPages, ...recipes];
 }

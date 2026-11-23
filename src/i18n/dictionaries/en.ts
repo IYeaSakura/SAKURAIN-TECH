@@ -24,6 +24,7 @@ export const en: Dictionary = {
     docs: 'Docs',
     algoViz: 'Algo Viz',
     settings: 'Settings',
+    kitchen: 'Kitchen',
     terminal: 'Terminal',
   },
   common: {
@@ -845,5 +846,19 @@ export const en: Dictionary = {
     modalTitle: 'Project details: {name}',
     visitDemo: 'Visit demo',
     viewGithub: 'GitHub',
+  },
+  kitchen: {
+    title: 'Kitchen',
+    subtitle: 'Home-cooking recipes with ingredients and the steps that matter, newest first.',
+    searchPlaceholder: 'Search dishes, ingredients or tags…',
+    allTags: 'All',
+    empty: 'No recipes match',
+    clear: 'Clear',
+    recipeUnit: 'recipes',
+    tagUnit: 'tags',
+    stepsUnit: 'steps',
+    back: 'Back to kitchen',
+    prev: 'Previous',
+    next: 'Next',
   },
 };

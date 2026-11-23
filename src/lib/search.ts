@@ -12,7 +12,8 @@ export type SearchDocumentType =
   | 'doc'
   | 'friend'
   | 'service'
-  | 'page';
+  | 'page'
+  | 'recipe';
 
 export interface SearchDocument {
   id: string;
@@ -295,6 +296,7 @@ export function groupResultsByType(
     friend: [],
     service: [],
     page: [],
+    recipe: [],
   };
 
   for (const result of results) {

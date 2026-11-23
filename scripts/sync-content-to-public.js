@@ -515,6 +515,26 @@ function buildSearchIndex() {
     }
   }
 
+  // Recipes (content/kitchen/*.md)
+  const kitchenDir = path.join(CONTENT_DIR, 'kitchen');
+  if (fs.existsSync(kitchenDir)) {
+    for (const file of fs.readdirSync(kitchenDir).filter((f) => f.endsWith('.md'))) {
+      const slug = file.replace(/\.md$/, '');
+      const { data, content } = matter(fs.readFileSync(path.join(kitchenDir, file), 'utf-8'));
+      documents.push({
+        id: `recipe:${slug}`,
+        type: 'recipe',
+        title: String(data.title || slug),
+        description: String(data.description || ''),
+        content: truncateText(cleanMarkdown(content || '')),
+        href: `/kitchen/${slug}`,
+        date: data.date ? String(data.date).slice(0, 10) : '',
+        tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
+        category: 'kitchen',
+      });
+    }
+  }
+
   // Dev notes
   const notes = safeReadJson(NOTES_JSON_TARGET);
   if (notes?.notes) {

@@ -24,6 +24,7 @@ export const zh: Dictionary = {
     algoViz: '算法可视化',
     settings: '设置',
     terminal: '终端',
+    kitchen: '菜谱',
   },
   common: {
     loading: '加载中...',
@@ -837,5 +838,19 @@ export const zh: Dictionary = {
     modalTitle: '项目详情：{name}',
     visitDemo: '访问演示',
     viewGithub: 'GitHub',
+  },
+  kitchen: {
+    title: '菜谱',
+    subtitle: '家常菜的做法与关键步骤记录，按日期归档。',
+    searchPlaceholder: '搜索菜名、食材或标签…',
+    allTags: '全部',
+    empty: '没有匹配的菜谱',
+    clear: '清空',
+    recipeUnit: '道菜',
+    tagUnit: '个标签',
+    stepsUnit: '步',
+    back: '返回菜谱',
+    prev: '上一道',
+    next: '下一道',
   },
 };

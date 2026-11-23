@@ -19,6 +19,7 @@ import {
   SkipBack,
   SkipForward,
   Music,
+  UtensilsCrossed,
   Terminal,
   Layout,
   Sun,
@@ -58,6 +59,7 @@ interface NavItem {
 const NAV_LINKS: NavItem[] = [
   { labelKey: 'home', href: '/', icon: Home },
   { labelKey: 'blog', href: '/blog', icon: BookOpen },
+  { labelKey: 'kitchen', href: '/kitchen', icon: UtensilsCrossed },
   { labelKey: 'projects', href: '/projects', icon: FolderKanban },
   { labelKey: 'devLog', href: '/dev-log', icon: MessageSquare },
   { labelKey: 'friends', href: '/friends', icon: Users },

@@ -34,6 +34,7 @@ export interface Dictionary {
     algoViz: string;
     settings: string;
     terminal: string;
+    kitchen: string;
   };
   common: {
     loading: string;
@@ -837,5 +838,19 @@ export interface Dictionary {
     modalTitle: string;
     visitDemo: string;
     viewGithub: string;
+  };
+  kitchen: {
+    title: string;
+    subtitle: string;
+    searchPlaceholder: string;
+    allTags: string;
+    empty: string;
+    clear: string;
+    recipeUnit: string;
+    tagUnit: string;
+    stepsUnit: string;
+    back: string;
+    prev: string;
+    next: string;
   };
 }

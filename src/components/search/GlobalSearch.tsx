@@ -20,6 +20,7 @@ import {
   Layout,
   Loader2,
   CornerDownLeft,
+  UtensilsCrossed,
 } from 'lucide-react';
 import { useAnimationEnabled, useNavigation, useTranslation } from '@/hooks';
 import { searchIndex, type SearchDocumentType, type SearchResult } from '@/lib/search';
@@ -32,6 +33,7 @@ const TYPE_ICONS: Record<SearchDocumentType, typeof FileText> = {
   friend: Heart,
   service: Briefcase,
   page: Layout,
+  recipe: UtensilsCrossed,
 };
 
 const TYPE_LABELS_EN: Record<SearchDocumentType, string> = {
@@ -41,6 +43,7 @@ const TYPE_LABELS_EN: Record<SearchDocumentType, string> = {
   friend: 'Friends',
   service: 'Services',
   page: 'Pages',
+  recipe: 'Kitchen',
 };
 
 const TYPE_LABELS_ZH: Record<SearchDocumentType, string> = {
@@ -50,6 +53,7 @@ const TYPE_LABELS_ZH: Record<SearchDocumentType, string> = {
   friend: '友链',
   service: '服务',
   page: '页面',
+  recipe: '菜谱',
 };
 
 function useTypeLabels(locale: string) {
@@ -102,7 +106,7 @@ export function GlobalSearch() {
     return groups;
   }, [results]);
 
-  const groupOrder: SearchDocumentType[] = ['post', 'doc', 'note', 'service', 'friend', 'page'];
+  const groupOrder: SearchDocumentType[] = ['post', 'doc', 'note', 'recipe', 'service', 'friend', 'page'];
 
   const groupedItems = useMemo(() => {
     const groups: Partial<
