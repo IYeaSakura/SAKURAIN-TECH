@@ -35,6 +35,7 @@ const COPY = {
     urlPlaceholder: 'https://example.com',
     icon: '网站图标链接',
     iconPlaceholder: 'https://example.com/favicon.ico',
+    iconKeepPlaceholder: '留空则沿用友链里现有的图标',
     iconHint: '建议 32×32 以上的 png / ico / svg',
     description: '网站描述',
     descriptionPlaceholder: '一句话介绍你的站点，最多 200 字',
@@ -76,6 +77,7 @@ const COPY = {
     urlPlaceholder: 'https://example.com',
     icon: 'Icon URL',
     iconPlaceholder: 'https://example.com/favicon.ico',
+    iconKeepPlaceholder: 'Leave empty to keep the current icon',
     iconHint: 'A png / ico / svg of at least 32×32 works best',
     description: 'Description',
     descriptionPlaceholder: 'One sentence about your site, up to 200 characters',
@@ -171,18 +173,18 @@ export default function FriendApplyForm({
     []
   );
 
-  // 联系邮箱改成必填，审核结果全靠它回信。
+  // 联系邮箱必填，审核结果全靠它回信；修改站点时图标可以留空沿用原来的。
   const canSubmit = useMemo(
     () =>
       Boolean(
         form.name.trim() &&
           form.url.trim() &&
-          form.icon.trim() &&
+          (isUpdate || form.icon.trim()) &&
           form.description.trim() &&
           form.email.trim() &&
           agree
       ),
-    [form, agree]
+    [form, agree, isUpdate]
   );
 
   const handleSubmit = async (event: FormEvent) => {
@@ -354,16 +356,21 @@ export default function FriendApplyForm({
           />
         </Field>
 
-        <Field label={copy.icon} requiredBadge={copy.required} hint={copy.iconHint}>
+        <Field
+          label={copy.icon}
+          requiredBadge={isUpdate ? undefined : copy.required}
+          optionalBadge={isUpdate ? copy.optional : undefined}
+          hint={copy.iconHint}
+        >
           <input
             type="url"
             className="w-full border-2 px-3 py-2 text-sm outline-none focus:border-[var(--accent-primary)]"
             style={fieldStyle}
             value={form.icon}
             onChange={update('icon')}
-            placeholder={copy.iconPlaceholder}
+            placeholder={isUpdate ? copy.iconKeepPlaceholder : copy.iconPlaceholder}
             maxLength={300}
-            required
+            required={!isUpdate}
           />
         </Field>
 
