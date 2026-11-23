@@ -35,8 +35,11 @@ import {
   Rss,
   ArrowUpRight,
   BookOpen,
+  Plus,
+  Pencil,
 } from 'lucide-react';
 import { Footer } from '@/components/sections/Footer';
+import FriendApplyForm from './FriendApplyForm';
 import { useAnimationEnabled, useTranslation } from '@/hooks';
 import { RouteLoader } from '@/components/RouteLoader';
 import type { SiteData } from '@/types';
@@ -1076,7 +1079,7 @@ const HeroSection = memo(function HeroSection({
   );
 });
 
-// Apply Modal Component
+// Apply Modal Component —— 左侧选申请形式，右侧直接是表单
 const ApplyModal = memo(function ApplyModal({
   isOpen,
   onClose,
@@ -1088,6 +1091,7 @@ const ApplyModal = memo(function ApplyModal({
 }) {
   const animationEnabled = useAnimationEnabled();
   const { t, tReplace } = useTranslation();
+  const [pane, setPane] = useState<'create' | 'update' | 'mail'>('create');
   const [copied, setCopied] = useState(false);
   const [siteInfoCopied, setSiteInfoCopied] = useState(false);
 
@@ -1109,10 +1113,25 @@ const ApplyModal = memo(function ApplyModal({
 
   useEffect(() => {
     if (isOpen) {
+      setPane('create');
       setCopied(false);
       setSiteInfoCopied(false);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -1143,203 +1162,236 @@ const ApplyModal = memo(function ApplyModal({
     window.location.href = mailtoLink;
   };
 
-  const handleOpenForm = () => {
-    // 站内自助申请页，提交后进入 sakurain-api 后台审核。
-    window.open('/friends/apply', '_blank', 'noopener,noreferrer');
-  };
+  const panes = [
+    { id: 'create' as const, label: '新增站点', hint: '还没在友链里', icon: Plus },
+    { id: 'update' as const, label: '修改站点', hint: '已在友链里', icon: Pencil },
+  ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t.friends.apply}
+    >
       <motion.div
         initial={animationEnabled ? { opacity: 0 } : undefined}
         animate={animationEnabled ? { opacity: 1 } : undefined}
         exit={{ opacity: 0 }}
         className="absolute inset-0"
-        style={{ background: 'rgba(0, 0, 0, 0.5)' }}
+        style={{ background: 'rgba(0, 0, 0, 0.62)' }}
         onClick={onClose}
       />
+
       <motion.div
-        initial={animationEnabled ? { opacity: 0, y: 20 } : undefined}
-        animate={animationEnabled ? { opacity: 1, y: 0 } : undefined}
-        exit={{ opacity: 0, y: 20 }}
-        transition={{ duration: 0.3 }}
-        className="relative w-full max-w-lg p-5 sm:p-6 max-h-[90vh] overflow-y-auto border-2"
+        initial={animationEnabled ? { opacity: 0, y: 24, scale: 0.98 } : undefined}
+        animate={animationEnabled ? { opacity: 1, y: 0, scale: 1 } : undefined}
+        exit={{ opacity: 0, y: 16, scale: 0.98 }}
+        transition={{ duration: 0.24, ease: 'easeOut' }}
+        className="relative flex max-h-[92vh] w-full max-w-4xl flex-col border-2"
         style={{
           background: 'var(--bg-secondary)',
           borderColor: 'var(--border-subtle)',
-          boxShadow: '6px 6px 0 var(--border-subtle)',
+          boxShadow: '8px 8px 0 var(--accent-primary)',
         }}
       >
         {/* Header */}
-        <div className="flex items-center gap-3 mb-5">
-          <div
-            className="flex items-center justify-center w-12 h-12 border-2"
-            style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-subtle)' }}
-          >
-            <Mail className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
-          </div>
-          <div>
-            <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
-              {t.friends.apply}
-            </h3>
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-              {t.friends.applySubtitle}
-            </p>
-          </div>
-        </div>
-
-        {/* Important Notice */}
         <div
-          className="mb-4 p-4 border-2"
-          style={{
-            background: 'var(--bg-primary)',
-            borderColor: 'var(--border-subtle)',
-          }}
+          className="flex flex-shrink-0 items-center justify-between gap-3 border-b-2 px-4 py-3 sm:px-5"
+          style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-subtle)' }}
         >
-          <div className="flex items-start gap-2">
-            <span style={{ color: 'var(--accent-secondary)' }}>⚠️</span>
-            <div>
-              <p className="text-xs font-bold uppercase font-mono" style={{ color: 'var(--text-primary)' }}>
-                {t.friends.importantNotice}
-              </p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                {t.friends.applyNotice}
+          <div className="flex min-w-0 items-center gap-3">
+            <span
+              className="flex h-9 w-9 flex-shrink-0 items-center justify-center border-2"
+              style={{ borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
+            >
+              <Mail className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <h3
+                className="truncate text-base font-bold uppercase leading-tight"
+                style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+              >
+                {t.friends.apply}
+              </h3>
+              <p className="truncate font-mono text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                {t.friends.applySubtitle}
               </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t.friends.close}
+            className="flex h-8 w-8 flex-shrink-0 items-center justify-center border-2 transition-colors hover:bg-[var(--bg-tertiary)]"
+            style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
-        {/* Site Info */}
-        <div
-          className="mb-4 p-4 border-2"
-          style={{
-            background: 'var(--bg-primary)',
-            borderColor: 'var(--border-subtle)',
-          }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-bold uppercase font-mono" style={{ color: 'var(--accent-primary)' }}>
-              {t.friends.ourInfo}
-            </p>
+        <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] md:grid-cols-[196px_minmax(0,1fr)] md:grid-rows-1">
+          {/* Left: 申请形式 */}
+          <aside
+            className="flex gap-2 overflow-x-auto border-b-2 p-3 md:flex-col md:overflow-visible md:border-b-0 md:border-r-2"
+            style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-primary)' }}
+          >
+            {panes.map((item) => {
+              const active = pane === item.id;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setPane(item.id)}
+                  className="flex min-w-[132px] flex-1 items-center gap-2.5 border-2 px-3 py-2.5 text-left transition-colors md:flex-none md:w-full"
+                  style={{
+                    background: active ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                    borderColor: active ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                    color: active ? 'var(--bg-primary)' : 'var(--text-primary)',
+                  }}
+                >
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-bold leading-tight">{item.label}</span>
+                    <span
+                      className="block font-mono text-[10px] uppercase leading-tight"
+                      style={{ color: active ? 'var(--bg-primary)' : 'var(--text-muted)', opacity: active ? 0.75 : 1 }}
+                    >
+                      {item.hint}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+
+            <span
+              className="hidden border-t-2 md:my-1 md:block"
+              style={{ borderColor: 'var(--border-subtle)' }}
+            />
+
             <button
-              onClick={handleCopySiteInfo}
-              className="px-2 py-1 text-xs font-bold uppercase border-2 transition-colors hover:opacity-80"
+              type="button"
+              onClick={() => setPane('mail')}
+              className="flex min-w-[132px] flex-1 items-center gap-2.5 border-2 px-3 py-2.5 text-left transition-colors md:flex-none md:w-full"
               style={{
-                background: siteInfoCopied ? 'var(--success)' : 'var(--accent-primary)',
-                borderColor: 'var(--border-subtle)',
-                color: 'var(--bg-primary)',
+                background: pane === 'mail' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
+                borderColor: pane === 'mail' ? 'var(--accent-primary)' : 'var(--border-subtle)',
+                color: pane === 'mail' ? 'var(--bg-primary)' : 'var(--text-primary)',
               }}
             >
-              {siteInfoCopied ? t.friends.copied : t.friends.copy}
+              <Send className="h-4 w-4 flex-shrink-0" />
+              <span className="min-w-0">
+                <span className="block text-sm font-bold leading-tight">{t.friends.emailApply}</span>
+                <span className="block font-mono text-[10px] uppercase leading-tight" style={{ opacity: 0.75 }}>
+                  mailto
+                </span>
+              </span>
             </button>
-          </div>
-          <div className="space-y-1.5 text-sm" style={{ color: 'var(--text-primary)' }}>
-            <p>
-              <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.name}:</span>
-              {siteInfo.name}
-            </p>
-            <p>
-              <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.url}:</span>
-              {siteInfo.url}
-            </p>
-            <p>
-              <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.icon}:</span>
-              {siteInfo.icon}
-            </p>
-            <p>
-              <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.rss}:</span>
-              {siteInfo.rss}
-            </p>
-            <p>
-              <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.description}:</span>
-              {siteInfo.description}
-            </p>
+          </aside>
+
+          {/* Right: 内容 */}
+          <div className="min-h-0 overflow-y-auto p-4 sm:p-6">
+            {pane === 'mail' ? (
+              <div className="space-y-4">
+                <div
+                  className="border-2 p-4"
+                  style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-primary)' }}
+                >
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <p className="font-mono text-[11px] font-bold uppercase" style={{ color: 'var(--accent-primary)' }}>
+                      {t.friends.ourInfo}
+                    </p>
+                    <button
+                      onClick={handleCopySiteInfo}
+                      className="border-2 px-2 py-1 text-[11px] font-bold uppercase transition-colors hover:opacity-80"
+                      style={{
+                        background: siteInfoCopied ? 'var(--success)' : 'var(--accent-primary)',
+                        borderColor: 'var(--border-subtle)',
+                        color: 'var(--bg-primary)',
+                      }}
+                    >
+                      {siteInfoCopied ? t.friends.copied : t.friends.copy}
+                    </button>
+                  </div>
+                  <div className="space-y-1 text-sm" style={{ color: 'var(--text-primary)' }}>
+                    <p>
+                      <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.name}: </span>
+                      {siteInfo.name}
+                    </p>
+                    <p>
+                      <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.url}: </span>
+                      {siteInfo.url}
+                    </p>
+                    <p>
+                      <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.icon}: </span>
+                      {siteInfo.icon}
+                    </p>
+                    <p>
+                      <span style={{ color: 'var(--text-muted)' }}>{t.friends.siteInfo.rss}: </span>
+                      {siteInfo.rss}
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  className="border-2 p-4"
+                  style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-primary)' }}
+                >
+                  <p className="mb-2 font-mono text-[11px] font-bold uppercase" style={{ color: 'var(--text-muted)' }}>
+                    {t.friends.recipientEmail}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <code
+                      className="flex-1 border-2 px-3 py-2 text-sm font-mono"
+                      style={{
+                        minWidth: '180px',
+                        background: 'var(--bg-secondary)',
+                        borderColor: 'var(--border-subtle)',
+                        color: 'var(--accent-primary)',
+                      }}
+                    >
+                      {contact}
+                    </code>
+                    <button
+                      onClick={handleCopyEmail}
+                      className="border-2 px-3 py-2 text-sm font-bold uppercase transition-colors hover:opacity-80"
+                      style={{
+                        background: copied ? 'var(--success)' : 'var(--accent-primary)',
+                        borderColor: 'var(--border-subtle)',
+                        color: 'var(--bg-primary)',
+                      }}
+                    >
+                      {copied ? t.friends.copied : t.friends.copy}
+                    </button>
+                    <button
+                      onClick={handleOpenMailto}
+                      className="inline-flex items-center gap-2 border-2 px-3 py-2 text-sm font-bold uppercase transition-colors hover:bg-[var(--bg-tertiary)]"
+                      style={{ borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
+                    >
+                      <Send className="h-4 w-4" />
+                      {t.friends.emailApply}
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  className="border-2 p-4"
+                  style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-primary)' }}
+                >
+                  <p className="font-mono text-[11px] font-bold uppercase" style={{ color: 'var(--text-primary)' }}>
+                    {t.friends.importantNotice}
+                  </p>
+                  <p className="mt-1 text-xs leading-5" style={{ color: 'var(--text-secondary)' }}>
+                    {t.friends.applyNotice}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <FriendApplyForm mode={pane} embedded onSuccess={() => undefined} />
+            )}
           </div>
         </div>
-
-        {/* Contact Email */}
-        <div
-          className="mb-4 p-4 border-2"
-          style={{
-            background: 'var(--bg-primary)',
-            borderColor: 'var(--border-subtle)',
-          }}
-        >
-          <p className="text-xs font-bold uppercase font-mono mb-2" style={{ color: 'var(--text-muted)' }}>
-            {t.friends.recipientEmail}
-          </p>
-          <div className="flex items-center gap-2">
-            <code
-              className="flex-1 px-3 py-2 text-sm font-mono border-2"
-              style={{
-                background: 'var(--bg-secondary)',
-                borderColor: 'var(--border-subtle)',
-                color: 'var(--accent-primary)',
-              }}
-            >
-              {contact}
-            </code>
-            <button
-              onClick={handleCopyEmail}
-              className="px-3 py-2 text-sm font-bold uppercase border-2 transition-colors hover:opacity-80"
-              style={{
-                background: copied ? 'var(--success)' : 'var(--accent-primary)',
-                borderColor: 'var(--border-subtle)',
-                color: 'var(--bg-primary)',
-              }}
-            >
-              {copied ? t.friends.copied : t.friends.copy}
-            </button>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          <p className="text-xs font-bold uppercase font-mono" style={{ color: 'var(--text-muted)' }}>
-            {t.friends.chooseApplyMethod}
-          </p>
-          <div className="flex gap-3">
-            <button
-              onClick={handleOpenMailto}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold uppercase border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
-              style={{
-                background: 'var(--bg-primary)',
-                borderColor: 'var(--accent-primary)',
-                color: 'var(--accent-primary)',
-                boxShadow: '3px 3px 0 var(--accent-primary)',
-              }}
-            >
-              <Send className="w-4 h-4" />
-              {t.friends.emailApply}
-            </button>
-            <button
-              onClick={handleOpenForm}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold uppercase border-2 transition-all hover:-translate-x-0.5 hover:-translate-y-0.5"
-              style={{
-                background: 'var(--accent-primary)',
-                borderColor: 'var(--border-subtle)',
-                color: 'var(--bg-primary)',
-                boxShadow: '3px 3px 0 var(--border-subtle)',
-              }}
-            >
-              <FileText className="w-4 h-4" />
-              {t.friends.formApply}
-            </button>
-          </div>
-        </div>
-
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="w-full mt-4 px-4 py-2 text-sm font-bold uppercase border-2 transition-colors hover:bg-[var(--bg-tertiary)]"
-          style={{
-            background: 'var(--bg-primary)',
-            borderColor: 'var(--border-subtle)',
-            color: 'var(--text-muted)',
-          }}
-        >
-          {t.friends.close}
-        </button>
       </motion.div>
     </div>
   );

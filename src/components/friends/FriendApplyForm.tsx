@@ -5,20 +5,29 @@
  *
  * 提交到 sakurain-api 的 /api/friends/applications，审核结果由站主在
  * api.sakurain.net/admin 处理；通过后会邮件通知申请人。
+ *
+ * 两种模式：
+ * - create：新站点入链
+ * - update：修改已经在友链里的站点信息（按网站地址匹配）
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle2, AlertCircle, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, AlertCircle, Send, Loader2, Info } from 'lucide-react';
 import { useTranslation } from '@/hooks';
 
 const DEFAULT_API = 'https://api.sakurain.net';
 
+export type ApplyMode = 'create' | 'update';
+
 const COPY = {
   zh: {
-    title: '申请友链',
-    subtitle: '填好下面几项就行，站主会人工看一遍，通过后邮件通知你。',
+    createTitle: '新增站点',
+    createSubtitle: '填好下面几项就行，站主会人工看一遍，通过后邮件通知你。',
+    updateTitle: '修改站点',
+    updateSubtitle: '填的是已经在友链里的站点，审核通过后会按下面的内容覆盖原信息。',
+    updateHint: '网站地址必须和友链里现有的那条一致，否则认不出来。',
     back: '返回友链页',
     name: '网站名称',
     namePlaceholder: '你的站点叫什么',
@@ -26,18 +35,23 @@ const COPY = {
     urlPlaceholder: 'https://example.com',
     icon: '网站图标链接',
     iconPlaceholder: 'https://example.com/favicon.ico',
-    iconHint: '建议 32×32 以上的 png / ico / svg，填错会显示成首字母',
+    iconHint: '建议 32×32 以上的 png / ico / svg',
     description: '网站描述',
     descriptionPlaceholder: '一句话介绍你的站点，最多 200 字',
     feed: 'Feed 地址',
+    feedPlaceholder: 'https://example.com/feed',
     email: '联系邮箱',
+    emailPlaceholder: 'you@example.com',
+    emailHint: '审核结果会发到这里，请填常用的邮箱',
     optional: '选填',
-    submit: '提交申请',
+    required: '必填',
+    submitCreate: '提交申请',
+    submitUpdate: '提交修改',
     submitting: '提交中…',
     agree: '我确认站点内容健康、无广告推广，且在站内添加了本站友链',
-    required: '必填',
     successTitle: '申请已收到',
-    successBody: '站主看到后会尽快审核，结果会发到你的邮箱（如果留了的话）。',
+    successBody: '站主看到后会尽快审核，结果会发到你的邮箱。',
+    successUpdate: '修改申请已收到，审核通过后会更新友链信息，并邮件通知你。',
     again: '再提交一个',
     failed: '提交失败',
     tooFast: '填写得太快了，请确认信息后再提交',
@@ -50,8 +64,11 @@ const COPY = {
     notice: '提交后会进入人工审核，通常一两天内处理。',
   },
   en: {
-    title: 'Apply for a link',
-    subtitle: 'Fill in the fields below. Applications are reviewed manually and you will get an email once approved.',
+    createTitle: 'Add a site',
+    createSubtitle: 'Fill in the fields below. Applications are reviewed manually and you will get an email once approved.',
+    updateTitle: 'Update a site',
+    updateSubtitle: 'For a site that is already listed. Once approved, these details replace the current ones.',
+    updateHint: 'The URL must match the entry that is already listed.',
     back: 'Back to friends',
     name: 'Site name',
     namePlaceholder: 'What is your site called',
@@ -63,14 +80,19 @@ const COPY = {
     description: 'Description',
     descriptionPlaceholder: 'One sentence about your site, up to 200 characters',
     feed: 'Feed URL',
+    feedPlaceholder: 'https://example.com/feed',
     email: 'Contact email',
+    emailPlaceholder: 'you@example.com',
+    emailHint: 'The review result goes here, use one you check often',
     optional: 'optional',
-    submit: 'Submit',
+    required: 'required',
+    submitCreate: 'Submit',
+    submitUpdate: 'Submit update',
     submitting: 'Submitting…',
     agree: 'I confirm my site is legal, ad-free, and already links back to this site',
-    required: 'required',
     successTitle: 'Application received',
-    successBody: 'It will be reviewed shortly. If you left an email, you will hear back there.',
+    successBody: 'It will be reviewed shortly and the result will be emailed to you.',
+    successUpdate: 'Update received. Once approved, the listing will be refreshed and you will get an email.',
     again: 'Submit another',
     failed: 'Submission failed',
     tooFast: 'That was too quick — please check your details and try again',
@@ -89,23 +111,42 @@ interface SubmitState {
   message?: string;
 }
 
-export default function FriendApplyForm() {
+const EMPTY_FORM = {
+  name: '',
+  url: '',
+  icon: '',
+  description: '',
+  feed: '',
+  email: '',
+  website: '',
+};
+
+export default function FriendApplyForm({
+  mode = 'create',
+  embedded = false,
+  onSuccess,
+}: {
+  mode?: ApplyMode;
+  embedded?: boolean;
+  onSuccess?: () => void;
+}) {
   const { locale } = useTranslation();
   const copy = COPY[locale === 'en' ? 'en' : 'zh'];
+  const isUpdate = mode === 'update';
 
   const [apiBase, setApiBase] = useState(DEFAULT_API);
-  const [form, setForm] = useState({
-    name: '',
-    url: '',
-    icon: '',
-    description: '',
-    feed: '',
-    email: '',
-    website: '',
-  });
+  const [form, setForm] = useState(EMPTY_FORM);
   const [agree, setAgree] = useState(false);
   const [state, setState] = useState<SubmitState>({ status: 'idle' });
   const openedAt = useRef(Date.now());
+
+  // 切换「新增 / 修改」时清空，避免把另一种模式的输入带过去。
+  useEffect(() => {
+    setForm(EMPTY_FORM);
+    setAgree(false);
+    setState({ status: 'idle' });
+    openedAt.current = Date.now();
+  }, [mode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -130,10 +171,16 @@ export default function FriendApplyForm() {
     []
   );
 
+  // 联系邮箱改成必填，审核结果全靠它回信。
   const canSubmit = useMemo(
     () =>
       Boolean(
-        form.name.trim() && form.url.trim() && form.icon.trim() && form.description.trim() && agree
+        form.name.trim() &&
+          form.url.trim() &&
+          form.icon.trim() &&
+          form.description.trim() &&
+          form.email.trim() &&
+          agree
       ),
     [form, agree]
   );
@@ -148,12 +195,13 @@ export default function FriendApplyForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          kind: mode,
           name: form.name.trim(),
           url: form.url.trim(),
           icon: form.icon.trim(),
           description: form.description.trim(),
           feed: form.feed.trim() || null,
-          email: form.email.trim() || null,
+          email: form.email.trim(),
           website: form.website,
           elapsedMs: Date.now() - openedAt.current,
         }),
@@ -176,47 +224,41 @@ export default function FriendApplyForm() {
         return;
       }
       setState({ status: 'success' });
-      setForm({ name: '', url: '', icon: '', description: '', feed: '', email: '', website: '' });
+      setForm(EMPTY_FORM);
       setAgree(false);
       openedAt.current = Date.now();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      onSuccess?.();
     } catch {
       setState({ status: 'error', message: copy.network });
     }
   };
 
-  const fieldStyle = {
-    background: 'var(--bg-primary)',
-    borderColor: 'var(--border-subtle)',
-    color: 'var(--text-primary)',
-  } as const;
-
   if (state.status === 'success') {
     return (
-      <div className="mx-auto w-full max-w-2xl">
-        <div
-          className="border-2 p-8 text-center"
-          style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}
+      <div
+        className="border-2 p-6 text-center sm:p-8"
+        style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-subtle)' }}
+      >
+        <CheckCircle2 className="mx-auto h-10 w-10" style={{ color: 'var(--success)' }} />
+        <h3
+          className="mt-4 text-xl font-bold uppercase"
+          style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
         >
-          <CheckCircle2 className="mx-auto h-12 w-12" style={{ color: 'var(--success)' }} />
-          <h1
-            className="mt-4 text-2xl font-bold uppercase"
-            style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
+          {copy.successTitle}
+        </h3>
+        <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
+          {isUpdate ? copy.successUpdate : copy.successBody}
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => setState({ status: 'idle' })}
+            className="border-2 px-4 py-2 text-sm font-bold uppercase"
+            style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
           >
-            {copy.successTitle}
-          </h1>
-          <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-            {copy.successBody}
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => setState({ status: 'idle' })}
-              className="border-2 px-4 py-2 text-sm font-bold uppercase"
-              style={{ borderColor: 'var(--border-subtle)', color: 'var(--text-primary)' }}
-            >
-              {copy.again}
-            </button>
+            {copy.again}
+          </button>
+          {!embedded && (
             <Link
               href="/friends"
               className="border-2 px-4 py-2 text-sm font-bold uppercase"
@@ -228,48 +270,68 @@ export default function FriendApplyForm() {
             >
               {copy.back}
             </Link>
-          </div>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
-      <Link
-        href="/friends"
-        className="mb-6 inline-flex items-center gap-2 font-mono text-xs uppercase"
-        style={{ color: 'var(--text-muted)' }}
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        {copy.back}
-      </Link>
+    <div className="w-full">
+      {!embedded && (
+        <Link
+          href="/friends"
+          className="mb-6 inline-flex items-center gap-2 font-mono text-xs uppercase"
+          style={{ color: 'var(--text-muted)' }}
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          {copy.back}
+        </Link>
+      )}
 
-      <header className="mb-6">
-        <h1
-          className="text-2xl font-bold uppercase sm:text-3xl"
+      <header className="mb-5">
+        <h2
+          className="text-xl font-bold uppercase sm:text-2xl"
           style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-pixel)' }}
         >
-          {copy.title}
-        </h1>
-        <p className="mt-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          {copy.subtitle}
+          {isUpdate ? copy.updateTitle : copy.createTitle}
+        </h2>
+        <p className="mt-1.5 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
+          {isUpdate ? copy.updateSubtitle : copy.createSubtitle}
         </p>
       </header>
 
-      <ul
-        className="mb-6 space-y-1.5 border-2 p-4 font-mono text-[11px] uppercase leading-5"
-        style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-muted)' }}
-      >
-        {copy.requirements.map((item) => (
-          <li key={item}>— {item}</li>
-        ))}
-      </ul>
+      {isUpdate ? (
+        <p
+          className="mb-5 flex items-start gap-2 border-2 px-3 py-2 text-xs leading-5"
+          style={{
+            borderColor: 'var(--accent-primary)',
+            background: 'color-mix(in srgb, var(--accent-primary) 12%, transparent)',
+            color: 'var(--text-primary)',
+          }}
+        >
+          <Info className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" style={{ color: 'var(--accent-primary)' }} />
+          {copy.updateHint}
+        </p>
+      ) : (
+        <ul
+          className="mb-5 space-y-1.5 border-2 p-3.5 font-mono text-[11px] leading-5"
+          style={{
+            borderColor: 'var(--border-subtle)',
+            background: 'var(--bg-primary)',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          {copy.requirements.map((item) => (
+            <li key={item}>— {item}</li>
+          ))}
+        </ul>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={copy.name} required>
+        <Field label={copy.name} requiredBadge={copy.required}>
           <input
-            className="w-full border-2 px-3 py-2 text-sm outline-none"
+            className="w-full border-2 px-3 py-2 text-sm outline-none focus:border-[var(--accent-primary)]"
             style={fieldStyle}
             value={form.name}
             onChange={update('name')}
@@ -279,10 +341,10 @@ export default function FriendApplyForm() {
           />
         </Field>
 
-        <Field label={copy.url} required>
+        <Field label={copy.url} requiredBadge={copy.required}>
           <input
             type="url"
-            className="w-full border-2 px-3 py-2 text-sm outline-none"
+            className="w-full border-2 px-3 py-2 text-sm outline-none focus:border-[var(--accent-primary)]"
             style={fieldStyle}
             value={form.url}
             onChange={update('url')}
@@ -292,10 +354,10 @@ export default function FriendApplyForm() {
           />
         </Field>
 
-        <Field label={copy.icon} required hint={copy.iconHint}>
+        <Field label={copy.icon} requiredBadge={copy.required} hint={copy.iconHint}>
           <input
             type="url"
-            className="w-full border-2 px-3 py-2 text-sm outline-none"
+            className="w-full border-2 px-3 py-2 text-sm outline-none focus:border-[var(--accent-primary)]"
             style={fieldStyle}
             value={form.icon}
             onChange={update('icon')}
@@ -305,9 +367,9 @@ export default function FriendApplyForm() {
           />
         </Field>
 
-        <Field label={copy.description} required>
+        <Field label={copy.description} requiredBadge={copy.required}>
           <textarea
-            className="w-full resize-y border-2 px-3 py-2 text-sm outline-none"
+            className="w-full resize-y border-2 px-3 py-2 text-sm outline-none focus:border-[var(--accent-primary)]"
             style={fieldStyle}
             value={form.description}
             onChange={update('description')}
@@ -318,53 +380,53 @@ export default function FriendApplyForm() {
           />
         </Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={copy.feed} optional={copy.optional}>
-            <input
-              type="url"
-              className="w-full border-2 px-3 py-2 text-sm outline-none"
-              style={fieldStyle}
-              value={form.feed}
-              onChange={update('feed')}
-              placeholder="https://example.com/feed"
-              maxLength={300}
-            />
-          </Field>
-          <Field label={copy.email} optional={copy.optional}>
-            <input
-              type="email"
-              className="w-full border-2 px-3 py-2 text-sm outline-none"
-              style={fieldStyle}
-              value={form.email}
-              onChange={update('email')}
-              placeholder="you@example.com"
-              maxLength={120}
-            />
-          </Field>
-        </div>
+        <Field label={copy.email} requiredBadge={copy.required} hint={copy.emailHint}>
+          <input
+            type="email"
+            className="w-full border-2 px-3 py-2 text-sm outline-none focus:border-[var(--accent-primary)]"
+            style={fieldStyle}
+            value={form.email}
+            onChange={update('email')}
+            placeholder={copy.emailPlaceholder}
+            maxLength={120}
+            required
+          />
+        </Field>
+
+        <Field label={copy.feed} optionalBadge={copy.optional}>
+          <input
+            type="url"
+            className="w-full border-2 px-3 py-2 text-sm outline-none focus:border-[var(--accent-primary)]"
+            style={fieldStyle}
+            value={form.feed}
+            onChange={update('feed')}
+            placeholder={copy.feedPlaceholder}
+            maxLength={300}
+          />
+        </Field>
 
         {/* 蜜罐：真实用户看不到，机器人往往会填 */}
         <div aria-hidden className="pointer-events-none absolute -left-[9999px] h-0 w-0 overflow-hidden">
           <label>
             Website
-            <input
-              tabIndex={-1}
-              autoComplete="off"
-              value={form.website}
-              onChange={update('website')}
-            />
+            <input tabIndex={-1} autoComplete="off" value={form.website} onChange={update('website')} />
           </label>
         </div>
 
         <label
           className="flex cursor-pointer items-start gap-3 border-2 p-3 text-xs leading-5"
-          style={{ borderColor: 'var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+          style={{
+            borderColor: 'var(--border-subtle)',
+            background: 'var(--bg-primary)',
+            color: 'var(--text-secondary)',
+          }}
         >
           <input
             type="checkbox"
             checked={agree}
             onChange={(event) => setAgree(event.target.checked)}
-            className="mt-0.5 h-4 w-4"
+            className="mt-0.5 h-4 w-4 flex-shrink-0"
+            style={{ accentColor: 'var(--accent-primary)' }}
           />
           <span>{copy.agree}</span>
         </label>
@@ -379,11 +441,11 @@ export default function FriendApplyForm() {
           </p>
         )}
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"
             disabled={!canSubmit || state.status === 'submitting'}
-            className="flex items-center justify-center gap-2 border-2 px-5 py-3 text-sm font-bold uppercase transition-transform disabled:cursor-not-allowed disabled:opacity-50 hover:-translate-y-0.5"
+            className="flex items-center justify-center gap-2 border-2 px-5 py-2.5 text-sm font-bold uppercase transition-transform disabled:cursor-not-allowed disabled:opacity-50 hover:-translate-y-0.5"
             style={{
               background: 'var(--accent-primary)',
               borderColor: 'var(--border-subtle)',
@@ -396,7 +458,11 @@ export default function FriendApplyForm() {
             ) : (
               <Send className="h-4 w-4" />
             )}
-            {state.status === 'submitting' ? copy.submitting : copy.submit}
+            {state.status === 'submitting'
+              ? copy.submitting
+              : isUpdate
+                ? copy.submitUpdate
+                : copy.submitCreate}
           </button>
           <span className="font-mono text-[10px] uppercase" style={{ color: 'var(--text-muted)' }}>
             {copy.notice}
@@ -407,32 +473,61 @@ export default function FriendApplyForm() {
   );
 }
 
+const fieldStyle = {
+  background: 'var(--bg-primary)',
+  borderColor: 'var(--border-subtle)',
+  color: 'var(--text-primary)',
+} as const;
+
 function Field({
   label,
-  required,
-  optional,
+  requiredBadge,
+  optionalBadge,
   hint,
   children,
 }: {
   label: string;
-  required?: boolean;
-  optional?: string;
+  requiredBadge?: string;
+  optionalBadge?: string;
   hint?: string;
   children: ReactNode;
 }) {
   return (
     <label className="block">
-      <span
-        className="mb-1.5 flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase"
-        style={{ color: 'var(--text-secondary)' }}
-      >
-        {label}
-        {required && <span style={{ color: 'var(--danger)' }}>*</span>}
-        {optional && <span style={{ color: 'var(--text-muted)' }}>· {optional}</span>}
+      <span className="mb-1.5 flex flex-wrap items-center gap-2">
+        <span
+          className="font-mono text-[11px] font-bold uppercase tracking-wide"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          {label}
+        </span>
+        {requiredBadge && (
+          <span
+            className="border px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase leading-none"
+            style={{
+              borderColor: 'var(--accent-primary)',
+              background: 'color-mix(in srgb, var(--accent-primary) 18%, transparent)',
+              color: 'var(--accent-primary)',
+            }}
+          >
+            {requiredBadge}
+          </span>
+        )}
+        {optionalBadge && (
+          <span
+            className="border px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase leading-none"
+            style={{
+              borderColor: 'var(--border-subtle)',
+              color: 'var(--text-muted)',
+            }}
+          >
+            {optionalBadge}
+          </span>
+        )}
       </span>
       {children}
       {hint && (
-        <span className="mt-1 block text-[11px]" style={{ color: 'var(--text-muted)' }}>
+        <span className="mt-1 block text-[11px] leading-4" style={{ color: 'var(--text-secondary)' }}>
           {hint}
         </span>
       )}
